@@ -1,11 +1,13 @@
 import os
 import random
 import string
+import secrets
 
 import ldap3
 from django.conf import settings
 from django.core.mail import mail_managers
 from ldap3 import Server, Connection
+
 
 BASE_DN = getattr(settings, 'LDAP_BASE_DN', 'dc=demo1,dc=freeipa,dc=org')
 SERVER_URI = getattr(settings, 'LDAP_SERVER_URI', 'ipa.demo1.freeipa.org')
@@ -16,9 +18,11 @@ USER_ROOT = getattr(settings, 'LDAP_USER_ROOT', '/home')
 GROUP_TABLE = getattr(settings, 'LDAP_GROUP_TABLE', 'ou=Groups')
 USER_SHELL = getattr(settings, 'LDAP_USER_SHELL', '/bin/bash')
 EMAIL_NEW_ACCOUNTS = getattr(settings, 'LDAP_SEND_EMAILS', False)
-
-USER_ATTRIBUTES = ['cn', 'uid', 'uidNumber', 'gidNumber', 'homeDirectory', 'loginShell', 'description', 'gecos',
-                   'objectclass']
+USER_ATTRIBUTES = [
+    'cn', 'uid', 'uidNumber', 'gidNumber',
+    'homeDirectory', 'loginShell', 'description',
+    'gecos', 'objectclass'
+]
 PAGE_SIZE = 1000
 
 
@@ -29,8 +33,8 @@ def uniquefy(name, existing):
     :param existing: list of existing names
     :return: a unique name based on the suggested name
     """
-    root = (u'%s' % name).replace('-', '').replace(' ', '').strip().lower()
-    choices = [root] + ['{}{}'.format(root, i) for i in range(1, 20)]
+    root = f'{name}'.replace('-', '').replace(' ', '').strip().lower()
+    choices = [root] + [f'{root}{i}' for i in range(1, 20)]
     candidates = sorted((set(choices) - set(existing)))
     return candidates[0]
 
@@ -51,27 +55,26 @@ def pwd_generator(alpha=6, numeric=3):
     consonants = [a for a in string.ascii_lowercase if a not in vowels]
     digits = string.digits
 
-    ####utility functions
-    def a_part(slen):
+    # utility functions
+    def a_part(str_len):
         ret = ''
-        for i in range(int(slen)):
+        for i in range(int(str_len)):
             if i % 2 == 0:
-                randid = random.randint(0, 20)  # number of consonants
-                ret += consonants[randid]
+                rand_id = random.randint(0, 20)  # number of consonants
+                ret += consonants[rand_id]
             else:
-                randid = random.randint(0, 4)  # number of vowels
-                ret += vowels[randid]
+                rand_id = random.randint(0, 4)  # number of vowels
+                ret += vowels[rand_id]
         ret = ''.join([random.choice([k, k, k, k.upper()]) for k in ret])
         return ret
 
-    def n_part(slen):
+    def n_part(str_len):
         ret = ''
-        for i in range(int(slen)):
-            randid = random.randint(0, 9)  # number of digits
-            ret += digits[randid]
+        for i in range(int(str_len)):
+            rand_id = random.randint(0, 9)  # number of digits
+            ret += digits[rand_id]
         return ret
 
-    ####
     fpl = alpha / 2
     if alpha % 2:
         fpl = int(alpha / 2) + 1
@@ -81,7 +84,35 @@ def pwd_generator(alpha=6, numeric=3):
     mid = n_part(numeric)
     end = a_part(lpl)
 
-    return "{}{}{}".format(start, mid, end)
+    return f"{start}{mid}{end}"
+
+
+def generate_passphrase(length, separators=PASSPHRASE_SEPARATORS, dictionary: str = WORDS_DICTIONARY):
+    """
+    Generates a secure passphrase using random words from a dictionary file.
+
+    :param length: The number of words in the passphrase.
+    :param separators: The character(s) to use between words, will randomly choose if multiple.
+    :param dictionary: Dictionary file to use.
+    :return: A string containing the generated passphrase.
+    """
+    try:
+        with open(dictionary, 'r') as f:
+            words = [word.strip() for word in f if 3 < len(word.strip()) < 15 and word.strip().isalpha()]  # Filter short and very long words
+    except FileNotFoundError:
+        return "Error: Dictionary file not found at dictionary. Please provide a custom word list."
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+    # Ensure there are enough words in the list
+    if len(words) < length:
+        return "Error: Not enough words in the dictionary to generate the requested passphrase length."
+
+    # Use secrets.choice for cryptographically secure random selection
+    selected_words = [secrets.choice((str.title, str))(secrets.choice(words)) for _ in range(length)]
+    results = [random.choice(separators)]*(2 * length - 1)
+    results[::2] = selected_words
+    return ''.join(results)
 
 
 class Directory(object):
@@ -145,17 +176,6 @@ class Directory(object):
         with Connection(self.server, user=self.admin_user, password=self.admin_secret, auto_bind=True) as connection:
             group_success = connection.add(group_dn, group_object_classes, group_record)
             user_success = connection.add(user_dn, user_object_classes, user_record)
-
-        if user_success and group_success and EMAIL_NEW_ACCOUNTS:
-            mail_managers(
-                "New Account -  {first_name} {last_name}".format(**info),
-                ("A new account has been created \n"
-                 "-------------------------------\n"
-                 " Full Name: {first_name} {last_name}\n"
-                 " Login: {username}\n"
-                 " Password: {password}\n"
-                 "-------------------------------\n").format(**info)
-            )
 
         del info['password']  # remove password from dictionary before returning
         return info
@@ -226,6 +246,23 @@ class Directory(object):
             'userPassword': [(ldap3.MODIFY_REPLACE, [new_pwd])]
         }
         with Connection(self.server, user_dn, old_pwd, auto_bind=True) as connection:
+            return connection.modify(user_dn, user_record)
+
+    def set_password(self, username, new_pwd):
+        """
+        Change the password for a user
+        :param username: user name to change
+        :param new_pwd: new password to change
+        :return: True or False
+        """
+
+        user_dn = 'uid={username},{user_table},{base_dn}'.format(
+            username=username, user_table=USER_TABLE, base_dn=BASE_DN
+        )
+        user_record = {
+            'userPassword': [(ldap3.MODIFY_REPLACE, [new_pwd])]
+        }
+        with Connection(self.server, user=self.admin_user, password=self.admin_secret, auto_bind=True) as connection:
             return connection.modify(user_dn, user_record)
 
     def fetch_users(self, *user_names, full=False):

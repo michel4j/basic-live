@@ -1,7 +1,6 @@
 [project]
 dynamic = ["version"]
 name = "basic-live"
-version = "0.1.0"
 description = "A Framework for creating beamline LIMS"
 license = "MIT"
 authors = [
@@ -11,7 +10,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13,<4.0"
 dependencies = [
-    "Django",
+    "Django >= 6.1.1",
     "Markdown",
     "cryptography",
     "django-colorfield",
@@ -19,7 +18,7 @@ dependencies = [
     "django-debug-toolbar",
     "django-debug-toolbar-request-history",
     "django-formtools",
-    "django-itemlist",
+    "django-itemlist >= 2026.1.11",
     "django-memoize",
     "django-model-utils",
     "django-proxy",
@@ -44,7 +43,6 @@ dependencies = [
     "Pygments",
     "isodate",
     "fastjsonschema",
-    "poetry-dynamic-versioning[plugin] (>=1.10.0,<2.0.0)"
 ]
 
 
