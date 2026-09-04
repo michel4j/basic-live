@@ -1,0 +1,33 @@
+[project]
+dynamic = ["version"]
+name = "basic-live"
+version = "0.1.0"
+description = "A Framework for creating beamline LIMS"
+license = "MIT"
+authors = [
+    {name = "Kathryn Janzen",email = "kathryn.janzen@lightsource.ca"},
+    {name = "Michel Fodje",email = "michel.fodje@lightsource.ca"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+
+[tool.poetry]
+packages = [
+    { include = "basiclive" },
+]
+version = "0.0.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry.requires-plugins]
+poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+format = "{base}.{revision}{distance}"
