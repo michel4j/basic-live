@@ -1,16 +1,15 @@
 import json
 from datetime import timedelta
-import requests
 
+import requests
 from django import http
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.signals import user_logged_in, user_logged_out
-from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
 from django.db.models import Count, Q, Case, When, Value, BooleanField, Max
-from django.forms.models import model_to_dict
 from django.http import JsonResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
 from django.urls import reverse, reverse_lazy
 from django.utils import dateformat, timezone
@@ -19,9 +18,8 @@ from formtools.wizard.views import SessionWizardView
 from itemlist.views import ItemListView
 from proxy.views import proxy_view
 
-
 from basiclive.utils import filters
-from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, HTML2PdfMixin, PlotViewMixin
+from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin
 from . import forms, models, stats
 
 DOWNLOAD_PROXY_URL = getattr(settings, 'DOWNLOAD_PROXY_URL', "http://basiclive.core-data/download")
@@ -310,22 +308,23 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit
         return reverse_lazy('project-profile', kwargs={'username': self.kwargs['username']})
 
 
-class ProjectLabels(AdminRequiredMixin, HTML2PdfMixin, detail.DetailView):
+class ProjectLabels(AdminRequiredMixin, detail.DetailView):
     template_name = "lims/pdf/return_labels.html"
     model = models.Project
     slug_field = 'username'
     slug_url_kwarg = 'username'
 
-    def get_template_name(self):
-        return self.template_name
-
-    def get_template_context(self):
-        object = self.get_object()
-        context = {
-            'project': object,
-            'shipment': object,
-            'admin_project': models.Project.objects.filter(is_superuser=True).first()
-        }
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        sender = None
+        if settings.LIMS_USE_SCHEDULE:
+            sender = BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
+        context.update({
+            'project': self.get_object(),
+            'shipment': None,
+            'admin_project': models.Project.objects.filter(is_superuser=True).first(),
+            'sender': sender
+        })
         return context
 
 
@@ -400,8 +399,9 @@ class ShipmentDetail(OwnerRequiredMixin, detail.DetailView):
         return ctx
 
 
-class ShipmentLabels(HTML2PdfMixin, ShipmentDetail):
-    template_name = "lims/pdf/send_labels.html"
+class ShipmentLabels(OwnerRequiredMixin, detail.DetailView):
+    model = models.Shipment
+    template_name = "lims/pdf/return_labels.html"
 
     def get_template_name(self):
         if self.request.user.is_superuser:
@@ -410,13 +410,18 @@ class ShipmentLabels(HTML2PdfMixin, ShipmentDetail):
             template = 'lims/pdf/send_labels.html'
         return template
 
-    def get_template_context(self):
-        object = self.get_object()
-        context = {
-            'project': object.project,
-            'shipment': object,
-            'admin_project': models.Project.objects.filter(is_superuser=True).first()
-        }
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        shipment = self.get_object()
+        sender = None
+        if settings.LIMS_USE_SCHEDULE:
+            sender = BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
+        context.update({
+            'project': shipment.project,
+            'shipment': shipment,
+            'admin_project': models.Project.objects.filter(is_superuser=True).first(),
+            'sender': sender
+        })
         return context
 
 

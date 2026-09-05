@@ -77,7 +77,8 @@ table td {
 
 #shipping-form {
   page-break-before: always !important;
-  padding-right: 2px;
+  margin: 1.5cm;
+  padding: 0.5em;
 
   p {
     margin-top: 0;
@@ -156,4 +157,11 @@ table td {
 
 .border-black-right {
   border-right: 1px solid black !important;
+}
+
+@media print {
+    #shipping-form {
+        margin: 1.5cm;
+        break-before: page;
+    }
 }

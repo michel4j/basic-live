@@ -1,22 +1,14 @@
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import JsonResponse, HttpResponse
-from django.template.loader import get_template
-from django.conf import settings
-from django.core.files.base import ContentFile
-from django.utils.text import slugify
-
-import os
-import shutil
-import subprocess
-from tempfile import mkdtemp
 from urllib import parse
+
+from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import JsonResponse, HttpRequest
 
 from ..utils.stats import generic_stats
 
-
 TEMP_PREFIX = getattr(settings, 'PDF_TEMP_PREFIX', 'render_pdf-')
 CACHE_PREFIX = getattr(settings, 'PDF_CACHE_PREFIX', 'render-pdf')
-CACHE_TIMEOUT = getattr(settings, 'PDF_CACHE_TIMEOUT', 30), # 86400)  # 1 day
+CACHE_TIMEOUT = getattr(settings, 'PDF_CACHE_TIMEOUT', 30)  # 86400)  # 1 day
 
 
 def is_ajax(request: HttpRequest) -> bool:
@@ -27,6 +19,7 @@ def is_ajax(request: HttpRequest) -> bool:
         request.headers.get('x-requested-with') == 'XMLHttpRequest'
         or request.accepts("application/json")
     )
+
 
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """
@@ -59,45 +52,7 @@ class AsyncFormMixin(object):
             return response
 
 
-class HTML2PdfMixin(object):
-    """
-    Mixin to create a .pdf file from a HTML template.
-    """
-
-    def get_template_name(self):
-        return "lims/base.html"
-
-    def get(self, request, *args, **kwargs):
-        object = self.get_object()
-        name = slugify(object.name)
-        context = self.get_template_context()
-        context['request'] = request
-        template = get_template(self.get_template_name())
-
-        rendered_tpl = template.render(context).encode('utf-8')
-
-        tmp = mkdtemp(prefix=TEMP_PREFIX)
-        html_file = os.path.join(tmp, '{}.html'.format(name))
-        f = open(html_file, 'w')
-        f.write(rendered_tpl.decode())
-        f.close()
-        pdf_filename = "{}/{}.pdf".format(tmp, name)
-        try:
-            cmd = 'xvfb-run wkhtmltopdf -L 25mm -R 25mm -T 20mm -B 20mm -s Letter {0}.html {0}.pdf'.format(name)
-            subprocess.call(cmd.split(), cwd=tmp)
-            pdf = open(pdf_filename, 'rb').read()
-
-        finally:
-            shutil.rmtree(tmp)
-
-        pdf_file = ContentFile(pdf)
-        res = HttpResponse(pdf_file, "application/pdf")
-        res['Content-Length'] = pdf_file.size
-        res['Content-Disposition'] = 'attachment; filename="{}"'.format(os.path.basename(pdf_filename))
-        return res
-
-
-class PlotViewMixin():
+class PlotViewMixin:
     template_name = "lims/list-plots.html"
     plot_fields = []
     date_field = None
