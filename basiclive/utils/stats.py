@@ -1,7 +1,7 @@
-from django.db.models import Count
-
 import calendar
+
 import numpy
+from django.db.models import Count
 
 
 def get_histogram_points(data, range=None, bins='doane'):
@@ -113,9 +113,6 @@ def make_table(data, columns: list, rows: list, total_col=True, total_row=True, 
     :param strings: convert all cells to strings
     :return: list of lists
     """
-
-    import pprint
-    pprint.pprint(data)
 
     headers = [''] + columns
     table_data = [headers] + [
