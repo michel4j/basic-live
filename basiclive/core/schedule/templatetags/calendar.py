@@ -1,15 +1,15 @@
 import calendar
-import isodate
 import logging
 import warnings
 from datetime import datetime, timedelta
 
-import pytz
+import isodate
 import requests
-from basiclive.core.schedule.models import BeamlineSupport
 from django import template
 from django.conf import settings
 from django.utils import timezone
+
+from basiclive.core.schedule.models import BeamlineSupport
 
 logger = logging.getLogger(__name__)
 

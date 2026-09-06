@@ -59,7 +59,7 @@ class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.U
         return self.model.objects.get(address=self.kwargs.get('address'))
 
 
-class RemoteConnectionList(AdminRequiredMixin, ItemListView):
+class AccessConnectionList(AdminRequiredMixin, ItemListView):
     model = models.Access
     list_columns = ['user', 'name', 'userlist', 'status', 'created', 'end']
     list_filters = ['created', filters.YearFilter('created', reverse=True), 'userlist', 'status']
@@ -73,15 +73,15 @@ class RemoteConnectionList(AdminRequiredMixin, ItemListView):
     paginate_by = 100
 
 
-class RemoteConnectionStats(PlotViewMixin, RemoteConnectionList):
+class AccessConnectionStats(PlotViewMixin, AccessConnectionList):
     plot_fields = {'user__kind__name': {}, 'userlist__name': {}, 'status': {}}
     date_field = 'created'
     list_url = reverse_lazy("access-connections")
 
 
-class RemoteConnectionDetail(AdminRequiredMixin, detail.DetailView):
+class AccessConnectionDetail(AdminRequiredMixin, detail.DetailView):
     model = models.Access
-    template_name = "lims/entries/connection.html"
+    template_name = "acl/connection.html"
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -111,18 +111,18 @@ class EndpointList(View):
         errors = []
 
         if user_list:
-            data = msgpack.loads(request.body)
-            for conn in data:
+            connections = msgpack.loads(request.body)
+            for connection in connections:
                 try:
-                    project = models.Project.objects.get(username=conn['project'])
+                    project = models.Project.objects.get(username=connection['project'])
                 except models.Project.DoesNotExist:
-                    errors.append(f"User '{conn['project']}' not found.")
-                status = conn['status']
+                    errors.append(f"User '{connection['project']}' not found.")
+                status = connection['status']
                 try:
-                    event_time = datetime.strptime(conn['date'], "%Y-%m-%d %H:%M:%S")
+                    event_time = datetime.strptime(connection['date'], "%Y-%m-%d %H:%M:%S")
                     dt = timezone.make_aware(event_time, timezone.get_current_timezone())
                     r, created = models.Access.objects.get_or_create(
-                        name=conn['name'], userlist=user_list, user=project
+                        name=connection['name'], userlist=user_list, user=project
                     )
                     r.status = status
                     if created:

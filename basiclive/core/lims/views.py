@@ -14,6 +14,7 @@ from django.http import JsonResponse, Http404, HttpResponseRedirect, HttpRespons
 from django.urls import reverse, reverse_lazy
 from django.utils import dateformat, timezone
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail, View
 from formtools.wizard.views import SessionWizardView
@@ -1722,6 +1723,7 @@ user_logged_in.connect(record_login)
 user_logged_out.connect(record_logout)
 
 
+@method_decorator(never_cache, name='dispatch')
 class PuckLoader(AdminRequiredMixin, detail.DetailView):
     model = models.Beamline
     template_name = "lims/loader.html"

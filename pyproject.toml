@@ -18,7 +18,7 @@ dependencies = [
     "django-debug-toolbar",
     "django-debug-toolbar-request-history",
     "django-formtools",
-    "django-itemlist >= 2026.1.11",
+    "django-itemlist >= 2026.1.15",
     "django-memoize",
     "django-model-utils",
     "django-proxy",

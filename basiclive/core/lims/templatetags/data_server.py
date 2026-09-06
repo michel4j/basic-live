@@ -1,6 +1,7 @@
 import collections
-import os
 import json
+import os
+
 import numpy
 import requests
 from django import template
@@ -8,7 +9,6 @@ from django.conf import settings
 from django.urls import reverse
 
 from basiclive.utils import xdi
-
 
 GOOG20_COLORS = [
     "#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6", "#dd4477", "#66aa00", "#b82e2e",
@@ -56,7 +56,7 @@ def get_json_info(path):
     if r.status_code == 200:
         return json.loads(r.content)
     else:
-        print("File not found: {}".format(path))
+        print(f"File not found: {path}")
         return {}
 
 
@@ -66,8 +66,8 @@ def get_xdi_info(path):
     if r.status_code == 200:
         return xdi.read_xdi_data(r.content)
     else:
-        print("File not found: {}".format(url))
-        return {}
+        print(f"File not found: {url}")
+        return None
 
 
 @register.simple_tag(takes_context=True)
@@ -75,12 +75,12 @@ def mad_report(context):
     data = context['data']
     if not data.url:
         return {}
-    xdi_path = '{}/{}'.format(data.url, data.file_name)
-    mad_path = '{}/{}.mad'.format(data.url, data.name)
+    xdi_path = f'{data.url}/{data.file_name}'
+    mad_path = f'{data.url}/{data.name}.xrf'
     raw = get_xdi_info(xdi_path)
     analysis = get_json_info(mad_path)
 
-    if not raw and analysis:
+    if not (raw and analysis):
         return {}
 
     x_values = numpy.round(analysis["esf"]['energy'], 4).astype(float).tolist()
@@ -166,10 +166,13 @@ def xrf_report(context):
     data = context['data']
     if not data.url:
         return {}
-    xdi_path = '{}/{}'.format(data.url, data.file_name)
-    xrf_path = '{}/{}.xrf'.format(data.url, data.name)
+    xdi_path = f'{data.url}/{data.file_name}'
+    xrf_path = f'{data.url}/{data.name}.xrf'
     raw = get_xdi_info(xdi_path)
     analysis = get_json_info(xrf_path)
+
+    if not raw:
+        return {}
 
     if analysis:
         assignments = [
