@@ -1,4 +1,9 @@
-from django.urls import re_path
+from django.urls import path, re_path
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView
+)
 
 from . import views
 
@@ -9,6 +14,10 @@ def keyed_url(regex, view, kwargs=None, name=None):
 
 
 urlpatterns = [
+    path('auth/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/verify/', TokenVerifyView.as_view(), name='token_verify'),
+
     #re_path(r'^accesslist/$', views.AccessList.as_view()),
     #path('keys/<slug:username>', views.SSHKeys.as_view(), name='project-sshkeys'),
 

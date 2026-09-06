@@ -1583,6 +1583,7 @@ class Config(TimeStampedModel):
     beamline = models.ForeignKey(Beamline, on_delete=models.CASCADE)
     automounter = models.ForeignKey(Automounter, on_delete=models.CASCADE)
     selected = models.ForeignKey(Container, related_name='selected', on_delete=models.SET_NULL, null=True)
+    pending = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.beamline.acronym} - {self.created}"
+        return f"{self.automounter.container.kind}"

@@ -1733,7 +1733,6 @@ class PuckLoader(AdminRequiredMixin, detail.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         automounter = self.object.active_automounter()
-        print(automounter)
         config, created = models.Config.objects.get_or_create(
             beamline=self.object, automounter=automounter
         )
@@ -1741,6 +1740,7 @@ class PuckLoader(AdminRequiredMixin, detail.DetailView):
         context['projects'] = models.Project.objects.filter(
             shipments__status=models.Shipment.STATES.ON_SITE,
         )
+        models.Config.objects.filter(pk=config.pk).update(pending=False)
         if self.kwargs.get('project'):
             project = models.Project.objects.filter(name=self.kwargs['project']).first()
             if project:
@@ -1789,11 +1789,10 @@ class SelectPuck(AuthenticationRequiredMixin, View):
 
 class LoadPuck(AuthenticationRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        beamline = kwargs.get('beamline')
+        acronym = kwargs.get('beamline')
         position = kwargs.get('position')
 
-        beamline = models.Beamline.objects.get(acronym__iexact=beamline)
-        config = models.Config.objects.filter(beamline=beamline).first()
+        config = models.Config.objects.filter(beamline__acronym=acronym).first()
         if not config:
             return http.HttpResponseBadRequest("Automounter not found")
 
@@ -1810,6 +1809,7 @@ class LoadPuck(AuthenticationRequiredMixin, View):
 
         puck = config.selected
         config.selected = None
+        config.pending = True
         config.save()
 
         # remove an existing puck from position
@@ -1826,11 +1826,10 @@ class LoadPuck(AuthenticationRequiredMixin, View):
 
 class UnloadPuck(AuthenticationRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        beamline = kwargs.get('beamline')
+        acronym = kwargs.get('beamline')
         position = kwargs.get('position')
 
-        beamline = models.Beamline.objects.get(acronym__iexact=beamline)
-        config = models.Config.objects.filter(beamline=beamline).first()
+        config = models.Config.objects.filter(beamline__acronym=acronym).first()
         if not config:
             return http.HttpResponseBadRequest("Automounter not found")
 
@@ -1849,3 +1848,16 @@ class UnloadPuck(AuthenticationRequiredMixin, View):
         models.Container.objects.filter(pk=puck.pk).update(parent=None, location=None)
 
         return JsonResponse({'unloaded': puck.name, 'location': location.name})
+
+
+class CheckPending(AuthenticationRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        acronym = kwargs.get('beamline')
+        config = models.Config.objects.filter(beamline__acronym=acronym).first()
+        if not config:
+            return JsonResponse({'pending': False})
+
+        return JsonResponse({'pending': config.pending})
+
+

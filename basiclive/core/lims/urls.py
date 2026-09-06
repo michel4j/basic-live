@@ -124,6 +124,7 @@ urlpatterns = [
     path('loader/<slug:beamline>/', views.PuckLoader.as_view(), name='puck-loader'),
     path('loader/<slug:beamline>/<slug:project>/', views.PuckLoader.as_view(), name='project-puck-loader'),
     path('loader/<slug:beamline>/<slug:project>/<int:puck>/', views.SelectPuck.as_view(), name='loader-select-puck'),
+    path('pending/<slug:beamline>/', views.CheckPending.as_view(), name='loader-check-pending'),
     path('loader/<slug:beamline>/load/<slug:position>', views.LoadPuck.as_view(), name='loader-load-puck'),
     path('loader/<slug:beamline>/unload/<slug:position>', views.UnloadPuck.as_view(), name='loader-unload-puck'),
 ]

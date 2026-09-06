@@ -1,18 +1,23 @@
-from django.conf import settings
+from datetime import datetime
 
+import msgpack
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse_lazy
-
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail
 from itemlist.views import ItemListView
 
-from .forms import AccessForm
-
 from basiclive.utils import filters
-from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin
-
+from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
 from . import models
+from .forms import AccessForm
+from ...auth.middleware import get_client_address
 
 User = get_user_model()
 
@@ -77,3 +82,98 @@ class RemoteConnectionStats(PlotViewMixin, RemoteConnectionList):
 class RemoteConnectionDetail(AdminRequiredMixin, detail.DetailView):
     model = models.Access
     template_name = "lims/entries/connection.html"
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EndpointList(View):
+    """
+    Returns list of usernames that should be able to access the remote server referenced by the IP number inferred from
+    the request.
+
+    :key: r'^accesslist/$'
+    """
+
+    def get(self, request, *args, **kwargs):
+        client_addr = get_client_address(request)
+
+        userlist = models.AccessList.objects.filter(address=client_addr, active=True).first()
+
+        if userlist:
+            return JsonResponse(userlist.access_users(), safe=False)
+        else:
+            return JsonResponse([], safe=False)
+
+    def post(self, request, *args, **kwargs):
+
+        client_addr = get_client_address(request)
+        user_list = models.AccessList.objects.filter(address=client_addr, active=True).first()
+
+        errors = []
+
+        if user_list:
+            data = msgpack.loads(request.body)
+            for conn in data:
+                try:
+                    project = models.Project.objects.get(username=conn['project'])
+                except models.Project.DoesNotExist:
+                    errors.append(f"User '{conn['project']}' not found.")
+                status = conn['status']
+                try:
+                    event_time = datetime.strptime(conn['date'], "%Y-%m-%d %H:%M:%S")
+                    dt = timezone.make_aware(event_time, timezone.get_current_timezone())
+                    r, created = models.Access.objects.get_or_create(
+                        name=conn['name'], userlist=user_list, user=project
+                    )
+                    r.status = status
+                    if created:
+                        r.created = dt
+                    else:
+                        r.end = dt
+                    r.save()
+                except Exception as e:
+                    pass
+
+            return JsonResponse(user_list.access_users(), safe=False)
+        else:
+            return JsonResponse([], safe=False)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SSHKeys(View):
+    """
+    Returns SSH keys for specified user if the remote server referenced by the IP number inferred from
+    the request exists.
+
+    :key: r'^accesskeys/<username>$'
+    """
+
+    def get(self, request, *args, **kwargs):
+        user = models.Project.objects.filter(username=self.kwargs.get('username')).first()
+
+        msg = ''
+        if user:
+            msg = '\n'.join(user.sshkeys.values_list('key', flat=True)).encode()
+
+        return HttpResponse(msg, content_type='text/plain')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AccessSSHKeys(AuthenticationRequiredMixin, View):
+    """
+    Returns SSH keys for the user if the remote server referenced by the IP number inferred from
+    the request exists and the user is specifically allowed to access the host.
+
+    :key: r'^keys/<username>$'
+    """
+
+    def get(self, request, *args, **kwargs):
+
+        client_addr = get_client_address(request)
+        user_list = models.AccessList.objects.filter(address=client_addr, active=True).first()
+        user = models.Project.objects.filter(username=self.kwargs.get('username')).first()
+
+        msg = ''
+        if user and user_list and user.username in user_list.access_users():
+            msg = '\n'.join(user.sshkeys.values_list('key', flat=True)).encode()
+
+        return HttpResponse(msg, content_type='text/plain')

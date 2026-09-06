@@ -1,4 +1,5 @@
 from django.urls import path
+
 from . import views
 
 urlpatterns = [
@@ -7,4 +8,5 @@ urlpatterns = [
     path('access/history/stats/', views.RemoteConnectionStats.as_view(), name='connection-stats'),
     path('access/<str:address>/edit', views.AccessEdit.as_view(), name='access-edit'),
     path('access/connection/<int:pk>/', views.RemoteConnectionDetail.as_view(), name='access-connection-detail'),
+    path('access/keys/<slug:username>/', views.AccessSSHKeys.as_view(), name='project-sshkeys'),
 ]
