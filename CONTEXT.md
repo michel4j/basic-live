@@ -30,6 +30,10 @@ _Avoid_: System User, Hardware Project, Admin Project.
 The integration mechanism that synchronizes approved research proposals and team rosters from a central facility user office portal into BasicLIVE.
 _Avoid_: User Importer, Portal Bridge, Sync Service.
 
+**SSHKey**:
+A public cryptographic key registered by a User or Project, used by beamline workstations to authenticate operational connections.
+_Avoid_: Private Key, Host Key.
+
 ### Facility & Hardware
 
 **Beamline**:
@@ -47,7 +51,7 @@ A tracked physical consignment dispatched by a Project containing containers and
 _Avoid_: Delivery, Package, Consignment.
 
 **Container**:
-Any physical vessel with indexed locations that holds samples or sub-containers (such as shipping dewars, pucks, cassettes, or plates).
+Any physical vessel with indexed locations that holds samples or sub-containers (such as shipping dewars, pucks, cassettes, or plates). Specialized beamline UI workflows may refer colloquially to pucks or plates while manipulating generic container records.
 _Avoid_: Dewar, Puck, Tray, Cane.
 
 **Sample**:
