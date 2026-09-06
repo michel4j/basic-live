@@ -1,9 +1,10 @@
-import pytz
-from django.db import models
-from django.utils import timezone
-from django.db.models import Q, F, Value, IntegerField, TextField, Subquery, OuterRef
+import datetime
+
 from django.conf import settings
-from memoize import memoize
+from django.db import models
+from django.db.models import Subquery, OuterRef
+from django.utils import timezone
+
 from . import signals
 
 
@@ -37,6 +38,11 @@ class TMEntriesManager(TMObjectsManager):
         return super().get_queryset().active()
 
 
+DISTANT_FUTURE = timezone.make_aware(
+    datetime.datetime.max - datetime.timedelta(days=30), timezone.get_default_timezone()
+)
+
+
 class TimedModel(models.Model):
     """
     A model that manages objects that can expire, use the entries manager to work only with active
@@ -44,7 +50,7 @@ class TimedModel(models.Model):
     """
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
-    expired = models.DateTimeField(default=timezone.now().replace(year=9999), db_index=True, editable=False)
+    expired = models.DateTimeField(default=DISTANT_FUTURE, db_index=True, editable=False)
 
     objects = TMObjectsManager()
     entries = TMEntriesManager()
@@ -187,6 +193,7 @@ def unique_for_time(*args):
 
 def unique_for_profile(*args):
     return args + ('effective',)
+
 
 def unique_for_temporal(*args):
     return unique_for_time(*args) + ('effective',)

@@ -1,5 +1,6 @@
 from django.urls import path
 from django.views.decorators.cache import cache_page
+
 from . import views, ajax_views, forms
 
 urlpatterns = [
@@ -119,4 +120,10 @@ urlpatterns = [
     path('guides/new/', views.GuideCreate.as_view(), name='new-guide'),
     path('guides/<int:pk>/edit/', views.GuideEdit.as_view(), name='guide-edit'),
     path('guides/<int:pk>/delete/', views.GuideDelete.as_view(), name='guide-delete'),
+
+    path('loader/<slug:beamline>/', views.PuckLoader.as_view(), name='puck-loader'),
+    path('loader/<slug:beamline>/<slug:project>/', views.PuckLoader.as_view(), name='project-puck-loader'),
+    path('loader/<slug:beamline>/<slug:project>/<int:puck>/', views.SelectPuck.as_view(), name='loader-select-puck'),
+    path('loader/<slug:beamline>/load/<slug:position>', views.LoadPuck.as_view(), name='loader-load-puck'),
+    path('loader/<slug:beamline>/unload/<slug:position>', views.UnloadPuck.as_view(), name='loader-unload-puck'),
 ]

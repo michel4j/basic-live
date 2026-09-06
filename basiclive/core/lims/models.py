@@ -16,7 +16,6 @@ from django.db.models.functions import Coalesce, Concat
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
-
 from memoize import memoize
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
@@ -29,7 +28,6 @@ IDENTITY_FORMAT = '-%y%m'
 RESTRICT_DOWNLOADS = getattr(settings, 'RESTRICT_DOWNLOADS', False)
 SHIFT_HRS = getattr(settings, 'HOURS_PER_SHIFT', 8)
 SHIFT_SECONDS = SHIFT_HRS * 3600
-
 MAX_CONTAINER_DEPTH = getattr(settings, 'MAX_CONTAINER_DEPTH', 2)
 SAMPLE_PORT_FIELDS = [
                          "container{}__location__name".format("__".join([""] + (["parent"] * i)))
@@ -72,6 +70,15 @@ class OrphanSample(object):
         self.orphaned_datasets = []
         self.orphaned_reports = []
 
+    def reports(self, session=None):
+        if session:
+            return [
+                report for report in self.orphaned_reports
+                if report.data.filter(session=session).exists()
+            ]
+        else:
+            return self.orphaned_reports
+
 
 class Beamline(models.Model):
     """
@@ -91,7 +98,7 @@ class Beamline(models.Model):
 
     def active_session(self):
         """
-        Returns the session that is currently running on the beamline, if there is one.
+        Returns the session currently running on the beamline, if there is one.
         """
         return self.sessions.filter(pk__in=Stretch.objects.active().values_list('session__pk')).first()
 
@@ -243,6 +250,18 @@ class ProjectObjectManager(models.Manager):
         return super().get_queryset().select_related('project')
 
 
+class ShipmentQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(status__in=[Shipment.STATES.ACTIVE, Shipment.STATES.PROCESSING])
+
+    def recent(self):
+        recently = timezone.now() - timedelta(days=7)
+        return self.filter(Q(date_received__gte=recently) | Q(date_shipped__gte=recently))
+
+    def on_site(self):
+        return self.filter(status__in=[Shipment.STATES.ON_SITE, Shipment.STATES.LOADED])
+
+
 class SessionQuerySet(models.QuerySet):
     def with_duration(self):
         return self.annotate(
@@ -325,6 +344,12 @@ class Session(models.Model):
     def samples(self):
         return self.project.samples.filter(datasets__session=self).distinct()
 
+    def sample_groups(self):
+        return {
+            group: self.project.samples.filter(datasets__session=self, group=group).distinct()
+            for group in self.groups()
+        }
+
     @memoize(60)
     def is_active(self):
         return self.stretches.active().exists()
@@ -374,6 +399,11 @@ class Session(models.Model):
     def last_record_time(self):
         last_data = self.datasets.last()
         return last_data.modified if last_data else self.created
+
+    @memoize(60)
+    def first_record_time(self):
+        first_data = self.datasets.first()
+        return first_data.modified if first_data else self.created
 
     def gaps(self):
         data = list(self.datasets.order_by('start_time'))
@@ -550,7 +580,7 @@ class Shipment(TransitStatusMixin):
     carrier = models.ForeignKey(Carrier, null=True, blank=True, on_delete=models.SET_NULL, related_name='projects')
     storage_location = models.CharField(max_length=60, null=True, blank=True)
 
-    objects = ProjectObjectManager()
+    objects = ShipmentQuerySet.as_manager()
 
     def identity(self):
         return 'SHP-{:07,d}'.format(self.id).replace(',', '-')
@@ -576,7 +606,12 @@ class Shipment(TransitStatusMixin):
     def num_datasets(self):
         return self.datasets().count()
 
-    def reports(self):
+    def reports(self, session=None):
+        if session:
+            return self.project.reports.filter(
+                data__session=session,
+                data__sample__container__shipment__pk=self.pk
+            )
         return self.project.reports.filter(data__sample__container__shipment__pk=self.pk)
 
     def num_reports(self):
@@ -763,6 +798,12 @@ class ContainerQuerySet(models.QuerySet):
     def with_port(self):
         return self.annotate(port_name=Concat(*CONTAINER_PORT_FIELDS))
 
+    def on_site(self):
+        return self.filter(shipment__isnull=False, status=Container.STATES.ON_SITE)
+
+    def in_transit(self):
+        return self.filter(shipment__isnull=False, status=Container.STATES.SENT)
+
 
 class ContainerManager(models.Manager.from_queryset(ContainerQuerySet)):
     def get_queryset(self):
@@ -820,6 +861,9 @@ class Container(TransitStatusMixin):
 
     def accepted_by(self):
         return ContainerType.objects.filter(pk__in=self.kind.locations.values_list('contents', flat=True))
+
+    def accepts(self, container: 'Container'):
+        return self.kind.locations.filter(accepts=container.kind).exists()
 
     def children_by_location(self):
         return self.children.order_by('location')
@@ -1207,7 +1251,11 @@ class Sample(ProjectObjectMixin):
     def automounter(self):
         return self.container.automounter()
 
-    def reports(self):
+    def reports(self, session=None):
+        if session:
+            return AnalysisReport.objects.filter(
+                project=self.project, data__sample=self, data__session=session
+            )
         return AnalysisReport.objects.filter(project=self.project, data__sample=self)
 
     def all_requests(self):
@@ -1529,3 +1577,12 @@ class Guide(TimeStampedModel):
 
     class Meta:
         ordering = ("-staff_only", "priority",)
+
+
+class Config(TimeStampedModel):
+    beamline = models.ForeignKey(Beamline, on_delete=models.CASCADE)
+    automounter = models.ForeignKey(Automounter, on_delete=models.CASCADE)
+    selected = models.ForeignKey(Container, related_name='selected', on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f"{self.beamline.acronym} - {self.created}"

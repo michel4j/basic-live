@@ -1,8 +1,11 @@
 from urllib import parse
 
+from django import http
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import JsonResponse, HttpRequest
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 from ..utils.stats import generic_stats
 
@@ -28,6 +31,19 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """
     def test_func(self):
         return self.request.user.is_superuser
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AuthenticationRequiredMixin(object):
+    """
+    Mixin to verify that the user is logged-in without any redirects
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return http.HttpResponseForbidden()
 
 
 class AsyncFormMixin(object):

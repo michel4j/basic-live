@@ -1,4 +1,5 @@
-from django.urls import re_path, path
+from django.urls import re_path
+
 from . import views
 
 
@@ -18,4 +19,5 @@ urlpatterns = [
     keyed_url(r'^samples/(?P<beamline>[\w_-]+)/$', views.ProjectSamples.as_view(), name='project-samples'),
     keyed_url(r'^launch/(?P<beamline>[\w_-]+)/(?P<session>[\w_-]+)/$', views.LaunchSession.as_view(), name='session-launch'),
     keyed_url(r'^close/(?P<beamline>[\w_-]+)/(?P<session>[\w_-]+)/$', views.CloseSession.as_view(), name='session-close'),
+
 ]

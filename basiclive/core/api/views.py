@@ -23,7 +23,6 @@ from basiclive.core.lims.templatetags.converter import humanize_duration
 from basiclive.utils.data import parse_frames
 from basiclive.utils.signing import Signer, InvalidSignature
 
-
 if settings.LIMS_USE_SCHEDULE:
     HALF_SHIFT = int(getattr(settings, 'HOURS_PER_SHIFT', 8)/2)
 
@@ -260,7 +259,6 @@ TRANSFORMS = {
     'file_name': 'filename',
     'exposure_time': 'exposure',
 }
-
 
 
 class AddReport(VerificationMixin, View):

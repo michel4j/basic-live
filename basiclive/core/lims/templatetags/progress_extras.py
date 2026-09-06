@@ -1,6 +1,8 @@
-from django.template import Library
 from django.db.models import Q
+from django.template import Library
+
 from .. import models
+
 register = Library()
 
 
@@ -47,4 +49,9 @@ def sample_data(sample, session=None):
         'data': sample.datasets.all(),
         'reports': sample.reports().all()
     }
+
+
+@register.simple_tag
+def filter_reports(sample, session=None):
+    return sample.reports(session=session)
 

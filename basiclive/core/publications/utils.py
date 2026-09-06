@@ -1,25 +1,26 @@
-import requests
+import codecs
 import csv
-import time
 import os
 import pickle
-from xml.dom import minidom
-from pprint import pprint as print
 import re
-import itertools
-from functools import reduce
-import codecs
-from datetime import date, datetime
-from dateutil import parser
 from collections import defaultdict
+from datetime import date, datetime
+from functools import reduce
+from pprint import pprint as print
+from xml.dom import minidom
+
+import itertools
+import requests
+import time
+from dateutil import parser
 from django.conf import settings
-from django.utils import dateparse, timezone
 from django.db import transaction
 from django.db.models import Subquery, OuterRef
-
+from django.utils import dateparse, timezone
 from habanero import Crossref
-from .multidict import MultiKeyDict
+
 from . import models
+from .multidict import MultiKeyDict
 
 PDB_FACILITY_ACRONYM = getattr(settings, 'PDB_FACILITY_ACRONYM', 'CLSI')
 CONTACT_EMAIL = getattr(settings, 'CONTACT_EMAIL', 'admin@example.com')
@@ -96,7 +97,9 @@ def tag_function(entry):
     """
     return [entry['diffrn_source.pdbx_synchrotron_beamline'].split()[-1],]
 
+
 TAG_FUNCTION = getattr(settings, 'PDB_TAG_FUNCTION', tag_function)
+
 
 def flatten(d, key=''):
     prefix = f'{key}.' if key else ''

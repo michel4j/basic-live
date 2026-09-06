@@ -1,15 +1,15 @@
 from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView, list
-
 from itemlist.views import ItemListView
+
 from basiclive.utils import filters
 from basiclive.utils.mixins import AdminRequiredMixin
 from . import models, stats
 
-
 PDB_URL_TEMPLATE = getattr(settings, 'PDB_URL_TEMPLATE', 'https://www.rcsb.org/structure/{}')
 YEAR_FILTER_START = getattr(settings, 'YEAR_FILTER_START', 2005)
+
 
 class PubEntryList(AdminRequiredMixin, ItemListView):
     template_name = 'publications/list.html'
@@ -65,7 +65,6 @@ class PDBEntryList(AdminRequiredMixin, ItemListView):
         return PDB_URL_TEMPLATE.format(obj.code)
 
 
-
 class PDBEntryText(list.ListView):
     model = models.Deposition
 
@@ -108,7 +107,6 @@ class JournalList(AdminRequiredMixin, ItemListView):
     }
     paginate_by = 25
     page_title = 'Journals'
-
 
 
 class Statistics(AdminRequiredMixin, TemplateView):
