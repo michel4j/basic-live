@@ -1,6 +1,7 @@
 
 import basiclive
 from basiclive.core.lims.conf import settings as lims_settings
+from basiclive.core.schedule.conf import settings as schedule_settings
 
 
 def export_settings(request):
@@ -17,4 +18,6 @@ def export_settings(request):
         'USE_CRM': lims_settings.USE_CRM,
         'USE_ACL': lims_settings.USE_ACL,
         'SUPPORT_EMAIL': lims_settings.SUPPORT_EMAIL,
+        'MIN_SUPPORT_HOUR': schedule_settings.MIN_SUPPORT_HOUR,
+        'MAX_SUPPORT_HOUR': schedule_settings.MAX_SUPPORT_HOUR,
     }

@@ -1,27 +1,25 @@
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+import timezonefinder
+from colorfield.fields import ColorField
 from django.db import models
-from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
+from django.db.models import F, Sum
 from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from geopy import geocoders
 from model_utils import Choices
 from model_utils.models import TimeFramedModel
-from django.db.models import F, Sum
-from basiclive.utils.functions import Shifts, ShiftEnd, ShiftStart
-
-from colorfield.fields import ColorField
-from datetime import datetime, timedelta
 
 from basiclive.core.lims.models import Project, Beamline, Stretch
 from basiclive.core.schedule.conf import settings
-
-from geopy import geocoders
-from zoneinfo import ZoneInfo
-import timezonefinder
+from basiclive.utils.functions import Shifts, ShiftEnd, ShiftStart
 
 tf = timezonefinder.TimezoneFinder()
 
 MIN_SUPPORT_HOUR = settings.MIN_SUPPORT_HOUR
 MAX_SUPPORT_HOUR = settings.MAX_SUPPORT_HOUR
-APP_NAME = settings.APP_NAME
 
 
 class AccessType(models.Model):
@@ -197,7 +195,7 @@ class EmailNotification(models.Model):
         # Get user's local timezone
         if not self.pk:
             try:
-                locator = geocoders.Nominatim(user_agent=APP_NAME)
+                locator = geocoders.Nominatim(user_agent='basic-live')
                 address = "{user.city}, {user.province}, {user.country}".format(user=self.beamtime.project)
                 _, (latitude, longitude) = locator.geocode(address)
                 usertz = tf.certain_timezone_at(lat=latitude, lng=longitude)
