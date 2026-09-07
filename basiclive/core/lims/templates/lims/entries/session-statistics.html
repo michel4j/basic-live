@@ -28,13 +28,13 @@
 {% block extra_js %}
     <script type="text/javascript" src="{% static 'd3/js/d3.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'd3/js/d3-legend.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'd3/js/d3.layout.timeline.js' %}"></script>
+    <script type="text/javascript" src="{% static 'd3/js/d3.layout.timeline.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'misc/js/showdown.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'misc/js/c3.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'lims/js/mxlive-reports.min.js' %}"></script>
 
     <script type="text/javascript">
-        var report = {{ report | safe }};
+        let report = {{ report | jsonify }};
         $(document).ready(function() {
             $('#data-stats').liveReport({
                 data: report

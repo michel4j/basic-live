@@ -1,21 +1,25 @@
+import json
+
+import numpy
 from django import template
 from django.utils.safestring import mark_safe
-import json
-import numpy
+
 register = template.Library()
 
 
-def convert(o):
-    if isinstance(o, numpy.int64):
-        return int(o)
-    elif isinstance(o, numpy.float64):
-        return int(0)
-    elif isinstance(o, numpy.ndarray):
-        return o.tolist()
-    raise TypeError
+class NumpyEncoder(json.JSONEncoder):
+    """Custom encoder to convert NumPy types into standard Python types."""
+    def default(self, obj):
+        if isinstance(obj, numpy.integer):
+            return int(obj)
+        elif isinstance(obj, numpy.floating):
+            return float(obj)
+        elif isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        return super().default(obj)
 
 
 @register.filter
 def jsonify(data):
-    return mark_safe(json.dumps(data, default=convert))
+    return mark_safe(json.dumps(data, cls=NumpyEncoder))
 

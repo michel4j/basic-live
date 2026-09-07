@@ -67,7 +67,7 @@
     <script type="text/javascript" src="{% static 'misc/js/c3.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'lims/js/mxlive-reports.min.js' %}"></script>
     <script type="text/javascript">
-        var report = {{ report | jsonify }};
+        let report = {{ report | jsonify }};
         $(document).ready(function(){
             $('#data-stats').liveReport({
                 data: report
