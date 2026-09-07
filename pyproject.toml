@@ -19,7 +19,6 @@ dependencies = [
     "django-itemlist >= 2026.1.15",
     "django-memoize",
     "django-model-utils",
-    "django-proxy",
     "django-python3-ldap",
     "djangorestframework",
     "djangorestframework-simplejwt",

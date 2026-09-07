@@ -19,7 +19,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail, View
 from formtools.wizard.views import SessionWizardView
 from itemlist.views import ItemListView
-from proxy.views import proxy_view
 
 from basiclive.utils import filters
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
@@ -1607,7 +1606,16 @@ class ProxyView(View):
         remote_url = DOWNLOAD_PROXY_URL + request.path
         if kwargs.get('section') == 'archive':
             return fetch_archive(request, remote_url)
-        return proxy_view(request, remote_url)
+        r = requests.get(remote_url, params=request.GET, stream=True)
+        if r.status_code == 200:
+            resp = http.StreamingHttpResponse(
+                r.iter_content(chunk_size=8192),
+                content_type=r.headers.get('Content-Type')
+            )
+            if 'Content-Disposition' in r.headers:
+                resp['Content-Disposition'] = r.headers['Content-Disposition']
+            return resp
+        return http.HttpResponse(r.content, status=r.status_code, content_type=r.headers.get('Content-Type'))
 
 
 def fetch_archive(request, url):

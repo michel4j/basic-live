@@ -548,21 +548,6 @@ files = [
 Django = ">=3.2"
 
 [[package]]
-name = "django-proxy"
-version = "1.3.0"
-description = "A simple HTTP proxy service as a Django app"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "django-proxy-1.3.0.tar.gz", hash = "sha256:cc0cf1e95f1f3c062de0d473b15fc6d0af88aa76d7d495ddbb4e3f12a4785c11"},
-    {file = "django_proxy-1.3.0-py3-none-any.whl", hash = "sha256:ea4a0acb2a27fe237c7370a057d182677f876796d0e05a5c72453939dc5bf118"},
-]
-
-[package.dependencies]
-requests = "*"
-
-[[package]]
 name = "django-python3-ldap"
 version = "0.16.1"
 description = "Django LDAP user authentication backend for Python 3."
@@ -1372,4 +1357,4 @@ zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0"
-content-hash = "43f6b7d167c67bd62e1d97b014dc3718b4f099fa6ea6cdea77ff402763609b91"
+content-hash = "587b7da165b11bb90eec8e6615c4a4752f8f7c1f9788a6bbfd261bc4e4d3e114"
