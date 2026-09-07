@@ -1,6 +1,6 @@
 from django.template.defaultfilters import stringfilter
 from django import template
-from django.conf import settings
+from basiclive.core.lims.conf import settings
 
 register = template.Library()
 
@@ -23,4 +23,4 @@ def texsafe(value):
 
 @register.simple_tag
 def path_to_files():
-    return getattr(settings, "BASE_DIR", "/tmp")
+    return settings.BASE_DIR

@@ -5,9 +5,9 @@ import os
 import numpy
 import requests
 from django import template
-from django.conf import settings
 from django.urls import reverse
 
+from basiclive.core.lims.conf import settings
 from basiclive.utils import xdi
 
 GOOG20_COLORS = [
@@ -16,8 +16,6 @@ GOOG20_COLORS = [
     "#5574a6", "#3b3eac"
 ]
 
-
-PROXY_URL = getattr(settings, 'DOWNLOAD_PROXY_URL', "http://basiclive.core-data/download")
 
 register = template.Library()
 
@@ -51,7 +49,7 @@ def get_meta_data(data):
 
 
 def get_json_info(path):
-    url = PROXY_URL + reverse('files-proxy', kwargs={'section': 'raw', 'path': path})
+    url = settings.DOWNLOAD_PROXY_URL + reverse('files-proxy', kwargs={'section': 'raw', 'path': path})
     r = requests.get(url)
     if r.status_code == 200:
         return json.loads(r.content)
@@ -61,7 +59,7 @@ def get_json_info(path):
 
 
 def get_xdi_info(path):
-    url = PROXY_URL + reverse('files-proxy', kwargs={'section': 'raw', 'path': path})
+    url = settings.DOWNLOAD_PROXY_URL + reverse('files-proxy', kwargs={'section': 'raw', 'path': path})
     r = requests.get(url)
     if r.status_code == 200:
         return xdi.read_xdi_data(r.content)

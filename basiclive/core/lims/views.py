@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import requests
 from django import http
-from django.conf import settings
+from basiclive.core.lims.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.signals import user_logged_in, user_logged_out
@@ -19,24 +19,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail, View
 from formtools.wizard.views import SessionWizardView
 from itemlist.views import ItemListView
-
 from basiclive.utils import filters
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
 from . import forms, models, stats
 
-DOWNLOAD_PROXY_URL = getattr(settings, 'DOWNLOAD_PROXY_URL', "http://basiclive.core-data/download")
-LIMS_USE_SCHEDULE = getattr(settings, 'LIMS_USE_SCHEDULE', False)
-LIMS_USE_ACL = getattr(settings, 'LIMS_USE_ACL', False)
-LOADER_SELECT_DURATION = getattr(settings, 'LOADER_SELECT_DURATION', 5 * 60)  # Default to 5 minutes
 
-
-if LIMS_USE_SCHEDULE:
+if settings.USE_SCHEDULE:
     from basiclive.core.schedule.models import AccessType, BeamlineSupport, Beamtime
 
-    MIN_SUPPORT_HOUR = getattr(settings, 'MIN_SUPPORT_HOUR', 0)
-    MAX_SUPPORT_HOUR = getattr(settings, 'MAX_SUPPORT_HOUR', 24)
-
-if LIMS_USE_ACL:
+if settings.USE_ACL:
     from basiclive.core.acl.models import Access, AccessList
 
 
@@ -321,7 +312,7 @@ class ProjectLabels(AdminRequiredMixin, detail.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         sender = None
-        if settings.LIMS_USE_SCHEDULE:
+        if settings.USE_SCHEDULE:
             sender = BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
         context.update({
             'project': self.get_object(),
@@ -418,7 +409,7 @@ class ShipmentLabels(OwnerRequiredMixin, detail.DetailView):
         context = super().get_context_data(**kwargs)
         shipment = self.get_object()
         sender = None
-        if settings.LIMS_USE_SCHEDULE:
+        if settings.USE_SCHEDULE:
             sender = BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
         context.update({
             'project': shipment.project,
@@ -1603,7 +1594,7 @@ class GuideDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
 
 class ProxyView(View):
     def get(self, request, *args, **kwargs):
-        remote_url = DOWNLOAD_PROXY_URL + request.path
+        remote_url = settings.DOWNLOAD_PROXY_URL + request.path
         if kwargs.get('section') == 'archive':
             return fetch_archive(request, remote_url)
         r = requests.get(remote_url, params=request.GET, stream=True)
@@ -1778,7 +1769,7 @@ class SelectPuck(AuthenticationRequiredMixin, View):
             beamline=beamline, automounter=beamline.active_automounter()
         )
         elapsed = timezone.now() - config.modified
-        if config.selected and elapsed.total_seconds() > LOADER_SELECT_DURATION:
+        if config.selected and elapsed.total_seconds() > settings.LOADER_SELECT_DURATION:
             config.selected = None
             config.save()
 
@@ -1810,7 +1801,7 @@ class LoadPuck(AuthenticationRequiredMixin, View):
             return http.HttpResponseBadRequest("No puck selected")
 
         elapsed = timezone.now() - config.modified
-        if elapsed.total_seconds() > LOADER_SELECT_DURATION:
+        if elapsed.total_seconds() > settings.LOADER_SELECT_DURATION:
             return http.HttpResponseBadRequest("Puck selection expired")
 
         location = config.automounter.kind.locations.filter(name=position).first()

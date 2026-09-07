@@ -5,7 +5,7 @@ from crispy_forms.bootstrap import StrictButton
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Field, Layout
 from django import forms
-from django.conf import settings
+from basiclive.core.lims.conf import settings
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
@@ -136,7 +136,7 @@ class NewProjectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(NewProjectForm, self).__init__(*args, **kwargs)
 
-        if getattr(settings, 'LDAP_SEND_EMAILS', False):
+        if settings.SEND_EMAILS:
             self.fields['password'].help_text += _(' and sent to staff once this form is submitted')
         self.fields['kind'].initial = ProjectType.objects.first()
         self.body = BodyHelper(self)

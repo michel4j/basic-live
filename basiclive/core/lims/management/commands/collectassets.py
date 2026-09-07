@@ -9,8 +9,9 @@ import requests
 from urllib.parse import urljoin
 from pathlib import Path
 from django.apps import apps as django_apps, apps
-from django.conf import settings
 from django.core.management.base import BaseCommand
+
+from basiclive.core.lims.conf import settings
 
 
 def download_asset(src_url, path: Path | str, sri: str | None = None):

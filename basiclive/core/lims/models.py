@@ -6,7 +6,6 @@ import os
 from collections import OrderedDict, defaultdict
 from datetime import timedelta
 
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -20,15 +19,25 @@ from memoize import memoize
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
 
+from basiclive.core.lims.conf import settings
 from basiclive.utils.data import parse_frames, frame_ranges
 from basiclive.utils.encrypt import encrypt
 from basiclive.utils.functions import ShiftEnd, ShiftStart
 
+
+def get_hours_per_shift() -> int:
+    try:
+        from basiclive.core.schedule.conf import settings as schedule_settings
+        return schedule_settings.HOURS_PER_SHIFT
+    except (ImportError, AttributeError):
+        return 8
+
+
 IDENTITY_FORMAT = '-%y%m'
-RESTRICT_DOWNLOADS = getattr(settings, 'RESTRICT_DOWNLOADS', False)
-SHIFT_HRS = getattr(settings, 'HOURS_PER_SHIFT', 8)
+RESTRICT_DOWNLOADS = settings.RESTRICT_DOWNLOADS
+SHIFT_HRS = get_hours_per_shift()
 SHIFT_SECONDS = SHIFT_HRS * 3600
-MAX_CONTAINER_DEPTH = getattr(settings, 'MAX_CONTAINER_DEPTH', 2)
+MAX_CONTAINER_DEPTH = settings.MAX_CONTAINER_DEPTH
 SAMPLE_PORT_FIELDS = [
                          "container{}__location__name".format("__".join([""] + (["parent"] * i)))
                          for i in reversed(range(MAX_CONTAINER_DEPTH))

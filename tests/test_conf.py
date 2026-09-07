@@ -5,13 +5,8 @@ from django.test import SimpleTestCase, override_settings
 from basiclive.utils.conf import AppSettings
 
 
-if not django_settings.configured:
-    django_settings.configure(
-        SECRET_KEY="test-secret-key",
-        BASICLIVE_TESTAPP={
-            "CUSTOM_OPTION": "from_configured",
-        },
-    )
+from tests import setup_django
+setup_django()
 
 
 class AppSettingsTests(SimpleTestCase):
