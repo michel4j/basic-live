@@ -1,17 +1,17 @@
 import re
-from django.conf import settings
 from django.http import Http404
 from django.utils.deprecation import MiddlewareMixin
 
+from basiclive.core.acl.conf import settings
 from basiclive.utils.network import IPAddressList, get_client_address
 
 
 def get_trusted_urls():
-    return getattr(settings, 'TRUSTED_URLS', [])
+    return settings.TRUSTED_URLS
 
 
 def get_trusted_ips():
-    return getattr(settings, 'TRUSTED_IPS', ['127.0.0.1/32'])
+    return settings.TRUSTED_IPS
 
 
 class TrustedAccessMiddleware(MiddlewareMixin):

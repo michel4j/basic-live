@@ -12,6 +12,8 @@ def setup_django():
                 "django.contrib.sessions",
                 "basiclive.core.lims",
                 "basiclive.core.schedule",
+                "basiclive.core.acl",
+                "basiclive.core.api",
             ],
             AUTH_USER_MODEL="lims.Project",
             DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},

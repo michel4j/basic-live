@@ -89,6 +89,11 @@ class AppSettingsTests(SimpleTestCase):
         self.assertIn("FOO", dir(app_settings))
         self.assertIn("NUM", dir(app_settings))
 
+        # iteration and keys
+        self.assertEqual(list(app_settings), ["FOO", "NUM"])
+        self.assertEqual(list(app_settings.keys()), ["FOO", "NUM"])
+        self.assertEqual(dict(app_settings), {"FOO": "bar", "NUM": 123})
+
         # repr
         self.assertEqual(repr(app_settings), "<AppSettings namespace='BASICLIVE_CONTAINER_TEST'>")
 

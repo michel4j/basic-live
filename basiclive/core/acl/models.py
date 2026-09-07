@@ -1,14 +1,23 @@
 import os
 from datetime import timedelta
 
-from django.conf import settings
 from django.db import models
 from django.utils import timezone
 from model_utils import Choices
 
-if settings.LIMS_USE_SCHEDULE:
+from basiclive.core.lims.conf import settings as lims_settings
+
+
+def get_hours_per_shift() -> int:
+    try:
+        from basiclive.core.schedule.conf import settings as schedule_settings
+        return schedule_settings.HOURS_PER_SHIFT
+    except (ImportError, AttributeError):
+        return 8
+
+
+if lims_settings.USE_SCHEDULE:
     from basiclive.core.schedule.models import Beamtime
-    HOURS_PER_SHIFT = getattr(settings, 'HOURS_PER_SHIFT', 8)
 
 
 def get_storage_path(instance, filename):
@@ -35,17 +44,18 @@ class AccessList(models.Model):
         return ' | '.join(self.scheduled())
 
     def scheduled(self):
-        if settings.LIMS_USE_SCHEDULE:
+        if lims_settings.USE_SCHEDULE:
             now = timezone.localtime()
+            slot = get_hours_per_shift()
             return list(Beamtime.objects.filter(cancelled=False, access__remote=True, beamline__in=self.beamline.all(),
                                                 start__lte=now,
-                                                end__gte=now - timedelta(hours=int(HOURS_PER_SHIFT / 2))).values_list(
+                                                end__gte=now - timedelta(hours=int(slot / 2))).values_list(
                 'project__username', flat=True))
         return []
 
     def access_users(self):
         users = list(self.users.values_list('username', flat=True))
-        if settings.LIMS_USE_SCHEDULE:
+        if lims_settings.USE_SCHEDULE:
             users += self.scheduled()
         return users
 

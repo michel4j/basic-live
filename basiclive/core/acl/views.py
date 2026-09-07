@@ -1,13 +1,14 @@
 from datetime import datetime
 
 import msgpack
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+
+from basiclive.core.lims.conf import settings as lims_settings
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail
@@ -41,7 +42,7 @@ class AccessListView(AdminRequiredMixin, ItemListView):
     page_title = 'Access Endpoints'
 
     def get_list_columns(self):
-        if settings.LIMS_USE_SCHEDULE and 'current_users' in self.list_columns:
+        if lims_settings.USE_SCHEDULE and 'current_users' in self.list_columns:
             self.list_columns[self.list_columns.index('current_users')] = 'scheduled_users'
         return self.list_columns
 

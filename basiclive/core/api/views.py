@@ -6,7 +6,6 @@ from datetime import timedelta
 import msgpack
 import requests
 from django import http
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.http import JsonResponse
@@ -17,17 +16,27 @@ from django.utils.encoding import force_str
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
+from basiclive.core.lims.conf import settings as lims_settings
 from basiclive.core.lims.models import ActivityLog, Beamline, Container, Automounter, Data, DataType
 from basiclive.core.lims.models import AnalysisReport, Project, Session
 from basiclive.core.lims.templatetags.converter import humanize_duration
 from basiclive.utils.data import parse_frames
 from basiclive.utils.signing import Signer, InvalidSignature
 
-if settings.LIMS_USE_SCHEDULE:
-    HALF_SHIFT = int(getattr(settings, 'HOURS_PER_SHIFT', 8)/2)
 
-PROXY_URL = getattr(settings, 'DOWNLOAD_PROXY_URL', '')
-MAX_CONTAINER_DEPTH = getattr(settings, 'MAX_CONTAINER_DEPTH', 2)
+def get_hours_per_shift() -> int:
+    try:
+        from basiclive.core.schedule.conf import settings as schedule_settings
+        return schedule_settings.HOURS_PER_SHIFT
+    except (ImportError, AttributeError):
+        return 8
+
+
+if lims_settings.USE_SCHEDULE:
+    HALF_SHIFT = int(get_hours_per_shift() / 2)
+
+PROXY_URL = lims_settings.DOWNLOAD_PROXY_URL
+MAX_CONTAINER_DEPTH = lims_settings.MAX_CONTAINER_DEPTH
 
 
 def make_secure_path(path):
@@ -132,7 +141,7 @@ class LaunchSession(VerificationMixin, View):
             raise http.Http404("Beamline does not exist.")
 
         end_time = None
-        if settings.LIMS_USE_SCHEDULE:
+        if lims_settings.USE_SCHEDULE:
             now = timezone.now()
             beamtime = project.beamtime.filter(beamline=beamline, start__lte=now + timedelta(hours=HALF_SHIFT),
                                                end__gte=now - timedelta(hours=HALF_SHIFT))

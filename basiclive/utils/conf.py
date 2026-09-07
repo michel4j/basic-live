@@ -57,6 +57,12 @@ class AppSettings:
         except AttributeError:
             return default
 
+    def __iter__(self):
+        return iter(self._defaults)
+
+    def keys(self):
+        return self._defaults.keys()
+
     def __contains__(self, name: str) -> bool:
         return name in self._defaults
 
