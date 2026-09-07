@@ -1,17 +1,17 @@
 from urllib import parse
 
 from django import http
-from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import JsonResponse, HttpRequest
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
+from basiclive.utils.conf import settings
 from ..utils.stats import generic_stats
 
-TEMP_PREFIX = getattr(settings, 'PDF_TEMP_PREFIX', 'render_pdf-')
-CACHE_PREFIX = getattr(settings, 'PDF_CACHE_PREFIX', 'render-pdf')
-CACHE_TIMEOUT = getattr(settings, 'PDF_CACHE_TIMEOUT', 30)  # 86400)  # 1 day
+TEMP_PREFIX = settings.PDF_TEMP_PREFIX
+CACHE_PREFIX = settings.PDF_CACHE_PREFIX
+CACHE_TIMEOUT = settings.PDF_CACHE_TIMEOUT
 
 
 def is_ajax(request: HttpRequest) -> bool:

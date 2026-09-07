@@ -1,10 +1,18 @@
 from django.db import models
 from django.db.models import fields, FloatField, Aggregate
-from django.conf import settings
 from django.utils import timezone
 from datetime import datetime
 
-SHIFT = getattr(settings, "HOURS_PER_SHIFT", 8)
+
+def get_hours_per_shift() -> int:
+    try:
+        from basiclive.core.schedule.conf import settings as schedule_settings
+        return schedule_settings.HOURS_PER_SHIFT
+    except (ImportError, AttributeError):
+        return 8
+
+
+SHIFT = get_hours_per_shift()
 SHIFT_DURATION = '{:d} hour'.format(SHIFT)
 OFFSET = -timezone.make_aware(datetime.now(), timezone.get_default_timezone()).utcoffset().total_seconds()
 
@@ -73,6 +81,7 @@ class ShiftStart(models.Func):
 
     def as_postgresql(self, compiler, connection):
         self.arg_joiner = " - "
+        shift_duration = '{:d} hour'.format(get_hours_per_shift())
         return self.as_sql(
             compiler, connection, function="to_timestamp",
             template=(
@@ -80,7 +89,7 @@ class ShiftStart(models.Func):
                 "   floor((EXTRACT(epoch FROM %(expressions)s)) / EXTRACT(epoch FROM interval '{shift}'))"
                 "   * EXTRACT(epoch FROM interval '{shift}') {offset:+}"
                 ")"
-            ).format(shift=SHIFT_DURATION, offset=OFFSET)
+            ).format(shift=shift_duration, offset=OFFSET)
         )
 
 
@@ -90,6 +99,7 @@ class ShiftEnd(models.Func):
 
     def as_postgresql(self, compiler, connection):
         self.arg_joiner = " - "
+        shift_duration = '{:d} hour'.format(get_hours_per_shift())
         return self.as_sql(
             compiler, connection, function="to_timestamp",
             template=(
@@ -97,7 +107,7 @@ class ShiftEnd(models.Func):
                 "   ceil((EXTRACT(epoch FROM %(expressions)s)) / EXTRACT(epoch FROM interval '{shift}'))"
                 "   * EXTRACT(epoch FROM interval '{shift}') {offset:+}"
                 ")"
-            ).format(shift=SHIFT_DURATION, offset=OFFSET)
+            ).format(shift=shift_duration, offset=OFFSET)
         )
 
 
@@ -119,6 +129,7 @@ class ShiftIndex(models.Func):
 
     def as_postgresql(self, compiler, connection):
         self.arg_joiner = " - "
+        shift = get_hours_per_shift()
         return self.as_sql(
             compiler, connection, function="floor",
             template=(
@@ -132,7 +143,7 @@ class ShiftIndex(models.Func):
                 "       )"
                 "   )) / {shift}"
                 ")::int"
-            ).format(shift=SHIFT, offset=-OFFSET)
+            ).format(shift=shift, offset=-OFFSET)
         )
 
 

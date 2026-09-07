@@ -112,3 +112,13 @@ class AppSettings:
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} namespace={self._namespace!r}>"
+
+
+DEFAULTS: dict[str, Any] = {
+    "TRUSTED_PROXIES": 2,
+    "PDF_TEMP_PREFIX": "render_pdf-",
+    "PDF_CACHE_PREFIX": "render-pdf",
+    "PDF_CACHE_TIMEOUT": 30,
+}
+
+settings = AppSettings("UTILS", DEFAULTS)

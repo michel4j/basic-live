@@ -1,5 +1,5 @@
 from ipaddress import ip_address, ip_network
-from django.conf import settings
+from basiclive.utils.conf import settings
 
 
 class IPAddressList(list):
@@ -12,8 +12,16 @@ class IPAddressList(list):
         return any(ip in net for net in self)
 
 
+def get_trusted_proxies() -> int:
+    try:
+        from basiclive.core.acl.conf import settings as acl_settings
+        return acl_settings.TRUSTED_PROXIES
+    except (ImportError, AttributeError):
+        return settings.TRUSTED_PROXIES
+
+
 def get_client_address(request):
-    depth = getattr(settings, 'TRUSTED_PROXIES', 2)
+    depth = get_trusted_proxies()
     if 'HTTP_X_FORWARDED_FOR' in request.META:
         header = request.META['HTTP_X_FORWARDED_FOR']
         levels = [x.strip() for x in header.split(',')]
