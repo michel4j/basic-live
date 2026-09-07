@@ -1,13 +1,11 @@
 import os
 import random
-import string
 import secrets
+import string
 
 import ldap3
 from django.conf import settings
-from django.core.mail import mail_managers
 from ldap3 import Server, Connection
-
 
 BASE_DN = getattr(settings, 'LDAP_BASE_DN', 'dc=demo1,dc=freeipa,dc=org')
 SERVER_URI = getattr(settings, 'LDAP_SERVER_URI', 'ipa.demo1.freeipa.org')
@@ -17,7 +15,8 @@ USER_TABLE = getattr(settings, 'LDAP_USER_TABLE', 'ou=People')
 USER_ROOT = getattr(settings, 'LDAP_USER_ROOT', '/home')
 GROUP_TABLE = getattr(settings, 'LDAP_GROUP_TABLE', 'ou=Groups')
 USER_SHELL = getattr(settings, 'LDAP_USER_SHELL', '/bin/bash')
-EMAIL_NEW_ACCOUNTS = getattr(settings, 'LDAP_SEND_EMAILS', False)
+WORDS_DICTIONARY = getattr(settings, 'LDAP_WORDS_DICTIONARY', '/usr/share/dict/words')
+PASSPHRASE_SEPARATORS = getattr(settings, 'LDAP_PASSPHRASE_SEPARATORS', ' -/')
 USER_ATTRIBUTES = [
     'cn', 'uid', 'uidNumber', 'gidNumber',
     'homeDirectory', 'loginShell', 'description',

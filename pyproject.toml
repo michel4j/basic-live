@@ -43,6 +43,7 @@ dependencies = [
     "Pygments",
     "isodate",
     "fastjsonschema",
+    "django-allauth[mfa,socialaccount] (>=65.19.2,<66.0.0)",
 ]
 
 
