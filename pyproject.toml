@@ -31,7 +31,6 @@ dependencies = [
     "msgpack",
     "numpy",
     "python-dateutil",
-    "pytz",
     "requests",
     "timezonefinder",
     "isodate",

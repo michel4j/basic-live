@@ -14,7 +14,8 @@ from datetime import datetime, timedelta
 from basiclive.core.lims.models import Project, Beamline, Stretch
 
 from geopy import geocoders
-import timezonefinder, pytz
+from zoneinfo import ZoneInfo
+import timezonefinder
 
 tf = timezonefinder.TimezoneFinder()
 
@@ -199,11 +200,12 @@ class EmailNotification(models.Model):
                 locator = geocoders.Nominatim(user_agent=APP_NAME)
                 address = "{user.city}, {user.province}, {user.country}".format(user=self.beamtime.project)
                 _, (latitude, longitude) = locator.geocode(address)
-                usertz = tf.certain_timezone_at(lat=latitude, lng=longitude) or settings.TIME_ZONE
-            except:
-                usertz = settings.TIME_ZONE
+                usertz = tf.certain_timezone_at(lat=latitude, lng=longitude)
+                tz = ZoneInfo(usertz) if usertz else timezone.get_current_timezone()
+            except Exception:
+                tz = timezone.get_current_timezone()
             t = self.beamtime.start - timedelta(days=7 + (self.beamtime.start.weekday() > 4 and self.beamtime.start.weekday() - 4 or 0))
-            self.send_time = pytz.timezone(usertz).localize(datetime(year=t.year, month=t.month, day=t.day, hour=10))
+            self.send_time = timezone.make_aware(datetime(year=t.year, month=t.month, day=t.day, hour=10), timezone=tz)
             self.email_subject = self.beamtime.info_subject()
             self.email_body = self.beamtime.info_body()
 
