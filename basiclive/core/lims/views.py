@@ -3,7 +3,6 @@ from datetime import timedelta
 
 import requests
 from django import http
-from basiclive.core.lims.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.signals import user_logged_in, user_logged_out
@@ -19,10 +18,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail, View
 from formtools.wizard.views import SessionWizardView
 from itemlist.views import ItemListView
+
+from basiclive.core.lims.conf import settings
 from basiclive.utils import filters
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
 from . import forms, models, stats
-
 
 if settings.USE_SCHEDULE:
     from basiclive.core.schedule.models import AccessType, BeamlineSupport, Beamtime
@@ -65,6 +65,14 @@ class ProjectDetail(UserPassesTestMixin, detail.DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ProjectDetail, self).get_context_data(**kwargs)
+
+        # Add lims configuration
+        context.update({
+            'USE_SCHEDULE': settings.USE_SCHEDULE,
+            'USE_PUBLICATIONS': settings.USE_PUBLICATIONS,
+            'USE_CRM': settings.USE_CRM,
+            'USE_ACL': settings.USE_ACL,
+        })
         now = timezone.now()
         one_year_ago = now - timedelta(days=365)
         project = self.request.user
@@ -79,7 +87,7 @@ class ProjectDetail(UserPassesTestMixin, detail.DetailView):
             container_count=Count('containers', distinct=True),
         ).order_by('status', '-date_shipped', '-created').prefetch_related('project')
 
-        if LIMS_USE_SCHEDULE:
+        if settings.USE_SCHEDULE:
             access_types = AccessType.objects.all()
             beamtimes = project.beamtime.filter(end__gte=now, cancelled=False).with_duration().annotate(
                 current=Case(When(start__lte=now, then=Value(True)), default=Value(False), output_field=BooleanField())
@@ -150,8 +158,8 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
         access_info = []
         connections = Access.objects.none()
         sessions = models.Session.objects.none()
-        active_access = Access.objects.none() if not LIMS_USE_ACL else Access.objects.filter(status__iexact=Access.STATES.CONNECTED)
-        if LIMS_USE_SCHEDULE:
+        active_access = Access.objects.none() if not settings.USE_ACL else Access.objects.filter(status__iexact=Access.STATES.CONNECTED)
+        if settings.USE_SCHEDULE:
             context.update(
                 access_types=AccessType.objects.all(),
                 support=BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
@@ -165,13 +173,13 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
                 )
                 sessions |= bt_sessions
                 # Check if the scheduled project is currently connected
-                if LIMS_USE_SCHEDULE and LIMS_USE_ACL:
-                    bt_conns = LIMS_USE_ACL and active_access.filter(
+                if settings.USE_SCHEDULE and settings.USE_ACL:
+                    bt_conns = settings.USE_ACL and active_access.filter(
                         user=bt.project, userlist__pk__in=bt.beamline.access_lists.values_list('pk', flat=True)
                     )
                     connections |= bt_conns
                 else:
-                    bt_conns = access_access.none()
+                    bt_conns = active_access.none()
 
                 access_info.append({
                     'user': bt.project,
@@ -183,7 +191,7 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
 
         # Check who has an active session
         for session in active_sessions.exclude(pk__in=[s.pk for s in sessions]):
-            if LIMS_USE_ACL:
+            if settings.USE_ACL:
                 ss_conns = active_access.filter(
                     user=session.project, userlist__pk__in=session.beamline.access_lists.values_list('pk', flat=True)
                 )
@@ -199,7 +207,7 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
             })
 
         # Users remotely connected, but not scheduled and without an active session
-        if LIMS_USE_ACL:
+        if settings.USE_ACL:
             for user in active_access.exclude(pk__in=[c.pk for c in connections]).values_list('user', flat=True).distinct():
                 user_conns = active_access.exclude(pk__in=[c.pk for c in connections]).filter(user__pk=user)
                 access_info.append({
@@ -212,7 +220,7 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
 
         for i, conn in enumerate(access_info):
             access_info[i]['shipments'] = shipments.filter(project=conn['user']).count()
-            if LIMS_USE_ACL:
+            if settings.USE_ACL:
                 connections = Access.objects.filter(pk__in=access_info[i]['connections'])
                 access_info[i]['connections'] = ({
                     access.name: access_info[i]['connections'].filter(userlist=access)

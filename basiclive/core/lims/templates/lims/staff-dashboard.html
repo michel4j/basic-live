@@ -35,12 +35,7 @@
 {% endblock %}
 
 {% block object_tools %}
-    {% get_setting "LIMS_USE_SCHEDULE" as schedule %}
-    {% get_setting "LIMS_USE_PUBLICATIONS" as publications %}
-    {% get_setting "LIMS_USE_CRM" as crm %}
-    {% get_setting "LIMS_USE_ACL" as acl %}
-
-    {% if acl %}
+    {% if USE_ACL %}
         <a  href="{% url 'access-list' %}">
             {% show_icon label="Access" icon="ti ti-md ti-rss-alt" %}
         </a>
@@ -52,17 +47,17 @@
         {% show_icon label="Accounts" icon="ti ti-md ti-user" %}
     </a>
 
-    {% if schedule %}
+    {% if USE_SCHEDULE %}
         <a  href="{% url 'schedule' %}">
             {% show_icon label="Schedule" icon="ti ti-md ti-time" %}
         </a>
     {% endif %}
-    {% if publications %}
+    {% if USE_PUBLICATIONS %}
         <a  href="{% url 'pub-entry-list' %}">
             {% show_icon label="Publications" icon="ti ti-md ti-layout-list-post" %}
         </a>
     {% endif %}
-    {% if crm %}
+    {% if USE_CRM %}
         <a href="{% url 'supportrecord-list' %}" title="User Support">
             {% show_icon label="Support" icon="ti ti-md ti-headphone-alt" %}
         </a>
@@ -147,7 +142,7 @@
         </div>
 
         <div class="col-12 col-md-3">
-          {% if support %}
+          {% if USE_CRM %}
             <div class="card mb-4">
                 <div class="card-header p-1 text-center text-wide text-muted"><small>LOCAL CONTACT</small></div>
                 <div class="list-group list-group-flush">
@@ -164,8 +159,7 @@
                                 </span>
                             </div>
                             <div class="tools-box ml-auto">
-                                {% get_setting "LIMS_USE_CRM" as crm %}
-                                {% if crm %}
+                                {% if USE_CRM %}
                                 <a href="#!" data-form-link="{% url 'new-supportrecord' %}" title="Record User Support">
                                     {% show_icon label='Support' icon='ti ti-md ti-headphone-alt' badge='+' color='primary' %}
                                 </a>
