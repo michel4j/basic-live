@@ -13,46 +13,50 @@ import itertools
 import requests
 import time
 from datetime import datetime
-from django.conf import settings
 from django.db import transaction
 from django.db.models import Subquery, OuterRef
 from django.utils import dateparse, timezone
 from habanero import Crossref
 
+from basiclive.core.publications.conf import settings
 from . import models
 from .multidict import MultiKeyDict
 
-PDB_FACILITY_ACRONYM = getattr(settings, 'PDB_FACILITY_ACRONYM', 'CLSI')
-CONTACT_EMAIL = getattr(settings, 'CONTACT_EMAIL', 'admin@example.com')
-CROSSREF_API_KEY = getattr(settings, 'CROSSREF_API_KEY', None)
-CROSSREF_THROTTLE = getattr(settings, 'CROSSREF_THROTTLE', 1)  # time delay between crossref calls
-CROSSREF_BATCH_SIZE = getattr(settings, 'CROSSREF_THROTTLE', 10)
-GOOGLE_API_KEY = getattr(settings, 'GOOGLE_API_KEY', None)
+PDB_FACILITY_ACRONYM = settings.PDB_FACILITY_ACRONYM
+CONTACT_EMAIL = settings.CONTACT_EMAIL
+CROSSREF_API_KEY = settings.CROSSREF_API_KEY
+CROSSREF_THROTTLE = settings.CROSSREF_THROTTLE
+CROSSREF_BATCH_SIZE = settings.CROSSREF_BATCH_SIZE
+GOOGLE_API_KEY = settings.GOOGLE_API_KEY
 
 
 CROSSREF_EVENTS_URL = "https://api.eventdata.crossref.org/v1/events/distinct"
 CROSSREF_CITATIONS_URL = "https://www.crossref.org/openurl/"
-PDB_SEARCH_URL = getattr(settings, 'PDB_SEARCH_URL', "https://search.rcsb.org/rcsbsearch/v2/query")
-PDB_REPORT_URL = getattr(settings, 'PDB_REPORT_URL', "https://data.rcsb.org/graphql")
-GOOGLE_BOOKS_API = getattr(settings, 'GOOGLE_BOOKS_API', "https://www.googleapis.com/books/v1/volumes")
-SCIMAGO_URL = getattr(settings, 'SCIMAGO_URL', "https://www.scimagojr.com/journalrank.php")
+PDB_SEARCH_URL = settings.PDB_SEARCH_URL
+PDB_REPORT_URL = settings.PDB_REPORT_URL
+GOOGLE_BOOKS_API = settings.GOOGLE_BOOKS_API
+SCIMAGO_URL = settings.SCIMAGO_URL
 
-SEARCH_JSON = {
-  "query": {
-    "type": "terminal",
-    "service": "text",
-    "parameters": {
-      "operator": "exact_match",
-      "negation": False,
-      "value": "{}".format(PDB_FACILITY_ACRONYM),
-      "attribute": "diffrn_source.pdbx_synchrotron_site"
+def get_search_json():
+    return {
+        "query": {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+                "operator": "exact_match",
+                "negation": False,
+                "value": "{}".format(settings.PDB_FACILITY_ACRONYM),
+                "attribute": "diffrn_source.pdbx_synchrotron_site"
+            }
+        },
+        "return_type": "entry",
+        "request_options": {
+            "return_all_hits": True
+        }
     }
-  },
-  "return_type": "entry",
-  "request_options": {
-    "return_all_hits": True
-  }
-}
+
+
+SEARCH_JSON = get_search_json()
 
 REPORT_QUERY = """{{
   entries(entry_ids: [{0}]) {{
@@ -95,10 +99,13 @@ def tag_function(entry):
     :param entry:
     :return:
     """
-    return [entry['diffrn_source.pdbx_synchrotron_beamline'].split()[-1],]
+    func = settings.PDB_TAG_FUNCTION
+    if callable(func):
+        return func(entry)
+    return [entry['diffrn_source.pdbx_synchrotron_beamline'].split()[-1]]
 
 
-TAG_FUNCTION = getattr(settings, 'PDB_TAG_FUNCTION', tag_function)
+TAG_FUNCTION = tag_function
 
 
 def flatten(d, key=''):
@@ -494,7 +501,7 @@ def fetch_deposition_codes():
     """
     Retrieve all PDB Codes for the facility as a list of strings
     """
-    response = requests.post(PDB_SEARCH_URL, json=SEARCH_JSON)
+    response = requests.post(settings.PDB_SEARCH_URL, json=get_search_json())
 
     if response.status_code == 200:
         return [entry['identifier'] for entry in response.json()['result_set']]
@@ -512,7 +519,7 @@ def fetch_depositions(codes):
     params = REPORT_QUERY
     params = params.format(', '.join(['"{}"'.format(pdb) for pdb in codes]))
 
-    response = requests.post(PDB_REPORT_URL, json={'query': params})
+    response = requests.post(settings.PDB_REPORT_URL, json={'query': params})
 
     if response.status_code == 200:
         return response.json()['data']['entries']
@@ -539,7 +546,7 @@ def create_depositions(entries):
 
     for entry in entries:
         for i, src in enumerate(entry['diffrn_source']):
-            if src['pdbx_synchrotron_site'] == PDB_FACILITY_ACRONYM:
+            if src['pdbx_synchrotron_site'] == settings.PDB_FACILITY_ACRONYM:
                 break
         for k in ['diffrn_source', 'diffrn_detector']:
             entry[k] = entry.get(k) and entry.get(k, [])[i] or None
@@ -594,8 +601,8 @@ def fetch_book(isbn_list):
 
     for isbn in isbn_list:
         isbn = re.sub(r'[\s_-]', '', isbn)
-        params = {'q': 'isbn:{0}'.format(isbn), 'key': GOOGLE_API_KEY}
-        response = requests.get(GOOGLE_BOOKS_API, params=params)
+        params = {'q': 'isbn:{0}'.format(isbn), 'key': settings.GOOGLE_API_KEY}
+        response = requests.get(settings.GOOGLE_BOOKS_API, params=params)
         if response.status_code == requests.codes.ok:
             result = response.json()
             if result['totalItems'] == 0:
@@ -638,7 +645,7 @@ def create_publications(doi_list):
         return {'journals': 0, 'publications': 0}
 
     # fetch metadata from CrossRef
-    cr = CrossRef(mailto=CONTACT_EMAIL, ua_string='MxLIVE')
+    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='MxLIVE')
     results = cr.works(ids=pending_dois)
     # fix inconsistent json from works
     results = results if isinstance(results, list) else [results]
@@ -748,13 +755,13 @@ def fetch_and_update_depositions():
 
     # process dois in chunks of CROSSREF_BATCH_SIZE, to avoid issues with CrossRef rate limits
     count = 0
-    for chunk in chunker(dois_pending, CROSSREF_BATCH_SIZE):
+    for chunk in chunker(dois_pending, settings.CROSSREF_BATCH_SIZE):
         doi_list = list(chunk)
         count += len(doi_list)
         print('CREATING PUBLICATIONS: {}'.format(count))
         print(doi_list)
         create_publications(doi_list)
-        time.sleep(CROSSREF_THROTTLE)
+        time.sleep(settings.CROSSREF_THROTTLE)
 
     # Update references
     added_references = models.Publication.objects.filter(created__gt=now).in_bulk(
@@ -789,7 +796,7 @@ def fetch_journal_metrics(year=None):
         with open(file_path, 'rb') as handle:
             return pickle.load(handle)
     else:
-        response = requests.get(SCIMAGO_URL, params=params)
+        response = requests.get(settings.SCIMAGO_URL, params=params)
         if response.status_code == 200:
             dialect = csv.Sniffer().sniff(response.text[:5000])
             text = codecs.iterdecode(response.iter_lines(), 'utf-8')
@@ -848,7 +855,7 @@ def fetch_article_metrics(doi, year=None):
     :return: dictionary of article metrics
     """
 
-    cr = CrossRef(mailto=CONTACT_EMAIL, ua_string='MxLIVE')
+    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='MxLIVE')
     mentions = cr.citations(ids=doi)
     return mentions
 
@@ -864,7 +871,7 @@ def update_publication_metrics(year=None):
     now = timezone.localtime(timezone.now())
     yr = year if year else now.year
 
-    cr = CrossRef(mailto=CONTACT_EMAIL, ua_string='MxLIVE')
+    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='MxLIVE')
     publications = models.Publication.objects.filter(published__year=year).in_bulk(field_name='code')
 
     doi_list = list(publications.keys())
@@ -893,7 +900,7 @@ def update_funders():
     publications = models.Publication.objects.filter(kind=models.Publication.TYPES.article, funders__isnull=True).in_bulk(
         field_name='code'
     )
-    cr = CrossRef(mailto=CONTACT_EMAIL, ua_string='MxLIVE')
+    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='MxLIVE')
 
     count = 0
     total = len(publications)
@@ -907,7 +914,7 @@ def update_funders():
             models.Funder.objects.get_or_create(name=funder['name'], defaults={'code': funder['code']})[0]
             for funder in funders
         ])
-        time.sleep(CROSSREF_THROTTLE)
+        time.sleep(settings.CROSSREF_THROTTLE)
         count += 1
         print('{:0.2%} {}/{}'.format(count/total, count, total))
 

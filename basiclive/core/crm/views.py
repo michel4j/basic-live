@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from django.conf import settings
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import Http404
 from django.template.defaultfilters import linebreaksbr
@@ -10,13 +9,14 @@ from django.utils.text import slugify
 from django.views.generic import edit, detail
 from itemlist.views import ItemListView
 
+from basiclive.core.lims.conf import settings as lims_settings
 from basiclive.core.lims.views import ListViewMixin
 from basiclive.utils import filters
 from basiclive.utils.encrypt import decrypt
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin
 from . import forms, models, stats
 
-if settings.LIMS_USE_SCHEDULE:
+if lims_settings.USE_SCHEDULE:
     from basiclive.core.schedule.models import BeamlineSupport
 
 
@@ -173,7 +173,7 @@ class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin
         initial = super().get_initial()
         initial['project'] = models.Project.objects.filter(username=self.request.GET.get('project')).first()
         initial['beamline'] = models.Beamline.objects.filter(acronym=self.request.GET.get('beamline')).first()
-        if settings.LIMS_USE_SCHEDULE:
+        if lims_settings.USE_SCHEDULE:
             support = BeamlineSupport.objects.filter(date=timezone.now().date()).first()
             initial['staff'] = support and support.staff or None
         return initial

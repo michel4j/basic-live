@@ -1,14 +1,14 @@
-from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.views.generic import TemplateView, list
 from itemlist.views import ItemListView
 
+from basiclive.core.publications.conf import settings
 from basiclive.utils import filters
 from basiclive.utils.mixins import AdminRequiredMixin
 from . import models, stats
 
-PDB_URL_TEMPLATE = getattr(settings, 'PDB_URL_TEMPLATE', 'https://www.rcsb.org/structure/{}')
-YEAR_FILTER_START = getattr(settings, 'YEAR_FILTER_START', 2005)
+PDB_URL_TEMPLATE = settings.PDB_URL_TEMPLATE
+YEAR_FILTER_START = settings.YEAR_FILTER_START
 
 
 class PubEntryList(AdminRequiredMixin, ItemListView):
@@ -62,7 +62,7 @@ class PDBEntryList(AdminRequiredMixin, ItemListView):
     link_field = 'code'
 
     def get_link_url(self, obj):
-        return PDB_URL_TEMPLATE.format(obj.code)
+        return settings.PDB_URL_TEMPLATE.format(obj.code)
 
 
 class PDBEntryText(list.ListView):

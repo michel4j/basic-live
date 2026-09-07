@@ -21,7 +21,7 @@ class AclConfTests(SimpleTestCase):
 
     def test_default_settings(self):
         self.assertEqual(acl_settings.TRUSTED_IPS, ["127.0.0.1/32"])
-        self.assertEqual(acl_settings.TRUSTED_URLS, [])
+        self.assertEqual(acl_settings.TRUSTED_URLS, ['^/json', '^/api'])
 
     def test_override_via_basiclive_acl(self):
         with override_settings(
@@ -35,7 +35,7 @@ class AclConfTests(SimpleTestCase):
 
         # Restores to defaults after context exit
         self.assertEqual(acl_settings.TRUSTED_IPS, ["127.0.0.1/32"])
-        self.assertEqual(acl_settings.TRUSTED_URLS, [])
+        self.assertEqual(acl_settings.TRUSTED_URLS, ['^/json', '^/api'])
 
     def test_trusted_access_middleware_allowed_unprotected_url(self):
         middleware = TrustedAccessMiddleware(lambda request: None)
