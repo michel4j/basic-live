@@ -15,8 +15,6 @@ dependencies = [
     "cryptography",
     "django-colorfield",
     "django-crispy-forms",
-    "django-debug-toolbar",
-    "django-debug-toolbar-request-history",
     "django-formtools",
     "django-itemlist >= 2026.1.15",
     "django-memoize",
@@ -32,18 +30,12 @@ dependencies = [
     "ldap3",
     "msgpack",
     "numpy",
-    "psycopg2-binary",
     "python-dateutil",
-    "pymemcache",
     "pytz",
     "requests",
     "timezonefinder",
-    "pyparsing",
-    "PyYAML",
-    "Pygments",
     "isodate",
     "fastjsonschema",
-    "django-allauth[mfa,socialaccount] (>=65.19.2,<66.0.0)",
 ]
 
 
