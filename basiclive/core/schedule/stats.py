@@ -1,11 +1,11 @@
 import calendar
 from collections import defaultdict
 
-from django.conf import settings
 from django.db.models import Sum, Count, Avg, Case, When, Value, IntegerField
 
 from memoize import memoize
 
+from basiclive.core.schedule.conf import settings
 from basiclive.core.schedule.models import Beamtime, Downtime, AccessType
 from basiclive.core.lims.models import Project, ProjectType
 from basiclive.core.lims.stats import ColorScheme
@@ -13,8 +13,8 @@ from basiclive.utils.functions import Median
 from basiclive.utils.stats import make_table
 
 HOUR_SECONDS = 3600
-SHIFT = getattr(settings, "HOURS_PER_SHIFT", 8)
-PUBLICATIONS = getattr(settings, "LIMS_USE_PUBLICATIONS", False)
+SHIFT = settings.HOURS_PER_SHIFT
+PUBLICATIONS = settings.USE_PUBLICATIONS
 if PUBLICATIONS:
     from basiclive.core.publications.stats import h_indices
 

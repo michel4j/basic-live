@@ -1,5 +1,4 @@
 from django.db import models
-from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.template.loader import render_to_string
@@ -12,6 +11,7 @@ from colorfield.fields import ColorField
 from datetime import datetime, timedelta
 
 from basiclive.core.lims.models import Project, Beamline, Stretch
+from basiclive.core.schedule.conf import settings
 
 from geopy import geocoders
 from zoneinfo import ZoneInfo
@@ -19,9 +19,9 @@ import timezonefinder
 
 tf = timezonefinder.TimezoneFinder()
 
-MIN_SUPPORT_HOUR = getattr(settings, 'MIN_SUPPORT_HOUR', 0)
-MAX_SUPPORT_HOUR = getattr(settings, 'MAX_SUPPORT_HOUR', 24)
-APP_NAME = getattr(settings, 'APP_NAME', 'basiclive')
+MIN_SUPPORT_HOUR = settings.MIN_SUPPORT_HOUR
+MAX_SUPPORT_HOUR = settings.MAX_SUPPORT_HOUR
+APP_NAME = settings.APP_NAME
 
 
 class AccessType(models.Model):

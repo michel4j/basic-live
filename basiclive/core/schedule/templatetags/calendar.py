@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 
 import requests
 from django import template
-from django.conf import settings
 from django.utils import timezone
 
+from basiclive.core.schedule.conf import settings
 from basiclive.core.schedule.models import BeamlineSupport
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ def calendar_view(year, week):
     }
 
     # Could be moved to AJAX request if Access-Control-Allow-Origin header added to api resource
-    if getattr(settings, "FACILITY_MODES", False):
+    if settings.FACILITY_MODES:
         try:
             url = f"{settings.FACILITY_MODES}?start={start}&end={end}"
             r = requests.get(url)

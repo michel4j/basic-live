@@ -5,11 +5,11 @@ from django.urls import reverse_lazy
 from django.views.generic import edit, detail
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.utils import timezone
-from django.conf import settings
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
 
+from basiclive.core.schedule.conf import settings
 from basiclive.utils import filters
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, LoginRequiredMixin, PlotViewMixin
 
@@ -20,8 +20,8 @@ from basiclive.core.lims.views import ListViewMixin
 
 from datetime import datetime, timedelta
 
-MIN_SUPPORT_HOUR = getattr(settings, 'MIN_SUPPORT_HOUR', 0)
-MAX_SUPPORT_HOUR = getattr(settings, 'MAX_SUPPORT_HOUR', 24)
+MIN_SUPPORT_HOUR = settings.MIN_SUPPORT_HOUR
+MAX_SUPPORT_HOUR = settings.MAX_SUPPORT_HOUR
 
 
 logger = logging.getLogger(__name__)
