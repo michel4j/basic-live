@@ -1,17 +1,17 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
+from basiclive.auth.ldap.conf import settings
 from . import slap
 
 
 def is_directory_management_enabled():
     """
     Check if LDAP directory management is enabled.
-    Opt-in via settings.LDAP_MANAGE_DIRECTORY = True or having settings.LDAP_MANAGER_DN configured.
+    Opt-in via settings.MANAGE_DIRECTORY = True or having settings.MANAGER_DN configured.
     """
-    return getattr(settings, 'LDAP_MANAGE_DIRECTORY', False) or bool(getattr(settings, 'LDAP_MANAGER_DN', None))
+    return bool(settings.MANAGE_DIRECTORY or settings.MANAGER_DN)
 
 
 @receiver(post_save)

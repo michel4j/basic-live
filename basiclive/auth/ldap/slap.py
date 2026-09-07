@@ -10,7 +10,7 @@ except ImportError:
     ldap3 = None
     Server = Connection = None
 
-from django.conf import settings
+from basiclive.auth.ldap.conf import settings
 
 
 def _setting(name, default=None):
@@ -20,16 +20,16 @@ def _setting(name, default=None):
         return default
 
 
-BASE_DN = _setting('LDAP_BASE_DN', 'dc=demo1,dc=freeipa,dc=org')
-SERVER_URI = _setting('LDAP_SERVER_URI', 'ipa.demo1.freeipa.org')
-MANAGER_DN = _setting('LDAP_MANAGER_DN', None)
-MANAGER_SECRET = _setting('LDAP_MANAGER_SECRET', None)
-USER_TABLE = _setting('LDAP_USER_TABLE', 'ou=People')
-USER_ROOT = _setting('LDAP_USER_ROOT', '/home')
-GROUP_TABLE = _setting('LDAP_GROUP_TABLE', 'ou=Groups')
-USER_SHELL = _setting('LDAP_USER_SHELL', '/bin/bash')
-WORDS_DICTIONARY = _setting('LDAP_WORDS_DICTIONARY', '/usr/share/dict/words')
-PASSPHRASE_SEPARATORS = _setting('LDAP_PASSPHRASE_SEPARATORS', ' -/')
+BASE_DN = settings.BASE_DN
+SERVER_URI = settings.SERVER_URI
+MANAGER_DN = settings.MANAGER_DN
+MANAGER_SECRET = settings.MANAGER_SECRET
+USER_TABLE = settings.USER_TABLE
+USER_ROOT = settings.USER_ROOT
+GROUP_TABLE = settings.GROUP_TABLE
+USER_SHELL = settings.USER_SHELL
+WORDS_DICTIONARY = settings.WORDS_DICTIONARY
+PASSPHRASE_SEPARATORS = settings.PASSPHRASE_SEPARATORS
 USER_ATTRIBUTES = [
     'cn', 'uid', 'uidNumber', 'gidNumber',
     'homeDirectory', 'loginShell', 'description',
@@ -106,9 +106,9 @@ def generate_passphrase(length, separators=None, dictionary: str = None):
     :return: A string containing the generated passphrase.
     """
     if separators is None:
-        separators = _setting('LDAP_PASSPHRASE_SEPARATORS', PASSPHRASE_SEPARATORS)
+        separators = settings.PASSPHRASE_SEPARATORS
     if dictionary is None:
-        dictionary = _setting('LDAP_WORDS_DICTIONARY', WORDS_DICTIONARY)
+        dictionary = settings.WORDS_DICTIONARY
     try:
         with open(dictionary, 'r') as f:
             words = [word.strip() for word in f if 3 < len(word.strip()) < 15 and word.strip().isalpha()]  # Filter short and very long words
@@ -142,25 +142,25 @@ class Directory(object):
         """
         if ldap3 is None:
             raise RuntimeError("ldap3 is not installed. Install with: poetry install --extras ldap")
-        self.admin_user = user if user is not None else _setting('LDAP_MANAGER_DN', MANAGER_DN)
-        self.admin_secret = secret if secret is not None else _setting('LDAP_MANAGER_SECRET', MANAGER_SECRET)
-        server_uri = uri if uri is not None else _setting('LDAP_SERVER_URI', SERVER_URI)
+        self.admin_user = user if user is not None else settings.MANAGER_DN
+        self.admin_secret = secret if secret is not None else settings.MANAGER_SECRET
+        server_uri = uri if uri is not None else settings.SERVER_URI
         self.server = Server(server_uri, use_ssl=use_ssl, get_info=ldap3.ALL)
 
     def _base_dn(self):
-        return _setting('LDAP_BASE_DN', BASE_DN)
+        return settings.BASE_DN
 
     def _group_table(self):
-        return _setting('LDAP_GROUP_TABLE', GROUP_TABLE)
+        return settings.GROUP_TABLE
 
     def _user_table(self):
-        return _setting('LDAP_USER_TABLE', USER_TABLE)
+        return settings.USER_TABLE
 
     def _user_root(self):
-        return _setting('LDAP_USER_ROOT', USER_ROOT)
+        return settings.USER_ROOT
 
     def _user_shell(self):
-        return _setting('LDAP_USER_SHELL', USER_SHELL)
+        return settings.USER_SHELL
 
     def add_user(self, info):
         """
