@@ -25,7 +25,6 @@ dependencies = [
     "crispy-bootstrap4",
     "geopy",
     "habanero",
-    "jsonfield2",
     "ldap3",
     "msgpack",
     "numpy",

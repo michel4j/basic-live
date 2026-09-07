@@ -8,7 +8,6 @@ import django.contrib.auth.validators
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import jsonfield.fields
 from basiclive.core import lims
 
 
@@ -93,7 +92,7 @@ class Migration(migrations.Migration):
                 ('kind', models.CharField(max_length=100)),
                 ('score', models.FloatField()),
                 ('url', models.CharField(max_length=200)),
-                ('details', jsonfield.fields.JSONField(default=[])),
+                ('details', models.JSONField(default=list)),
             ],
             options={
                 'ordering': ['-score'],
@@ -159,7 +158,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=20)),
-                ('layout', jsonfield.fields.JSONField(blank=True, null=True)),
+                ('layout', models.JSONField(blank=True, null=True)),
                 ('envelope', models.CharField(blank=True, max_length=200)),
                 ('container_locations', models.ManyToManyField(blank=True, related_name='containers', to='lims.ContainerLocation')),
             ],
@@ -182,7 +181,7 @@ class Migration(migrations.Migration):
                 ('url', models.CharField(max_length=200)),
                 ('kind', models.CharField(choices=[(b'MX_SCREEN', b'MX Screening'), (b'MX_DATA', b'MX Dataset'), (b'XRD_DATA', b'XRD Dataset'), (b'RASTER', b'Raster'), (b'XAS_SCAN', b'XAS Scan'), (b'XRF_SCAN', b'XRF Scan'), (b'MAD_SCAN', b'MAD Scan')], default=b'MX_SCREEN', max_length=20, verbose_name=b'Data type')),
                 ('download', models.BooleanField(default=False)),
-                ('meta_data', jsonfield.fields.JSONField(default={})),
+                ('meta_data', models.JSONField(default=dict)),
                 ('beamline', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='lims.Beamline')),
             ],
             options={

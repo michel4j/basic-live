@@ -826,21 +826,6 @@ files = [
 all = ["coverage (>=7.10.0)", "hypothesis (>=6.141.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.16.0)", "ty (>=0.0.37)"]
 
 [[package]]
-name = "jsonfield2"
-version = "4.0.0.post0"
-description = "A reusable Django field that allows you to store validated JSON in your model."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "jsonfield2-4.0.0.post0-py3-none-any.whl", hash = "sha256:bab284d3fc721067d5f3107a0adc87ee772e9b09cac5eca042fad6311c4842bd"},
-    {file = "jsonfield2-4.0.0.post0.tar.gz", hash = "sha256:cbce2d7c52563550cd2048fcf3a57631019d3547f5ed142f42141d1d2dc53283"},
-]
-
-[package.dependencies]
-Django = ">=2.2"
-
-[[package]]
 name = "ldap3"
 version = "2.9.1"
 description = "A strictly RFC 4510 conforming LDAP V3 pure Python client library"
@@ -1357,4 +1342,4 @@ zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0"
-content-hash = "587b7da165b11bb90eec8e6615c4a4752f8f7c1f9788a6bbfd261bc4e4d3e114"
+content-hash = "6efc7d39106455a86b107915a3a49eff8aff65c5e426fe3e92835d23b6fd16d6"
