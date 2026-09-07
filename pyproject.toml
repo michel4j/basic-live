@@ -33,7 +33,6 @@ dependencies = [
     "python-dateutil",
     "requests",
     "timezonefinder",
-    "isodate",
     "fastjsonschema",
 ]
 

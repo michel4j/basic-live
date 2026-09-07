@@ -3,7 +3,6 @@ import logging
 import warnings
 from datetime import datetime, timedelta
 
-import isodate
 import requests
 from django import template
 from django.conf import settings
@@ -65,8 +64,8 @@ def calendar_view(year, week):
             r = requests.get(url)
             if r.status_code == 200:
                 for mode in r.json():
-                    st = isodate.parse_datetime(mode['start'])
-                    en = isodate.parse_datetime(mode['end'])
+                    st = datetime.fromisoformat(mode['start'])
+                    en = datetime.fromisoformat(mode['end'])
                     while st < en:
                         dt = format_local_date(st)
                         hr = format_local_hour(st)
