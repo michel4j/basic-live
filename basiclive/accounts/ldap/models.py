@@ -1,29 +1,7 @@
-from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save, pre_delete
-from django.dispatch import receiver
+from basiclive.auth.ldap.models import on_user_create, on_user_delete, is_directory_management_enabled
 
-from . import slap
+# Legacy aliases
+on_project_create = on_user_create
+on_project_delete = on_user_delete
 
-User = get_user_model()
-
-
-@receiver(post_save, sender=User)
-def on_project_create(sender, instance, created, **kwargs):
-    if created:
-        user_info = {
-            'username': instance.username,
-            'password': '',
-            'first_name': instance.first_name,
-            'last_name': instance.last_name
-        }
-        ldap = slap.Directory()
-        info = ldap.add_user(user_info)
-        instance.name = info.get('username')
-        instance.save()
-
-
-@receiver(pre_delete, sender=User)
-def on_project_delete(sender, instance, **kwargs):
-    directory = slap.Directory()
-    directory.delete_user(instance.name)
-
+__all__ = ['on_user_create', 'on_user_delete', 'on_project_create', 'on_project_delete', 'is_directory_management_enabled']

@@ -1,4 +1,4 @@
-AUTH_MODULE = 'auth.ldap'
+AUTH_MODULE = 'basiclive.auth.ldap'
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'django_python3_ldap.auth.LDAPBackend'
@@ -11,9 +11,13 @@ LDAP_MANAGER_SECRET = SECRET_KEY
 LDAP_USER_TABLE = 'ou=People'
 LDAP_USER_ROOT = '/home'
 LDAP_GROUP_TABLE = 'ou=Groups'
-LDAP_USER_SHELL ='/bin/bash'
+LDAP_USER_SHELL = '/bin/bash'
 LDAP_SEND_EMAILS = False
 LDAP_ADMIN_UIDS = [2000]
+
+# Directory Provisioning Settings
+# Set to True (or configure LDAP_MANAGER_DN) to enable automatic POSIX account provisioning in LDAP
+LDAP_MANAGE_DIRECTORY = False
 
 # LDAP Authentication Settings
 LDAP_AUTH_URL = "ldap://{}:389".format(LDAP_SERVER_URI)
