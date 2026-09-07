@@ -30,7 +30,6 @@ dependencies = [
     "ldap3",
     "msgpack",
     "numpy",
-    "python-dateutil",
     "requests",
     "timezonefinder",
     "fastjsonschema",

@@ -12,7 +12,7 @@ from xml.dom import minidom
 import itertools
 import requests
 import time
-from dateutil import parser
+from datetime import datetime
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Subquery, OuterRef
@@ -206,14 +206,14 @@ class PDBParser(ObjectParser):
         return ', '.join(self._entry.get('rcsb_primary_citation.rcsb_authors', []))
 
     def get_released(self):
-        return parser.isoparse(self._entry['rcsb_accession_info.initial_release_date'])
+        return datetime.fromisoformat(self._entry['rcsb_accession_info.initial_release_date'])
 
     def get_deposited(self):
-        return parser.isoparse(self._entry['rcsb_accession_info.deposit_date'])
+        return datetime.fromisoformat(self._entry['rcsb_accession_info.deposit_date'])
 
     def get_collected(self):
         if self._entry.get('diffrn_detector.pdbx_collection_date'):
-            return parser.isoparse(self._entry['diffrn_detector.pdbx_collection_date'])
+            return datetime.fromisoformat(self._entry['diffrn_detector.pdbx_collection_date'])
 
     def get_doi(self):
         return "10.2210/pdb{}/pdb".format(self._entry['rcsb_id'].upper())
