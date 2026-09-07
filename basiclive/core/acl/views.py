@@ -17,7 +17,7 @@ from basiclive.utils import filters
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
 from . import models
 from .forms import AccessForm
-from ...auth.middleware import get_client_address
+from basiclive.utils.network import get_client_address
 
 User = get_user_model()
 
