@@ -19,18 +19,25 @@ dependencies = [
     "django-itemlist >= 2026.1.15",
     "django-memoize",
     "django-model-utils",
-    "django-python3-ldap",
     "djangorestframework",
     "djangorestframework-simplejwt",
     "crispy-bootstrap4",
     "geopy",
     "habanero",
-    "ldap3",
     "msgpack",
     "numpy",
     "requests",
     "timezonefinder",
     "fastjsonschema",
+]
+
+[project.optional-dependencies]
+ldap = [
+    "django-python3-ldap",
+    "ldap3",
+]
+cas = [
+    "django-cas-ng",
 ]
 
 
