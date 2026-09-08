@@ -41,6 +41,10 @@ class AccessListView(AdminRequiredMixin, ItemListView):
     template_name = "lims/list.html"
     page_title = 'Access Endpoints'
 
+    def get_queryset(self, *args, **kwargs):
+        queryset = super().get_queryset(*args, **kwargs)
+        return queryset.filter(active=True)
+
     def get_list_columns(self):
         if lims_settings.USE_SCHEDULE and 'current_users' in self.list_columns:
             self.list_columns[self.list_columns.index('current_users')] = 'scheduled_users'
