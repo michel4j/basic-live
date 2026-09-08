@@ -1,11 +1,18 @@
 import os
 from datetime import timedelta
+from typing import NamedTuple
 
 from django.db import models
 from django.utils import timezone
 from model_utils import Choices
 
 from basiclive.core.lims.conf import settings as lims_settings
+
+
+class AnnotatedUser(NamedTuple):
+    username: str
+    source: str
+
 
 
 def get_hours_per_shift() -> int:
@@ -58,6 +65,14 @@ class AccessList(models.Model):
         if lims_settings.USE_SCHEDULE:
             users += self.scheduled()
         return users
+
+    def annotated_users(self) -> list[AnnotatedUser]:
+        scheduled_set = set(self.scheduled())
+        manual_set = set(self.users.values_list('username', flat=True)) - scheduled_set
+
+        scheduled_users = [AnnotatedUser(u, 'schedule') for u in sorted(scheduled_set)]
+        manual_users = [AnnotatedUser(u, 'manual') for u in sorted(manual_set)]
+        return scheduled_users + manual_users
 
     def identity(self):
         return self.name

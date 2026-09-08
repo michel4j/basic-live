@@ -7,6 +7,8 @@ from django.http import JsonResponse, HttpResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.html import escape
+
 
 from basiclive.core.lims.conf import settings as lims_settings
 from django.views import View
@@ -27,11 +29,28 @@ def format_beamlines(value, record):
     return ', '.join(record.beamline.values_list('acronym', flat=True))
 
 
+def format_allowed_users(value, record):
+    badges = []
+    for user in record.annotated_users():
+        if user.source == 'schedule':
+            css_class = 'badge badge-success'
+            title = 'Scheduled Access'
+        else:
+            css_class = 'badge badge-info'
+            title = 'Manual Access'
+        badges.append(f'<span class="{css_class}" title="{title}">{escape(user.username)}</span>')
+    return ' '.join(badges)
+
+
 class AccessListView(AdminRequiredMixin, ItemListView):
     model = models.AccessList
     list_filters = ['beamline', 'active']
-    list_columns = ['name', 'description', 'current_users', 'allowed_users', 'address', 'beamlines', 'active']
-    list_transforms = {'beamlines': format_beamlines}
+    list_columns = ['name', 'description', 'allowed_users', 'address', 'beamlines', 'active']
+    list_headers = {'allowed_users': 'Authorized Users'}
+    list_transforms = {
+        'beamlines': format_beamlines,
+        'allowed_users': format_allowed_users,
+    }
     list_search = ['name', 'description']
     tool_template = "acl/tools-access.html"
     link_url = 'access-edit'
@@ -45,10 +64,6 @@ class AccessListView(AdminRequiredMixin, ItemListView):
         queryset = super().get_queryset(*args, **kwargs)
         return queryset.filter(active=True)
 
-    def get_list_columns(self):
-        if lims_settings.USE_SCHEDULE and 'current_users' in self.list_columns:
-            self.list_columns[self.list_columns.index('current_users')] = 'scheduled_users'
-        return self.list_columns
 
 
 class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
