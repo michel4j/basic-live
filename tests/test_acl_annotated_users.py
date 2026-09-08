@@ -119,12 +119,12 @@ class AnnotatedUsersTests(TestCase):
         self.assertEqual(s, "schedule")
 
     def test_format_allowed_users_empty(self):
-        from basiclive.core.acl.views import format_allowed_users
-        html = format_allowed_users(None, self.access_list)
+        from basiclive.core.acl.views import format_authorized_users
+        html = format_authorized_users(None, self.access_list)
         self.assertEqual(html, "")
 
     def test_format_allowed_users_badges(self):
-        from basiclive.core.acl.views import format_allowed_users
+        from basiclive.core.acl.views import format_authorized_users
 
         self.access_list.users.add(self.user_bob)
         now = timezone.localtime()
@@ -137,13 +137,13 @@ class AnnotatedUsersTests(TestCase):
             cancelled=False,
         )
 
-        html = format_allowed_users(None, self.access_list)
+        html = format_authorized_users(None, self.access_list)
         expected_alice = '<span class="badge badge-success" title="Scheduled Access">alice</span>'
         expected_bob = '<span class="badge badge-info" title="Manual Access">bob</span>'
         self.assertEqual(html, f"{expected_alice} {expected_bob}")
 
     def test_access_list_view_configuration(self):
-        from basiclive.core.acl.views import AccessListView, format_allowed_users
+        from basiclive.core.acl.views import AccessListView, format_authorized_users
 
         view = AccessListView()
         self.assertEqual(
@@ -153,7 +153,7 @@ class AnnotatedUsersTests(TestCase):
         self.assertNotIn('current_users', view.get_list_columns())
         self.assertNotIn('scheduled_users', view.get_list_columns())
         self.assertEqual(view.get_list_headers().get('allowed_users'), 'Authorized Users')
-        self.assertIs(view.get_list_transforms().get('allowed_users'), format_allowed_users)
+        self.assertIs(view.get_list_transforms().get('allowed_users'), format_authorized_users)
 
         with override_settings(BASICLIVE_LIMS={"USE_SCHEDULE": False}):
             self.assertEqual(
