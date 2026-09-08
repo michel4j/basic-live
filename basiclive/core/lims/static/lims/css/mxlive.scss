@@ -1064,9 +1064,16 @@ a[data-link], .back text[port], .cursor {
   }
 }
 
+.badge {
+  margin: 1px;
+}
 .badge.score {
   font-size: 0.95em;
   border: 1px solid rgba(0,0,0,0.075);
+}
+.badge-md {
+  font-size: 0.9em;
+  font-weight: 400;
 }
 
 .highlight {

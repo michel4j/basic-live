@@ -169,8 +169,8 @@ class StaffDashboard(AdminRequiredMixin, detail.DetailView):
                 bt_sessions = models.Session.objects.filter(
                     project=bt.project, beamline=bt.beamline
                 ).filter(
-                    Q(stretches__end__isnull=True) | Q(stretches__end__gte=bt.start), distinct=True
-                )
+                    Q(stretches__end__isnull=True) | Q(stretches__end__gte=bt.start)
+                ).distinct()
                 sessions |= bt_sessions
                 # Check if the scheduled project is currently connected
                 if settings.USE_SCHEDULE and settings.USE_ACL:

@@ -14,7 +14,6 @@ class AnnotatedUser(NamedTuple):
     source: str
 
 
-
 def get_hours_per_shift() -> int:
     try:
         from basiclive.core.schedule.conf import settings as schedule_settings
@@ -41,33 +40,31 @@ class AccessList(models.Model):
     modified = models.DateTimeField('date modified', auto_now_add=True, editable=False)
     beamline = models.ManyToManyField("lims.Beamline", blank=True, related_name="access_lists")
 
-    def allowed_users(self):
-        return ' | '.join(self.users.values_list('username', flat=True))
-
-    def current_users(self):
-        return ' | '.join(self.connections.filter(status__in=['Connected', 'Disconnected']).values_list('user__username', flat=True).distinct())
-
-    def scheduled_users(self):
-        return ' | '.join(self.scheduled())
+    def authorized_users(self):
+        return [u.username for u in self.annotated_users()]
 
     def scheduled(self):
         if lims_settings.USE_SCHEDULE:
             now = timezone.localtime()
             slot = get_hours_per_shift()
-            return list(Beamtime.objects.filter(cancelled=False, access__remote=True, beamline__in=self.beamline.all(),
-                                                start__lte=now,
-                                                end__gte=now - timedelta(hours=int(slot / 2))).values_list(
-                'project__username', flat=True))
+            user_names = Beamtime.objects.filter(
+                cancelled=False,
+                access__remote=True,
+                beamline__in=self.beamline.all(),
+                start__lte=now,
+                end__gte=now - timedelta(hours=int(slot / 2))
+            ).values_list(
+                'project__username',
+                flat=True
+            ).order_by().distinct()
+            return list(user_names)
         return []
 
-    def access_users(self):
-        users = list(self.users.values_list('username', flat=True))
-        if lims_settings.USE_SCHEDULE:
-            users += self.scheduled()
-        return users
-
     def annotated_users(self) -> list[AnnotatedUser]:
-        scheduled_set = set(self.scheduled())
+        if lims_settings.USE_SCHEDULE:
+            scheduled_set = set(self.scheduled())
+        else:
+            scheduled_set = set()
         manual_set = set(self.users.values_list('username', flat=True)) - scheduled_set
 
         scheduled_users = [AnnotatedUser(u, 'schedule') for u in sorted(scheduled_set)]

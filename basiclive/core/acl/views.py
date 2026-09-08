@@ -29,27 +29,27 @@ def format_beamlines(value, record):
     return ', '.join(record.beamline.values_list('acronym', flat=True))
 
 
-def format_allowed_users(value, record):
+def format_authorized_users(users, record):
     badges = []
-    for user in record.annotated_users():
+    for user in users:
         if user.source == 'schedule':
             css_class = 'badge badge-success'
             title = 'Scheduled Access'
         else:
-            css_class = 'badge badge-info'
+            css_class = 'badge badge-warning'
             title = 'Manual Access'
-        badges.append(f'<span class="{css_class}" title="{title}">{escape(user.username)}</span>')
+        badges.append(f'<span class="{css_class} badge-md" title="{title}">{escape(user.username.upper())}</span>')
     return ' '.join(badges)
 
 
 class AccessListView(AdminRequiredMixin, ItemListView):
     model = models.AccessList
-    list_filters = ['beamline', 'active']
-    list_columns = ['name', 'description', 'allowed_users', 'address', 'beamlines', 'active']
-    list_headers = {'allowed_users': 'Authorized Users'}
+    list_filters = ['beamline']
+    list_columns = ['name', 'description', 'annotated_users', 'address', 'beamlines']
+    list_headers = {'annotated_users': 'Authorized Users'}
     list_transforms = {
         'beamlines': format_beamlines,
-        'allowed_users': format_allowed_users,
+        'annotated_users': format_authorized_users,
     }
     list_search = ['name', 'description']
     tool_template = "acl/tools-access.html"
@@ -63,7 +63,6 @@ class AccessListView(AdminRequiredMixin, ItemListView):
     def get_queryset(self, *args, **kwargs):
         queryset = super().get_queryset(*args, **kwargs)
         return queryset.filter(active=True)
-
 
 
 class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
@@ -119,7 +118,7 @@ class EndpointList(View):
         userlist = models.AccessList.objects.filter(address=client_addr, active=True).first()
 
         if userlist:
-            return JsonResponse(userlist.access_users(), safe=False)
+            return JsonResponse(userlist.authorized_users(), safe=False)
         else:
             return JsonResponse([], safe=False)
 
@@ -153,7 +152,7 @@ class EndpointList(View):
                 except Exception as e:
                     pass
 
-            return JsonResponse(user_list.access_users(), safe=False)
+            return JsonResponse(user_list.authorized_users(), safe=False)
         else:
             return JsonResponse([], safe=False)
 
@@ -193,7 +192,7 @@ class AccessSSHKeys(AuthenticationRequiredMixin, View):
         user = models.Project.objects.filter(username=self.kwargs.get('username')).first()
 
         msg = ''
-        if user and user_list and user.username in user_list.access_users():
+        if user and user_list and user.username in user_list.authorized_users():
             msg = '\n'.join(user.sshkeys.values_list('key', flat=True)).encode()
 
         return HttpResponse(msg, content_type='text/plain')
