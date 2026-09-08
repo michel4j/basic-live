@@ -304,13 +304,13 @@ class Session(models.Model):
         ordering = ('-created',)
 
     def __str__(self):
-        return '{}-{}'.format(self.project.name.upper(), self.name)
+        return f'{self.project.name.upper()}-{self.name}'
 
     def identity(self):
-        return 'SES-{:07,d}'.format(self.id).replace(',', '-')
+        return f'SES-{self.id:07,d}'.replace(',', '-')
 
     def download_url(self):
-        return '{}/{}.tar.gz'.format(self.url, self.name)
+        return f'{self.url}/{self.name}.tar.gz'
 
     def feedback_key(self):
         return encrypt("{user}:{name}".format(user=self.project.username, name=self.name))
