@@ -26,22 +26,36 @@ def download_asset(src_url, path: Path | str, sri: str | None = None):
     :param sri: SRI string for verification
     """
 
-    # fetch the file from the url
-    response = requests.get(src_url)
-    response.raise_for_status()
-
-    # check the integrity of the file if an SRI was supplied
-    if sri is not None:
+    # if file exists, check SRI and only download if new
+    download_pending = True
+    if Path(path).exists() and sri:
         algorithm, file_hash = sri.split('-')
         h = hashlib.new(algorithm)
-        h.update(response.content)
-        if base64.b64encode(h.digest()).decode() != file_hash:
-            raise Exception(f'Subresource Integrity (SRI) failed for {path}')
+        with open(path, 'rb') as f:
+            content = f.read()
+            h.update(content)
+            if base64.b64encode(h.digest()).decode() == file_hash:
+                print(f'{path} is up to date!')
+                download_pending = False
 
-    # Save the file
-    with open(path, 'wb') as f:
-        print(f'{src_url} -> {path}')
-        f.write(response.content)
+    if download_pending:
+        # fetch the file from the url
+        response = requests.get(src_url)
+        response.raise_for_status()
+
+        # check the integrity of the file if an SRI was supplied
+        if sri is not None:
+            algorithm, file_hash = sri.split('-')
+            h = hashlib.new(algorithm)
+            h.update(response.content)
+            if base64.b64encode(h.digest()).decode() != file_hash:
+                print(f'File integrity mismatch: {path}!!!')
+                return
+
+        # Save the file
+        with open(path, 'wb') as f:
+            print(f'{src_url} -> {path}')
+            f.write(response.content)
 
 
 class Command(BaseCommand):
@@ -66,13 +80,13 @@ class Command(BaseCommand):
             for key, asset_conf in assets.items():
                 url = asset_conf.pop('url')
                 for kind in [k for k in asset_conf.keys()]:
-                    for file in asset_conf[kind]:
+                    for asset in asset_conf[kind]:
                         # get the directory and the file_name
-                        filename = Path(file['path']).name
+                        filename = asset.get('file', Path(asset['path']).name)
                         file_path = assets_root / key / kind / filename
                         file_path.parent.mkdir(parents=True, exist_ok=True)
 
                         # get the full url of the file
-                        file_url = urljoin(url, file['path'])
-                        download_asset(file_url, file_path, sri=file.get('sri'))
+                        file_url = urljoin(url, asset['path'])
+                        download_asset(file_url, file_path, sri=asset.get('sri'))
 
