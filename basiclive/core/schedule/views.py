@@ -101,7 +101,7 @@ class BeamtimeStats(PlotViewMixin, ListViewMixin, ItemListView):
 
 class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.BeamtimeForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Beamtime
     success_url = reverse_lazy('schedule')
     success_message = "Beamtime has been created"
@@ -154,7 +154,7 @@ class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, ed
 
 class BeamtimeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.BeamtimeForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Beamtime
     success_url = reverse_lazy('schedule')
     success_message = "Beamtime has been updated"
@@ -190,7 +190,7 @@ class BeamtimeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
 
 
 class BeamtimeDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+    template_name = "lims/modal/delete.html"
     model = models.Beamtime
     success_url = reverse_lazy('schedule')
     success_message = "Beamtime has been deleted"
@@ -222,7 +222,7 @@ class SupportDetail(LoginRequiredMixin, detail.DetailView):
 
 class SupportCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.BeamlineSupportForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.BeamlineSupport
     success_url = reverse_lazy('schedule')
     success_message = "Beamline Support has been created"
@@ -238,14 +238,14 @@ class SupportCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
 
 class SupportEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.BeamlineSupportForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.BeamlineSupport
     success_url = reverse_lazy('schedule')
     success_message = "Beamline Support has been updated"
 
 
 class SupportDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
-    template_name = "modal/delete.html"
+    template_name = "lims/modal/delete.html"
     model = models.BeamlineSupport
     success_url = reverse_lazy('schedule')
     success_message = "Beamline Support has been deleted"
@@ -300,7 +300,7 @@ def split_visits(obj, start, end):
 
 class DowntimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
     form_class = forms.DowntimeForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Downtime
     success_url = reverse_lazy('schedule')
     success_message = "Downtime has been created"
@@ -333,7 +333,7 @@ class DowntimeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, ed
 
 class DowntimeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.DowntimeForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.Downtime
     success_url = reverse_lazy('schedule')
     success_message = "Downtime has been updated"
@@ -383,7 +383,7 @@ class EmailNotificationList(AdminRequiredMixin, ListViewMixin, ItemListView):
 
 class EmailNotificationEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     form_class = forms.EmailNotificationForm
-    template_name = "modal/form.html"
+    template_name = "lims/modal/form.html"
     model = models.EmailNotification
     success_url = reverse_lazy('schedule')
     success_message = "Email Notification has been updated"
