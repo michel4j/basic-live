@@ -645,7 +645,7 @@ def create_publications(doi_list):
         return {'journals': 0, 'publications': 0}
 
     # fetch metadata from CrossRef
-    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='MxLIVE')
+    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='BasicLIVE')
     results = cr.works(ids=pending_dois)
     # fix inconsistent json from works
     results = results if isinstance(results, list) else [results]
@@ -855,7 +855,7 @@ def fetch_article_metrics(doi, year=None):
     :return: dictionary of article metrics
     """
 
-    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='MxLIVE')
+    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='BasicLIVE')
     mentions = cr.citations(ids=doi)
     return mentions
 
@@ -871,7 +871,7 @@ def update_publication_metrics(year=None):
     now = timezone.localtime(timezone.now())
     yr = year if year else now.year
 
-    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='MxLIVE')
+    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='BasicLIVE')
     publications = models.Publication.objects.filter(published__year=year).in_bulk(field_name='code')
 
     doi_list = list(publications.keys())
@@ -900,7 +900,7 @@ def update_funders():
     publications = models.Publication.objects.filter(kind=models.Publication.TYPES.article, funders__isnull=True).in_bulk(
         field_name='code'
     )
-    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='MxLIVE')
+    cr = CrossRef(mailto=settings.CONTACT_EMAIL, ua_string='BasicLIVE')
 
     count = 0
     total = len(publications)
