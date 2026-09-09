@@ -10,6 +10,9 @@ def setup_django():
                 "django.contrib.auth",
                 "django.contrib.contenttypes",
                 "django.contrib.sessions",
+                "django.contrib.humanize",
+                "crispy_forms",
+                "crispy_bootstrap4",
                 "basiclive.core.lims",
                 "basiclive.core.schedule",
                 "basiclive.core.acl",
@@ -27,6 +30,7 @@ def setup_django():
                     "APP_DIRS": True,
                 }
             ],
+            CRISPY_TEMPLATE_PACK="bootstrap4",
             BASICLIVE_TESTAPP={
                 "CUSTOM_OPTION": "from_configured",
             },

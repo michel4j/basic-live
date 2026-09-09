@@ -1,0 +1,228 @@
+import inspect
+from pathlib import Path
+import unittest
+
+from tests import setup_django
+setup_django()
+
+from django import forms
+from django.apps import apps
+from django.template.loader import get_template
+from django.test import SimpleTestCase
+from django.urls import URLPattern, URLResolver
+
+from basiclive.core.lims.models import DataType, Project, RequestType
+import basiclive.core.lims.views as lims_views
+import basiclive.core.acl.views as acl_views
+import basiclive.core.crm.views as crm_views
+import basiclive.core.schedule.views as schedule_views
+import basiclive.core.publications.views as pub_views
+import basiclive.core.lims.urls as lims_urls
+import basiclive.core.acl.urls as acl_urls
+import basiclive.core.crm.urls as crm_urls
+import basiclive.core.schedule.urls as schedule_urls
+import basiclive.core.publications.urls as pub_urls
+
+
+class TemplateIntegrityTests(SimpleTestCase):
+    """Automated tests verifying template paths, loading, compilation, and rendering."""
+
+    VIEW_MODULES = [
+        lims_views,
+        acl_views,
+        crm_views,
+        schedule_views,
+        pub_views,
+    ]
+
+    URL_MODULES = [
+        lims_urls,
+        acl_urls,
+        crm_urls,
+        schedule_urls,
+        pub_urls,
+    ]
+
+    def test_all_view_template_names_exist(self):
+        """Verify that every view class with a template_name or tool_template attribute points to an existing template."""
+        checked = 0
+        for mod in self.VIEW_MODULES:
+            for name, obj in inspect.getmembers(mod, inspect.isclass):
+                if obj.__module__ == mod.__name__:
+                    tname = getattr(obj, "template_name", None)
+                    if tname:
+                        with self.subTest(view=f"{mod.__name__}.{name}", template=tname):
+                            tmpl = get_template(tname)
+                            self.assertIsNotNone(tmpl)
+                            checked += 1
+                    tool_template = getattr(obj, "tool_template", None)
+                    if tool_template:
+                        with self.subTest(view=f"{mod.__name__}.{name}", tool_template=tool_template):
+                            tmpl = get_template(tool_template)
+                            self.assertIsNotNone(tmpl)
+                            checked += 1
+
+        self.assertGreater(checked, 60, "Expected at least 60 view templates to be validated")
+
+    def test_url_pattern_template_overrides_exist(self):
+        """Verify that template_name overrides passed in as_view(...) in URL patterns exist."""
+        def extract_patterns(pattern_list):
+            results = []
+            for p in pattern_list:
+                if isinstance(p, URLPattern):
+                    initkwargs = getattr(p.callback, "view_initkwargs", {}) or getattr(p.callback, "initkwargs", {})
+                    if "template_name" in initkwargs:
+                        results.append((str(p.pattern), initkwargs["template_name"]))
+                elif isinstance(p, URLResolver):
+                    results.extend(extract_patterns(p.url_patterns))
+            return results
+
+        overrides = []
+        for umod in self.URL_MODULES:
+            overrides.extend(extract_patterns(umod.urlpatterns))
+
+        self.assertGreater(len(overrides), 0, "Expected URL pattern template overrides to be found")
+        for pattern_str, tname in overrides:
+            with self.subTest(pattern=pattern_str, template=tname):
+                tmpl = get_template(tname)
+                self.assertIsNotNone(tmpl)
+
+    def test_data_detail_get_template_names(self):
+        """Verify DataDetail.get_template_names() dynamically builds valid template candidates."""
+        view = lims_views.DataDetail()
+        kind = DataType(name="MX Dataset", acronym="DATA", template="lims/data/data-frames.html")
+        view.object = type("DummyData", (), {"kind": kind})()
+
+        names = view.get_template_names()
+        self.assertEqual(names, ["lims/data/data-frames.html", "lims/data/data.html"])
+
+        for tname in names:
+            with self.subTest(template=tname):
+                tmpl = get_template(tname)
+                self.assertIsNotNone(tmpl)
+
+    def test_request_type_template_defaults(self):
+        """Verify RequestType model template path defaults and standard request templates."""
+        edit_default = RequestType._meta.get_field("edit_template").default
+        self.assertEqual(edit_default, "lims/requests/base-edit.html")
+        self.assertIsNotNone(get_template(edit_default))
+
+        standard_request_templates = [
+            "lims/requests/base-edit.html",
+            "lims/requests/base-view.html",
+            "lims/requests/exafs-edit.html",
+            "lims/requests/exafs-view.html",
+            "lims/requests/imgir-edit.html",
+            "lims/requests/imgir-view.html",
+        ]
+        for tname in standard_request_templates:
+            with self.subTest(template=tname):
+                tmpl = get_template(tname)
+                self.assertIsNotNone(tmpl)
+
+    def test_data_type_templates(self):
+        """Verify standard DataType templates exist and load."""
+        standard_data_templates = [
+            "lims/data/data.html",
+            "lims/data/data-frames.html",
+            "lims/data/data-mad.html",
+            "lims/data/data-xrf.html",
+        ]
+        for tname in standard_data_templates:
+            with self.subTest(template=tname):
+                tmpl = get_template(tname)
+                self.assertIsNotNone(tmpl)
+
+    def test_templatetag_and_component_templates_exist(self):
+        """Verify component and inclusion tag templates exist."""
+        component_templates = [
+            "lims/components/badge-score.html",
+            "lims/components/badge-label.html",
+            "lims/components/icon-info.html",
+            "lims/guides.html",
+            "lims/comments.html",
+            "lims/messages.html",
+            "lims/navs.html",
+            "crm/forms/likert-table.html",
+            "crm/forms/likert-entry.html",
+            "acl/tools-access.html",
+            "crm/tools-support.html",
+            "lims/tools-base.html",
+            "lims/tools-shipment.html",
+            "lims/tools-shipment-edit.html",
+            "lims/tools-user.html",
+            "publications/tools.html",
+        ]
+        for tname in component_templates:
+            with self.subTest(template=tname):
+                tmpl = get_template(tname)
+                self.assertIsNotNone(tmpl)
+
+    def test_all_app_templates_load_and_compile(self):
+        """Verify every HTML template file across all core apps loads and compiles without syntax error."""
+        app_names = [
+            "basiclive.core.lims",
+            "basiclive.core.acl",
+            "basiclive.core.crm",
+            "basiclive.core.schedule",
+            "basiclive.core.publications",
+        ]
+        loaded_count = 0
+        for app_name in app_names:
+            app_config = apps.get_app_config(app_name.split(".")[-1])
+            template_dir = Path(app_config.path) / "templates"
+            if not template_dir.is_dir():
+                continue
+
+            for html_file in template_dir.rglob("*.html"):
+                rel_path = str(html_file.relative_to(template_dir))
+                with self.subTest(app=app_name, template=rel_path):
+                    tmpl = get_template(rel_path)
+                    self.assertIsNotNone(tmpl)
+                    loaded_count += 1
+
+        self.assertGreater(loaded_count, 60, "Expected at least 60 templates on disk across apps")
+
+    def test_error_handlers_render(self):
+        """Verify error handler templates (403, 403_csrf, 404, 500) exist and render."""
+        error_templates = [
+            ("403.html", {"reason": "Permission denied"}),
+            ("403_csrf.html", {"reason": "CSRF verification failed"}),
+            ("404.html", {"request_path": "/missing/path/"}),
+            ("500.html", {}),
+        ]
+        for tname, ctx in error_templates:
+            with self.subTest(template=tname):
+                tmpl = get_template(tname)
+                rendered = tmpl.render(ctx)
+                self.assertIsInstance(rendered, str)
+                self.assertGreater(len(rendered.strip()), 0)
+
+    def test_core_layout_and_modal_templates_render(self):
+        """Verify core base layout and modal wrapper templates render properly."""
+        class DummyForm(forms.Form):
+            name = forms.CharField()
+
+        class DummyWizard:
+            steps = type("Steps", (), {"step0": 0, "step1": 1, "count": 2, "prev": None, "next": "step2"})()
+            form = DummyForm()
+
+        project = Project(username="testuser", name="Test User")
+
+        cases = [
+            ("lims/base.html", {"user": None}),
+            ("lims/modal/content.html", {"title": "Test Title"}),
+            ("lims/modal/form.html", {"form": DummyForm(), "title": "Edit Item"}),
+            ("lims/modal/delete.html", {"object": project, "title": "Delete Item"}),
+            ("lims/modal/wizard.html", {"wizard": DummyWizard(), "title": "New Item"}),
+        ]
+        for tname, ctx in cases:
+            with self.subTest(template=tname):
+                tmpl = get_template(tname)
+                rendered = tmpl.render(ctx)
+                self.assertIsInstance(rendered, str)
+                self.assertGreater(len(rendered.strip()), 0)
+
+
+if __name__ == "__main__":
+    unittest.main()
