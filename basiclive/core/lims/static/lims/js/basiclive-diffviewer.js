@@ -13,10 +13,11 @@
 * BasicLIVE: 'iviewer' changed to 'diffviewer' throughout.
 */
 
+
 (function ($, undefined) {
 
 //this code was taken from the https://github.com/furf/jquery-ui-touch-punch
-    var mouseEvents = {
+    let mouseEvents = {
         touchstart: 'mousedown',
         touchmove: 'mousemove',
         touchend: 'mouseup'
@@ -26,7 +27,7 @@
      * Convert a touch event to a mouse-like
      */
     function makeMouseEvent(event) {
-        var touch = event.originalEvent.changedTouches[0];
+        let touch = event.originalEvent.changedTouches[0];
 
         return $.extend(event, {
             type: mouseEvents[event.type],

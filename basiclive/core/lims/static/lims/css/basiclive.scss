@@ -78,7 +78,7 @@ $max_font: 14px;
   --gray-barely: #{$gray-barely};
   --main-background: #{$white};
   --main-text: #{$black};
-
+  --bs-table-bg: transparent;
   @include fluid-type($min_width, $max_width, $min_font, $max_font);
 }
 
@@ -440,6 +440,7 @@ a.text-muted:hover {
 table {
   &.table {
     margin-bottom: 0;
+    --bs-table-bg: transparent;
   }
 }
 
@@ -1604,7 +1605,6 @@ tr.sample-completed {
 .attention {
     animation: flash 1s infinite alternate;
 }
-
 
 .accordion {
   [aria-expanded]:after {
