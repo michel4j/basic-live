@@ -11,7 +11,10 @@ from pathlib import Path
 from django.apps import apps as django_apps, apps
 from django.core.management.base import BaseCommand
 
-from basiclive.core.lims.conf import settings
+from django.conf import settings
+
+
+ASSETS_ROOT = getattr(settings, "BASICLIVE_ASSETS_ROOT", settings.STATIC_ROOT / "assets")
 
 
 def download_asset(src_url, path: Path | str, sri: str | None = None):
@@ -46,7 +49,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         apps = django_apps.get_app_configs()
-        assets_root = settings.ASSETS_ROOT
+        assets_root = ASSETS_ROOT
         for app in apps:
             asset_path = None
             # read spec file. Prefer 'assets.json' and fallback to 'vendor.json'

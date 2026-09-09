@@ -11,7 +11,6 @@ DEFAULTS = {
     "MAX_CONTAINER_DEPTH": 2,
     "RESTRICT_DOWNLOADS": False,
     "LOADER_SELECT_DURATION": 5 * 60,  # 5 minutes
-    "ASSETS_ROOT": None,
     "RESTRUCTUREDTEXT_FILTER_SETTINGS": {},
     "SEND_EMAILS": False,
     "BASE_DIR": "/tmp",
