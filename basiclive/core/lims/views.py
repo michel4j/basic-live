@@ -312,7 +312,7 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit
 
 
 class ProjectLabels(AdminRequiredMixin, detail.DetailView):
-    template_name = "lims/pdf/return_labels.html"
+    template_name = "lims/pdf/return-labels.html"
     model = models.Project
     slug_field = 'username'
     slug_url_kwarg = 'username'
@@ -404,13 +404,13 @@ class ShipmentDetail(OwnerRequiredMixin, detail.DetailView):
 
 class ShipmentLabels(OwnerRequiredMixin, detail.DetailView):
     model = models.Shipment
-    template_name = "lims/pdf/return_labels.html"
+    template_name = "lims/pdf/return-labels.html"
 
     def get_template_name(self):
         if self.request.user.is_superuser:
-            template = 'lims/pdf/return_labels.html'
+            template = 'lims/pdf/return-labels.html'
         else:
-            template = 'lims/pdf/send_labels.html'
+            template = 'lims/pdf/send-labels.html'
         return template
 
     def get_context_data(self, **kwargs):

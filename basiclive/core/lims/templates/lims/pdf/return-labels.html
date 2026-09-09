@@ -1,4 +1,4 @@
-{% extends "lims/pdf/doc_base.html" %}
+{% extends "lims/pdf/doc-base.html" %}
 
 {% load static %}
 {% load settings %}
@@ -28,7 +28,7 @@
                     <td></td>
                     <td>ATTN: {{ project.contact_person|upper|default:"" }}{% if project.department %} / {{ project.department|upper }}{% endif %}</td>
                 </tr>
-                {% include "lims/pdf/address_base.html" %}
+                {% include "lims/pdf/address-base.html" %}
             </table>
             <div class="panel panel-default">
                 <table class="table table-sm">
@@ -44,7 +44,7 @@
                         <td></td>
                         <td>{{ admin_project.organisation|upper|default:"" }}</td>
                     </tr>
-                    {% include "lims/pdf/address_base.html" with project=admin_project %}
+                    {% include "lims/pdf/address-base.html" with project=admin_project %}
                 </table>
             </div>
         <span class="emphasize">Not restricted, as per Special Provision A152</span>
@@ -52,6 +52,6 @@
     </div>
 </div>
 {% endspaceless %}
-{% include "lims/pdf/shipping_form.html" %}
+{% include "lims/pdf/shipping-form.html" %}
 
 {% endblock %}
