@@ -13,7 +13,7 @@
     <p>Resetting the key allows a new key to be set remotely. Only do this if you will be providing a new key shortly.
     </p>
 
-    <div id="key_snippet_grp" class="form-group">
+    <div id="key_snippet_grp" class="mb-3">
         <label for="key_snippet" class="">Existing Key</label>
         <div class="">
             <textarea cols="40" rows="1" disabled class="textarea form-control" id="key_snippet">{{ object.key|truncatechars:50|default:"-- no key --" }}</textarea>

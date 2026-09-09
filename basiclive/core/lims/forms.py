@@ -72,13 +72,13 @@ class ProjectForm(forms.ModelForm):
                 self.user.is_superuser and Div(Field('designation', css_class='select'), css_class='col-6') or Div(
                     'designation'
                 ),
-                css_class='form-row'
+                css_class='row g-2'
             ),
             Div(
                 Div(Field('kind', css_class='select'), css_class='col-6'),
                 Div('alias', css_class='col-6'),
                 Div('contact_person', css_class='col-12'),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div('contact_email', css_class='col-6'),
@@ -89,34 +89,34 @@ class ProjectForm(forms.ModelForm):
                     ),
                     css_class='col-6'
                 ),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div(Field('carrier', css_class="select"), css_class='col-6'),
                 Div('account_number', css_class='col-6'),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div('organisation', css_class='col-12'),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div('department', css_class='col-12'),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div('address', css_class='col-12'),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div('city', css_class='col-6'),
                 Div('province', css_class='col-6'),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div('country', css_class='col-6'),
                 Div('postal_code', css_class='col-6'),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -149,25 +149,25 @@ class NewProjectForm(forms.ModelForm):
             Div(
                 Div('username', css_class='col-6'),
                 Div(Field('password', disabled=True), css_class="col-6"),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div('first_name', css_class='col-6'),
                 Div('last_name', css_class='col-6'),
                 Div('email', css_class='col-6'),
                 Div(Field('designation', css_class='select'), css_class='col-6'),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div(Field('kind', css_class="select"), css_class='col-6'),
                 Div('alias', css_class='col-6'),
                 Div('contact_person', css_class='col-12'),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div('contact_email', css_class='col-6'),
                 Div('contact_phone', css_class='col-6'),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -235,7 +235,7 @@ class RequestTypeForm(forms.ModelForm):
                 Div('edit_template', css_class='col-4'),
                 Div('description', css_class='col-8'),
                 Div('view_template', css_class='col-4'),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div(
@@ -257,7 +257,7 @@ class RequestTypeForm(forms.ModelForm):
                                             css_class="btn btn-warning float-end safe-remove"
                                         ),
                                     ),
-                                    css_class="form-group"
+                                    css_class="mb-3"
                                 ),
                                 css_class="col-1"
                             ),
@@ -365,7 +365,7 @@ class RequestTypeLayoutForm(forms.ModelForm):
                             HTML(
                                 '<a title="Drag to change priority" class="move btn btn-white"><i class="ti ti-move"></i></a>'
                             ),
-                            css_class="form-group"
+                            css_class="mb-3"
                         ),
                         css_class="col-1"
                     ),
@@ -576,7 +576,7 @@ class RequestParameterForm(forms.ModelForm):
             self.fields['kind'].widget = disabled_widget
             self.layout_template = kind.edit_template
             for row in kind.layout:
-                param_row = Div(css_class='form-row')
+                param_row = Div(css_class='row g-2')
                 for param, style in row:
                     info = kind.spec.get(param, {})
                     field_type = 'type' in info and info.pop('type') or 'string'
@@ -665,7 +665,7 @@ class RequestAdminForm(forms.ModelForm):
         self.body.layout = Layout(
             Div(
                 Div('staff_comments', css_class='col-12'),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -793,7 +793,7 @@ class SampleForm(forms.ModelForm):
                 Div('barcode', css_class='col-6'),
                 Div('comments', css_class='col-12'),
                 Div('image', css_class='col-12'),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -839,7 +839,7 @@ class SampleAdminForm(forms.ModelForm):
         self.body.layout = Layout(
             Div(
                 Div('staff_comments', css_class='col-12'),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -894,7 +894,7 @@ class ShipmentSendForm(forms.ModelForm):
                 Div('tracking_code', css_class="col-6"),
                 Div(Field('components', css_class="select"), css_class="col-12"),
                 Div('comments', css_class="col-12"),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -925,13 +925,13 @@ class ShipmentReturnForm(forms.ModelForm):
         self.body.layout = Layout(
             Div(
                 Div(Field('loaded'), css_class="col-12"),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div(Field('carrier', css_class="select"), css_class="col-6"),
                 Div('return_code', css_class="col-6"),
                 Div('staff_comments', css_class="col-12"),
-                css_class="form-row"
+                css_class="row g-2"
             ),
         )
         self.footer.layout = Layout(
@@ -962,7 +962,7 @@ class ShipmentRecallSendForm(forms.ModelForm):
                 Div('tracking_code', css_class="col-6"),
                 Div(Field('components', css_class="select"), css_class="col-12"),
                 Div('comments', css_class="col-12"),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -987,7 +987,7 @@ class ShipmentRecallReturnForm(forms.ModelForm):
                 Div(Field('carrier', css_class="select"), css_class="col-6"),
                 Div('return_code', css_class="col-6"),
                 Div('staff_comments', css_class="col-12"),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -1092,11 +1092,11 @@ class GroupForm(forms.ModelForm):
             'project',
             Div(
                 Div('name', css_class="col-12"),
-                css_class="form-row"
+                css_class="row g-2"
             ),
             Div(
                 Div('comments', css_class="col-12"),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -1141,7 +1141,7 @@ class ContainerLoadForm(forms.ModelForm):
                     ),
                     css_class="col-6"
                 ),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -1224,7 +1224,7 @@ class LocationLoadForm(forms.ModelForm):
                     Field('child', css_class="select"),
                     css_class="col-12"
                 ),
-                css_class="form-row"
+                css_class="row g-2"
             )
         )
         self.footer.layout = Layout(
@@ -1247,7 +1247,7 @@ class AddShipmentForm(forms.ModelForm):
             name_row = Div(
                 Div(Field('project', css_class="select"), css_class="col-4"),
                 Div('name', css_class="col-8"),
-                css_class="form-row"
+                css_class="row g-2"
             )
         else:
             self.fields['project'].widget = forms.HiddenInput()
@@ -1346,7 +1346,7 @@ class ShipmentContainerForm(forms.ModelForm):
                                             css_class="btn btn-warning float-end safe-remove"
                                         ),
                                     ),
-                                    css_class="form-group"
+                                    css_class="mb-3"
                                 ),
                                 css_class="col-2"
                             ),
@@ -1479,14 +1479,14 @@ class ShipmentGroupForm(forms.ModelForm):
                                         '</a>'
                                         '</div>'
                                     ),
-                                    css_class="form-group float-end"
+                                    css_class="mb-3 float-end"
                                 ),
                                 css_class="col-4"
                             ),
                             Div(
                                 Div(
                                     Div(Field('comments'), css_class="col-12"),
-                                    css_class="form-row"
+                                    css_class="row g-2"
                                 ),
                                 Field('shipment'),
                                 Field('priority'),
@@ -1631,15 +1631,15 @@ class GuideForm(forms.ModelForm):
             Div(
                 Div(
                     Div(
-                        Field('staff_only', css_class="custom-control-input"),
-                        css_class="custom-control custom-switch"
+                        Field('staff_only', css_class="form-check-input"),
+                        css_class="form-check form-switch"
                     ),
                     css_class="col-6"
                 ),
                 Div(
                     Div(
-                        Field('modal', css_class="custom-control-input"),
-                        css_class="custom-control custom-switch"
+                        Field('modal', css_class="form-check-input"),
+                        css_class="form-check form-switch"
                     ),
                     css_class="col-6"
                 ),

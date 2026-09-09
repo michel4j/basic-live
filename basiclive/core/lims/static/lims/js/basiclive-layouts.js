@@ -1,4 +1,14 @@
 (function ($) {
+    function initTooltips(target) {
+        if (window.bootstrap && window.bootstrap.Tooltip) {
+            $(target).each(function() {
+                bootstrap.Tooltip.getOrCreateInstance(this);
+            });
+        } else if ($.fn.tooltip) {
+            $(target).tooltip();
+        }
+    }
+
     $.fn.layoutContainer = function (options) {
         let parent = $(this);
         let settings = $.extend({
@@ -53,7 +63,7 @@
                 // Draw Container Children
                 $("#" + svg_id).drawContainer(data, settings);
                 listLoaded('#loaded-projects', '#loaded-containers', data, settings);
-                parent.find('[title]').tooltip();
+                initTooltips(parent.find('[title]'));
                 if (settings.loadable) {
                     $(document).on('click', '[data-unload-url]', function () {
                         unloadUpdateData(this, settings);
@@ -345,7 +355,7 @@ function listLoaded(proj_container, loc_container, data, settings) {
             d.root_id = settings.root_id;
             return locTemplate(d)
         });
-    $(proj_container + ' [title], ' + loc_container + ' [title]').tooltip();
+    initTooltips(proj_container + ' [title], ' + loc_container + ' [title]');
 }
 
 function unloadUpdateData(element, settings) {

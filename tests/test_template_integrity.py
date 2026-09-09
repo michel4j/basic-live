@@ -409,6 +409,7 @@ class TemplateIntegrityTests(SimpleTestCase):
             (re.compile(r'\b(float|pull)-(left|right)\b'), "Legacy float/pull class (use 'float-start' or 'float-end')"),
             (re.compile(r'\btext-(left|right)\b'), "Legacy text align class (use 'text-start' or 'text-end')"),
             (re.compile(r'\b(mr|ml|pr|pl)-[0-9a-z]+\b'), "Legacy directional spacing class (use 'me-*', 'ms-*', 'pe-*', 'ps-*')"),
+            (re.compile(r'\bform-(row|group)\b'), "Legacy form layout class (use 'row g-2' or 'mb-3')"),
         ]
 
         for app_name in app_names:
@@ -440,6 +441,27 @@ class TemplateIntegrityTests(SimpleTestCase):
         modal_content = get_template("lims/modal/content.html")
         self.assertIn('data-bs-dismiss="modal"', modal_content.template.source)
         self.assertIn('btn-close', modal_content.template.source)
+
+    def test_bootstrap5_form_and_modal_javascript_helpers(self):
+        """Verify Bootstrap 5 Select2 theme, modal helpers, and absence of form-row in forms.py."""
+        # 1. Select2 theme in JS helpers
+        lims_static = Path(apps.get_app_config("lims").path) / "static" / "lims" / "js"
+        forms_js = (lims_static / "basiclive-forms.js").read_text(encoding="utf-8")
+        modals_js = (lims_static / "basiclive-modals.js").read_text(encoding="utf-8")
+
+        self.assertIn("theme: 'bootstrap-5'", forms_js)
+        self.assertNotIn("theme: 'bootstrap4'", forms_js)
+        self.assertIn("theme: 'bootstrap-5'", modals_js)
+        self.assertNotIn("theme: 'bootstrap4'", modals_js)
+
+        # 2. Modal helpers support bootstrap.Modal
+        self.assertIn("bootstrap.Modal.getOrCreateInstance", modals_js)
+        self.assertIn("bootstrap.Modal.getInstance", modals_js)
+
+        # 3. forms.py contains zero form-row or form-group occurrences
+        forms_py = (Path(apps.get_app_config("lims").path) / "forms.py").read_text(encoding="utf-8")
+        self.assertNotIn("form-row", forms_py)
+        self.assertNotIn("form-group", forms_py)
 
 
 if __name__ == "__main__":

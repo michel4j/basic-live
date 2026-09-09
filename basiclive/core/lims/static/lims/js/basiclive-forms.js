@@ -101,7 +101,7 @@ function initShipmentWizard() {
                     $(item).attr('href', $(item).attr('href').replace(/--\d+$/, '--'+pos));
                 }
             });
-            $(row).find(".select-alt:not(.select2-hidden-accessible)").select2({theme: 'bootstrap4'});
+            $(row).find(".select-alt:not(.select2-hidden-accessible)").select2({theme: 'bootstrap-5'});
         });
     }
     $('.repeat').each(function() {
@@ -117,11 +117,23 @@ function initShipmentWizard() {
             let btn = $(this);
             btn.switchClass('btn-warning', 'btn-danger', 100, 'fade', function(){
                 btn.addClass('remove', 'text-white');
-                btn.popover({content: 'Click again to confirm', placement: 'bottom'});
-                btn.popover('show');
+                if (window.bootstrap && window.bootstrap.Popover) {
+                    let pop = bootstrap.Popover.getOrCreateInstance(btn[0], {content: 'Click again to confirm', placement: 'bottom'});
+                    pop.show();
+                } else if (btn.popover) {
+                    btn.popover({content: 'Click again to confirm', placement: 'bottom'});
+                    btn.popover('show');
+                }
             });
             setTimeout(function(){
-                btn.popover('dispose');
+                if (window.bootstrap && window.bootstrap.Popover) {
+                    let pop = bootstrap.Popover.getInstance(btn[0]);
+                    if (pop) {
+                        pop.dispose();
+                    }
+                } else if (btn.popover) {
+                    btn.popover('dispose');
+                }
                 btn.switchClass('btn-danger', 'btn-warning', 100, 'fade', function(){
                     btn.removeClass('remove', 'text-white');
                 });

@@ -17,12 +17,36 @@
 
 
 (function ( $ ) {
+    function showModal(modalEl, options) {
+        let opts = $.extend({backdrop: 'static'}, options);
+        if (window.bootstrap && window.bootstrap.Modal) {
+            let inst = bootstrap.Modal.getOrCreateInstance(modalEl, opts);
+            inst.show();
+            return inst;
+        } else if ($.fn.modal) {
+            $(modalEl).modal(opts);
+            $(modalEl).modal('show');
+        }
+    }
+
+    function hideModal(modalEl) {
+        if (window.bootstrap && window.bootstrap.Modal) {
+            let inst = bootstrap.Modal.getInstance(modalEl);
+            if (inst) {
+                inst.hide();
+            }
+        }
+        if ($.fn.modal) {
+            $(modalEl).modal('hide');
+        }
+    }
+
     $.fn.asyncForm = function (options) {
         let target = $(this);
         let defaults = {
             url: $(this).data('form-action'),
             setup: function (body) {
-                body.find(".select").select2({theme: 'bootstrap4'});
+                body.find(".select").select2({theme: 'bootstrap-5'});
                 body.find("select[data-update-on]").each(function(){
                     let src = $('[name="'+ $(this).data('update-on')+'"]');
                     let dst = $(this);
@@ -75,9 +99,11 @@
             success: function(response) {
                 target.html(response);
                 settings.setup(target);
-                target.find('.modal').modal({backdrop: 'static'});
-                target.find('.modal').on('hidden.bs.modal', function(){
-                    target.empty();  // remove contents after hiding
+                target.find('.modal').each(function() {
+                    showModal(this, {backdrop: 'static'});
+                    $(this).on('hidden.bs.modal', function(){
+                        target.empty();  // remove contents after hiding
+                    });
                 });
             }
         });
@@ -115,13 +141,19 @@
                         } else {
                             target.html(data);
                             settings.setup(target);
-                            target.find('.modal').modal({backdrop: 'static'});
+                            target.find('.modal').each(function() {
+                                showModal(this, {backdrop: 'static'});
+                            });
                         }
                     } else if (/json/.test(dataType)) {
-                        target.find('.modal').modal('hide').data('bs.modal', null);
+                        target.find('.modal').each(function() {
+                            hideModal(this);
+                        });
                         settings.complete(data);
                     } else {
-                        target.find('.modal').modal('hide').data('bs.modal', null);
+                        target.find('.modal').each(function() {
+                            hideModal(this);
+                        });
                     }
                 },
                 error: function() {
@@ -132,9 +164,6 @@
         });
     };
 
-}(jQuery));
-
-(function ( $ ) {
     $.fn.loadModal = function (url) {
         let target = $(this);
 
@@ -144,9 +173,11 @@
             url: url,
             success: function(response) {
                 target.html(response);
-                target.find('.modal').modal({backdrop: 'static'});
-                target.find('.modal').on('hidden.bs.modal', function(){
-                    target.empty();  // remove contents after hiding
+                target.find('.modal').each(function() {
+                    showModal(this, {backdrop: 'static'});
+                    $(this).on('hidden.bs.modal', function(){
+                        target.empty();  // remove contents after hiding
+                    });
                 });
             }
         });
