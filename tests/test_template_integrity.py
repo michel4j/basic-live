@@ -376,6 +376,20 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIn("select2-bootstrap-5-theme.min.css", modal_tmpl.template.source)
         self.assertNotIn("select2-bootstrap4", modal_tmpl.template.source)
 
+    def test_vendored_bootstrap_scss_removed_and_css_variables_configured(self):
+        """Verify vendored Bootstrap SCSS is removed and basiclive.scss overrides CSS custom properties."""
+        lims_static = Path(apps.get_app_config("lims").path) / "static"
+        vendored_scss_dir = lims_static / "bootstrap" / "scss"
+        self.assertFalse(vendored_scss_dir.exists(), "Vendored Bootstrap SCSS directory should be removed")
+
+        scss_file = lims_static / "lims" / "css" / "basiclive.scss"
+        self.assertTrue(scss_file.exists())
+        scss_content = scss_file.read_text(encoding="utf-8")
+
+        self.assertNotIn("@import \"../../bootstrap/scss/bootstrap\";", scss_content)
+        self.assertIn("--bs-primary", scss_content)
+        self.assertIn("--bs-border-color", scss_content)
+
 
 if __name__ == "__main__":
     unittest.main()
