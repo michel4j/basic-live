@@ -287,6 +287,7 @@ class TemplateIntegrityTests(SimpleTestCase):
 
         base_tmpl = get_template("lims/base.html")
         rendered_base = base_tmpl.render({"user": None})
+        self.assertIn("bootstrap/css/bootstrap.min.css", rendered_base)
         self.assertIn("lims/css/basiclive.min.css", rendered_base)
         self.assertIn("lims/js/basiclive-modals.min.js", rendered_base)
         self.assertNotIn("mxlive", rendered_base.lower())
@@ -344,6 +345,36 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIn("form-label", rendered)
         self.assertIn("form-control", rendered)
         self.assertNotIn("form-group", rendered)
+
+    def test_bootstrap5_and_select2_theme_assets(self):
+        """Verify assets.json and templates use Bootstrap 5 and select2-bootstrap-5-theme."""
+        import json
+        assets_file = Path(apps.get_app_config("lims").path) / "static" / "lims" / "assets.json"
+        self.assertTrue(assets_file.exists())
+        with open(assets_file, "r") as f:
+            assets_data = json.load(f)
+
+        # Bootstrap 5 assets
+        bootstrap_conf = assets_data.get("bootstrap", {})
+        self.assertIn("bootstrap@5", bootstrap_conf.get("url", ""))
+        css_paths = [entry["path"] for entry in bootstrap_conf.get("css", [])]
+        js_paths = [entry["path"] for entry in bootstrap_conf.get("js", [])]
+        self.assertIn("css/bootstrap.min.css", css_paths)
+        self.assertIn("js/bootstrap.bundle.min.js", js_paths)
+
+        # Select2 Bootstrap 5 theme
+        misc_css = [entry["path"] for entry in assets_data.get("misc", {}).get("css", [])]
+        self.assertTrue(any("select2-bootstrap-5-theme" in p for p in misc_css))
+        self.assertFalse(any("select2-bootstrap4" in p for p in misc_css))
+
+        # Template references
+        req_tmpl = get_template("lims/details/requesttype.html")
+        self.assertIn("select2-bootstrap-5-theme.min.css", req_tmpl.template.source)
+        self.assertNotIn("select2-bootstrap4", req_tmpl.template.source)
+
+        modal_tmpl = get_template("lims/modal/form.html")
+        self.assertIn("select2-bootstrap-5-theme.min.css", modal_tmpl.template.source)
+        self.assertNotIn("select2-bootstrap4", modal_tmpl.template.source)
 
 
 if __name__ == "__main__":
