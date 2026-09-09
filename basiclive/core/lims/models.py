@@ -1090,7 +1090,7 @@ class RequestType(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     scope = models.CharField(max_length=15, default=SCOPES.UNLIMITED)
-    edit_template = models.CharField(max_length=100, default="requests/base-edit.html")
+    edit_template = models.CharField(max_length=100, default="lims/requests/base-edit.html")
     view_template = models.CharField(max_length=100, default="")
     spec = models.JSONField(blank=True)
     layout = models.JSONField(blank=True, default=list)
