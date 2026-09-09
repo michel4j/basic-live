@@ -376,6 +376,10 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIn("select2-bootstrap-5-theme.min.css", modal_tmpl.template.source)
         self.assertNotIn("select2-bootstrap4", modal_tmpl.template.source)
 
+        base_tmpl = get_template("lims/base.html")
+        self.assertIn("bootstrap/css/bootstrap.min.css", base_tmpl.template.source)
+        self.assertIn("bootstrap/js/bootstrap.bundle.min.js", base_tmpl.template.source)
+
     def test_vendored_bootstrap_scss_removed_and_css_variables_configured(self):
         """Verify vendored Bootstrap SCSS is removed and basiclive.scss overrides CSS custom properties."""
         lims_static = Path(apps.get_app_config("lims").path) / "static"
@@ -410,6 +414,7 @@ class TemplateIntegrityTests(SimpleTestCase):
             (re.compile(r'\btext-(left|right)\b'), "Legacy text align class (use 'text-start' or 'text-end')"),
             (re.compile(r'\b(mr|ml|pr|pl)-[0-9a-z]+\b'), "Legacy directional spacing class (use 'me-*', 'ms-*', 'pe-*', 'ps-*')"),
             (re.compile(r'\bform-(row|group)\b'), "Legacy form layout class (use 'row g-2' or 'mb-3')"),
+            (re.compile(r'\bcustom-select\b'), "Legacy 'custom-select' class (use 'form-select')"),
         ]
 
         for app_name in app_names:
