@@ -18,29 +18,29 @@
         <div class="row">
             <h5 class="my-0 p-2">
             {% if tag %}
-                <a href="{% url 'section-stats' tag %}"><span class="badge badge-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
+                <a href="{% url 'section-stats' tag %}"><span class="badge text-bg-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
                 {% for yr in years %}
-                    <a href="{% url 'section-yearly-stats' tag  yr %}"><span class="badge badge-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
+                    <a href="{% url 'section-yearly-stats' tag  yr %}"><span class="badge text-bg-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
                 {% endfor %}
             {% else %}
-                <a href="{% url 'all-stats' %}"><span class="badge badge-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
+                <a href="{% url 'all-stats' %}"><span class="badge text-bg-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
                 {% for yr in years %}
-                    <a href="{% url 'all-yearly-stats' yr %}"><span class="badge badge-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
+                    <a href="{% url 'all-yearly-stats' yr %}"><span class="badge text-bg-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
                 {% endfor %}
             {% endif %}
             </h5>
-            <h5 class="my-0 ml-auto p-2">
-            <a href="{% url 'all-stats' %}"><span class="badge badge-{% if tag %}warning{% else %}success{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
+            <h5 class="my-0 ms-auto p-2">
+            <a href="{% url 'all-stats' %}"><span class="badge text-bg-{% if tag %}warning{% else %}success{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
             {% if year %}
                 {% for tagname in tags %}
                     <a href="{% url 'section-yearly-stats' tagname year %}">
-                        <span class="badge badge-{% if tagname == tag %}success{% else %}warning{% endif %}">{{ tagname }}</span>
+                        <span class="badge text-bg-{% if tagname == tag %}success{% else %}warning{% endif %}">{{ tagname }}</span>
                     </a>
                 {% endfor %}
             {% else %}
                 {% for tagname in tags %}
                     <a href="{% url 'section-stats' tagname %}">
-                        <span class="badge badge-{% if tagname == tag %}success{% else %}warning{% endif %}">{{ tagname }}</span>
+                        <span class="badge text-bg-{% if tagname == tag %}success{% else %}warning{% endif %}">{{ tagname }}</span>
                     </a>
                 {% endfor %}
             {% endif %}

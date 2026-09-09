@@ -38,11 +38,11 @@
         {% if not object.samples.exists %}
             class="attention"
             title="No Samples"
-            data-toggle="popover"
-            data-trigger="hover"
-            data-placement="bottom"
+            data-bs-toggle="popover"
+            data-bs-trigger="hover"
+            data-bs-placement="bottom"
             data-type="popover-info"
-            data-content="Click here to add samples"
+            data-bs-content="Click here to add samples"
         {% endif %}
         >
         {% if not object.samples.exists %}
@@ -59,7 +59,7 @@
         </a>
     {% endif %}
     {% if object.children_history.exists %}
-        <a class="pull-right" data-link="{% url 'automounter-history' object.pk %}">
+        <a class="float-end" data-link="{% url 'automounter-history' object.pk %}">
             {% show_icon label='Load History' icon='ti ti-md ti-timer' %}
         </a>
     {% endif %}
@@ -70,11 +70,11 @@
         <div class="row">
             <div class="col-2">
                 <h3 class="no-vmargin">
-                    <span class="badge badge-{% if object.status == object.STATES.ON_SITE %}info
+                    <span class="badge text-bg-{% if object.status == object.STATES.ON_SITE %}info
                                 {% elif object.status == object.STATES.DRAFT %}warning
                                 {% elif object.status == object.STATES.SENT %}success
                                 {% elif object.status == object.STATES.RETURNED and not user.is_superuser %}success
-                                {% else %}default{% endif %}">{% if object.parent %}Loaded{% else %}{{ object.get_status_display }}{% endif %}</span>
+                                {% else %}secondary{% endif %}">{% if object.parent %}Loaded{% else %}{{ object.get_status_display }}{% endif %}</span>
                 </h3>
             </div>
             <div class="col-3">
@@ -86,12 +86,12 @@
                 {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
             {% endif %}
             </div>
-            <div class="col-2 pull-right text-right">
+            <div class="col-2 float-end text-end">
                 <small class="text-muted text-condensed">Number of {% if object.accepts_children %}Containers{% else %}Samples{% endif %}:</small><br>
                 <strong>{% if object.accepts_children %}{{ object.children.count }}{% else %}{{ object.num_samples }}{% endif %}</strong>{% if object.kind.locations.count %} / {{ object.kind.locations.count }}{% endif %}
             </div>
             {% if object.parent %}
-                <div class="col-3 pull-right text-right">
+                <div class="col-3 float-end text-end">
                     <small class="text-muted text-condensed">Location:</small><br>
                     {% if object.automounter %}
                         {{ object.automounter.beamline }}
@@ -101,7 +101,7 @@
                 </div>
             {% endif %}
 
-            <div class="col-{% if object.parent %}2{% else %}5{% endif %} pull-right text-right">
+            <div class="col-{% if object.parent %}2{% else %}5{% endif %} float-end text-end">
                 <small class="text-muted text-condensed">Type:</small><br>
                 {{ object.kind }}
             </div>

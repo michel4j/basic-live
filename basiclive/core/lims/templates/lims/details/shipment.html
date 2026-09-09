@@ -41,11 +41,11 @@
         <div class="row">
             <div class="col">
                 <h3 class="m-0">
-                    <span class="badge badge-{% if shipment.status == shipment.STATES.ON_SITE %}info
+                    <span class="badge text-bg-{% if shipment.status == shipment.STATES.ON_SITE %}info
                                 {% elif shipment.status == shipment.STATES.DRAFT %}warning
                                 {% elif shipment.status == shipment.STATES.SENT %}success
                                 {% elif shipment.status == shipment.STATES.RETURNED and not user.is_superuser %}success
-                                {% else %}default{% endif %}">{{ shipment.get_status_display }}</span>
+                                {% else %}secondary{% endif %}">{{ shipment.get_status_display }}</span>
                 </h3>
             </div>
             <div class="col">
@@ -104,10 +104,10 @@
                 </div>
             {% endif %}
             {% if shipment.components.count %}
-                <div class="col text-right">
+                <div class="col text-end">
                     <small class="text-muted text-condensed">Included Items</small><br>
                     {% for c in shipment.components.all %}
-                        <span class="badge badge-warning p-2">{{ c.kind }}</span>
+                        <span class="badge text-bg-warning p-2">{{ c.kind }}</span>
                     {% endfor %}
                 </div>
             {% endif %}
@@ -125,7 +125,7 @@
                             <h5 class="text-condensed">
                                 <a href="{% url 'container-detail' pk=container.pk %}">
                                     {% if container.parent %}
-                                        <span class="badge badge-primary text-thin" title="Loaded">
+                                        <span class="badge text-bg-primary text-thin" title="Loaded">
                                         {% with automounters|get_item:container.pk as am %}
                                             {% if am %}{{ am.beamline }} |
                                             {% else %}{{ container.parent.kind.name }} {{ container.parent.name }} |
@@ -133,7 +133,7 @@
                                         {% endwith %}
                                     </span>
                                     {% else %}
-                                        <span class="badge badge-secondary text-thin">{{ container.name }}</span>
+                                        <span class="badge text-bg-secondary text-thin">{{ container.name }}</span>
                                     {% endif %}
                                 </a>
                             </h5>
@@ -154,7 +154,7 @@
                     {% empty %}
                         <div class="list-group-item">
                             <div class="d-flex flex-row">
-                                <div class="pl-3 flex-shrink-1 align-self-center">
+                                <div class="ps-3 flex-shrink-1 align-self-center">
                                     <small class="p-0 m-0 text-condensed">
                                         Use Requests to communicate intended experiments and procedures for this set of
                                         samples, especially if beamline staff will be collecting the data.

@@ -18,7 +18,7 @@
                 {% for container in shipment.containers.all %}
                     <div class="{% container_col container %} seater text-center" id="seater-{{ container.pk }}">
                         <h4 class="">
-                            <a href="#!" class="badge badge-secondary text-condensed text-thin" title="Toggle All"
+                            <a href="#!" class="badge text-bg-secondary text-condensed text-thin" title="Toggle All"
                                data-pk="{{ container.pk }}"><strong>{{ container.name }}</strong>
                             </a>
                         </h4>
@@ -74,12 +74,12 @@
 {% block modal_footer %}
     <div class="col-9">
         <div class="alert alert-info m-0 p-2 small" id="seater-instructions">
-            <i class="ti ti-md ti-info-alt float-left pr-2"></i>
+            <i class="ti ti-md ti-info-alt float-start pe-2"></i>
             Click on a group to select it, then click the locations of the corresponding samples in each container.
             Click previously selected samples to remove them.
         </div>
     </div>
-    <div class="col-3 my-auto text-right">
+    <div class="col-3 my-auto text-end">
         <button id='save-seats' class="btn btn btn-primary" name="save" type="button"
                 data-post-action="{% url 'create-samples' pk=shipment.pk %}"
         >Save Samples</button>

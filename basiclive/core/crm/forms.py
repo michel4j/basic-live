@@ -30,9 +30,9 @@ class SupportAreaForm(forms.ModelForm):
         self.body.layout = Layout(
             Div(
                 Div('name', css_class="col-12"),
-                Div(Div('user_feedback', css_class="mt-3 ml-3 pl-1"), css_class="col-6"),
+                Div(Div('user_feedback', css_class="mt-3 ms-3 ps-1"), css_class="col-6"),
                 Div('scale', css_class="col-6"),
-                Div(Div('external', css_class="mt-3 ml-3 pl-1"), css_class="col-12"),
+                Div(Div('external', css_class="mt-3 ms-3 ps-1"), css_class="col-12"),
                 css_class="row"
             ),
         )

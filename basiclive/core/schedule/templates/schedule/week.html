@@ -33,7 +33,7 @@
             <div class="heading-box">
                 <h3>Week of {{ info.start }}</h3>
             </div>
-            <div class="calendarnav tools-box pull-right">
+            <div class="calendarnav tools-box float-end">
                 <a class="cal-nav" href="#" rel="{% url 'any-week' last_week.0 last_week.1 %}" title="Last Week">
                     {% show_icon icon="ti ti-md ti-angle-left" %}
                 </a>
@@ -47,9 +47,9 @@
                     {% show_icon icon="ti ti-md ti-home" %}
                 </a>
                 {% if editable %}
-                    <div class="toggle-box d-flex flex-column ml-3 pl-4">
+                    <div class="toggle-box d-flex flex-column ms-3 ps-4">
                         <div title="Edit Downtime">
-                            <text class="text-muted text-sm text-condensed mr-1" style="writing-mode: vertical-lr;">CANC</text>
+                            <text class="text-muted text-sm text-condensed me-1" style="writing-mode: vertical-lr;">CANC</text>
                             <input type="checkbox"  id="dtSwitch" class="dn">
                             <label for="dtSwitch" class="toggle mb-0"><span class="toggle__handler"></span></label>
 
@@ -107,14 +107,14 @@
     <div class="row">
         <div class="legend-box {% if facility_modes %}col-6{% else %}col-12{% endif %} my-3">
             <div class="row">
-                <div class="col-4 pr-2 py-2 overflow ellipsis" title="Reserved"><span class="full legend px-3 mr-1"></span> Reserved</div>
+                <div class="col-4 pe-2 py-2 overflow ellipsis" title="Reserved"><span class="full legend px-3 me-1"></span> Reserved</div>
                 {% for scope in scope_types %}
                     <div class="col-4 p-2 overflow ellipsis" title="{{ scope.1 }}">
-                        <span class="{{ scope.0 }} legend px-3 mr-1" style="background-color: {{kind.color}};"></span> {{ scope.1 }}
+                        <span class="{{ scope.0 }} legend px-3 me-1" style="background-color: {{kind.color}};"></span> {{ scope.1 }}
                     </div>
                 {% endfor %}
                 {% for kind in access_types %}
-                    <div class="col-4 p-2 overflow ellipsis" title="{{ kind.name }}"><span class="kind.name legend px-3 mr-1" style="background-color: {{kind.color}};"></span> {{ kind.name }}</div>
+                    <div class="col-4 p-2 overflow ellipsis" title="{{ kind.name }}"><span class="kind.name legend px-3 me-1" style="background-color: {{kind.color}};"></span> {{ kind.name }}</div>
                 {% endfor %}
             </div>
         </div>
@@ -122,8 +122,8 @@
         <div class="legend-box col-6 my-3">
             <div class="row">
                 {% for kind in facility_modes %}
-                    <div class="col-4 {% if forloop.first %}pr-2 py-2{% else %}p-2{% endif %} overflow ellipsis" title="{{ kind.description }}">
-                        <span class="legend px-3 mr-1" style="background-color: {{kind.color}};"></span>
+                    <div class="col-4 {% if forloop.first %}pe-2 py-2{% else %}p-2{% endif %} overflow ellipsis" title="{{ kind.description }}">
+                        <span class="legend px-3 me-1" style="background-color: {{kind.color}};"></span>
                         {{ kind.description }}</div>
                 {% endfor %}
             </div>

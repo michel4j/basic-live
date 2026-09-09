@@ -120,7 +120,7 @@ class DowntimeForm(forms.ModelForm):
         if self.instance.pk:
             self.body.title = u"Edit Downtime"
             self.body.form_action = reverse_lazy('downtime-edit', kwargs={'pk': self.instance.pk})
-            delete_btn = StrictButton('Delete', type='delete', value='Delete', css_class="btn btn-danger pull-left")
+            delete_btn = StrictButton('Delete', type='delete', value='Delete', css_class="btn btn-danger float-start")
         else:
             self.body.title = u"Mark Downtime"
             self.body.form_action = reverse_lazy('new-downtime')

@@ -71,7 +71,7 @@
         </div>
         {% endif %}
         <div class="col">
-            <div class="tools-box float-right">
+            <div class="tools-box float-end">
             {% if object.url %}
                 <a href="{% url 'files-proxy' section='archive' path=object.download_url %}"
                    download="{{ object.name }}.tar.gz" title="Download Full Dataset">

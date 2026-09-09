@@ -1,7 +1,7 @@
 {% load icons %}
 
 {% with request.num_samples as num_samples %}
-    <li class="list-group-item pl-2" id="request-{{ request.pk }}" data-request="{{ request.pk }}" data-highlight="id"
+    <li class="list-group-item ps-2" id="request-{{ request.pk }}" data-request="{{ request.pk }}" data-highlight="id"
          data-reference="{% for s in request.sample_list %}{{ s.pk }} {% endfor %}">
         <div class="d-flex flex-row justify-content-between">
             {% if editable %}
@@ -11,7 +11,7 @@
                     </span>
                 </div>
             {% endif %}
-            <div class="text-left flex-fill pl-3 overflow-ellipsis">
+            <div class="text-start flex-fill ps-3 overflow-ellipsis">
                 <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
                 <span class="text-condensed">{{ request.kind.name }}</span>
                 <div class="small">

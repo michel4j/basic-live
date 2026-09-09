@@ -26,23 +26,23 @@
                     <thead>
                     <tr class="bg-light" style="z-index: 1;">
                         <th>Element</th>
-                        <th class="text-right">%</th>
+                        <th class="text-end">%</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for element in xrf.assignments %}
                         <tr style="color: {{ element.color }};">
                             <td>
-                            <span class="custom-control custom-switch" style="z-index: 0;">
-                              <input type="checkbox" class="custom-control-input xrf-toggle" id="switch{{ forloop.counter0 }}"
+                            <span class="form-check form-switch" style="z-index: 0;">
+                              <input type="checkbox" class="form-check-input xrf-toggle" id="switch{{ forloop.counter0 }}"
                                      data-element="{{ element.label }}"
                                      data-color="{{ element.color }}"
                                      {% if element.reliability > 2 %}checked{% endif %}
                               >
-                              <label class="custom-control-label" for="switch{{forloop.counter0}}">&emsp;{{ element.label }}</label>
+                              <label class="form-check-label" for="switch{{forloop.counter0}}">&emsp;{{ element.label }}</label>
                             </span>
                             </td>
-                            <td class="text-right">{{ element.reliability|floatformat:1 }}</td>
+                            <td class="text-end">{{ element.reliability|floatformat:1 }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

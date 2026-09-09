@@ -8,16 +8,16 @@
             <span class="text-condensed text-muted">CONTACT PERSON:</span>
             <strong>{{ object.contact_person|default_if_none:"" }}</strong><br/>
             {% if object.contact_email %}{{ object.contact_email }}<br/>{% endif %}
-            {% if object.contact_phone %}<span class="text-monospace">{{ object.contact_phone }}</span><br/>{% endif %}
+            {% if object.contact_phone %}<span class="font-monospace">{{ object.contact_phone }}</span><br/>{% endif %}
         </div>
       </div>
       <div class="col-6">
-        <div class="mini-profile text-right">
+        <div class="mini-profile text-end">
             <span class="text-condensed text-muted">PRINCIPAL INVESTIGATOR:</span>
             <strong>{{ object.first_name }} {{ object.last_name }}</strong><br/>
             {% if object.email %}{{ object.email }}{% endif %}<br/>
             {% if object.contact_fax %}
-                <span class="text-condensed text-muted">FACSIMILE:</span>&nbsp;<span class="text-monospace">{{ object.contact_fax }}</span><br/>
+                <span class="text-condensed text-muted">FACSIMILE:</span>&nbsp;<span class="font-monospace">{{ object.contact_fax }}</span><br/>
             {% endif %}
         </div>
       </div>
@@ -33,7 +33,7 @@
             {% include "lims/address.html" with user=object %}
         </div>
         <div class="col-6">
-            <div class="text-center float-right">
+            <div class="text-center float-end">
                 <img src="/static/lims/img/{{ object.carrier|default_if_none:'walking'|slugify }}.png"
                      height="80px"
                      title="{{ object.carrier|default_if_none:'User'|title }}">

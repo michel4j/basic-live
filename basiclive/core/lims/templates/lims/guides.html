@@ -11,8 +11,8 @@
         {% if not guide.staff_only or request.user.is_superuser%}
         <div class="card">
             <div class="card-header {% if guide.staff_only %}alert-warning{% endif %} w-100 p-2">
-                <a href="#!" data-toggle="collapse"
-                   data-target="#collapse-{{ forloop.counter }}"
+                <a href="#!" data-bs-toggle="collapse"
+                   data-bs-target="#collapse-{{ forloop.counter }}"
                    aria-controls="collapse-{{ forloop.counter }}"
                    aria-expanded="false"
                    id="heading-{{ forloop.counter }}"
@@ -24,7 +24,7 @@
             </div>
 
             <div id="collapse-{{ forloop.counter }}" class="collapse" aria-labelledby="heading-{{ forloop.counter }}"
-                 data-parent="#guide-accordion">
+                 data-bs-parent="#guide-accordion">
                 <div class="card-body p-3">
                     {% if guide.url or guide.attachment %}
                         {% if guide.has_image %}
@@ -84,7 +84,7 @@
                     {% endif %}
                 </div>
                     {% if request.user.is_superuser or guide.has_document %}
-                        <div class="tools-box float-right pr-0">
+                        <div class="tools-box float-end pe-0">
                             {% if guide.has_document %}
                                 <a href="{{ guide.attachment.url }}" title="Download" download>
                                     {% show_icon icon='ti ti-md ti-clip' %}

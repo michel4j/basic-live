@@ -14,7 +14,7 @@
                 {% show_icon label=shipment.date_returned|date:"M j"|upper icon='ti ti-md ti-archive' tooltip='Archived' %}
             {% endif %}
         </div>
-        <div class="pl-3 overflow-ellipsis text-muted align-self-center">
+        <div class="ps-3 overflow-ellipsis text-muted align-self-center">
             <h5 class="m-0">
                 <a class="text-muted text-condensed" href="{% url 'shipment-detail' shipment.pk %}"
                    title='View Shipment "{{ shipment.name }}"'>
@@ -28,7 +28,7 @@
                 <strong>{{ shipment.sample_count }}</strong> Sample{{ shipment.sample_count|pluralize }}
             </div>
         </div>
-        <div class="tools-box ml-auto">
+        <div class="tools-box ms-auto">
             {% if shipment.status >= shipment.STATES.ON_SITE %}
                 <a href="{% url 'shipment-data' shipment.pk %}" title="Go to Data from this shipment">
                     {% show_icon label='Data' badge=shipment.data_count icon='ti ti-md ti-layout-grid3' color='info' %}

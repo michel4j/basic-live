@@ -2,7 +2,7 @@
 
 {% if detailed %}
     {% if bt.notification %}
-    <div class="float-left">
+    <div class="float-start">
 
         <a href="#!" class="d-flex" data-form-link="{% url 'email-edit' bt.notification.pk %}" title="Edit Notification">
             {% if bt.notification.sent %}
@@ -17,8 +17,8 @@
     </div>
     {% endif %}
 
-    <div class="tools-box float-right pr-0 my-1">
-        <a href="#!" data-form-link="{% url 'beamtime-edit' bt.pk %}" title="Edit" class="pr-0">
+    <div class="tools-box float-end pe-0 my-1">
+        <a href="#!" data-form-link="{% url 'beamtime-edit' bt.pk %}" title="Edit" class="pe-0">
             {% show_icon icon='ti ti-sm ti-pencil' %}
         </a>
         <a href="#!" data-form-link="{% url 'beamtime-delete' bt.pk %}" title="Delete">

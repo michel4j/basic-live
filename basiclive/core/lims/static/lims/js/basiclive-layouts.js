@@ -252,7 +252,7 @@ var locTemplate = _.template(
     '           <div class="flex-grow-1 align-self-center py-0">' +
     '               <div class="loc-list row">' +
     '                   <strong class="col-2"><%= port %></strong>' +
-    '                   <span class="col mr-2"><a href="<%= url %>"><%= name %></a>&nbsp;<small class="float-right badge badge-pill badge-primary detail"><%= samples %></small></span>' +
+    '                   <span class="col me-2"><a href="<%= url %>"><%= name %></a>&nbsp;<small class="float-end badge rounded-pill text-bg-primary detail"><%= samples %></small></span>' +
     '                   <span class="col text-center text-muted detail"><%= project %></span>' +
     '               </div>' +
     '           </div>' +
@@ -269,7 +269,7 @@ var locTemplate = _.template(
 
 var projTemplate = _.template(
     '<div class="row" data-highlight="project" data-reference="<%= name.toLowerCase() %>">' +
-    '       <h4 class="col-2 text-condensed text-center align-self-center"><span class="badge badge-pill badge-primary py-1"><%= details.length %></span></h4>' +
+    '       <h4 class="col-2 text-condensed text-center align-self-center"><span class="badge rounded-pill text-bg-primary py-1"><%= details.length %></span></h4>' +
     '       <div class="col d-flex flex-row justify-content-between">' +
     '           <div class="flex-grow-1"><h5 class="m-0"><%= name %></h5>' +
     '               <div class="loc-list">' +
@@ -277,7 +277,7 @@ var projTemplate = _.template(
     '               </div>' +
     '           </div>' +
     '           <div class="project-list-tools tools-box">' +
-    '               <a data-toggle="collapse" href="#prj-<%= name.toLowerCase() %>-list"> ' +
+    '               <a data-bs-toggle="collapse" href="#prj-<%= name.toLowerCase() %>-list"> ' +
     '                   <div class="icon-stack">' +
     '                       <i class="ti ti-md ti-zoom-in"></i>' +
     '                   </div>' +
@@ -291,7 +291,7 @@ var projTemplate = _.template(
     '       </div>' +
     '</div>' +
     '<div class="collapse detail-container-list row" id="prj-<%= name.toLowerCase() %>-list">' +
-    '<div class="col ml-5 my-1 ">' +
+    '<div class="col ms-5 my-1 ">' +
     '     <% _.each(details, function(container, i){ container.root_id = root_id; %><%= locTemplate(container) %><% }); %>' +
     '</div></div>'
 );

@@ -48,7 +48,7 @@
         <div class="row">
             <div class="col d-flex flex-row">
                 <h3 class="align-self-center m-0 p-0">
-                    <span class="badge badge-{% if object.status == object.STATES.ACTIVE %}info
+                    <span class="badge text-bg-{% if object.status == object.STATES.ACTIVE %}info
                                 {% elif object.status == object.STATES.DRAFT %}warning
                                 {% elif object.status == object.STATES.COMPLETE %}success
                                 {% elif object.status == object.STATES.ARCHIVED and not user.is_superuser %}success
@@ -59,7 +59,7 @@
                 <small class="text-muted text-condensed">Shipment:</small><br>
                 {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
             </div>
-            <div class="col pull-right text-right">
+            <div class="col float-end text-end">
                 <small class="text-muted text-condensed">Number of Samples:</small><br>
                 <strong>{{ object.num_samples }}</strong>
             </div>

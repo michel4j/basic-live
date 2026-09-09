@@ -138,8 +138,8 @@ class AnnotatedUsersTests(TestCase):
         )
 
         html = format_authorized_users(self.access_list.annotated_users(), self.access_list)
-        expected_alice = '<span class="badge badge-success badge-md" title="Scheduled Access">ALICE</span>'
-        expected_bob = '<span class="badge badge-warning badge-md" title="Manual Access">BOB</span>'
+        expected_alice = '<span class="badge text-bg-success badge-md" title="Scheduled Access">ALICE</span>'
+        expected_bob = '<span class="badge text-bg-warning badge-md" title="Manual Access">BOB</span>'
         self.assertEqual(html, f"{expected_alice} {expected_bob}")
 
     def test_access_list_view_configuration(self):

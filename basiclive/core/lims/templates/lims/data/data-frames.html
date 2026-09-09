@@ -38,7 +38,7 @@
             <small class="col text-center text-condensed p-0" style="line-height: 1.2;"><span
                     id="framename"></span><br/><span id="oscstart"></span> to <span id="oscend"></span></small>
             <div class="col">
-                <div class="float-right">
+                <div class="float-end">
                     <button class="btn btn-sm btn-info" onclick="prevClicked();" type="button"><i
                             class="ti ti-arrow-left"></i></button>
                     <button class="btn btn-sm btn-info" onclick="nextClicked();" type="button"><i
@@ -48,7 +48,7 @@
         </div>
     </div>
 
-    <div class="d-none d-lg-flex flex-column flex-fill pl-3">
+    <div class="d-none d-lg-flex flex-column flex-fill ps-3">
         <!-- Display of metaData -->
         <div class="meta-data mb-3" style="flex: none;">
             <div class="xtal-pic"
@@ -58,9 +58,9 @@
         </div>
         <small style="flex: none;">
             <ul class="nav nav-tabs text-condensed px-2" role="tablist">
-                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#frames">{{ object.num_frames }}
+                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#frames">{{ object.num_frames }}
                     Frames ({{ object.frame_sets|truncatechars:20 }})</a></li>
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#meta-data">Meta-Data</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#meta-data">Meta-Data</a></li>
             </ul>
         </small>
         <div class="frame-list flex-fill">
@@ -73,7 +73,7 @@
                             {% get_frame_name object frame_id as frame_name %}
                             <li data-frame-id="{{ frame_id }}" data-frame-name="{{ frame_name }}">
                                 <a onclick="toFrame('{{ frame_name }}', {{ frame_id }});">{{ frame_name }}</a>&nbsp;
-                                <a class="float-right download-tool" download="{{ frame_name }}"
+                                <a class="float-end download-tool" download="{{ frame_name }}"
                                    href="{% url 'files-proxy' section='raw' path=frame_url %}"
                                    title="Download this image">
                                    {% show_icon icon='ti ti-sm ti-download' color='info' %}</a>
@@ -84,7 +84,7 @@
                 <div id="meta-data" class="tab-pane fade">
                     <ul class="list-unstyled">
                         {% for k, v in object.get_meta_data.items %}
-                            <li><strong>{{ k|title }}: </strong> <span class="float-right">{{ v }}</span></li>
+                            <li><strong>{{ k|title }}: </strong> <span class="float-end">{{ v }}</span></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -212,10 +212,10 @@
         var url = $viewer.data('base-url') + '/' + $current_frame_to_display + '/' + $current_brightness_to_display + '.png';
         updateFrameDetails();
 
-        $('[data-target="#parameters"]').click(function (e) {
+        $('[data-bs-target="#parameters"], [data-target="#parameters"]').click(function (e) {
         e.preventDefault();
         e.stopPropagation();
-        var target = $($(this).attr('data-target'));
+        var target = $($(this).attr('data-bs-target') || $(this).attr('data-target'));
         var frame_list = $('.frame-list ul');
         var height = 0;
         if (target.hasClass('in')) {

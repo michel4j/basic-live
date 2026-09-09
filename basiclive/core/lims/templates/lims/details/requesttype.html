@@ -41,12 +41,12 @@
         <div class="row">
             <div class="col-2">
                 <h3 class="no-vmargin">
-                    <span class="badge badge-{% if object.active %}success{% else %}default{% endif %}">
+                    <span class="badge text-bg-{% if object.active %}success{% else %}secondary{% endif %}">
                         {% if object.active %}ACTIVE{% else %}INACTIVE{% endif %}
                     </span>
                 </h3>
             </div>
-            <div class="col-10 pull-right text-right">
+            <div class="col-10 float-end text-end">
                 <small class="text-muted text-condensed">Template:</small><br>
                 {{ object.template }}
             </div>

@@ -20,12 +20,12 @@
             {% for sample in container.samples.all %}
                 <li class="list-group-item d-flex flex-row justify-content-between" id="sample-{{ sample.pk }}" data-group="{{ sample.group.pk }}"
                     data-id="{{ sample.pk }}">
-                    <div class="text-left flex-fill">
+                    <div class="text-start flex-fill">
                         <a href="{% url 'sample-detail' sample.pk %}"><strong>{{ sample.name }}</strong></a>
                         {% if sample.comments %} | {{ sample.comments }}{% endif %}
                     </div>
                     {% if sample.image %}
-                        <div class="tools-box my-0 text-right">
+                        <div class="tools-box my-0 text-end">
                             <img src="{{ sample.image.url }}" height="40px"/>
                         </div>
                     {% endif %}

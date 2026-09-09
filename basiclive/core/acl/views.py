@@ -33,10 +33,10 @@ def format_authorized_users(users, record):
     badges = []
     for user in users:
         if user.source == 'schedule':
-            css_class = 'badge badge-success'
+            css_class = 'badge text-bg-success'
             title = 'Scheduled Access'
         else:
-            css_class = 'badge badge-warning'
+            css_class = 'badge text-bg-warning'
             title = 'Manual Access'
         badges.append(f'<span class="{css_class} badge-md" title="{title}">{escape(user.username.upper())}</span>')
     return ' '.join(badges)

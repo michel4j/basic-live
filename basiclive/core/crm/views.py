@@ -29,7 +29,7 @@ def format_comments(val, args):
 
 
 def format_areas(val, record):
-    return '<br/>'.join(["<span class='badge badge-info'>{}</span>".format(a.name) for a in record.areas.all()])
+    return '<br/>'.join(["<span class='badge text-bg-info'>{}</span>".format(a.name) for a in record.areas.all()])
 
 
 def format_created(val, args):

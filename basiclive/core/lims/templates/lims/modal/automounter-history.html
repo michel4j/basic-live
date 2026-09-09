@@ -15,22 +15,22 @@
                 <tr>
                     <th>Container</th>
                     <th>Start</th>
-                    <th class="text-right">End</th>
-                    <th class="text-right">Loaded Time</th></tr>
+                    <th class="text-end">End</th>
+                    <th class="text-end">Loaded Time</th></tr>
                 {% for stretch in object.children_history.active %}
                     <tr>
                         <td>{{ stretch.child.project }} | {{ stretch.child.name }} <strong>{{ stretch.location }}</strong></td>
                         <td>{{ stretch.start }}</td>
-                        <td class="text-right">{{ stretch.end }}</td>
-                        <td class="text-right">{{ stretch.duration|default:"Active" }} {% if stretch.duration %}minutes{% endif %}</td>
+                        <td class="text-end">{{ stretch.end }}</td>
+                        <td class="text-end">{{ stretch.duration|default:"Active" }} {% if stretch.duration %}minutes{% endif %}</td>
                     </tr>
                 {% endfor %}
                 {% for stretch in object.children_history.with_duration|slice:"50" %}
                     <tr>
                         <td>{{ stretch.child.project }} | {{ stretch.child.name }} <strong>{{ stretch.location }}</strong></td>
                         <td>{{ stretch.start }}</td>
-                        <td class="text-right">{{ stretch.end }}</td>
-                        <td class="text-right">{{ stretch.duration|humanize_duration|default:"0 minutes" }}</td>
+                        <td class="text-end">{{ stretch.end }}</td>
+                        <td class="text-end">{{ stretch.duration|humanize_duration|default:"0 minutes" }}</td>
                     </tr>
                 {% endfor %}
             </table>

@@ -9,9 +9,9 @@
             {% include "lims/details/container-layout.html" %}
             <div class="text-center">
                 {% if container.parent %}
-                    <span class="badge badge-info" title="Loaded in {{ container.parent }}">Loaded</span>
+                    <span class="badge text-bg-info" title="Loaded in {{ container.parent }}">Loaded</span>
                 {% else %}
-                    <span class="badge badge-secondary" title="Not Loaded">None</span>
+                    <span class="badge text-bg-secondary" title="Not Loaded">None</span>
                 {% endif %}
             </div>
         </div>

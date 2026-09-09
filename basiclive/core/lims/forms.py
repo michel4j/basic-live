@@ -254,7 +254,7 @@ class RequestTypeForm(forms.ModelForm):
                                     Div(
                                         StrictButton(
                                             '<i class="ti ti-minus"></i>',
-                                            css_class="btn btn-warning float-right safe-remove"
+                                            css_class="btn btn-warning float-end safe-remove"
                                         ),
                                     ),
                                     css_class="form-group"
@@ -670,7 +670,7 @@ class RequestAdminForm(forms.ModelForm):
         )
         self.footer.layout = Layout(
             Field('status'),
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary mr-auto"),
+            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary me-auto"),
             mark_btn,
             StrictButton('Save Comments', type='submit', name="submit", value='save', css_class='btn btn-primary'),
         )
@@ -844,7 +844,7 @@ class SampleAdminForm(forms.ModelForm):
         )
         self.footer.layout = Layout(
             Field('collect_status'),
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary mr-auto"),
+            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary me-auto"),
             mark_btn,
             StrictButton('Save Comments', type='submit', name="submit", value='save', css_class='btn btn-primary'),
         )
@@ -1343,7 +1343,7 @@ class ShipmentContainerForm(forms.ModelForm):
                                     Div(
                                         StrictButton(
                                             '<i class="ti ti-minus"></i>',
-                                            css_class="btn btn-warning float-right safe-remove"
+                                            css_class="btn btn-warning float-end safe-remove"
                                         ),
                                     ),
                                     css_class="form-group"
@@ -1446,7 +1446,7 @@ class ShipmentGroupForm(forms.ModelForm):
                 StrictButton(
                     'Fill Containers',
                     title='Auto-create one group per container (filled with samples) ignoring the groups defined above',
-                    type='submit', name="submit", value='Fill', css_class='mr-auto btn btn-warning'
+                    type='submit', name="submit", value='Fill', css_class='me-auto btn btn-warning'
                 ),
             )
             self.footer.layout.append(
@@ -1471,7 +1471,7 @@ class ShipmentGroupForm(forms.ModelForm):
                                         '</a>'
                                         '<a title="Edit more group details" href="#group-details--{rowcount}" '
                                         '   class="btn btn-info btn-collapse collapsed"'
-                                        '   aria-expanded="false" data-toggle="collapse">'
+                                        '   aria-expanded="false" data-bs-toggle="collapse">'
                                         '   <i class="ti ti-angle-double-right"></i>'
                                         '</a>'
                                         '<a title="Delete Group" class="btn safe-remove btn-warning">'
@@ -1479,7 +1479,7 @@ class ShipmentGroupForm(forms.ModelForm):
                                         '</a>'
                                         '</div>'
                                     ),
-                                    css_class="form-group float-right"
+                                    css_class="form-group float-end"
                                 ),
                                 css_class="col-4"
                             ),

@@ -17,10 +17,10 @@
         <div class="row">
             <h5 class="col my-0 p-2">
                 <a href="{% url "beamtime-stats" %}"><span
-                        class="badge badge-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
+                        class="badge text-bg-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
                 {% for yr in years %}
                     <a href="{% url "beamtime-stats-yearly" yr %}"><span
-                            class="badge badge-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
+                            class="badge text-bg-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
                 {% endfor %}
 
             </h5>

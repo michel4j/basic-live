@@ -12,7 +12,7 @@
                 </a>
             </div>
         {% endif %}
-        <div class="pl-3 overflow-ellipsis align-self-center">
+        <div class="ps-3 overflow-ellipsis align-self-center">
             <h5 class="m-0 text-condensed">
                 <span class="text-muted">
                     <a href="#!" data-link="{% url 'user-info' connection.user.username %}"
@@ -42,7 +42,7 @@
 
             </span>
         </div>
-        <div class="tools-box ml-auto">
+        <div class="tools-box ms-auto">
             {% for access, conn in connection.connections.items %}
                 <a href="{% url 'access-connections' %}?search={{ connection.user.username }}&status=Connected&userlist__id__exact={{ conn.0.userlist.pk }}"
                    title='View {{ connection.user.username|upper }} Connections to {{ access }}'>

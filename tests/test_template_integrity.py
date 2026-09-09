@@ -390,6 +390,57 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIn("--bs-primary", scss_content)
         self.assertIn("--bs-border-color", scss_content)
 
+    def test_no_legacy_bootstrap4_classes_or_attributes_in_templates(self):
+        """Verify that HTML templates do not contain legacy Bootstrap 4 data attributes or utility classes."""
+        import re
+
+        app_names = [
+            "basiclive.core.lims",
+            "basiclive.core.acl",
+            "basiclive.core.crm",
+            "basiclive.core.schedule",
+            "basiclive.core.publications",
+        ]
+
+        legacy_patterns = [
+            (re.compile(r'\bdata-(toggle|target|dismiss)\s*='), "Legacy data-* attribute without bs- prefix"),
+            (re.compile(r'\bbadge-pill\b'), "Legacy 'badge-pill' class (use 'rounded-pill')"),
+            (re.compile(r'\bbadge-(primary|secondary|success|danger|warning|info|light|dark)\b'), "Legacy 'badge-*' color class (use 'text-bg-*')"),
+            (re.compile(r'\b(float|pull)-(left|right)\b'), "Legacy float/pull class (use 'float-start' or 'float-end')"),
+            (re.compile(r'\btext-(left|right)\b'), "Legacy text align class (use 'text-start' or 'text-end')"),
+            (re.compile(r'\b(mr|ml|pr|pl)-[0-9a-z]+\b'), "Legacy directional spacing class (use 'me-*', 'ms-*', 'pe-*', 'ps-*')"),
+        ]
+
+        for app_name in app_names:
+            app_config = apps.get_app_config(app_name.split(".")[-1])
+            template_dir = Path(app_config.path) / "templates"
+            if not template_dir.is_dir():
+                continue
+
+            for html_file in template_dir.rglob("*.html"):
+                content = html_file.read_text(encoding="utf-8")
+                # Strip <script>...</script> tags to avoid catching backward-compatible JS fallback selectors
+                stripped_content = re.sub(r'<script\b[^>]*>.*?</script>', '', content, flags=re.DOTALL)
+                rel_path = str(html_file.relative_to(template_dir))
+
+                for pattern, msg in legacy_patterns:
+                    match = pattern.search(stripped_content)
+                    if match:
+                        self.fail(f"Found {msg} ('{match.group(0)}') in {app_name}/{rel_path}")
+
+    def test_bootstrap5_template_markup_present(self):
+        """Verify presence of Bootstrap 5 markup and data attributes in key templates."""
+        navs_tmpl = get_template("lims/navs.html")
+        self.assertIn('data-bs-toggle="dropdown"', navs_tmpl.template.source)
+        self.assertIn('navbar-nav ms-auto', navs_tmpl.template.source)
+
+        base_tmpl = get_template("lims/base.html")
+        self.assertIn("data-bs-toggle", base_tmpl.template.source)
+
+        modal_content = get_template("lims/modal/content.html")
+        self.assertIn('data-bs-dismiss="modal"', modal_content.template.source)
+        self.assertIn('btn-close', modal_content.template.source)
+
 
 if __name__ == "__main__":
     unittest.main()

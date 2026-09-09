@@ -26,7 +26,7 @@
                     <strong><span class="{% if active %}text-success{% elif current %}text-warning{% else %}text-muted{% endif %}">{% now "H:i" %}</span></strong> <span class="text-condensed text-muted">{% now "M j, Y" %}</span>
                 </h5>
             </div>
-            <div class="col pull-right text-right">
+            <div class="col float-end text-end">
                 <strong class="text-sm">Support Hours:</strong><br>
                 <h5 class="text-condensed text-muted">{% if MIN_SUPPORT_HOUR < 10 %}0{% endif %}{{ MIN_SUPPORT_HOUR|floatformat:"0" }}:00 - {{ MAX_SUPPORT_HOUR|floatformat:"0" }}:00</h5>
             </div>

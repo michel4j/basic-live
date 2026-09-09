@@ -27,10 +27,10 @@
                 {% else %}
                     {% if sample.staff_comments %}
                         <span title="Staff Comments"
-                              data-toggle="popover"
-                              data-content="{{ sample.staff_comments|default:''}}"
-                              data-placement="bottom"
-                              data-trigger="hover">
+                              data-bs-toggle="popover"
+                              data-bs-content="{{ sample.staff_comments|default:''}}"
+                              data-bs-placement="bottom"
+                              data-bs-trigger="hover">
                             <i class="ti ti-comment-alt"></i> </span>
                     {% endif %}
                     {% if sample.collect_status %}<i class="ti ti-check-box"></i>{% endif %}
@@ -40,10 +40,10 @@
             <td class="overflow-ellipsis"
             {% if sample.staff_comments %}
                 title="Staff Comments"
-                data-toggle="popover"
-                data-content="{{ sample.staff_comments|default:''}}"
-                data-placement="bottom"
-                data-trigger="hover"
+                data-bs-toggle="popover"
+                data-bs-content="{{ sample.staff_comments|default:''}}"
+                data-bs-placement="bottom"
+                data-bs-trigger="hover"
             {% endif %}
             >
                 {% if sample.pk %}
@@ -69,7 +69,7 @@
                 <td>
                     {% for request in sample.all_requests %}
                         <a href="{% url 'request-detail' request.pk %}">
-                        <span class="badge badge-{% if request.status == request.STATUS_CHOICES.PENDING %}info
+                        <span class="badge text-bg-{% if request.status == request.STATUS_CHOICES.PENDING %}info
                                 {% elif request.status == request.STATUS_CHOICES.DRAFT %}warning
                                 {% elif request.status == request.STATUS_CHOICES.COMPLETE %}success
                                 {% else %}primary{% endif %}" title="{{ request.get_status_display }}{% if request.comments %} | {{ request.comments }}{% endif %}">{{ request.kind.name }}

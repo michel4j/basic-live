@@ -9,11 +9,11 @@
 <a  href="#!" data-form-link="{% url 'seat-samples' shipment.pk %}" title="Samples"
     {% if shipment.num_samples == 0 %}
         title="No Samples"
-        data-toggle="popover"
-        data-trigger="hover"
-        data-placement="bottom"
+        data-bs-toggle="popover"
+        data-bs-trigger="hover"
+        data-bs-placement="bottom"
         data-type="popover-primary"
-        data-content="Click here to add samples"
+        data-bs-content="Click here to add samples"
     {% endif %}
     >
 {% if shipment.num_samples == 0 %}
