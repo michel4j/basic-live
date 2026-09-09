@@ -67,11 +67,11 @@
         {% if automounter %}
             <div class="row">
                 <div {% if user.is_superuser %}id="admin-assign"{% endif %} class="col-sm-7 p-4">
-                    {% include "lims/entries/container-layout.html" with container=automounter.container show_samples=True loadable=True %}
+                    {% include "lims/details/container-layout.html" with container=automounter.container show_samples=True loadable=True %}
                 </div>
 
                 <div class="col-sm-5 col-12">
-                    {% include "lims/entries/loaded.html" %}
+                    {% include "lims/details/loaded.html" %}
                 </div>
             </div>
         {% endif %}

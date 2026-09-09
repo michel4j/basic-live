@@ -81,7 +81,7 @@
     <div class="row">
         <div class="{% if sample.image %}col-md-7 {% endif %}col-12">
             <div class="list-group list-group-hover">
-                {% include "lims/entries/sample-data.html" %}
+                {% include "lims/details/sample-data.html" %}
                 {% if not object.datasets.count %}
                     <div class="list-group-item empty">No data collected for this sample yet.</div>
                 {% endif %}

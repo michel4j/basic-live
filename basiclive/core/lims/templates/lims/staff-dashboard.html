@@ -84,7 +84,7 @@
                                 <hr/>
                             </div>
                             {% if automounter %}
-                                {% include "lims/entries/container-layout.html" with container=automounter.container details=False %}
+                                {% include "lims/details/container-layout.html" with container=automounter.container details=False %}
                             {% endif %}
                         </a>
                     {% endwith %}
@@ -96,7 +96,7 @@
                 <div class="card-body p-2">
                     <div class="row">
                         {% for container in adaptors %}
-                            {% include "lims/entries/container-item.html" %}
+                            {% include "lims/details/container-item.html" %}
                         {% endfor %}
                     </div>
                 </div>
@@ -121,7 +121,7 @@
                 <div class="card-header p-1 text-center text-wide text-muted"><small>SHIPMENTS</small></div>
                 <div class="list-group list-group-flush">
                     {% for shipment in shipments %}
-                        {% include "lims/entries/shipment-list-item.html" %}
+                        {% include "lims/details/shipment-list-item.html" %}
                     {% endfor %}
                         <div class="p-2 list-group-item empty">
                             <a href="#!" data-form-link="{% url 'shipment-new' %}" class="d-flex flex-row">

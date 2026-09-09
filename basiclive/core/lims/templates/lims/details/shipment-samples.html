@@ -1,4 +1,4 @@
-{% extends "lims/entries/shipment-base.html" %}
+{% extends "lims/details/shipment-base.html" %}
 {% load static %}
 {% load icons %}
 {% load progress_extras %}
@@ -15,7 +15,7 @@
                      | <span class="text-muted text-thin text-condensed">{{ group.num_samples }} sample{{ group.num_samples|pluralize }}</span>
                     {% if group.comments %} | <span class="text-muted text-thin text-condensed">{{ group.comments }}</span>{% endif %}
                 </h4>
-                {% include "lims/entries/group-samples.html" with samples=group.samples.all request_detail=True %}
+                {% include "lims/details/group-samples.html" with samples=group.samples.all request_detail=True %}
                 <hr />
             {% endfor %}
         </div>

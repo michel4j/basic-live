@@ -114,10 +114,10 @@
     {% if object.accepts_children %}
         <div class="row">
             <div {% if user.is_superuser %}id="admin-assign"{% endif %} class="col-sm-7 p-4">
-                {% include "lims/entries/container-layout.html" with container=object show_samples=True loadable=True %}
+                {% include "lims/details/container-layout.html" with container=object show_samples=True loadable=True %}
             </div>
             <div class="col-sm-5 col-12">
-                {% include "lims/entries/loaded.html" %}
+                {% include "lims/details/loaded.html" %}
             </div>
         </div>
     {% else %}
@@ -128,7 +128,7 @@
         </div>
         {% if object.kind.envelope != 'list' %}
             <div class="col-md-5 p-4 col-12">
-                {% include "lims/entries/container-layout.html" with container=object show_samples=True label_samples=True loadable=False %}
+                {% include "lims/details/container-layout.html" with container=object show_samples=True label_samples=True loadable=False %}
             </div>
         {% endif %}
     </div>

@@ -138,7 +138,7 @@
                                 </a>
                             </h5>
                         </div>
-                        {% include "lims/entries/container-layout.html" with show_samples=True label_samples=True %}
+                        {% include "lims/details/container-layout.html" with show_samples=True label_samples=True %}
                     </div>
 
                 {% endfor %}
@@ -150,7 +150,7 @@
                 <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
                 <ul class="list-group list-group-flush sortable" data-url="{% url 'update-request-priority' %}" data-sort="request">
                     {% for request in shipment.requests %}
-                        {% include "lims/entries/request-list-item.html" with editable=shipment.is_editable %}
+                        {% include "lims/details/request-list-item.html" with editable=shipment.is_editable %}
                     {% empty %}
                         <div class="list-group-item">
                             <div class="d-flex flex-row">
@@ -170,7 +170,7 @@
                 <div class="card-header p-1 text-center text-wide text-muted"><small>GROUPS</small></div>
                 <ul class="list-group list-group-flush sortable" data-url="{% url 'update-group-priority' %}" data-sort="group">
                     {% for group in shipment.groups_by_priority %}
-                        {% include "lims/entries/group-list-item.html" with group=group editable=shipment.is_editable %}
+                        {% include "lims/details/group-list-item.html" with group=group editable=shipment.is_editable %}
                     {% endfor %}
                 </ul>
             </div>

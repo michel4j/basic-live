@@ -254,7 +254,7 @@ class ProjectReset(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
 
 class ProjectProfile(UserPassesTestMixin, detail.DetailView):
     model = models.Project
-    template_name = "lims/entries/project-profile.html"
+    template_name = "lims/details/project-profile.html"
     slug_field = 'username'
     slug_url_kwarg = 'username'
 
@@ -270,7 +270,7 @@ class ProjectProfile(UserPassesTestMixin, detail.DetailView):
 
 
 class ProjectStatistics(ProjectProfile):
-    template_name = "lims/entries/project-statistics.html"
+    template_name = "lims/details/project-statistics.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -392,7 +392,7 @@ class ShipmentList(ListViewMixin, ItemListView):
 
 class ShipmentDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Shipment
-    template_name = "lims/entries/shipment.html"
+    template_name = "lims/details/shipment.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -444,7 +444,7 @@ class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
 
 
 class ShipmentRevise(AdminRequiredMixin, ShipmentDetail):
-    template_name = 'lims/entries/shipment-edit.html'
+    template_name = 'lims/details/shipment-edit.html'
 
     def dispatch(self, request, *args, **kwargs):
         obj = self.get_object()
@@ -578,7 +578,7 @@ class ReceiveShipment(ShipmentEdit):
 
 class RequestTypeList(AdminRequiredMixin, ListViewMixin, ItemListView):
     model = models.RequestType
-    template_name = "lims/requesttype-list.html"
+    template_name = "lims/details/requesttype-list.html"
     list_columns = ['id', 'name', 'description']
     list_search = ['name', 'spec', 'description']
     link_field = 'name'
@@ -590,7 +590,7 @@ class RequestTypeList(AdminRequiredMixin, ListViewMixin, ItemListView):
 
 class RequestTypeDetail(AdminRequiredMixin, detail.DetailView):
     model = models.RequestType
-    template_name = "lims/entries/requesttype.html"
+    template_name = "lims/details/requesttype.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -654,7 +654,7 @@ class SampleStats(AdminRequiredMixin, PlotViewMixin, SampleList):
 class SampleDetail(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     model = models.Sample
     form_class = forms.SampleForm
-    template_name = "lims/entries/sample.html"
+    template_name = "lims/details/sample.html"
     success_url = reverse_lazy('sample-list')
     success_message = "Sample has been updated"
 
@@ -701,7 +701,7 @@ class ContainerList(ListViewMixin, ItemListView):
 
 class ContainerDetail(DetailListMixin, SampleList):
     extra_model = models.Container
-    template_name = "lims/entries/container.html"
+    template_name = "lims/details/container.html"
     list_columns = ['name', 'barcode', 'group', 'location', 'comments']
     link_url = 'sample-detail'
     show_project = False
@@ -846,7 +846,7 @@ def movable(val, record):
 
 class GroupDetail(DetailListMixin, SampleList):
     extra_model = models.Group
-    template_name = "lims/entries/group.html"
+    template_name = "lims/details/group.html"
     list_columns = ['priority', 'name', 'barcode', 'container_and_location', 'comments']
     list_transforms = {
         'priority': movable,
@@ -961,7 +961,7 @@ class UsageSummary(PlotViewMixin, DataList):
 
 class DataDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Data
-    template_name = "lims/entries/data.html"
+    template_name = "lims/data/data.html"
 
     def get_template_names(self):
         return [self.object.kind.template, self.template_name]
@@ -990,11 +990,11 @@ class ReportList(ListViewMixin, ItemListView):
 
 class ReportDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.AnalysisReport
-    template_name = "lims/entries/report.html"
+    template_name = "lims/details/report.html"
 
 
 class ShipmentDataList(DataList):
-    template_name = "lims/entries/shipment-data.html"
+    template_name = "lims/details/shipment-data.html"
     lookup = 'group__shipment__pk'
     detail_model = models.Shipment
 
@@ -1017,7 +1017,7 @@ class ShipmentDataList(DataList):
 
 
 class ShipmentReportList(ReportList):
-    template_name = "lims/entries/shipment-reports.html"
+    template_name = "lims/details/shipment-reports.html"
     lookup = 'data__group__shipment__pk'
     detail_model = models.Shipment
 
@@ -1060,7 +1060,7 @@ class RequestList(ListViewMixin, ItemListView):
 
 class RequestDetail(DetailListMixin, SampleList):
     extra_model = models.Request
-    template_name = "lims/entries/request.html"
+    template_name = "lims/details/request.html"
     list_columns = ['priority', 'name', 'barcode', 'container_and_location', 'comments']
     list_transforms = {
         'priority': movable,
@@ -1222,13 +1222,13 @@ class RequestDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
 
 
 class SessionDataList(ShipmentDataList):
-    template_name = "lims/entries/session-data.html"
+    template_name = "lims/details/session-data.html"
     lookup = 'session__pk'
     detail_model = models.Session
 
 
 class SessionReportList(ShipmentReportList):
-    template_name = "lims/entries/session-reports.html"
+    template_name = "lims/details/session-reports.html"
     lookup = 'data__session__pk'
     detail_model = models.Session
 
@@ -1273,12 +1273,12 @@ class SessionList(ListViewMixin, ItemListView):
 
 class SessionDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Session
-    template_name = "lims/entries/session.html"
+    template_name = "lims/details/session.html"
 
 
 class SessionStatistics(AdminRequiredMixin, detail.DetailView):
     model = models.Session
-    template_name = "lims/entries/session-statistics.html"
+    template_name = "lims/details/session-statistics.html"
     page_title = "Session Statistics"
 
     def get_context_data(self, **kwargs):
@@ -1289,7 +1289,7 @@ class SessionStatistics(AdminRequiredMixin, detail.DetailView):
 
 class BeamlineDetail(AdminRequiredMixin, detail.DetailView):
     model = models.Beamline
-    template_name = "lims/entries/beamline.html"
+    template_name = "lims/details/beamline.html"
 
 
 class AutomounterEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
@@ -1563,7 +1563,7 @@ class SSHKeyDelete(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
 
 class GuideView(detail.DetailView):
     model = models.Guide
-    template_name = "lims/components/guide-youtube.html"
+    template_name = "lims/modal/guide-youtube.html"
 
     def get_object(self, queryset=None):
         if self.request.user.is_superuser:
@@ -1636,7 +1636,7 @@ def fetch_archive(request, url):
 class ProjectList(AdminRequiredMixin, ItemListView):
     model = models.Project
     paginate_by = 25
-    template_name = "lims/user-list.html"
+    template_name = "lims/details/user-list.html"
     list_filters = ['created', 'modified', 'kind', 'designation']
     list_columns = ['username', 'contact_person', 'contact_phone', 'contact_email', 'kind']
     list_search = [
@@ -1652,14 +1652,14 @@ class ProjectList(AdminRequiredMixin, ItemListView):
 
 class UserDetail(AdminRequiredMixin, detail.DetailView):
     model = models.Project
-    template_name = "lims/entries/user-info.html"
+    template_name = "lims/modal/user-info.html"
 
     def get_object(self, **kwargs):
         return models.Project.objects.get(username=self.kwargs.get('username'))
 
 
 class UserStats(UserDetail):
-    template_name = "lims/entries/user.html"
+    template_name = "lims/details/user.html"
     page_title = "User Profile"
 
     def get_object(self, **kwargs):
