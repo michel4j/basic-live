@@ -10,7 +10,7 @@
 * Author: Dmitry Petrov
 * Version: 0.7
 *
-* MXLIVE: 'iviewer' changed to 'diffviewer' throughout.
+* BasicLIVE: 'iviewer' changed to 'diffviewer' throughout.
 */
 
 (function ($, undefined) {
@@ -218,7 +218,7 @@
             //drag variables
             this.dx = 0;
             this.dy = 0;
-            this.dragged = false; /*** MxLIVE: thumb dragging ***/
+            this.dragged = false; /*** BasicLIVE: thumb dragging ***/
 
             /* object containing actual information about image
     * @img_object.object - jquery img object
@@ -267,7 +267,7 @@
                 })
                 .prependTo(this.container);
 
-            /*** MxLIVE: mousemove action changed ****/
+            /*** BasicLIVE: mousemove action changed ****/
             //this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
             this.container.bind('mousemove', function (e) {
                 return me.update_pos(e)
@@ -287,14 +287,14 @@
         },
 
         _updateContainerInfo: function () {
-            /*** MxLIVE: force square image ***/
+            /*** BasicLIVE: force square image ***/
             let size = Math.max(this.container.height(), this.container.width());
             this.options.height = size;
             this.options.width = size;
         },
 
         loadImage: function (src) {
-            /*** MxLIVE: moved this here to clear out image before loading next one ***/
+            /*** BasicLIVE: moved this here to clear out image before loading next one ***/
             this.img_object.object()
                 .removeAttr("src")
                 .removeAttr("width")
@@ -307,7 +307,7 @@
 
             /**************************************************************************/
 
-            /*** MxLIVE: Added initiation of overview objects ***/
+            /*** BasicLIVE: Added initiation of overview objects ***/
             this.overview_img = $("<img>").css({
                 position: "absolute",
                 bottom: "0px",
@@ -347,8 +347,8 @@
                     me._trigger('onFinishLoad', 0, src);
                 }
             });
-            this.overview_img.attr("src", src); /*** MxLIVE: Make overview img ***/
-            /*** MxLIVE: Added to ensure IE displays images ***/
+            this.overview_img.attr("src", src); /*** BasicLIVE: Make overview img ***/
+            /*** BasicLIVE: Added to ensure IE displays images ***/
             if (useIeTransforms) {
                 this.img_object.object().attr("src", src);
                 this.img_object.object().attr("width", '512px');
@@ -420,10 +420,10 @@
             this.img_object.x(coords.x);
             this.img_object.y(coords.y);
 
-            this.setBoxCoords(x, y); /*** MxLIVE: call new function ***/
+            this.setBoxCoords(x, y); /*** BasicLIVE: call new function ***/
         },
 
-        /*** MxLIVE: new function just to set overview_box coords ***/
+        /*** BasicLIVE: new function just to set overview_box coords ***/
         setBoxCoords: function (x, y) {
             // set the coordinates of the overview box
             var ox, oy, ow, oh;
@@ -518,7 +518,7 @@
          * if initial coords are not inside image
          **/
         _getMouseCoords: function (e) {
-            /*** MxLIVE: Change this function ***/
+            /*** BasicLIVE: Change this function ***/
             var img_offset = this.img_object.object().offset();
             var $x = util.descaleValue(e.pageX - img_offset.left, this.current_zoom);
             var $y = util.descaleValue(e.pageY - img_offset.top, this.current_zoom);
@@ -574,7 +574,7 @@
                 self = this;
 
             this.setBoxCoords(new_x, new_y);
-            /*** MxLIVE: set only box coords ***/
+            /*** BasicLIVE: set only box coords ***/
             this.img_object.setImageProps(new_width, new_height, coords.x, coords.y,
                 skip_animation, function () {
                     self._trigger('onAfterZoom', 0, new_zoom);
@@ -687,7 +687,7 @@
                 }
             }
 
-            /*** MxLIVE ***/
+            /*** BasicLIVE ***/
             /* Show overview if zoom is at least 10% above minimum */
             if (percent > this.options.zoom_min + 10) {
                 this.overview_object.show();
@@ -788,7 +788,7 @@
             this._trigger('onClick', 0, this._getMouseCoords(e));
         },
 
-        /*** MxLIVE: callback for handling mousdown event to start dragging image ***/
+        /*** BasicLIVE: callback for handling mousdown event to start dragging image ***/
         thumb_drag_start: function (e) {
             /* start drag event*/
             this.dragged = true;
@@ -797,7 +797,7 @@
             return false;
         },
 
-        /*** MxLIVE: callback for handling mousmove event to drag thumbnail image ***/
+        /*** BasicLIVE: callback for handling mousmove event to drag thumbnail image ***/
         thumb_drag: function (e) {
             if (this.dragged) {
                 this.options.onDrag &&
@@ -812,14 +812,14 @@
             }
         },
 
-        /*** MxLIVE: callback for handling stop thumbnail drag ***/
+        /*** BasicLIVE: callback for handling stop thumbnail drag ***/
         thumb_drag_end: function (e) {
             this.container.removeClass("diffviewer_drag_cursor");
             this.dragged = false;
 
         },
 
-        /*** MxLIVE: callback for clicking within overview ***/
+        /*** BasicLIVE: callback for clicking within overview ***/
         thumb_click: function (e) {
             var x, y, offsets = this.overview_img.offset();
             x = (e.pageX - offsets.left) * this.img_object.display_width() / 128 - this.options.width / 2;
@@ -828,7 +828,7 @@
             return false;
         },
 
-        /*** MxLIVE: update image position ***/
+        /*** BasicLIVE: update image position ***/
         update_pos: function (e) {
             var coords = this._getMouseCoords(e);
             x = 2.0 * Math.abs((Math.min(Math.max(coords.x, 0.0), this.img_object.orig_width()) / this.img_object.orig_width()) - 0.5);
@@ -875,7 +875,7 @@
             this.zoom_object = $("<div>").addClass("diffviewer_zoom_status diffviewer_common")
                 .appendTo(this.container);
 
-            /*** MxLIVE: not needed
+            /*** BasicLIVE: not needed
              $("<div>", { 'class': "diffviewer_rotate_left diffviewer_common diffviewer_button"})
              .bind('mousedown touchstart',function(){me.angle(-90); return false;})
              .appendTo(this.container);
