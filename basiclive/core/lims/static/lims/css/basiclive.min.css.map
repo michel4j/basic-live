@@ -1,8 +1,8 @@
 {
 	"version": 3,
-	"file": "mxlive.min.css",
+	"file": "basiclive.min.css",
 	"sources": [
-		"mxlive.scss",
+		"basiclive.scss",
 		"../../bootstrap/scss/bootstrap.scss",
 		"../../bootstrap/scss/_functions.scss",
 		"../../bootstrap/scss/_variables.scss",
