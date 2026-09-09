@@ -7,6 +7,7 @@ setup_django()
 
 from django import forms
 from django.apps import apps
+from django.contrib.staticfiles import finders
 from django.template.loader import get_template
 from django.test import SimpleTestCase
 from django.urls import URLPattern, URLResolver
@@ -222,6 +223,103 @@ class TemplateIntegrityTests(SimpleTestCase):
                 rendered = tmpl.render(ctx)
                 self.assertIsInstance(rendered, str)
                 self.assertGreater(len(rendered.strip()), 0)
+
+    def test_basiclive_static_assets_exist(self):
+        """Verify that all renamed BasicLIVE static assets exist and old mxlive assets do not."""
+        expected_assets = [
+            "lims/css/basiclive.scss",
+            "lims/css/basiclive.min.css",
+            "lims/css/basiclive.min.css.map",
+            "lims/js/basiclive-diffviewer.js",
+            "lims/js/basiclive-diffviewer.min.js",
+            "lims/js/basiclive-forms.js",
+            "lims/js/basiclive-forms.min.js",
+            "lims/js/basiclive-layouts.js",
+            "lims/js/basiclive-layouts.min.js",
+            "lims/js/basiclive-modals.js",
+            "lims/js/basiclive-modals.min.js",
+            "lims/js/basiclive-reports.js",
+            "lims/js/basiclive-reports.min.js",
+            "lims/js/basiclive-seater.js",
+            "lims/js/basiclive-seater.min.js",
+            "lims/js/basiclive-spreadsheet.js",
+            "lims/js/basiclive-spreadsheet.min.js",
+            "schedule/js/basiclive-scheduler.js",
+        ]
+        for asset in expected_assets:
+            with self.subTest(asset=asset):
+                path = finders.find(asset)
+                self.assertIsNotNone(path, f"Expected static asset not found: {asset}")
+
+        obsolete_assets = [
+            "lims/css/mxlive.scss",
+            "lims/css/mxlive.min.css",
+            "lims/css/mxlive.min.css.map",
+            "lims/js/mxlive-diffviewer.js",
+            "lims/js/mxlive-diffviewer.min.js",
+            "lims/js/mxlive-forms.js",
+            "lims/js/mxlive-forms.min.js",
+            "lims/js/mxlive-layouts.js",
+            "lims/js/mxlive-layouts.min.js",
+            "lims/js/mxlive-modals.js",
+            "lims/js/mxlive-modals.min.js",
+            "lims/js/mxlive-reports.js",
+            "lims/js/mxlive-reports.min.js",
+            "lims/js/mxlive-seater.js",
+            "lims/js/mxlive-seater.min.js",
+            "lims/js/mxlive-spreadsheet.js",
+            "lims/js/mxlive-spreadsheet.min.js",
+            "schedule/js/mxlive-scheduler.js",
+        ]
+        for asset in obsolete_assets:
+            with self.subTest(obsolete_asset=asset):
+                path = finders.find(asset)
+                self.assertIsNone(path, f"Obsolete mxlive asset still found: {asset}")
+
+    def test_rendered_templates_use_basiclive_assets(self):
+        """Verify key rendered templates output basiclive asset URLs and no mxlive asset URLs."""
+        class DummyForm(forms.Form):
+            name = forms.CharField()
+
+        class DummyWizard:
+            steps = type("Steps", (), {"step0": 0, "step1": 1, "count": 2, "prev": None, "next": "step2"})()
+            form = DummyForm()
+
+        base_tmpl = get_template("lims/base.html")
+        rendered_base = base_tmpl.render({"user": None})
+        self.assertIn("lims/css/basiclive.min.css", rendered_base)
+        self.assertIn("lims/js/basiclive-modals.min.js", rendered_base)
+        self.assertNotIn("mxlive", rendered_base.lower())
+
+        wizard_tmpl = get_template("lims/modal/wizard.html")
+        rendered_wizard = wizard_tmpl.render({"wizard": DummyWizard(), "title": "New Item"})
+        self.assertIn("lims/js/basiclive-forms.min.js", rendered_wizard)
+        self.assertNotIn("mxlive", rendered_wizard.lower())
+
+        schedule_tmpl = get_template("schedule/schedule.html")
+        self.assertIn("schedule/js/basiclive-scheduler.js", schedule_tmpl.template.source)
+        self.assertNotIn("mxlive", schedule_tmpl.template.source.lower())
+
+    def test_no_mxlive_references_in_any_template(self):
+        """Verify that no HTML template across any core app contains references to mxlive."""
+        app_names = [
+            "basiclive.core.lims",
+            "basiclive.core.acl",
+            "basiclive.core.crm",
+            "basiclive.core.schedule",
+            "basiclive.core.publications",
+        ]
+        for app_name in app_names:
+            app_config = apps.get_app_config(app_name.split(".")[-1])
+            template_dir = Path(app_config.path) / "templates"
+            if not template_dir.is_dir():
+                continue
+
+            for html_file in template_dir.rglob("*.html"):
+                content = html_file.read_text(encoding="utf-8")
+                rel_path = str(html_file.relative_to(template_dir))
+                with self.subTest(app=app_name, template=rel_path):
+                    self.assertNotIn("mxlive", content.lower(), f"Found 'mxlive' reference in {app_name}/{rel_path}")
 
 
 if __name__ == "__main__":
