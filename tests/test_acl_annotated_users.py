@@ -120,7 +120,7 @@ class AnnotatedUsersTests(TestCase):
 
     def test_format_allowed_users_empty(self):
         from basiclive.core.acl.views import format_authorized_users
-        html = format_authorized_users(None, self.access_list)
+        html = format_authorized_users([], self.access_list)
         self.assertEqual(html, "")
 
     def test_format_allowed_users_badges(self):
@@ -137,7 +137,7 @@ class AnnotatedUsersTests(TestCase):
             cancelled=False,
         )
 
-        html = format_authorized_users(None, self.access_list)
+        html = format_authorized_users(self.access_list.annotated_users(), self.access_list)
         expected_alice = '<span class="badge badge-success badge-md" title="Scheduled Access">ALICE</span>'
         expected_bob = '<span class="badge badge-warning badge-md" title="Manual Access">BOB</span>'
         self.assertEqual(html, f"{expected_alice} {expected_bob}")
@@ -148,7 +148,7 @@ class AnnotatedUsersTests(TestCase):
         view = AccessListView()
         self.assertEqual(
             view.get_list_columns(),
-            ['name', 'description', 'annotated_users', 'address', 'beamlines', 'active']
+            ['name', 'description', 'annotated_users', 'address', 'beamlines']
         )
         self.assertNotIn('current_users', view.get_list_columns())
         self.assertNotIn('scheduled_users', view.get_list_columns())
@@ -158,7 +158,7 @@ class AnnotatedUsersTests(TestCase):
         with override_settings(BASICLIVE_LIMS={"USE_SCHEDULE": False}):
             self.assertEqual(
                 view.get_list_columns(),
-                ['name', 'description', 'annotated_users', 'address', 'beamlines', 'active']
+                ['name', 'description', 'annotated_users', 'address', 'beamlines']
             )
 
 
