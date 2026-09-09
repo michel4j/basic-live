@@ -636,8 +636,8 @@ form .list-group-item {
 
 svg {
   &.outline > .envelope {
-    stroke: var(--dark);
-    fill: var(--light);
+    stroke: var(--bs-dark);
+    fill: var(--bs-light);
   }
 
   &.empty > .envelope {
@@ -650,7 +650,7 @@ svg {
   }
 
   &.occupied > .envelope {
-    fill: var(--info);
+    fill: var(--bs-info);
   }
 
   &.started > .envelope {
@@ -658,7 +658,7 @@ svg {
   }
 
   .active-envelope {
-    fill: var(--warning) !important;
+    fill: var(--bs-warning) !important;
   }
 }
 
@@ -1340,7 +1340,7 @@ a[data-link], .back text[port], .cursor {
   }
 }
 
-a:hover {
+a {
   text-decoration: none;
 }
 
@@ -1886,7 +1886,7 @@ input::placeholder {
   td.active.day {
     border-radius: 0;
     background-image: unset;
-    background-color: var(--info) !important;
+    background-color: var(--bs-info) !important;
     &:hover {
       background-image: unset;
       background-color: darken($info, 10%) !important;
