@@ -1089,8 +1089,10 @@ class RequestDetail(DetailListMixin, SampleList):
 
 
 class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
-    form_list = [('start', forms.RequestForm),
-                 ('parameters', forms.RequestParameterForm)]
+    form_list = [
+        ('start', forms.RequestForm),
+        ('parameters', forms.RequestParameterForm)
+    ]
     template_name = "lims/forms/add-request.html"
 
     def get_context_data(self, form, **kwargs):
@@ -1144,8 +1146,10 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
 
 
 class RequestWizardEdit(UserPassesTestMixin, SessionWizardView):
-    form_list = [('start', forms.RequestForm),
-                 ('parameters', forms.RequestParameterForm)]
+    form_list = [
+        ('start', forms.RequestForm),
+        ('parameters', forms.RequestParameterForm)
+    ]
     template_name = "lims/forms/add-request.html"
 
     def test_func(self):
@@ -1297,9 +1301,11 @@ class AutomounterEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, e
 
 
 class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
-    form_list = [('shipment', forms.AddShipmentForm),
-                 ('containers', forms.ShipmentContainerForm),
-                 ('groups', forms.ShipmentGroupForm)]
+    form_list = [
+        ('shipment', forms.AddShipmentForm),
+        ('containers', forms.ShipmentContainerForm),
+        ('groups', forms.ShipmentGroupForm)
+    ]
     template_name = "modal/wizard.html"
 
     def get_context_data(self, form, **kwargs):
