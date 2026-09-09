@@ -2,6 +2,7 @@
 {% load static %}
 {% load stats %}
 {% load icons %}
+{% load jsutils %}
 
 {% block page_heading %}
     <h3>
@@ -49,13 +50,13 @@
 {% block extra_js %}
     <script type="text/javascript" src="{% static 'd3/js/d3.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'd3/js/d3-legend.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'd3/js/d3.layout.timeline.js' %}"></script>
+    <script type="text/javascript" src="{% static 'd3/js/d3.layout.timeline.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'misc/js/showdown.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'misc/js/c3.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'lims/js/basiclive-reports.min.js' %}"></script>
 
     <script type="text/javascript">
-        var report = {{ report | safe }};
+        var report = {{ report | jsonify }};
         $(document).ready(function() {
             $('#data-stats').liveReport({
                 data: report
