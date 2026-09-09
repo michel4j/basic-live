@@ -96,7 +96,7 @@ class FeedbackCreate(SuccessMessageMixin, edit.CreateView):
     form_class = forms.FeedbackForm
     template_name = "crm/forms/survey.html"
     model = models.Feedback
-    success_url = reverse_lazy('dashboard')
+    success_url = '/'
     success_message = "User Feedback has been submitted"
 
     def get_initial(self):
