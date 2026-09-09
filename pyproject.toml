@@ -1,7 +1,6 @@
 [project]
 dynamic = ["version"]
-name = "basic-live"
-import-names = ["basiclive"]
+name = "basiclive"
 description = "A Framework for creating beamline LIMS"
 license = "MIT"
 authors = [
