@@ -138,8 +138,8 @@ class AnnotatedUsersTests(TestCase):
         )
 
         html = format_authorized_users(None, self.access_list)
-        expected_alice = '<span class="badge badge-success" title="Scheduled Access">alice</span>'
-        expected_bob = '<span class="badge badge-info" title="Manual Access">bob</span>'
+        expected_alice = '<span class="badge badge-success badge-md" title="Scheduled Access">ALICE</span>'
+        expected_bob = '<span class="badge badge-warning badge-md" title="Manual Access">BOB</span>'
         self.assertEqual(html, f"{expected_alice} {expected_bob}")
 
     def test_access_list_view_configuration(self):
@@ -148,17 +148,17 @@ class AnnotatedUsersTests(TestCase):
         view = AccessListView()
         self.assertEqual(
             view.get_list_columns(),
-            ['name', 'description', 'allowed_users', 'address', 'beamlines', 'active']
+            ['name', 'description', 'annotated_users', 'address', 'beamlines', 'active']
         )
         self.assertNotIn('current_users', view.get_list_columns())
         self.assertNotIn('scheduled_users', view.get_list_columns())
-        self.assertEqual(view.get_list_headers().get('allowed_users'), 'Authorized Users')
-        self.assertIs(view.get_list_transforms().get('allowed_users'), format_authorized_users)
+        self.assertEqual(view.get_list_headers().get('annotated_users'), 'Authorized Users')
+        self.assertIs(view.get_list_transforms().get('annotated_users'), format_authorized_users)
 
         with override_settings(BASICLIVE_LIMS={"USE_SCHEDULE": False}):
             self.assertEqual(
                 view.get_list_columns(),
-                ['name', 'description', 'allowed_users', 'address', 'beamlines', 'active']
+                ['name', 'description', 'annotated_users', 'address', 'beamlines', 'active']
             )
 
 
