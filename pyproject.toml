@@ -21,7 +21,7 @@ dependencies = [
     "django-model-utils",
     "djangorestframework",
     "djangorestframework-simplejwt",
-    "crispy-bootstrap4",
+    "crispy-bootstrap5",
     "geopy",
     "habanero",
     "msgpack",

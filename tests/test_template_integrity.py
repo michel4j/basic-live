@@ -321,6 +321,30 @@ class TemplateIntegrityTests(SimpleTestCase):
                 with self.subTest(app=app_name, template=rel_path):
                     self.assertNotIn("mxlive", content.lower(), f"Found 'mxlive' reference in {app_name}/{rel_path}")
 
+    def test_crispy_bootstrap5_configuration_and_rendering(self):
+        """Verify crispy_forms is configured with crispy_bootstrap5 and renders Bootstrap 5 form markup."""
+        from django.conf import settings
+        from crispy_forms.helper import FormHelper
+        from django.template import Context, Template
+
+        self.assertIn("crispy_bootstrap5", settings.INSTALLED_APPS)
+        self.assertEqual(getattr(settings, "CRISPY_TEMPLATE_PACK", None), "bootstrap5")
+
+        class SampleForm(forms.Form):
+            title = forms.CharField(label="Title")
+
+        form = SampleForm()
+        form.helper = FormHelper()
+        form.helper.form_tag = False
+        template = Template("{% load crispy_forms_tags %}{% crispy form %}")
+        rendered = template.render(Context({"form": form}))
+
+        # Bootstrap 5 crispy forms uses 'mb-3' and 'form-label' rather than BS4 'form-group'
+        self.assertIn("mb-3", rendered)
+        self.assertIn("form-label", rendered)
+        self.assertIn("form-control", rendered)
+        self.assertNotIn("form-group", rendered)
+
 
 if __name__ == "__main__":
     unittest.main()

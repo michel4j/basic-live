@@ -62,7 +62,7 @@
           <option value="django-memoize" />
           <option value="django-python3-ldap" />
           <option value="djangorestframework-simplejwt" />
-          <option value="crispy-bootstrap4" />
+          <option value="crispy-bootstrap5" />
           <option value="geopy" />
           <option value="jsonfield2" />
           <option value="ldap3" />

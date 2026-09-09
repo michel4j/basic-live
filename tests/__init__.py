@@ -12,7 +12,7 @@ def setup_django():
                 "django.contrib.sessions",
                 "django.contrib.humanize",
                 "crispy_forms",
-                "crispy_bootstrap4",
+                "crispy_bootstrap5",
                 "basiclive.core.lims",
                 "basiclive.core.schedule",
                 "basiclive.core.acl",
@@ -30,7 +30,9 @@ def setup_django():
                     "APP_DIRS": True,
                 }
             ],
-            CRISPY_TEMPLATE_PACK="bootstrap4",
+            ROOT_URLCONF="basiclive.core.lims.urls",
+            CRISPY_ALLOWED_TEMPLATE_PACKS="bootstrap5",
+            CRISPY_TEMPLATE_PACK="bootstrap5",
             BASICLIVE_TESTAPP={
                 "CUSTOM_OPTION": "from_configured",
             },
