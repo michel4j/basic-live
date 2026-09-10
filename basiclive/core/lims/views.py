@@ -17,16 +17,17 @@ from django.views.generic import edit, detail, View
 from formtools.wizard.views import SessionWizardView
 from itemlist.views import ItemListView
 
+from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView, ModalFormView
 from basiclive.core.lims.conf import settings
 from basiclive.utils import filters
-from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
+from basiclive.utils.mixins import AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
 from . import forms, models, stats
 
 if settings.USE_SCHEDULE:
     from basiclive.core.schedule.models import BeamlineSupport
 
 
-class ProjectReset(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class ProjectReset(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     template_name = "lims/forms/project-reset.html"
     model = models.Project
     success_message = "Account API key reset"
@@ -82,7 +83,7 @@ class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_superuser or getattr(self.get_object(), self.owner_field) == self.request.user
 
 
-class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.ProjectForm
     template_name = "lims/modal/form.html"
     model = models.Project
@@ -221,7 +222,7 @@ class ShipmentLabels(OwnerRequiredMixin, detail.DetailView):
         return context
 
 
-class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.ShipmentForm
     template_name = "lims/modal/form.html"
     model = models.Shipment
@@ -246,7 +247,7 @@ class ShipmentRevise(AdminRequiredMixin, ShipmentDetail):
         return super().dispatch(request, *args, **kwargs)
 
 
-class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.ShipmentCommentsForm
     template_name = "lims/modal/form.html"
     model = models.Shipment
@@ -264,18 +265,17 @@ class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, 
         return super(ShipmentComments, self).form_valid(form)
 
 
-class ShipmentDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+class ShipmentDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     template_name = "lims/modal/delete.html"
     model = models.Shipment
     success_message = "Shipment has been deleted."
     success_url = reverse_lazy('shipment-list')
 
-    def delete(self, request, *args, **kwargs):
-        super(ShipmentDelete, self).delete(request, *args, **kwargs)
-        success_url = self.get_success_url()
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
         models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
                                                 self.success_message)
-        return JsonResponse({'url': success_url})
+        return response
 
 
 class SendShipment(ShipmentEdit):
@@ -391,7 +391,7 @@ class RequestTypeDetail(AdminRequiredMixin, detail.DetailView):
         return ctx
 
 
-class RequestTypeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class RequestTypeCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.RequestTypeForm
     template_name = "lims/forms/request-wizard.html"
     model = models.RequestType
@@ -399,7 +399,7 @@ class RequestTypeCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin,
     success_message = "Request Type has been created."
 
 
-class RequestTypeEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class RequestTypeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.RequestTypeForm
     template_name = "lims/forms/request-wizard.html"
     model = models.RequestType
@@ -415,7 +415,7 @@ class RequestTypeLayout(RequestTypeEdit):
 
 
 
-class RequestTypeView(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class RequestTypeView(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.RequestParameterForm
     template_name = "lims/modal/form.html"
     model = models.Request
@@ -444,7 +444,7 @@ class SampleStats(AdminRequiredMixin, PlotViewMixin, SampleList):
     list_url = reverse_lazy("sample-list")
 
 
-class SampleDetail(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class SampleDetail(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     model = models.Sample
     form_class = forms.SampleForm
     template_name = "lims/details/sample.html"
@@ -452,7 +452,7 @@ class SampleDetail(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
     success_message = "Sample has been updated"
 
 
-class SampleEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class SampleEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.SampleForm
     template_name = "lims/modal/form.html"
     model = models.Sample
@@ -463,17 +463,17 @@ class SampleEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.U
         return ""
 
 
-class SampleDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+class SampleDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     success_url = reverse_lazy('sample-list')
     template_name = "lims/modal/delete.html"
     model = models.Sample
     success_message = "Sample has been deleted."
 
-    def delete(self, request, *args, **kwargs):
-        super(SampleDelete, self).delete(request, *args, **kwargs)
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
         models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
                                                 self.success_message)
-        return JsonResponse({'url': self.success_url})
+        return response
 
     def get_context_data(self, **kwargs):
         context = super(SampleDelete, self).get_context_data(**kwargs)
@@ -504,7 +504,7 @@ class ContainerDetail(DetailListMixin, SampleList):
         return 'Samples in {}'.format(obj.name)
 
 
-class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.ContainerForm
     template_name = "lims/modal/form.html"
     model = models.Container
@@ -609,17 +609,17 @@ class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
         return JsonResponse(self.root.get_layout(), safe=False)
 
 
-class ContainerDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+class ContainerDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     success_url = reverse_lazy('container-list')
     template_name = "lims/modal/delete.html"
     model = models.Container
     success_message = "Container has been deleted."
 
-    def delete(self, request, *args, **kwargs):
-        super(ContainerDelete, self).delete(request, *args, **kwargs)
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
         models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
                                                 self.success_message)
-        return JsonResponse({'url': self.success_url})
+        return response
 
 
 class GroupList(ListViewMixin, ItemListView):
@@ -660,7 +660,7 @@ class GroupDetail(DetailListMixin, SampleList):
         return obj
 
 
-class GroupEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class GroupEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.GroupForm
     template_name = "lims/forms/group-edit.html"
     model = models.Group
@@ -672,25 +672,27 @@ class GroupEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.Up
         return super(GroupEdit, self).get_initial()
 
     def form_valid(self, form):
-        super(GroupEdit, self).form_valid(form)
+        response = super(GroupEdit, self).form_valid(form)
         for s in self.object.samples.all():
             if self.original_name in s.name:
                 models.Sample.objects.filter(pk=s.pk).update(name=s.name.replace(self.original_name, self.object.name))
-        return JsonResponse({})
+        return response
 
 
-class GroupDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+class GroupDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     success_url = reverse_lazy('group-list')
     template_name = "lims/modal/delete.html"
     model = models.Group
     success_message = "Group has been deleted."
 
-    def delete(self, request, *args, **kwargs):
-        group = self.get_object()
-        super(GroupDelete, self).delete(request, *args, **kwargs)
-        models.ActivityLog.objects.log_activity(self.request, group, models.ActivityLog.TYPE.DELETE,
+    def get_success_url(self):
+        return self.object.shipment and self.object.shipment.get_absolute_url() or reverse_lazy('group-list')
+
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
+        models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
                                                 self.success_message)
-        return JsonResponse({'url': group.shipment and group.shipment.get_absolute_url() or reverse_lazy('group-list')})
+        return response
 
 
 class DataList(ListViewMixin, ItemListView):
@@ -989,7 +991,7 @@ class RequestWizardEdit(UserPassesTestMixin, SessionWizardView):
         return JsonResponse({})
 
 
-class RequestEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class RequestEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.RequestAdminForm
     template_name = "lims/modal/form.html"
     model = models.Request
@@ -1000,18 +1002,20 @@ class RequestEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
         return reverse_lazy('shipment-requests', kwargs={'pk': self.object.shipment().pk})
 
 
-class RequestDelete(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+class RequestDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     success_url = reverse_lazy('request-list')
     template_name = "lims/modal/delete.html"
     model = models.Request
     success_message = "Request has been deleted."
 
-    def delete(self, request, *args, **kwargs):
-        obj = self.get_object()
-        super().delete(request, *args, **kwargs)
-        models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.DELETE,
+    def get_success_url(self):
+        return self.object.shipment() and self.object.shipment().get_absolute_url() or reverse_lazy('request-list')
+
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
+        models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
                                                 self.success_message)
-        return JsonResponse({'url': obj.shipment() and obj.shipment().get_absolute_url() or reverse_lazy('request-list')})
+        return response
 
 
 class SessionDataList(ShipmentDataList):
@@ -1085,7 +1089,7 @@ class BeamlineDetail(AdminRequiredMixin, detail.DetailView):
     template_name = "lims/details/beamline.html"
 
 
-class AutomounterEdit(OwnerRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class AutomounterEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.AutomounterForm
     template_name = "lims/modal/form.html"
     model = models.Automounter
@@ -1185,7 +1189,7 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
         return JsonResponse({'url': reverse('shipment-detail', kwargs={'pk': self.shipment.pk})})
 
 
-class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.FormView):
+class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, ModalFormView):
     form_class = forms.ShipmentContainerForm
     template_name = "lims/forms/add-wizard.html"
     success_message = "Shipment updated"
@@ -1214,7 +1218,7 @@ class ShipmentAddContainer(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMix
         return HttpResponseRedirect(reverse('shipment-add-groups', kwargs={'pk': self.kwargs.get('pk')}))
 
 
-class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, ModalCreateView):
     model = models.Group
     form_class = forms.ShipmentGroupForm
     template_name = "lims/forms/add-wizard.html"
@@ -1255,12 +1259,12 @@ class ShipmentAddGroup(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, 
         return JsonResponse({})
 
 
-class SeatSamples(OwnerRequiredMixin, AsyncFormMixin, detail.DetailView):
+class SeatSamples(OwnerRequiredMixin, detail.DetailView):
     template_name = "lims/forms/seat-samples.html"
     model = models.Shipment
 
 
-class ContainerSpreadsheet(LoginRequiredMixin, AsyncFormMixin, detail.DetailView):
+class ContainerSpreadsheet(LoginRequiredMixin, detail.DetailView):
     template_name = "lims/forms/container-spreadsheet.html"
     model = models.Container
 
@@ -1310,7 +1314,7 @@ class ContainerSpreadsheet(LoginRequiredMixin, AsyncFormMixin, detail.DetailView
             raise http.Http404('Container Not Found!')
 
 
-class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.SSHKeyForm
     template_name = "lims/modal/form.html"
     model = models.SSHKey
@@ -1334,7 +1338,7 @@ class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, AsyncFormMixin, edi
         return initial
 
 
-class SSHKeyEdit(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class SSHKeyEdit(LoginRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.SSHKeyForm
     template_name = "lims/modal/form.html"
     model = models.SSHKey
@@ -1342,7 +1346,7 @@ class SSHKeyEdit(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.U
     success_message = "SSH key has been updated"
 
 
-class SSHKeyDelete(LoginRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+class SSHKeyDelete(LoginRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     template_name = "lims/modal/delete.html"
     model = models.SSHKey
     success_url = '/'
@@ -1371,7 +1375,7 @@ class GuideView(detail.DetailView):
         return context
 
 
-class GuideCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class GuideCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.GuideForm
     template_name = "lims/modal/form.html"
     model = models.Guide
@@ -1379,7 +1383,7 @@ class GuideCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.
     success_message = "Guide has been created"
 
 
-class GuideEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class GuideEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.GuideForm
     template_name = "lims/modal/form.html"
     model = models.Guide
@@ -1387,7 +1391,7 @@ class GuideEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.Up
     success_message = "Guide has been updated"
 
 
-class GuideDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+class GuideDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     template_name = "lims/modal/delete.html"
     model = models.Guide
     success_url = '/'
@@ -1464,7 +1468,7 @@ class UserStats(UserDetail):
         return context
 
 
-class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.NewProjectForm
     template_name = "lims/modal/form.html"
     model = models.Project
@@ -1483,7 +1487,7 @@ class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
         return response
 
 
-class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.DeleteView):
+class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     template_name = "lims/modal/delete.html"
     model = models.Project
     success_url = reverse_lazy('user-list')
@@ -1498,10 +1502,9 @@ class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edi
         context['form_action'] = reverse_lazy('user-delete', kwargs={'username': self.object.username})
         return context
 
-    def delete(self, *args, **kwargs):
-        obj = self.get_object()
-        self.success_message = "{} account has been deleted".format(kwargs.get('username'))
-        return JsonResponse({'url': self.success_url}, safe=False)
+    def confirmed(self, *args, **kwargs):
+        self.success_message = "{} account has been deleted".format(self.kwargs.get('username'))
+        return super().confirmed(*args, **kwargs)
 
 
 def record_logout(sender, user, request, **kwargs):

@@ -9,11 +9,12 @@ from django.utils.text import slugify
 from django.views.generic import edit, detail
 from itemlist.views import ItemListView
 
+from crisp_modals.views import ModalCreateView, ModalUpdateView
 from basiclive.core.lims.conf import settings as lims_settings
 from basiclive.core.lims.views import ListViewMixin
 from basiclive.utils import filters
 from basiclive.utils.encrypt import decrypt
-from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin
+from basiclive.utils.mixins import AdminRequiredMixin, PlotViewMixin
 from . import forms, models, stats
 
 if lims_settings.USE_SCHEDULE:
@@ -49,7 +50,7 @@ class SupportAreaList(ListViewMixin, ItemListView):
     link_attr = 'data-form-link'
 
 
-class SupportAreaCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class SupportAreaCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.SupportAreaForm
     template_name = "lims/modal/form.html"
     model = models.SupportArea
@@ -57,7 +58,7 @@ class SupportAreaCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin,
     success_message = "Support area has been created"
 
 
-class SupportAreaEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class SupportAreaEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.SupportAreaForm
     template_name = "lims/modal/form.html"
     model = models.SupportArea
@@ -162,7 +163,7 @@ class FeedbackStats(PlotViewMixin, FeedbackList):
         return stats.feedback_stats(self.get_queryset(), self.get_active_filters())
 
 
-class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.CreateView):
+class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.SupportEntryForm
     template_name = "lims/modal/form.html"
     model = models.SupportRecord
@@ -179,7 +180,7 @@ class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin
         return initial
 
 
-class SupportEntryEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class SupportEntryEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.SupportEntryForm
     template_name = "lims/modal/form.html"
     model = models.SupportRecord

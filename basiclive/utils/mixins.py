@@ -46,26 +46,22 @@ class AuthenticationRequiredMixin(object):
             return http.HttpResponseForbidden()
 
 
-class AsyncFormMixin(object):
-    """
-    Mixin to add AJAX support to a form.
-    Must be used with an object-based FormView (e.g. CreateView)
-    """
-    modal_response = False
+import warnings
+from crisp_modals.views import AjaxFormMixin
 
-    def form_valid(self, form):
-        # We make sure to call the parent's form_valid() method because
-        # it might do some processing (in the case of CreateView, it will
-        # call form.save() for example).
-        response = super().form_valid(form)
-        if is_ajax(self.request):
-            data = {
-                'modal': self.modal_response,
-                'url': self.get_success_url(),
-            }
-            return JsonResponse(data, safe=False)
-        else:
-            return response
+
+class AsyncFormMixin(AjaxFormMixin):
+    """
+    Deprecated: use crisp_modals.views.ModalCreateView, ModalUpdateView, ModalDeleteView, etc.
+    """
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "AsyncFormMixin is deprecated and will be removed in a future release. "
+            "Use ModalView classes from crisp_modals.views instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
 
 class PlotViewMixin:

@@ -13,8 +13,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail
 from itemlist.views import ItemListView
 
+from crisp_modals.views import ModalUpdateView
 from basiclive.utils import filters
-from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
+from basiclive.utils.mixins import AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
 from basiclive.utils.network import get_client_address
 from . import models
 from .forms import AccessForm
@@ -62,7 +63,7 @@ class AccessListView(AdminRequiredMixin, ItemListView):
         return queryset.filter(active=True)
 
 
-class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
+class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = AccessForm
     template_name = "lims/modal/form.html"
     model = models.AccessList
