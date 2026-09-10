@@ -236,8 +236,6 @@ class TemplateIntegrityTests(SimpleTestCase):
             "lims/js/basiclive-forms.min.js",
             "lims/js/basiclive-layouts.js",
             "lims/js/basiclive-layouts.min.js",
-            "lims/js/basiclive-modals.js",
-            "lims/js/basiclive-modals.min.js",
             "lims/js/basiclive-reports.js",
             "lims/js/basiclive-reports.min.js",
             "lims/js/basiclive-seater.js",
@@ -289,7 +287,7 @@ class TemplateIntegrityTests(SimpleTestCase):
         rendered_base = base_tmpl.render({"user": None})
         self.assertIn("bootstrap/css/bootstrap.min.css", rendered_base)
         self.assertIn("lims/css/basiclive.min.css", rendered_base)
-        self.assertIn("lims/js/basiclive-modals.min.js", rendered_base)
+        self.assertIn("crisp_modals/modals.min.js", rendered_base)
         self.assertNotIn("mxlive", rendered_base.lower())
 
         wizard_tmpl = get_template("lims/modal/wizard.html")
@@ -453,16 +451,16 @@ class TemplateIntegrityTests(SimpleTestCase):
         # 1. Select2 theme in JS helpers
         lims_static = Path(apps.get_app_config("lims").path) / "static" / "lims" / "js"
         forms_js = (lims_static / "basiclive-forms.js").read_text(encoding="utf-8")
-        modals_js = (lims_static / "basiclive-modals.js").read_text(encoding="utf-8")
+        crisp_static = Path(apps.get_app_config("crisp_modals").path) / "static" / "crisp_modals" / "modals.js"
+        modals_js = crisp_static.read_text(encoding="utf-8")
 
         self.assertIn("theme: 'bootstrap-5'", forms_js)
         self.assertNotIn("theme: 'bootstrap4'", forms_js)
-        self.assertIn("theme: 'bootstrap-5'", modals_js)
-        self.assertNotIn("theme: 'bootstrap4'", modals_js)
 
         # 2. Modal helpers support bootstrap.Modal
-        self.assertIn("bootstrap.Modal.getOrCreateInstance", modals_js)
-        self.assertIn("bootstrap.Modal.getInstance", modals_js)
+        self.assertIn("bootstrap.Modal", modals_js)
+        self.assertIn("initModal", modals_js)
+        self.assertIn("asyncForm", modals_js)
 
         # 3. forms.py contains zero form-row or form-group occurrences
         forms_py = (Path(apps.get_app_config("lims").path) / "forms.py").read_text(encoding="utf-8")
