@@ -14,7 +14,6 @@
     {% block site_css %}
         <link rel="stylesheet" href="{% static 'themify-icons/css/themify-icons.css' %}">
         <link rel="stylesheet" href="{% static 'misc/css/noty.min.css' %}" type="text/css"/>
-        <link rel="stylesheet" href="{% static 'jquery/css/jquery.scrollbar.min.css' %}"/>
         <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" type="text/css"/>
         <link rel="stylesheet" href="{% static 'lims/css/basiclive.min.css' %}" type="text/css"/>
     {% endblock %}
@@ -76,7 +75,6 @@
 
 <script src="{% static 'misc/js/popper.min.js' %}"></script>
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'jquery/js/jquery.scrollbar.min.js' %}"></script>
 
 {% block extra_js %}{% endblock %}
 <script>
@@ -126,24 +124,6 @@
         });
 
         });
-        </script>
-
-<script>
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie != '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-</script>
+    </script>
 </body>
 </html>

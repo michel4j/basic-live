@@ -49,7 +49,7 @@
         var self = this;
         self._touchActive = false;
 
-        this.element.bind('touchstart.' + this.widgetName, function (event) {
+        this.element.on('touchstart.' + this.widgetName, function (event) {
             self._touchActive = true;
             return self._mouseDown(makeMouseEvent(event));
         });
@@ -69,8 +69,8 @@
         };
 
         $(document)
-            .bind('touchmove.' + this.widgetName, this._mouseMoveDelegate)
-            .bind('touchend.' + this.widgetName, this._mouseUpDelegate);
+            .on('touchmove.' + this.widgetName, this._mouseMoveDelegate)
+            .on('touchend.' + this.widgetName, this._mouseUpDelegate);
 
         _mouseInit.apply(this);
     };
@@ -89,37 +89,6 @@
             }
         }
     };
-
-    /**
-     * Internet explorer rotates image relative left top corner, so we should
-     * shift image when it's rotated.
-     */
-    var ieTransforms = {
-            '0': {
-                marginLeft: 0,
-                marginTop: 0,
-                filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=1, M12=0, M21=0, M22=1, SizingMethod="auto expand")'
-            },
-
-            '90': {
-                marginLeft: -1,
-                marginTop: 1,
-                filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=0, M12=-1, M21=1, M22=0, SizingMethod="auto expand")'
-            },
-
-            '180': {
-                marginLeft: 0,
-                marginTop: 0,
-                filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=-1, M12=0, M21=0, M22=-1, SizingMethod="auto expand")'
-            },
-
-            '270': {
-                marginLeft: -1,
-                marginTop: 1,
-                filter: 'progid:DXImageTransform.Microsoft.Matrix(M11=0, M12=1, M21=-1, M22=0, SizingMethod="auto expand")'
-            }
-        },
-        useIeTransforms = (jQuery.browser.msie && parseInt(jQuery.browser.version, 10) <= 8);
 
     $.widget("ui.diffviewer", $.ui.mouse, {
         widgetEventPrefix: "diffviewer",
@@ -268,10 +237,8 @@
                 })
                 .prependTo(this.container);
 
-            /*** BasicLIVE: mousemove action changed ****/
-            //this.container.bind('mousemove', function(ev) { me._handleMouseMove(ev); });
-            this.container.bind('mousemove', function (e) {
-                return me.update_pos(e)
+            this.container.on('mousemove', function (e) {
+                return me.update_pos(e);
             });
 
             this.loadImage(this.options.src);
@@ -348,14 +315,7 @@
                     me._trigger('onFinishLoad', 0, src);
                 }
             });
-            this.overview_img.attr("src", src); /*** BasicLIVE: Make overview img ***/
-            /*** BasicLIVE: Added to ensure IE displays images ***/
-            if (useIeTransforms) {
-                this.img_object.object().attr("src", src);
-                this.img_object.object().attr("width", '512px');
-                this.img_object.object().attr("height", '512px');
-            }
-            /**************************************************/
+            this.overview_img.attr("src", src);
         },
 
         /**
@@ -847,7 +807,7 @@
             var me = this;
 
             $("<div>", {'class': "diffviewer_zoom_in diffviewer_common diffviewer_button"})
-                .bind('mousedown touchstart', function () {
+                .on('mousedown touchstart', function () {
                     me.zoom_by(1);
                     return false;
                 })
@@ -856,7 +816,7 @@
                 .appendTo(this.container);
 
             $("<div>", {'class': "diffviewer_zoom_out diffviewer_common diffviewer_button"})
-                .bind('mousedown touchstart', function () {
+                .on('mousedown touchstart', function () {
                     me.zoom_by(-1);
                     return false;
                 })
@@ -865,7 +825,7 @@
                 .appendTo(this.container);
 
             $("<div>", {'class': "diffviewer_zoom_fit diffviewer_common diffviewer_button"})
-                .bind('mousedown touchstart', function () {
+                .on('mousedown touchstart', function () {
                     me.fit(this);
                     return false;
                 })
@@ -875,16 +835,6 @@
 
             this.zoom_object = $("<div>").addClass("diffviewer_zoom_status diffviewer_common")
                 .appendTo(this.container);
-
-            /*** BasicLIVE: not needed
-             $("<div>", { 'class': "diffviewer_rotate_left diffviewer_common diffviewer_button"})
-             .bind('mousedown touchstart',function(){me.angle(-90); return false;})
-             .appendTo(this.container);
-
-             $("<div>", { 'class': "diffviewer_rotate_right diffviewer_common diffviewer_button" })
-             .bind('mousedown touchstart',function(){me.angle(90); return false;})
-             .appendTo(this.container);
-             ***********************/
 
             this.update_status(); //initial status update
         }
@@ -1058,17 +1008,6 @@
                 jQuery.each(['', '-webkit-', '-moz-', '-o-', '-ms-'], function (i, prefix) {
                     img.css(prefix + 'transform', cssVal);
                 });
-
-                if (useIeTransforms) {
-                    jQuery.each(['-ms-', ''], function (i, prefix) {
-                        img.css(prefix + 'filter', ieTransforms[deg].filter);
-                    });
-
-                    img.css({
-                        marginLeft: ieTransforms[deg].marginLeft * this.display_diff() / 2,
-                        marginTop: ieTransforms[deg].marginTop * this.display_diff() / 2
-                    });
-                }
             },
             function () {
                 return this._angle;
@@ -1156,43 +1095,10 @@
                 left: x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px"
             };
 
-            if (useIeTransforms) {
-                jQuery.extend(params, {
-                    marginLeft: ieTransforms[this.angle()].marginLeft * this.display_diff() / 2,
-                    marginTop: ieTransforms[this.angle()].marginTop * this.display_diff() / 2
-                });
-            }
-
-            var swapDims = this._swapDimensions,
-                img = this._img;
-
-            //here we come: another IE oddness. If image is rotated 90 degrees with a filter, than
-            //width and height getters return real width and height of rotated image. The bad news
-            //is that to set height you need to set a width and vice versa. Fuck IE.
-            //So, in this case we have to animate width and height manually.
-            if (useIeTransforms && swapDims) {
-                var ieh = this._img.width(),
-                    iew = this._img.height(),
-                    iedh = params.height - ieh;
-                iedw = params.width - iew;
-
-                delete params.width;
-                delete params.height;
-            }
-
             if (this._do_anim && !skip_animation) {
                 this._img.animate(params, {
                     duration: 200,
-                    complete: complete,
-                    step: function (now, fx) {
-                        if (useIeTransforms && swapDims && (fx.prop === 'top')) {
-                            var percent = (now - fx.start) / (fx.end - fx.start);
-
-                            img.height(ieh + iedh * percent);
-                            img.width(iew + iedw * percent);
-                            img.css('top', now);
-                        }
-                    }
+                    complete: complete
                 });
             } else {
                 this._img.css(params);

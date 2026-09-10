@@ -49,10 +49,6 @@
         "sri": "sha512-c9tMa1UHAV5HK+LMSz07WQnJ/qS7yA5fy8Up6ZV+8w8jFoszs0gdncicJB/4GRWfcTNtn1veVL9NyUfKsbW/BQ=="
       },
       {
-        "path": "https://cdnjs.cloudflare.com/ajax/libs/jquery.scrollbar/0.2.11/jquery.scrollbar.min.js",
-        "sri": "sha512-5AcaBUUUU/lxSEeEcruOIghqABnXF8TWqdIDXBZ2SNEtrTGvD408W/ShtKZf0JNjQUfOiRBJP+yHk6Ab2eFw3Q=="
-      },
-      {
         "path": "https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js",
         "sri": "sha512-rCjfoab9CVKOH/w/T6GbBxnAH5Azhy4+q1EXW5XEURefHbIkRbQ++ZR+GBClo3/d3q583X/gO4FKmOFuhkKrdA=="
       },
@@ -66,10 +62,6 @@
       }
     ],
     "css": [
-      {
-        "path": "https://cdnjs.cloudflare.com/ajax/libs/jquery.scrollbar/0.2.11/jquery.scrollbar.min.css",
-        "sri": "sha512-xlddSVZtsRE3eIgHezgaKXDhUrdkIZGMeAFrvlpkK0k5Udv19fTPmZFdQapBJnKZyAQtlr3WXEM3Lf4tsrHvSA=="
-      }
     ]
   },
   "misc": {
