@@ -173,8 +173,7 @@ function initTooltips(selector) {
                     } else {
                         url = `/users/containers/${settings.root_id}/${d.id}/load/`;
                     }
-                    $('#modal-target').asyncForm({
-                        url: url,
+                    $('#modal-target').asyncForm(url, {
                         complete: function(data){
                             let cnt = $('#' + settings.prefix + '-' + data.id);
                             cnt.empty();

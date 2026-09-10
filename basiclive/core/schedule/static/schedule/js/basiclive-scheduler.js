@@ -142,7 +142,7 @@ function setupEditor(sel, sw) {
             let dt = $(sw).prop('checked');
 
             if (dt && $(this).hasClass('downtime')) {
-                $('#modal-target').asyncForm({url: $(this).data('edit-link')});
+                $('#modal-target').asyncForm($(this).data('edit-link'));
             } else {
                 if (!$(this).hasClass('block')) {
                     // Check that the time slot is selectable
@@ -170,8 +170,7 @@ function setupEditor(sel, sw) {
                         $('#modal-target')
                             .on('hidden.bs.modal', function () {
                                 freshEditor(sel);
-                            }).asyncForm({
-                            url: url,
+                            }).asyncForm(url, {
                             complete: function (data) {
                                 $.ajax({
                                     url: $(sel).data('week-url'),
