@@ -468,6 +468,50 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertNotIn("form-row", forms_py)
         self.assertNotIn("form-group", forms_py)
 
+    def test_jquery_migrate_not_referenced(self):
+        """Verify that jquery-migrate is purged from all templates and assets.json."""
+        # 1. Sweep all templates across all registered apps
+        app_names = [
+            "basiclive.core.lims",
+            "basiclive.core.acl",
+            "basiclive.core.crm",
+            "basiclive.core.schedule",
+            "basiclive.core.publications",
+        ]
+        for app_name in app_names:
+            app_config = apps.get_app_config(app_name.split(".")[-1])
+            template_dir = Path(app_config.path) / "templates"
+            if not template_dir.is_dir():
+                continue
+            for html_file in template_dir.rglob("*.html"):
+                content = html_file.read_text(encoding="utf-8")
+                self.assertNotIn(
+                    "jquery-migrate",
+                    content,
+                    f"Found obsolete jquery-migrate reference in {html_file}",
+                )
+
+        # 2. Check assets.json
+        assets_file = Path(apps.get_app_config("lims").path) / "static" / "lims" / "assets.json"
+        assets_content = assets_file.read_text(encoding="utf-8")
+        self.assertNotIn("jquery-migrate", assets_content)
+
+    def test_diffviewer_modernization(self):
+        """Verify that basiclive-diffviewer.js and .min.js do not reference jQuery.browser or IE8 transforms."""
+        lims_static = Path(apps.get_app_config("lims").path) / "static" / "lims" / "js"
+        diffviewer_js = (lims_static / "basiclive-diffviewer.js").read_text(encoding="utf-8")
+        diffviewer_min_js = (lims_static / "basiclive-diffviewer.min.js").read_text(encoding="utf-8")
+
+        for name, content in [("basiclive-diffviewer.js", diffviewer_js), ("basiclive-diffviewer.min.js", diffviewer_min_js)]:
+            with self.subTest(file=name):
+                self.assertNotIn("jQuery.browser", content, f"Obsolete jQuery.browser found in {name}")
+                self.assertNotIn("useIeTransforms", content, f"Obsolete useIeTransforms found in {name}")
+                self.assertNotIn("ieTransforms", content, f"Obsolete ieTransforms found in {name}")
+
+        # Also verify static asset resolution
+        self.assertIsNotNone(finders.find("lims/js/basiclive-diffviewer.js"))
+        self.assertIsNotNone(finders.find("lims/js/basiclive-diffviewer.min.js"))
+
 
 if __name__ == "__main__":
     unittest.main()
