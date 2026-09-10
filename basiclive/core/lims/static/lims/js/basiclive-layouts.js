@@ -1,14 +1,15 @@
-(function ($) {
-    function initTooltips(target) {
-        if (window.bootstrap && window.bootstrap.Tooltip) {
-            $(target).each(function() {
-                bootstrap.Tooltip.getOrCreateInstance(this);
-            });
-        } else if ($.fn.tooltip) {
-            $(target).tooltip();
-        }
+function initTooltips(selector) {
+    let tooltipTriggerList;
+    if (typeof selector === "string") {
+        tooltipTriggerList = document.querySelectorAll(selector)
+    } else {
+        tooltipTriggerList = selector
     }
 
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+}
+
+(function ($) {
     $.fn.layoutContainer = function (options) {
         let parent = $(this);
         let settings = $.extend({
@@ -63,7 +64,7 @@
                 // Draw Container Children
                 $("#" + svg_id).drawContainer(data, settings);
                 listLoaded('#loaded-projects', '#loaded-containers', data, settings);
-                initTooltips(parent.find('[title]'));
+                initTooltips(parent.find('[title]').get());
                 if (settings.loadable) {
                     $(document).on('click', '[data-unload-url]', function () {
                         unloadUpdateData(this, settings);
@@ -256,7 +257,7 @@ function compileProjects(data) {
     return results;
 }
 
-var locTemplate = _.template(
+const locTemplate = _.template(
     '<div class="row  list-cnt-<%= id %>" data-highlight="id" data-reference="<%= id %>">' +
     '       <h6 class="col d-flex flex-row justify-content-between my-0">' +
     '           <div class="flex-grow-1 align-self-center py-0">' +
@@ -277,7 +278,7 @@ var locTemplate = _.template(
 );
 
 
-var projTemplate = _.template(
+const projTemplate = _.template(
     '<div class="row" data-highlight="project" data-reference="<%= name.toLowerCase() %>">' +
     '       <h4 class="col-2 text-condensed text-center align-self-center"><span class="badge rounded-pill text-bg-primary py-1"><%= details.length %></span></h4>' +
     '       <div class="col d-flex flex-row justify-content-between">' +
