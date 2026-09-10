@@ -92,14 +92,14 @@
 
     $(document).ready(function () {
         // enable tooltips
-        $("[title]").not("[data-bs-toggle]").not("[data-toggle]").tooltip({
+        $("[title]").not("[data-bs-toggle]").tooltip({
             container: 'body',
             viewport: {selector: 'body', padding: 5}
             //placement: 'auto'
         });
 
         // Enable popovers
-        $("[data-bs-toggle='popover'], [data-toggle='popover']").popover({
+        $("[data-bs-toggle='popover']").popover({
             container: 'body',
             placement:  function(context, src) {
                 $(context).addClass($(src).data('type') || '');

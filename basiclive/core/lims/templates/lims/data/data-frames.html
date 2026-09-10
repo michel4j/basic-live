@@ -219,10 +219,10 @@
         var url = $viewer.data('base-url') + '/' + $current_frame_to_display + '/' + $current_brightness_to_display + '.png';
         updateFrameDetails();
 
-        $('[data-bs-target="#parameters"], [data-target="#parameters"]').click(function (e) {
+        $('[data-bs-target="#parameters"]').click(function (e) {
         e.preventDefault();
         e.stopPropagation();
-        var target = $($(this).attr('data-bs-target') || $(this).attr('data-target'));
+        var target = $($(this).attr('data-bs-target'));
         var frame_list = $('.frame-list ul');
         var height = 0;
         if (target.hasClass('in')) {
