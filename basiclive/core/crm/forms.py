@@ -1,4 +1,11 @@
-from crispy_forms.bootstrap import StrictButton
+from crisp_modals.forms import (
+    Button,
+    FullWidth,
+    HalfWidth,
+    ModalModelForm,
+    Row,
+    ThirdWidth,
+)
 from crispy_forms.layout import HTML, Div, Field, Layout
 from django import forms
 from django.urls import reverse_lazy
@@ -6,10 +13,9 @@ from django.utils.text import slugify
 
 from .models import SupportRecord, SupportArea, Feedback, LikertScale
 from basiclive.core.lims.models import Project
-from basiclive.core.lims.forms import BodyHelper, FooterHelper
 
 
-class SupportAreaForm(forms.ModelForm):
+class SupportAreaForm(ModalModelForm):
 
     class Meta:
         model = SupportArea
@@ -18,27 +24,24 @@ class SupportAreaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         if self.instance.pk:
-            self.body.title = u"Edit Support Area"
+            self.body.title = "Edit Support Area"
             self.body.form_action = reverse_lazy('supportarea-edit', kwargs={'pk': self.instance.pk})
         else:
-            self.body.title = u"New Support Area"
+            self.body.title = "New Support Area"
             self.body.form_action = reverse_lazy('new-supportarea')
 
         self.body.layout = Layout(
-            Div(
-                Div('name', css_class="col-12"),
-                Div(Div('user_feedback', css_class="mt-3 ms-3 ps-1"), css_class="col-6"),
-                Div('scale', css_class="col-6"),
-                Div(Div('external', css_class="mt-3 ms-3 ps-1"), css_class="col-12"),
-                css_class="row"
+            Row(
+                FullWidth('name'),
+                HalfWidth(Div('user_feedback', css_class="mt-3 ms-3 ps-1")),
+                HalfWidth('scale'),
+                FullWidth(Div('external', css_class="mt-3 ms-3 ps-1")),
             ),
         )
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
 
@@ -54,7 +57,7 @@ class LikertEntry(Field):
     template = "crm/forms/likert-entry.html"
 
 
-class FeedbackForm(forms.ModelForm):
+class FeedbackForm(ModalModelForm):
 
     class Meta:
         model = Feedback
@@ -71,9 +74,7 @@ class FeedbackForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"User Experience Survey"
+        self.body.title = "User Experience Survey"
         self.body.form_action = reverse_lazy('session-feedback', kwargs={'key': self.initial['session'].feedback_key()})
 
         likert_tables = []
@@ -93,19 +94,18 @@ class FeedbackForm(forms.ModelForm):
             HTML("""<p class="text-large text-condensed">
                     Help us improve your next visit or session by letting us know how we did this time.</p>"""),
             *likert_tables,
-            Div(
-                Div('comments', css_class="col-12"),
-                Div('contact', css_class="mx-3 px-1 col-12"),
-                css_class="row"
+            Row(
+                FullWidth('comments'),
+                FullWidth('contact', style="mx-3 px-1"),
             ),
         )
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
 
-class SupportEntryForm(forms.ModelForm):
+class SupportEntryForm(ModalModelForm):
     staff = forms.ModelChoiceField(queryset=Project.objects.filter(kind__name="Staff"))
 
     class Meta:
@@ -120,36 +120,31 @@ class SupportEntryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         if self.instance.pk:
-            self.body.title = u"Edit Record of User Support"
+            self.body.title = "Edit Record of User Support"
             self.body.form_action = reverse_lazy('supportrecord-edit', kwargs={'pk': self.instance.pk})
         else:
-            self.body.title = u"New Record of User Support"
+            self.body.title = "New Record of User Support"
             self.body.form_action = reverse_lazy('new-supportrecord')
             self.fields['staff_comments'].widget = forms.HiddenInput()
 
         self.body.layout = Layout(
-            Div(
-                Div('staff', css_class='col-4'),
-                Div('beamline', css_class="col-4"),
-                Div('project', css_class='col-4'),
-                css_class="row"
+            Row(
+                ThirdWidth('staff'),
+                ThirdWidth('beamline'),
+                ThirdWidth('project'),
             ),
-            Div(
-                Div('kind', css_class="col-6"),
-                Div('lost_time', css_class="col-6"),
-                Div(Field('areas', css_class="select"), css_class="col-12"),
-                css_class="row"
+            Row(
+                HalfWidth('kind'),
+                HalfWidth('lost_time'),
+                FullWidth(Field('areas', css_class="select")),
             ),
-            Div(
-                Div('comments', css_class="col-12"),
-                Div('staff_comments', css_class="col-12"),
-                css_class="row"
+            Row(
+                FullWidth('comments'),
+                FullWidth('staff_comments'),
             ),
         )
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
