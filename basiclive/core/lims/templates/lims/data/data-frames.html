@@ -43,7 +43,7 @@
                 </button>
             </div>
             <small class="col text-center text-condensed p-0" style="line-height: 1.2;"><span
-                    id="framename"></span><br/><span id="oscstart"></span> to <span id="oscend"></span></small>
+                    id="frame-name"></span><br/><span id="osc-start"></span> to <span id="osc-end"></span></small>
             <div class="col">
                 <div class="float-end">
                     <button class="btn btn-sm btn-info" onclick="prevClicked();" type="button"><i
@@ -63,13 +63,13 @@
                  title="Snapshot from beamline">&nbsp;
             </div>
         </div>
-        <small style="flex: none;">
+        <div style="flex: none;">
             <ul class="nav nav-tabs text-condensed px-2" role="tablist">
                 <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#frames">{{ object.num_frames }}
                     Frames ({{ object.frame_sets|truncatechars:20 }})</a></li>
                 <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#meta-data">Meta-Data</a></li>
             </ul>
-        </small>
+        </div>
         <div class="frame-list flex-fill">
             <!--h4 class="text-condensed">{{ object.num_frames }} Frames ({{ object.frame_sets }})</h4-->
             <div class="tab-content">
@@ -165,17 +165,17 @@
 
     function updateFrameDetails() {
         // use jQuery to find and update the frame specific elements.
-        var element = $('#framename');
+        var element = $('#frame-name');
         element.text($current_frame_to_display);
         if (element.width() > parseInt($('.loaded-image').css('maxWidth'))) {
             $('.loaded-image').addClass('reverse-ellipsis');
         }
 
         osc = ($current_frame_id - {{object.first_frame}}) * {{object.meta_data.delta_angle|default:0}} + {{object.meta_data.start_angle|default:0}};
-        $('#oscstart').text(osc + " deg");
+        $('#osc-start').text(osc + " deg");
 
         osc = osc + {{object.meta_data.delta_angle|default:0|floatformat:1}};
-        $('#oscend').text(osc + " deg");
+        $('#osc-end').text(osc + " deg");
 
     }
 

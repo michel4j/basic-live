@@ -922,7 +922,7 @@ a[data-link], .back text[port], .cursor {
   /* viewer specifics */
   .viewer { width: 100%; border: 1px solid var(--gray-alpha); position: relative; margin-bottom: 5px; }
   .loaded-image { padding-left: 10px; vertical-align: middle; max-width: 230px; }
-  #framename { font-weight: bold; }
+  #frame-name { font-weight: bold; }
 }
 
 /* image loading indicator kept separate */
