@@ -1,0 +1,27 @@
+# Migration of Modal Form Framework to django-crisp-modals
+
+BasicLIVE previously implemented custom modal handling using an in-house jQuery plugin (`basiclive-modals.js` / `basiclive-modals.min.js`), custom modal templates (`lims/modal/content.html`, `lims/modal/form.html`, `lims/modal/delete.html`), and a custom backend mixin (`AsyncFormMixin` in `basiclive/utils/mixins.py`) paired with Django generic views (`CreateView`, `UpdateView`, `DeleteView`).
+
+Following the migration to Bootstrap 5, we decided to adopt the modal form framework provided by `django-crisp-modals` (`crisp_modals`).
+
+## Context and Decision
+
+1. **Dependency and Configuration**:
+   - Added `django-crisp-modals >= 2026.1.0` to `pyproject.toml`.
+   - Added `"crisp_modals"` to `INSTALLED_APPS` and wired frontend assets via CDN (`jquery.form.min.js`, `crisp_modals/modals.min.js`).
+
+2. **Template Modernization and Inheritance**:
+   - Re-based `lims/modal/content.html` on `crisp_modals/modal.html`.
+   - Re-based `lims/modal/form.html` on `crisp_modals/form.html`.
+   - Re-based `lims/modal/delete.html` on `crisp_modals/delete.html`.
+   - Configured `$('#modal-target').initModal(...)` in `lims/base.html` while retaining backward-compatible event listeners for `data-link` and `data-form-link` triggers alongside native `data-modal-url`.
+
+3. **Frontend Helper Consolidation**:
+   - Retired and purged `basiclive-modals.js` and `basiclive-modals.min.js`.
+   - Moved string utility functions (`slugify`, `strip`) into `basiclive-spreadsheet.js` and recompiled `basiclive-spreadsheet.min.js`.
+   - Ensured modal templates depending on `slugify` (such as `lims/forms/group-edit.html`) explicitly load `basiclive-spreadsheet.min.js` via `modal_assets`.
+
+4. **View Migration across Apps**:
+   - Systematically migrated modal views across `lims`, `crm`, `acl`, and `schedule` to inherit from `crisp_modals.views` (`ModalCreateView`, `ModalUpdateView`, `ModalDeleteView`, `ModalFormView`).
+   - Standardized modal delete views to override `confirmed(*args, **kwargs)` for post-deletion actions and activity logging, returning clean JSON responses.
+   - Replaced custom `AsyncFormMixin` with an alias inheriting from `crisp_modals.views.AjaxFormMixin` that emits a `DeprecationWarning`.

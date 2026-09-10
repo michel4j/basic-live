@@ -511,6 +511,46 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIsNotNone(finders.find("lims/js/basiclive-diffviewer.js"))
         self.assertIsNotNone(finders.find("lims/js/basiclive-diffviewer.min.js"))
 
+    def test_crisp_modals_configuration_and_integration(self):
+        """Verify crisp_modals app installation, template inheritance, and base.html wiring."""
+        self.assertTrue(apps.is_installed("crisp_modals"))
+
+        # 1. Base template includes modals.min.js and initializes modal handler
+        base_tmpl = get_template("lims/base.html")
+        rendered_base = base_tmpl.render({"user": None})
+        self.assertIn("crisp_modals/modals.min.js", rendered_base)
+        self.assertIn("jquery.form.min.js", rendered_base)
+        self.assertIn("initModal", rendered_base)
+        self.assertIn("data-link", rendered_base)
+        self.assertIn("data-form-link", rendered_base)
+
+        # 2. Re-based templates extend crisp_modals
+        content_tmpl = get_template("lims/modal/content.html")
+        self.assertIn('extends "crisp_modals/modal.html"', content_tmpl.template.source)
+
+        form_tmpl = get_template("lims/modal/form.html")
+        self.assertIn('extends "crisp_modals/form.html"', form_tmpl.template.source)
+
+        delete_tmpl = get_template("lims/modal/delete.html")
+        self.assertIn('extends "crisp_modals/delete.html"', delete_tmpl.template.source)
+
+        # 3. Rendered modal templates contain Bootstrap 5 modal markup
+        rendered_content = content_tmpl.render({})
+        self.assertIn('data-bs-dismiss="modal"', rendered_content)
+        self.assertIn('btn-close', rendered_content)
+        self.assertIn('id="modal"', rendered_content)
+
+    def test_spreadsheet_utility_functions_present(self):
+        """Verify that slugify and strip utility functions exist in basiclive-spreadsheet.js and .min.js."""
+        lims_static = Path(apps.get_app_config("lims").path) / "static" / "lims" / "js"
+        spreadsheet_js = (lims_static / "basiclive-spreadsheet.js").read_text(encoding="utf-8")
+        spreadsheet_min_js = (lims_static / "basiclive-spreadsheet.min.js").read_text(encoding="utf-8")
+
+        for name, content in [("basiclive-spreadsheet.js", spreadsheet_js), ("basiclive-spreadsheet.min.js", spreadsheet_min_js)]:
+            with self.subTest(file=name):
+                self.assertIn("function slugify", content)
+                self.assertIn("function strip", content)
+
 
 if __name__ == "__main__":
     unittest.main()
