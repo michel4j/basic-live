@@ -1,7 +1,22 @@
 import re
 
 import fastjsonschema
-from crispy_forms.bootstrap import StrictButton
+from crisp_modals.forms import (
+    BodyHelper,
+    Button,
+    FooterHelper,
+    FullWidth,
+    HalfWidth,
+    ModalForm,
+    ModalModelForm,
+    QuarterWidth,
+    Row,
+    SixthWidth,
+    StrictButton,
+    ThirdWidth,
+    ThreeQuarterWidth,
+    TwoThirdWidth,
+)
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Field, Layout
 from django import forms
@@ -15,22 +30,6 @@ from .models import Project, Shipment, Automounter, Sample, ComponentType, Conta
     ContainerType
 
 
-class BodyHelper(FormHelper):
-    def __init__(self, form):
-        super().__init__(form)
-        self.form_tag = False
-        self.use_custom_control = True
-        self.form_show_errors = False
-
-
-class FooterHelper(FormHelper):
-    def __init__(self, form):
-        super().__init__(form)
-        self.form_tag = False
-        self.disable_csrf = True
-        self.form_show_errors = False
-
-
 disabled_widget = forms.HiddenInput(attrs={'readonly': True})
 
 
@@ -38,7 +37,7 @@ class HiddenArea(forms.HiddenInput):
     template_name = 'django/forms/widgets/textarea.html'
 
 
-class ProjectForm(forms.ModelForm):
+class ProjectForm(ModalModelForm):
     class Meta:
         model = Project
         fields = ('first_name', 'last_name', 'email', 'contact_person', 'contact_email', 'contact_phone',
@@ -47,11 +46,9 @@ class ProjectForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
-        super(ProjectForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         pk = self.instance.pk
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         if pk:
             self.body.title = _("Edit Profile")
             self.body.form_action = reverse_lazy('edit-profile', kwargs={'username': self.instance.username})
@@ -65,67 +62,64 @@ class ProjectForm(forms.ModelForm):
             self.fields['designation'].widget = forms.MultipleHiddenInput()
 
         self.body.layout = Layout(
-            Div(
-                Div('first_name', css_class='col-6'),
-                Div('last_name', css_class='col-6'),
-                Div('email', css_class='col-{}'.format(self.user.is_superuser and '6' or '12')),
-                self.user.is_superuser and Div(Field('designation', css_class='select'), css_class='col-6') or Div(
-                    'designation'
-                ),
-                css_class='row g-2'
+            Row(
+                HalfWidth('first_name'),
+                HalfWidth('last_name'),
+                HalfWidth('email') if self.user.is_superuser else FullWidth('email'),
+                HalfWidth(Field('designation', css_class='select')) if self.user.is_superuser else Div('designation'),
+                style="g-2"
             ),
-            Div(
-                Div(Field('kind', css_class='select'), css_class='col-6'),
-                Div('alias', css_class='col-6'),
-                Div('contact_person', css_class='col-12'),
-                css_class="row g-2"
+            Row(
+                HalfWidth(Field('kind', css_class='select')),
+                HalfWidth('alias'),
+                FullWidth('contact_person'),
+                style="g-2"
             ),
-            Div(
-                Div('contact_email', css_class='col-6'),
-                Div(
+            Row(
+                HalfWidth('contact_email'),
+                HalfWidth(
                     Field(
                         'contact_phone', pattern=r"(\+\d{1,3}-)?\d{3}-\d{3}-\d{4}( x\d+)?$",
                         placeholder="[+9-]999-999-9999[ x9999]"
-                    ),
-                    css_class='col-6'
+                    )
                 ),
-                css_class="row g-2"
+                style="g-2"
             ),
-            Div(
-                Div(Field('carrier', css_class="select"), css_class='col-6'),
-                Div('account_number', css_class='col-6'),
-                css_class="row g-2"
+            Row(
+                HalfWidth(Field('carrier', css_class="select")),
+                HalfWidth('account_number'),
+                style="g-2"
             ),
-            Div(
-                Div('organisation', css_class='col-12'),
-                css_class="row g-2"
+            Row(
+                FullWidth('organisation'),
+                style="g-2"
             ),
-            Div(
-                Div('department', css_class='col-12'),
-                css_class="row g-2"
+            Row(
+                FullWidth('department'),
+                style="g-2"
             ),
-            Div(
-                Div('address', css_class='col-12'),
-                css_class="row g-2"
+            Row(
+                FullWidth('address'),
+                style="g-2"
             ),
-            Div(
-                Div('city', css_class='col-6'),
-                Div('province', css_class='col-6'),
-                css_class="row g-2"
+            Row(
+                HalfWidth('city'),
+                HalfWidth('province'),
+                style="g-2"
             ),
-            Div(
-                Div('country', css_class='col-6'),
-                Div('postal_code', css_class='col-6'),
-                css_class="row g-2"
+            Row(
+                HalfWidth('country'),
+                HalfWidth('postal_code'),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
         )
 
 
-class NewProjectForm(forms.ModelForm):
+class NewProjectForm(ModalModelForm):
     password = forms.CharField(required=False, help_text=_('A password will be auto-generated for this account'))
 
     class Meta:
@@ -134,48 +128,45 @@ class NewProjectForm(forms.ModelForm):
                   'kind', 'alias', 'designation')
 
     def __init__(self, *args, **kwargs):
-        super(NewProjectForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if settings.SEND_EMAILS:
             self.fields['password'].help_text += _(' and sent to staff once this form is submitted')
         self.fields['kind'].initial = ProjectType.objects.first()
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
 
         self.body.title = _("Create New User Account")
         self.body.form_action = reverse_lazy('new-project')
-        self.footer.layout = Layout()
         self.body.layout = Layout(
-            Div(
-                Div('username', css_class='col-6'),
-                Div(Field('password', disabled=True), css_class="col-6"),
-                css_class="row g-2"
+            Row(
+                HalfWidth('username'),
+                HalfWidth(Field('password', disabled=True)),
+                style="g-2"
             ),
-            Div(
-                Div('first_name', css_class='col-6'),
-                Div('last_name', css_class='col-6'),
-                Div('email', css_class='col-6'),
-                Div(Field('designation', css_class='select'), css_class='col-6'),
-                css_class="row g-2"
+            Row(
+                HalfWidth('first_name'),
+                HalfWidth('last_name'),
+                HalfWidth('email'),
+                HalfWidth(Field('designation', css_class='select')),
+                style="g-2"
             ),
-            Div(
-                Div(Field('kind', css_class="select"), css_class='col-6'),
-                Div('alias', css_class='col-6'),
-                Div('contact_person', css_class='col-12'),
-                css_class="row g-2"
+            Row(
+                HalfWidth(Field('kind', css_class="select")),
+                HalfWidth('alias'),
+                FullWidth('contact_person'),
+                style="g-2"
             ),
-            Div(
-                Div('contact_email', css_class='col-6'),
-                Div('contact_phone', css_class='col-6'),
-                css_class="row g-2"
+            Row(
+                HalfWidth('contact_email'),
+                HalfWidth('contact_phone'),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton('Save', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
         )
 
 
-class RequestTypeForm(forms.ModelForm):
+class RequestTypeForm(ModalModelForm):
     parameter = forms.CharField(max_length=32, required=False, label=_("Field*"))
     required = forms.ChoiceField(choices=((False, 'No'), (True, 'Yes')), required=False)
     label = forms.CharField(max_length=64, required=False)
@@ -216,71 +207,69 @@ class RequestTypeForm(forms.ModelForm):
                 parameters]
             self.repeated_data['required_set'] = [str(spec[param]['required']) for param in parameters]
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-
         if pk:
-            self.body.title = u"Edit Request Type"
+            self.body.title = "Edit Request Type"
             self.body.form_action = reverse_lazy('requesttype-edit', kwargs={'pk': pk})
         else:
-            self.body.title = u"Create New Request Type"
+            self.body.title = "Create New Request Type"
             self.body.form_action = reverse_lazy('new-requesttype')
 
         self.body.layout = Layout(
             self.help_text(),
-            Div(
+            Row(
                 'spec',
-                Div('name', css_class='col-4'),
-                Div('scope', css_class='col-4'),
-                Div('edit_template', css_class='col-4'),
-                Div('description', css_class='col-8'),
-                Div('view_template', css_class='col-4'),
-                css_class="row g-2"
+                ThirdWidth('name'),
+                ThirdWidth('scope'),
+                ThirdWidth('edit_template'),
+                TwoThirdWidth('description'),
+                ThirdWidth('view_template'),
+                style="g-2"
             ),
             Div(
-                Div(
-                    Div(
-                        Div(
-                            Div(Field('parameter'), css_class="col-2"),
-                            Div(Field('kind', css_class="select-alt", data_repeat_enable="true"), css_class="col-2"),
-                            Div(Field('label'), css_class="col-3"),
-                            Div(Field('choices'), css_class="col-3"),
+                Row(
+                    FullWidth(
+                        Row(
+                            SixthWidth(Field('parameter')),
+                            SixthWidth(Field('kind', css_class="select-alt", data_repeat_enable="true")),
+                            QuarterWidth(Field('label')),
+                            QuarterWidth(Field('choices')),
                             Div(
-                                Field('required', css_class="select-alt", data_repeat_enable="true"), css_class="col-1"
+                                Field('required', css_class="select-alt", data_repeat_enable="true"),
+                                css_class="col-1"
                             ),
                             Div(
                                 Div(
                                     HTML('<label>&nbsp;</label>'),
                                     Div(
-                                        StrictButton(
+                                        Button(
                                             '<i class="ti ti-minus"></i>',
-                                            css_class="btn btn-warning float-end safe-remove"
+                                            style="btn-warning float-end safe-remove"
                                         ),
                                     ),
                                     css_class="mb-3"
                                 ),
                                 css_class="col-1"
                             ),
-                            css_class="repeat-row template row"
+                            style="repeat-row template"
                         ),
-                        css_class="col-12 repeat-group repeat-container"
+                        style="repeat-group repeat-container"
                     ),
-                    Div(
-                        StrictButton(
+                    FullWidth(
+                        Button(
                             "<i class='ti ti-plus'></i> Add Parameter", type="button",
-                            css_class='btn btn-sm btn-success add'
+                            style='btn-sm btn-success add'
                         ),
-                        css_class="col-12 mt-2"
+                        style="mt-2"
                     ),
-                    css_class="row repeat-wrapper"
+                    style="repeat-wrapper"
                 ),
                 css_class='repeat'
             ),
         )
 
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
     def help_text(self):
@@ -336,7 +325,7 @@ WIDTH_CHOICES = (
 )
 
 
-class RequestTypeLayoutForm(forms.ModelForm):
+class RequestTypeLayoutForm(ModalModelForm):
     class Meta:
         model = RequestType
         fields = ('layout',)
@@ -349,14 +338,14 @@ class RequestTypeLayoutForm(forms.ModelForm):
         pk = self.instance.pk
 
         field_styles = self.instance.field_styles()
-        parameter_list = Div(css_class="col-12 repeat-group repeat-container")
+        parameter_list = FullWidth(style="repeat-group repeat-container")
         for f, style in field_styles.items():
             self.fields[f] = forms.CharField(initial=f)
             self.fields[f].widget.attrs['readonly'] = True
             self.fields[f"{f}_width"] = forms.CharField(initial=style, label=_('Display Width'))
             self.fields[f"{f}_width"].widget = forms.Select(choices=WIDTH_CHOICES)
             parameter_list.append(
-                Div(
+                Row(
                     Div(Field(f), css_class="col-5"),
                     Div(Field(f"{f}_width", css_class="select"), css_class="col-5"),
                     Div(
@@ -369,31 +358,28 @@ class RequestTypeLayoutForm(forms.ModelForm):
                         ),
                         css_class="col-1"
                     ),
-                    css_class="repeat-row row"
+                    style="repeat-row"
                 )
             )
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-
-        self.body.title = u"Edit Request Type Layout"
+        self.body.title = "Edit Request Type Layout"
         self.body.form_action = reverse_lazy('requesttype-layout', kwargs={'pk': pk})
 
         self.body.layout = Layout(
             self.help_text(),
             'layout',
             Div(
-                Div(
+                Row(
                     parameter_list,
-                    css_class="row repeat-wrapper"
+                    style="repeat-wrapper"
                 ),
                 css_class="repeat"
             )
         )
 
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
     def help_text(self):
@@ -418,7 +404,7 @@ class RequestTypeLayoutForm(forms.ModelForm):
         return layout
 
 
-class RequestForm(forms.ModelForm):
+class RequestForm(ModalModelForm):
     template = forms.ModelChoiceField(
         label=_("Copy settings from past request"), queryset=Request.objects.all(),
         required=False
@@ -441,8 +427,6 @@ class RequestForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         pk = self.instance.pk
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         if pk is not None:
             self.body.title = "Edit Request"
             self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
@@ -478,30 +462,28 @@ class RequestForm(forms.ModelForm):
         else:
             self.fields['request'].widget = forms.HiddenInput()
 
-        autofill = Div(
-            is_requests and Div(
+        autofill = Row(
+            Div(
                 Field(
                     'request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'),
                     css_class='select'
                 ),
                 css_class="{}".format(is_template and "col-5" or "col-12")
-            ) or Div(),
-            is_requests and is_template and Div(HTML("""OR"""), css_class='col-2 text-center') or Div(),
-            is_template and Div(
+            ) if is_requests else Div(),
+            Div(HTML("""OR"""), css_class='col-2 text-center') if (is_requests and is_template) else Div(),
+            Div(
                 Field(
                     'template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'),
                     css_class='select'
                 ),
                 css_class="{}".format(is_requests and "col-5" or "col-12")
-            ) or Div(),
-            css_class='row'
+            ) if is_template else Div(),
         )
 
         if pk:
-            related =  Div(
-                Div(Field('groups', css_class='select'), css_class='col-6'),
-                Div(Field('samples', css_class='select'), css_class='col-6'),
-                css_class='row'
+            related = Row(
+                HalfWidth(Field('groups', css_class='select')),
+                HalfWidth(Field('samples', css_class='select')),
             )
         else:
             related = Div('groups', 'samples')
@@ -514,12 +496,12 @@ class RequestForm(forms.ModelForm):
             Field('comments', css_id='comments'),
             related
         )
-        self.footer.layout = Layout(
-            StrictButton("Continue", type="submit", value="Continue", css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button("Continue", type="submit", value="Continue", style='btn-primary'),
         )
 
 
-class RequestParameterForm(forms.ModelForm):
+class RequestParameterForm(ModalModelForm):
     template = forms.ModelChoiceField(queryset=Request.objects.all(), required=False)
     request = forms.ModelChoiceField(queryset=Request.objects.all(), required=False)
 
@@ -544,8 +526,6 @@ class RequestParameterForm(forms.ModelForm):
         else:
             kind_pk = self.initial.get('kind', kind_pk)
             kind = RequestType.objects.filter(pk=kind_pk).first()
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
 
         parameters = Div()
         request = self.initial.get('request') and Request.objects.filter(pk=self.initial.get('request')).first() or None
@@ -561,22 +541,22 @@ class RequestParameterForm(forms.ModelForm):
             self.fields['comments'].widget.attrs['readonly'] = True
         if pk:
             self.body.form_action = reverse_lazy('request-edit', kwargs={'pk': self.instance.pk})
-            self.footer.layout = Layout(
-                StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-                StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+            self.footer.set_buttons(
+                Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+                Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
             )
         else:
             self.body.form_action = reverse_lazy('request-new')
-            self.footer.layout = Layout(
-                StrictButton('Finish', type='submit', name="submit", value='Finish', css_class='btn btn-primary'),
+            self.footer.set_buttons(
+                Button('Finish', type='submit', name="submit", value='Finish', style='btn-primary'),
             )
 
         if kind:
-            self.body.title = u"Request Details".format(kind.name)
+            self.body.title = "Request Details".format(kind.name)
             self.fields['kind'].widget = disabled_widget
             self.layout_template = kind.edit_template
             for row in kind.layout:
-                param_row = Div(css_class='row g-2')
+                param_row = Row(style='g-2')
                 for param, style in row:
                     info = kind.spec.get(param, {})
                     field_type = 'type' in info and info.pop('type') or 'string'
@@ -620,7 +600,7 @@ class RequestParameterForm(forms.ModelForm):
         )
         if self.instance.pk:
             if self.instance.kind.scope not in [RequestType.SCOPES.ONE_SAMPLE, RequestType.SCOPES.ONE_GROUP]:
-                row = Div(css_class='row')
+                row = Row()
                 if self.instance.kind.scope in [RequestType.SCOPES.UNLIMITED, RequestType.SCOPES.GROUPS]:
                     row.append(Div(Field('groups', css_class='select'), css_class='col'))
                 if self.instance.kind.scope in [RequestType.SCOPES.UNLIMITED, RequestType.SCOPES.SAMPLES]:
@@ -636,7 +616,7 @@ class RequestParameterForm(forms.ModelForm):
         return parameters
 
 
-class RequestAdminForm(forms.ModelForm):
+class RequestAdminForm(ModalModelForm):
     class Meta:
         model = Request
         fields = ('staff_comments', 'status')
@@ -649,30 +629,28 @@ class RequestAdminForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         pk = self.instance.pk
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Update Request"
+        self.body.title = "Update Request"
         self.body.form_action = reverse_lazy('request-admin-edit', kwargs={'pk': pk})
         if self.instance.status != self.instance.STATUS_CHOICES.COMPLETE:
-            mark_btn = StrictButton(
-                "Mark Complete", type='submit', name="submit", value='done', css_class='btn btn-success'
+            mark_btn = Button(
+                "Mark Complete", type='submit', name="submit", value='done', style='btn-success'
             )
         else:
-            mark_btn = StrictButton(
-                "Mark Incomplete", type='submit', name="submit", value='done', css_class='btn btn-warning'
+            mark_btn = Button(
+                "Mark Incomplete", type='submit', name="submit", value='done', style='btn-warning'
             )
 
         self.body.layout = Layout(
-            Div(
-                Div('staff_comments', css_class='col-12'),
-                css_class="row g-2"
+            Row(
+                FullWidth('staff_comments'),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
+        self.footer.set_buttons(
             Field('status'),
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary me-auto"),
+            Button('Revert', type='reset', value='Reset', style="btn-secondary me-auto"),
             mark_btn,
-            StrictButton('Save Comments', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+            Button('Save Comments', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
     def clean(self):
@@ -687,29 +665,26 @@ class RequestAdminForm(forms.ModelForm):
         return cleaned_data
 
 
-class ShipmentForm(forms.ModelForm):
+class ShipmentForm(ModalModelForm):
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         pk = self.instance.pk
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-
         if pk:
-            self.body.title = u"Edit Shipment"
+            self.body.title = "Edit Shipment"
             self.body.form_action = reverse_lazy('shipment-edit', kwargs={'pk': pk})
         else:
-            self.body.title = u"Create New Shipment"
+            self.body.title = "Create New Shipment"
             self.body.form_action = reverse_lazy('shipment-new')
         self.body.layout = Layout('project', 'name', 'comments')
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
     def clean(self):
-        cleaned_data = super(ShipmentForm, self).clean()
+        cleaned_data = super().clean()
         if cleaned_data['project'].shipments.filter(name__iexact=cleaned_data.get('name', '')) \
                 .exclude(pk=self.instance.pk).exists():
             self.add_error('name', forms.ValidationError("Shipment with this name already exists"))
@@ -723,21 +698,19 @@ class ShipmentForm(forms.ModelForm):
         }
 
 
-class ShipmentCommentsForm(forms.ModelForm):
+class ShipmentCommentsForm(ModalModelForm):
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentCommentsForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         pk = self.instance.pk
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Edit shipment"
+        self.body.title = "Edit shipment"
         self.body.form_action = reverse_lazy('shipment-comments', kwargs={'pk': pk})
         self.body.layout = Layout('storage_location', 'staff_comments')
-        self.footer.layout = Layout(
-            StrictButton('Unreceive', type='recall', value='Recall', css_class="btn btn-danger"),
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Unreceive', type='recall', value='Recall', style="btn-danger"),
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
     class Meta:
@@ -746,27 +719,25 @@ class ShipmentCommentsForm(forms.ModelForm):
         widgets = {'staff_comments': forms.Textarea(attrs={'rows': "2"})}
 
 
-class AutomounterForm(forms.ModelForm):
+class AutomounterForm(ModalModelForm):
     class Meta:
         model = Automounter
         fields = ('staff_comments',)
         widgets = {'staff_comments': forms.Textarea(attrs={'rows': "3"})}
 
     def __init__(self, *args, **kwargs):
-        super(AutomounterForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         self.body.form_action = reverse_lazy('automounter-edit', kwargs={'pk': self.instance.pk})
-        self.body.title = u"Staff Comments for {} Automounter".format(self.instance.beamline.acronym)
+        self.body.title = "Staff Comments for {} Automounter".format(self.instance.beamline.acronym)
         self.body.layout = Layout('staff_comments')
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
 
-class SampleForm(forms.ModelForm):
+class SampleForm(ModalModelForm):
     class Meta:
         model = Sample
         fields = ('name', 'barcode', 'comments', 'image')
@@ -775,30 +746,28 @@ class SampleForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(SampleForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         pk = self.instance.pk
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         if pk:
-            self.body.title = u"Edit Sample"
+            self.body.title = "Edit Sample"
             self.body.form_action = reverse_lazy('sample-edit', kwargs={'pk': pk})
         else:
-            self.body.title = u"Create New Sample"
+            self.body.title = "Create New Sample"
             self.body.form_action = reverse_lazy('sample-new')
 
         self.body.layout = Layout(
-            Div(
-                Div('name', css_class='col-6'),
-                Div('barcode', css_class='col-6'),
-                Div('comments', css_class='col-12'),
-                Div('image', css_class='col-12'),
-                css_class="row g-2"
+            Row(
+                HalfWidth('name'),
+                HalfWidth('barcode'),
+                FullWidth('comments'),
+                FullWidth('image'),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
     def clean(self):
@@ -810,7 +779,7 @@ class SampleForm(forms.ModelForm):
         return self.cleaned_data
 
 
-class SampleAdminForm(forms.ModelForm):
+class SampleAdminForm(ModalModelForm):
     class Meta:
         model = Sample
         fields = ('staff_comments', 'collect_status')
@@ -820,33 +789,31 @@ class SampleAdminForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(SampleAdminForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         pk = self.instance.pk
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Update Sample"
+        self.body.title = "Update Sample"
         self.body.form_action = reverse_lazy('sample-admin-edit', kwargs={'pk': pk})
         if not self.instance.collect_status:
-            mark_btn = StrictButton(
-                "Mark Complete", type='submit', name="submit", value='done', css_class='btn btn-success'
+            mark_btn = Button(
+                "Mark Complete", type='submit', name="submit", value='done', style='btn-success'
             )
         else:
-            mark_btn = StrictButton(
-                "Mark Incomplete", type='submit', name="submit", value='done', css_class='btn btn-warning'
+            mark_btn = Button(
+                "Mark Incomplete", type='submit', name="submit", value='done', style='btn-warning'
             )
 
         self.body.layout = Layout(
-            Div(
-                Div('staff_comments', css_class='col-12'),
-                css_class="row g-2"
+            Row(
+                FullWidth('staff_comments'),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
+        self.footer.set_buttons(
             Field('collect_status'),
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary me-auto"),
+            Button('Revert', type='reset', value='Reset', style="btn-secondary me-auto"),
             mark_btn,
-            StrictButton('Save Comments', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+            Button('Save Comments', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
     def clean(self):
@@ -858,7 +825,7 @@ class SampleAdminForm(forms.ModelForm):
         return cleaned_data
 
 
-class ShipmentSendForm(forms.ModelForm):
+class ShipmentSendForm(ModalModelForm):
     components = forms.ModelMultipleChoiceField(
         label='Items included in shipment',
         queryset=ComponentType.objects.all(),
@@ -873,7 +840,7 @@ class ShipmentSendForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentSendForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         errors = Div()
         if self.instance.shipping_errors():
             errors = Div(
@@ -883,26 +850,24 @@ class ShipmentSendForm(forms.ModelForm):
                 ),
                 css_class="card bg-warning"
             )
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Send Shipment"
+        self.body.title = "Send Shipment"
         self.body.form_action = reverse_lazy('shipment-send', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout(
             errors,
-            Div(
-                Div(Field('carrier', css_class="select"), css_class="col-6"),
-                Div('tracking_code', css_class="col-6"),
-                Div(Field('components', css_class="select"), css_class="col-12"),
-                Div('comments', css_class="col-12"),
-                css_class="row g-2"
+            Row(
+                HalfWidth(Field('carrier', css_class="select")),
+                HalfWidth('tracking_code'),
+                FullWidth(Field('components', css_class="select")),
+                FullWidth('comments'),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton('Send', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Send', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
 
-class ShipmentReturnForm(forms.ModelForm):
+class ShipmentReturnForm(ModalModelForm):
     loaded = forms.BooleanField(label="I have removed these containers from the automounter(s)")
 
     class Meta:
@@ -910,7 +875,7 @@ class ShipmentReturnForm(forms.ModelForm):
         fields = ['carrier', 'return_code', 'staff_comments']
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentReturnForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance.containers.filter(parent__isnull=False):
             self.fields['loaded'].label += ": {}".format(
                 ','.join(self.instance.containers.filter(parent__isnull=False).values_list('name', flat=True))
@@ -918,28 +883,26 @@ class ShipmentReturnForm(forms.ModelForm):
         else:
             self.fields['loaded'].initial = True
             self.fields['loaded'].widget = forms.HiddenInput()
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Return Shipment"
+        self.body.title = "Return Shipment"
         self.body.form_action = reverse_lazy('shipment-return', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout(
-            Div(
-                Div(Field('loaded'), css_class="col-12"),
-                css_class="row g-2"
+            Row(
+                FullWidth(Field('loaded')),
+                style="g-2"
             ),
-            Div(
-                Div(Field('carrier', css_class="select"), css_class="col-6"),
-                Div('return_code', css_class="col-6"),
-                Div('staff_comments', css_class="col-12"),
-                css_class="row g-2"
+            Row(
+                HalfWidth(Field('carrier', css_class="select")),
+                HalfWidth('return_code'),
+                FullWidth('staff_comments'),
+                style="g-2"
             ),
         )
-        self.footer.layout = Layout(
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
 
-class ShipmentRecallSendForm(forms.ModelForm):
+class ShipmentRecallSendForm(ModalModelForm):
     components = forms.ModelMultipleChoiceField(
         label='Items included in shipment',
         queryset=ComponentType.objects.all(),
@@ -951,105 +914,95 @@ class ShipmentRecallSendForm(forms.ModelForm):
         fields = ['carrier', 'tracking_code', 'comments']
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentRecallSendForm, self).__init__(*args, **kwargs)
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Update Shipping Information"
+        super().__init__(*args, **kwargs)
+        self.body.title = "Update Shipping Information"
         self.body.form_action = reverse_lazy('shipment-update-send', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout(
-            Div(
-                Div(Field('carrier', css_class="select"), css_class="col-6"),
-                Div('tracking_code', css_class="col-6"),
-                Div(Field('components', css_class="select"), css_class="col-12"),
-                Div('comments', css_class="col-12"),
-                css_class="row g-2"
+            Row(
+                HalfWidth(Field('carrier', css_class="select")),
+                HalfWidth('tracking_code'),
+                FullWidth(Field('components', css_class="select")),
+                FullWidth('comments'),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton('Unsend', type='recall', value='Recall', css_class="btn btn-danger"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Unsend', type='recall', value='Recall', style="btn-danger"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
 
-class ShipmentRecallReturnForm(forms.ModelForm):
+class ShipmentRecallReturnForm(ModalModelForm):
     class Meta:
         model = Shipment
         fields = ['carrier', 'return_code', 'staff_comments']
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentRecallReturnForm, self).__init__(*args, **kwargs)
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Update Shipping Information"
+        super().__init__(*args, **kwargs)
+        self.body.title = "Update Shipping Information"
         self.body.form_action = reverse_lazy('shipment-update-return', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout(
-            Div(
-                Div(Field('carrier', css_class="select"), css_class="col-6"),
-                Div('return_code', css_class="col-6"),
-                Div('staff_comments', css_class="col-12"),
-                css_class="row g-2"
+            Row(
+                HalfWidth(Field('carrier', css_class="select")),
+                HalfWidth('return_code'),
+                FullWidth('staff_comments'),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton('Unsend', type='recall', value='Recall', css_class="btn btn-danger"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Unsend', type='recall', value='Recall', style="btn-danger"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
 
-class ShipmentReceiveForm(forms.ModelForm):
+class ShipmentReceiveForm(ModalModelForm):
     class Meta:
         model = Shipment
         fields = ['storage_location', 'staff_comments']
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentReceiveForm, self).__init__(*args, **kwargs)
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Receive Shipment?"
+        super().__init__(*args, **kwargs)
+        self.body.title = "Receive Shipment?"
         self.body.form_action = reverse_lazy('shipment-receive', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout('storage_location', 'staff_comments')
-        self.footer.layout = Layout(
-            StrictButton('Receive', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Receive', type='submit', name="submit", value='submit', style='btn-primary'),
         )
 
 
-class ShipmentArchiveForm(forms.ModelForm):
+class ShipmentArchiveForm(ModalModelForm):
     class Meta:
         model = Shipment
         fields = []
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentArchiveForm, self).__init__(*args, **kwargs)
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Archive Shipment?"
+        super().__init__(*args, **kwargs)
+        self.body.title = "Archive Shipment?"
         self.body.form_action = reverse_lazy('shipment-archive', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout(
             HTML("""{{ object }}"""),
         )
-        self.footer.layout = Layout(
-            StrictButton('Archive', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Archive', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
 
-class ContainerForm(forms.ModelForm):
+class ContainerForm(ModalModelForm):
 
     def __init__(self, *args, **kwargs):
-        super(ContainerForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         pk = self.instance.pk
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         if pk:
-            self.body.title = u"Edit Container"
+            self.body.title = "Edit Container"
             self.body.form_action = reverse_lazy("container-edit", kwargs={'pk': pk})
         else:
-            self.body.title = u"Create New Container"
+            self.body.title = "Create New Container"
             self.body.form_action = reverse_lazy("container-new")
         self.body.layout = Layout('project', 'name', 'shipment', 'comments')
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
         )
 
     def clean_kind(self):
@@ -1067,7 +1020,7 @@ class ContainerForm(forms.ModelForm):
         widgets = {'project': disabled_widget}
 
 
-class GroupForm(forms.ModelForm):
+class GroupForm(ModalModelForm):
     class Meta:
         model = Group
         fields = ('project', 'name', 'comments')
@@ -1077,30 +1030,28 @@ class GroupForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(GroupForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         pk = self.instance.pk
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         if pk:
-            self.body.title = u"Edit Group"
+            self.body.title = "Edit Group"
             self.body.form_action = reverse_lazy("group-edit", kwargs={'pk': pk})
         else:
-            self.body.title = u"Create New Group"
+            self.body.title = "Create New Group"
             self.body.form_action = reverse_lazy("group-new")
         self.body.layout = Layout(
             'project',
-            Div(
-                Div('name', css_class="col-12"),
-                css_class="row g-2"
+            Row(
+                FullWidth('name'),
+                style="g-2"
             ),
-            Div(
-                Div('comments', css_class="col-12"),
-                css_class="row g-2"
+            Row(
+                FullWidth('comments'),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton('Save', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
         )
 
     def clean_name(self):
@@ -1110,43 +1061,37 @@ class GroupForm(forms.ModelForm):
         return name
 
 
-class ContainerLoadForm(forms.ModelForm):
+class ContainerLoadForm(ModalModelForm):
     class Meta:
         model = Container
         fields = ['parent', 'location']
 
     def __init__(self, *args, **kwargs):
         form_action = kwargs.pop('form-action')
-        super(ContainerLoadForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['parent'].queryset = self.fields['parent'].queryset.filter(
             kind__locations__accepts=self.instance.kind
         ).distinct()
         if self.instance.parent:
             self.fields['location'].queryset = self.instance.parent.kind.locations.order_by('name')
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Move Container {}".format(self.instance)
+        self.body.title = "Move Container {}".format(self.instance)
         self.body.form_action = form_action
         self.body.layout = Layout(
-            Div(
-                Div(
-                    Field('parent', css_class="select"),
-                    css_class="col-6"
-                ),
-                Div(
+            Row(
+                HalfWidth(Field('parent', css_class="select")),
+                HalfWidth(
                     Field(
                         'location', css_class="select", data_update_on='parent',
                         data_update_url=reverse_lazy("update-locations", kwargs={'pk': 0})
-                    ),
-                    css_class="col-6"
+                    )
                 ),
-                css_class="row g-2"
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton('Unload', type="submit", name="unload", value='Unload', css_class='btn btn-danger'),
-            StrictButton('Save', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Unload', type="submit", name="unload", value='Unload', style='btn-danger'),
+            Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
         )
 
     def clean(self):
@@ -1163,7 +1108,7 @@ class ContainerLoadForm(forms.ModelForm):
         return self.cleaned_data
 
 
-class EmptyContainers(forms.ModelForm):
+class EmptyContainers(ModalModelForm):
     parent = forms.ModelChoiceField(queryset=Container.objects.all(), widget=forms.HiddenInput)
 
     class Meta:
@@ -1172,11 +1117,9 @@ class EmptyContainers(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         form_action = kwargs.pop('form-action')
-        super(EmptyContainers, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Remove containers"
+        self.body.title = "Remove containers"
         self.body.form_action = form_action
         self.body.layout = Layout(
             Div(
@@ -1188,12 +1131,12 @@ class EmptyContainers(forms.ModelForm):
             ),
             'parent',
         )
-        self.footer.layout = Layout(
-            StrictButton('Unload All', type='submit', name="submit", value='submit', css_class='btn btn-danger'),
+        self.footer.set_buttons(
+            Button('Unload All', type='submit', name="submit", value='submit', style='btn-danger'),
         )
 
 
-class LocationLoadForm(forms.ModelForm):
+class LocationLoadForm(ModalModelForm):
     child = forms.ModelChoiceField(
         label="Container",
         queryset=Container.objects.filter(status=Container.STATES.ON_SITE)
@@ -1206,33 +1149,28 @@ class LocationLoadForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         form_action = kwargs.pop('form-action')
-        super(LocationLoadForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.fields['child'].queryset = self.fields['child'].queryset.filter(parent__isnull=True).filter(
             kind__in=self.initial['location'].accepts.all()
         )
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
-        self.body.title = u"Load Container in location {}".format(self.initial['location'])
+        self.body.title = "Load Container in location {}".format(self.initial['location'])
         self.body.form_action = form_action
 
         self.body.layout = Layout(
-            Div(
+            Row(
                 Field('location', type="hidden"),
-                Div(
-                    Field('child', css_class="select"),
-                    css_class="col-12"
-                ),
-                css_class="row g-2"
+                FullWidth(Field('child', css_class="select")),
+                style="g-2"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton('Load', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Load', type='submit', name="submit", value='submit', style='btn-primary'),
         )
 
 
-class AddShipmentForm(forms.ModelForm):
+class AddShipmentForm(ModalModelForm):
     class Meta:
         model = Shipment
         fields = ('name', 'comments', 'project')
@@ -1241,13 +1179,13 @@ class AddShipmentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(AddShipmentForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if self.initial['project'].is_superuser:
-            name_row = Div(
-                Div(Field('project', css_class="select"), css_class="col-4"),
-                Div('name', css_class="col-8"),
-                css_class="row g-2"
+            name_row = Row(
+                ThirdWidth(Field('project', css_class="select")),
+                TwoThirdWidth('name'),
+                style="g-2"
             )
         else:
             self.fields['project'].widget = forms.HiddenInput()
@@ -1256,10 +1194,8 @@ class AddShipmentForm(forms.ModelForm):
                 Field('name', css_class="col-12")
             )
 
-        self.body = BodyHelper(self)
         self.body.title = "Create a Shipment"
         self.body.form_action = reverse_lazy("shipment-new")
-        self.footer = FooterHelper(self)
         self.body.layout = Layout(
             Div(
                 Div(
@@ -1277,8 +1213,8 @@ class AddShipmentForm(forms.ModelForm):
                 css_class="row"
             )
         )
-        self.footer.layout = Layout(
-            StrictButton("Continue", type="submit", value="Continue", css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button("Continue", type="submit", value="Continue", style='btn-primary'),
         )
 
     def clean(self):
@@ -1287,7 +1223,7 @@ class AddShipmentForm(forms.ModelForm):
             self.add_error('name', forms.ValidationError("Shipment with this name already exists"))
 
 
-class ShipmentContainerForm(forms.ModelForm):
+class ShipmentContainerForm(ModalModelForm):
     id = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
@@ -1296,7 +1232,7 @@ class ShipmentContainerForm(forms.ModelForm):
         widgets = {'shipment': forms.HiddenInput()}
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentContainerForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['kind'].initial = ContainerType.objects.filter(active=True).first()
         self.fields['kind'].queryset = self.fields['kind'].queryset.filter(active=True)
 
@@ -1305,11 +1241,8 @@ class ShipmentContainerForm(forms.ModelForm):
         for f in self.repeated_fields:
             self.fields['{}_set'.format(f)] = forms.CharField(required=False)
 
-        self.body = BodyHelper(self)
         self.body.title = "Create a Shipment"
         self.body.form_action = reverse_lazy("shipment-new")
-        self.footer = FooterHelper(self)
-        self.footer.layout = Layout()
 
         if self.initial.get('shipment'):
             self.repeated_data['name_set'] = [str(c.name) for c in self.initial['shipment'].containers.all()]
@@ -1321,29 +1254,29 @@ class ShipmentContainerForm(forms.ModelForm):
                 kwargs={'pk': self.initial['shipment'].pk}
             )
             self.body.title = 'Add Containers to Shipment'
-            self.footer.layout.append(
-                StrictButton('Save', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
+            self.footer.set_buttons(
+                Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
             )
         else:
-            self.footer.layout.append(
-                StrictButton("Continue", type="submit", value="Continue", css_class='btn btn-primary'),
+            self.footer.set_buttons(
+                Button("Continue", type="submit", value="Continue", style='btn-primary'),
             )
 
         self.body.layout = Layout(
             self.help_text(),
             Div(
-                Div(
-                    Div(
-                        Div(
+                Row(
+                    FullWidth(
+                        Row(
                             Div(Field('name'), css_class="col-5"),
                             Div(Field('kind', css_class="select-alt", data_repeat_enable="true"), css_class="col-5"),
                             Div(
                                 Div(
                                     HTML("<label>&nbsp;</label>"),
                                     Div(
-                                        StrictButton(
+                                        Button(
                                             '<i class="ti ti-minus"></i>',
-                                            css_class="btn btn-warning float-end safe-remove"
+                                            style="btn-warning float-end safe-remove"
                                         ),
                                     ),
                                     css_class="mb-3"
@@ -1351,18 +1284,18 @@ class ShipmentContainerForm(forms.ModelForm):
                                 css_class="col-2"
                             ),
                             Div('shipment', 'id', css_class="col-12 d-none"),
-                            css_class="repeat-row template row"
+                            style="repeat-row template"
                         ),
-                        css_class="col-12 repeat-group repeat-container"
+                        style="repeat-group repeat-container"
                     ),
-                    Div(
-                        StrictButton(
+                    FullWidth(
+                        Button(
                             "<i class='ti ti-plus'></i> Add Container", type="button",
-                            css_class='btn btn-sm btn-success add'
+                            style='btn-sm btn-success add'
                         ),
-                        css_class="col-12 mt-2"
+                        style="mt-2"
                     ),
-                    css_class="row repeat-wrapper"
+                    style="repeat-wrapper"
                 ),
                 css_class='repeat'
             ),
@@ -1390,7 +1323,7 @@ class ShipmentContainerForm(forms.ModelForm):
 
     def clean(self):
         self.repeated_data = {}
-        cleaned_data = super(ShipmentContainerForm, self).clean()
+        cleaned_data = super().clean()
         for field in self.repeated_fields:
             if 'containers-{}'.format(field) in self.data:
                 cleaned_data['{}_set'.format(field)] = self.data.getlist('containers-{}'.format(field))
@@ -1404,7 +1337,7 @@ class ShipmentContainerForm(forms.ModelForm):
         return cleaned_data
 
 
-class ShipmentGroupForm(forms.ModelForm):
+class ShipmentGroupForm(ModalModelForm):
     id = forms.CharField(required=False, widget=forms.HiddenInput)
 
     class Meta:
@@ -1419,13 +1352,10 @@ class ShipmentGroupForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(ShipmentGroupForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['name'].required = False
-        self.body = BodyHelper(self)
         self.body.title = "Create a Shipment"
         self.body.form_action = reverse_lazy("shipment-new")
-        self.footer = FooterHelper(self)
-        self.footer.layout = Layout()
         if self.initial.get('shipment'):
             groups = self.initial['shipment'].groups.order_by('priority')
             self.repeated_data = {
@@ -1435,30 +1365,28 @@ class ShipmentGroupForm(forms.ModelForm):
                 'comments_set': [group.comments or '' for group in groups]
             }
 
-            self.footer.layout.append(
-                StrictButton('Save', type='submit', name="submit", value='submit', css_class='btn btn-primary'),
+            self.footer.set_buttons(
+                Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
             )
 
             self.body.title = "Add Groups to Shipment"
             self.body.form_action = reverse_lazy('shipment-add-groups', kwargs={'pk': self.initial['shipment'].pk})
         else:
-            self.footer.layout.append(
-                StrictButton(
+            self.footer.set_buttons(
+                Button(
                     'Fill Containers',
                     title='Auto-create one group per container (filled with samples) ignoring the groups defined above',
-                    type='submit', name="submit", value='Fill', css_class='me-auto btn btn-warning'
+                    type='submit', name="submit", value='Fill', style='me-auto btn-warning'
                 ),
-            )
-            self.footer.layout.append(
-                StrictButton('Finish', type='submit', name="submit", value='Finish', css_class='btn btn-primary'),
+                Button('Finish', type='submit', name="submit", value='Finish', style='btn-primary'),
             )
 
         self.body.layout = Layout(
             self.help_text(),
             Div(
-                Div(
-                    Div(
-                        Div(
+                Row(
+                    FullWidth(
+                        Row(
                             Div('name', css_class="col-8"),
                             Div(
                                 Div(
@@ -1484,9 +1412,9 @@ class ShipmentGroupForm(forms.ModelForm):
                                 css_class="col-4"
                             ),
                             Div(
-                                Div(
-                                    Div(Field('comments'), css_class="col-12"),
-                                    css_class="row g-2"
+                                Row(
+                                    FullWidth(Field('comments')),
+                                    style="g-2"
                                 ),
                                 Field('shipment'),
                                 Field('priority'),
@@ -1494,18 +1422,18 @@ class ShipmentGroupForm(forms.ModelForm):
                                 css_class="col-12 collapse",
                                 id="group-details--{rowcount}"
                             ),
-                            css_class="repeat-row template row"
+                            style="repeat-row template"
                         ),
-                        css_class="col-12 repeat-group repeat-container"
+                        style="repeat-group repeat-container"
                     ),
-                    Div(
-                        StrictButton(
+                    FullWidth(
+                        Button(
                             "<i class='ti ti-plus'></i> Add Group", type="button",
-                            css_class='btn btn-sm btn-success add'
+                            style='btn-sm btn-success add'
                         ),
-                        css_class="col-12 mt-2"
+                        style="mt-2"
                     ),
-                    css_class="row repeat-wrapper"
+                    style="repeat-wrapper"
                 ),
                 css_class='repeat'
             ),
@@ -1533,7 +1461,7 @@ class ShipmentGroupForm(forms.ModelForm):
 
     def clean(self):
         self.repeated_data = {}
-        cleaned_data = super(ShipmentGroupForm, self).clean()
+        cleaned_data = super().clean()
         for field in self.Meta.fields:
             if 'groups-{}'.format(field) in self.data:
                 cleaned_data['{}_set'.format(field)] = self.data.getlist('groups-{}'.format(field))
@@ -1548,7 +1476,7 @@ class ShipmentGroupForm(forms.ModelForm):
         return cleaned_data
 
 
-class SSHKeyForm(forms.ModelForm):
+class SSHKeyForm(ModalModelForm):
     class Meta:
         model = SSHKey
         fields = ['name', 'key', 'project']
@@ -1560,32 +1488,28 @@ class SSHKeyForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         if self.instance.pk:
-            self.body.title = u"Edit SSH key"
+            self.body.title = "Edit SSH key"
             self.body.form_action = reverse_lazy('sshkey-edit', kwargs={'pk': self.instance.pk})
         else:
-            self.body.title = u"New SSH key"
+            self.body.title = "New SSH key"
             self.body.form_action = reverse_lazy('new-sshkey', kwargs={'username': self.initial['project'].username})
         self.body.layout = Layout(
-            Div(
+            Row(
                 'project',
-                Div('name', css_class="col-12"),
-                css_class="row"
+                FullWidth('name'),
             ),
-            Div(
-                Div('key', css_class="col-12"),
-                css_class="row"
+            Row(
+                FullWidth('key'),
             ),
         )
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
 
-class GuideForm(forms.ModelForm):
+class GuideForm(ModalModelForm):
     class Meta:
         model = Guide
         fields = ['title', 'description', 'kind', 'staff_only', 'modal', 'attachment', 'url', 'priority']
@@ -1596,57 +1520,45 @@ class GuideForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.body = BodyHelper(self)
-        self.footer = FooterHelper(self)
         if self.instance.pk:
-            self.body.title = u"Edit Announcement"
+            self.body.title = "Edit Announcement"
             self.body.form_action = reverse_lazy('guide-edit', kwargs={'pk': self.instance.pk})
         else:
-            self.body.title = u"New Announcement"
+            self.body.title = "New Announcement"
             self.body.form_action = reverse_lazy('new-guide')
         self.body.layout = Layout(
-            Div(
-                Div('priority', css_class="col-2"),
-                Div('title', css_class="col-10"),
-                css_class="row"
+            Row(
+                SixthWidth('priority'),
+                FiveSixthWidth('title'),
             ),
-            Div(
-                Div('description', css_class="col-12"),
-                css_class="row"
+            Row(
+                FullWidth('description'),
             ),
-            Div(
-                Div('kind', css_class="col-6"),
-                Div(
-                    'url', css_class="col-6", title="Resource examples:\n'youtube:<vid>' or \n'flickr:<album>:<photo>'"
+            Row(
+                HalfWidth('kind'),
+                HalfWidth(
+                    Field('url', title="Resource examples:\n'youtube:<vid>' or \n'flickr:<album>:<photo>'")
                 ),
-                css_class="row"
             ),
-            Div(
-                Div(
-                    Field('attachment'),
-                    css_class="col-12"
-                ),
-                css_class="row"
+            Row(
+                FullWidth(Field('attachment')),
             ),
-            Div(
-                Div(
+            Row(
+                HalfWidth(
                     Div(
                         Field('staff_only', css_class="form-check-input"),
                         css_class="form-check form-switch"
-                    ),
-                    css_class="col-6"
+                    )
                 ),
-                Div(
+                HalfWidth(
                     Div(
                         Field('modal', css_class="form-check-input"),
                         css_class="form-check form-switch"
-                    ),
-                    css_class="col-6"
+                    )
                 ),
-                css_class="row"
             ),
         )
-        self.footer.layout = Layout(
-            StrictButton('Revert', type='reset', value='Reset', css_class="btn btn-secondary"),
-            StrictButton('Save', type='submit', name="submit", value='save', css_class='btn btn-primary'),
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
