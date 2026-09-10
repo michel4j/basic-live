@@ -29,6 +29,7 @@ dependencies = [
     "requests",
     "timezonefinder",
     "fastjsonschema",
+    "django-crisp-modals >= 2026.1.0",
 ]
 
 [project.optional-dependencies]

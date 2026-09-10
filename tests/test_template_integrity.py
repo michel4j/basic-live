@@ -444,8 +444,9 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIn("data-bs-toggle", base_tmpl.template.source)
 
         modal_content = get_template("lims/modal/content.html")
-        self.assertIn('data-bs-dismiss="modal"', modal_content.template.source)
-        self.assertIn('btn-close', modal_content.template.source)
+        rendered_modal = modal_content.render({})
+        self.assertIn('data-bs-dismiss="modal"', rendered_modal)
+        self.assertIn('btn-close', rendered_modal)
 
     def test_bootstrap5_form_and_modal_javascript_helpers(self):
         """Verify Bootstrap 5 Select2 theme, modal helpers, and absence of form-row in forms.py."""

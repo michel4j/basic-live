@@ -13,6 +13,7 @@ def setup_django():
                 "django.contrib.humanize",
                 "crispy_forms",
                 "crispy_bootstrap5",
+                "crisp_modals",
                 "basiclive.core.lims",
                 "basiclive.core.schedule",
                 "basiclive.core.acl",

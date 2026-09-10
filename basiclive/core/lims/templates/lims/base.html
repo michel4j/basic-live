@@ -22,6 +22,8 @@
     <script src="{% static 'misc/js/noty.min.js' %}"></script>
     <script src="{% static 'misc/js/underscore-min.js' %}"></script>
     <script src="{% static 'jquery/js/jquery.cookie.min.js' %}"></script>
+    <script src="{% static 'jquery/js/jquery.form.min.js' %}"></script>
+    <script src="{% static 'crisp_modals/modals.min.js' %}"></script>
     <script src="{% static 'lims/js/basiclive-modals.min.js' %}"></script>
 
     {% block pre_js %}{% endblock %}
@@ -111,6 +113,44 @@
         // show attention popovers
         $(".attention").popover('show');
 
+        // Initialize crisp_modals
+        $('#modal-target').initModal({
+            setup: function (body) {
+                if ($.fn.select2) {
+                    body.find(".select").select2({theme: 'bootstrap-5'});
+                    body.find("select[data-update-on]").each(function(){
+                        let src = $('[name="'+ $(this).data('update-on')+'"]');
+                        let dst = $(this);
+                        let initial = dst.find('option:selected').val();
+                        let url_template = dst.data('update-url');
+
+                        src.change(function(){
+                            if (src.val()) {
+                                let url = url_template.replace(/\d+/, src.val());
+                                $.ajax({
+                                    url: url,
+                                    dataType: 'json',
+                                    success: function (response) {
+                                        let new_options = response;
+                                        dst.empty();
+                                        $.each(new_options, function(i, item) {
+                                            dst.append($('<option>', {
+                                                    value : item[0],
+                                                    text: item[1],
+                                                    selected: (initial === item[0])
+                                                })
+                                            );
+                                        });
+                                        dst.trigger('change.select2');
+                                    }
+                                });
+                            }
+                        });
+                    });
+                }
+            }
+        });
+
         // Handle data-link, data-form-link and data-href
         $(document).on('click', '[data-href]', function () {
             window.document.location = $(this).data("href");
@@ -120,10 +160,11 @@
             $('#modal-target').loadModal($(this).data('link'));
         });
         $(document).on('click', '[data-form-link]', function () {
-            $('#modal-target').asyncForm({url: $(this).data('form-link')});
+            $('#modal-target').asyncForm($(this).data('form-link'));
         });
 
         });
     </script>
 </body>
 </html>
+
