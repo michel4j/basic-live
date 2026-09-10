@@ -54,7 +54,7 @@ class PDBEntryList(AdminRequiredMixin, ItemListView):
     list_columns = ['id', 'code', 'released', 'title', 'resolution', 'deposited', ]
     list_search = ['title', 'authors', 'code', 'reference__title']
     list_styles = {
-        'title': 'w-75',
+        'title': 'w-65',
     }
     ordering = ['-released']
     paginate_by = 25

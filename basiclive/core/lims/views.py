@@ -1,5 +1,4 @@
 import json
-from datetime import timedelta
 
 import requests
 from django import http
@@ -8,7 +7,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
-from django.db.models import Count, Q, Case, When, Value, BooleanField, Max
 from django.http import JsonResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
 from django.urls import reverse, reverse_lazy
 from django.utils import dateformat, timezone
@@ -25,7 +23,8 @@ from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewM
 from . import forms, models, stats
 
 if settings.USE_SCHEDULE:
-    from basiclive.core.schedule.models import AccessType, BeamlineSupport, Beamtime
+    from basiclive.core.schedule.models import BeamlineSupport
+
 
 class ProjectReset(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit.UpdateView):
     template_name = "lims/forms/project-reset.html"
@@ -36,7 +35,7 @@ class ProjectReset(AdminRequiredMixin, SuccessMessageMixin, AsyncFormMixin, edit
     def get_success_url(self):
         return self.object.get_absolute_url()
 
-    def get_object(self, *kwargs):
+    def get_object(self, *args, **kwargs):
         obj = self.model.objects.get(username=self.kwargs.get('username'))
         return obj
 

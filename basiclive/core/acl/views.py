@@ -8,9 +8,6 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.html import escape
-
-
-from basiclive.core.lims.conf import settings as lims_settings
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail
@@ -18,9 +15,9 @@ from itemlist.views import ItemListView
 
 from basiclive.utils import filters
 from basiclive.utils.mixins import AsyncFormMixin, AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
+from basiclive.utils.network import get_client_address
 from . import models
 from .forms import AccessForm
-from basiclive.utils.network import get_client_address
 
 User = get_user_model()
 
