@@ -4,6 +4,13 @@
 {% load static %}
 {% load icons %}
 
+{% block modal_assets %}
+    <link rel="stylesheet" href="{% static 'lims/css/diffviewer.min.css' %}" />
+    <script src="{% static 'jquery/js/jquery-ui.min.js' %}"></script>
+    <script src="{% static 'jquery/js/jquery.mousewheel.min.js' %}"></script>
+    <script src="{% static 'lims/js/basiclive-diffviewer.min.js' %}"></script>
+{% endblock  %}
+
 {% block data_content %}
 <div id='data-viewer'
      data-first-file='{{ object.first_file }}'
