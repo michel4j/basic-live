@@ -551,6 +551,83 @@ class TemplateIntegrityTests(SimpleTestCase):
                 self.assertIn("function slugify", content)
                 self.assertIn("function strip", content)
 
+    def test_modal_form_inheritance_and_crisp_modals_layouts(self):
+        """Verify that modal forms inherit from ModalModelForm/ModalForm and use crisp_modals layout classes."""
+        import crisp_modals.forms as cm_forms
+        from basiclive.core.lims import forms as lims_forms
+        from basiclive.core.crm import forms as crm_forms
+        from basiclive.core.acl import forms as acl_forms
+        from basiclive.core.schedule import forms as schedule_forms
+
+        # 1. Backwards-compatibility check: BodyHelper and FooterHelper exist in lims.forms
+        self.assertTrue(hasattr(lims_forms, "BodyHelper"))
+        self.assertTrue(hasattr(lims_forms, "FooterHelper"))
+        self.assertTrue(issubclass(lims_forms.BodyHelper, cm_forms.BodyHelper))
+        self.assertTrue(issubclass(lims_forms.FooterHelper, cm_forms.FooterHelper))
+
+        # 2. Verify all modal form classes inherit from crisp_modals ModalModelForm or ModalForm
+        form_modules = [lims_forms, crm_forms, acl_forms, schedule_forms]
+        expected_modal_forms = [
+            # lims
+            (lims_forms, "ProjectForm"),
+            (lims_forms, "NewProjectForm"),
+            (lims_forms, "RequestTypeForm"),
+            (lims_forms, "RequestTypeLayoutForm"),
+            (lims_forms, "RequestForm"),
+            (lims_forms, "RequestParameterForm"),
+            (lims_forms, "RequestAdminForm"),
+            (lims_forms, "ShipmentForm"),
+            (lims_forms, "ShipmentCommentsForm"),
+            (lims_forms, "AutomounterForm"),
+            (lims_forms, "SampleForm"),
+            (lims_forms, "SampleAdminForm"),
+            (lims_forms, "ShipmentSendForm"),
+            (lims_forms, "ShipmentReturnForm"),
+            (lims_forms, "ShipmentRecallSendForm"),
+            (lims_forms, "ShipmentRecallReturnForm"),
+            (lims_forms, "ShipmentReceiveForm"),
+            (lims_forms, "ShipmentArchiveForm"),
+            (lims_forms, "ContainerForm"),
+            (lims_forms, "GroupForm"),
+            (lims_forms, "ContainerLoadForm"),
+            (lims_forms, "EmptyContainers"),
+            (lims_forms, "LocationLoadForm"),
+            (lims_forms, "AddShipmentForm"),
+            (lims_forms, "ShipmentContainerForm"),
+            (lims_forms, "ShipmentGroupForm"),
+            (lims_forms, "SSHKeyForm"),
+            (lims_forms, "GuideForm"),
+            # crm
+            (crm_forms, "SupportAreaForm"),
+            (crm_forms, "FeedbackForm"),
+            (crm_forms, "SupportEntryForm"),
+            # acl
+            (acl_forms, "AccessForm"),
+            # schedule
+            (schedule_forms, "BeamtimeForm"),
+            (schedule_forms, "BeamlineSupportForm"),
+            (schedule_forms, "DowntimeForm"),
+            (schedule_forms, "EmailNotificationForm"),
+        ]
+
+        for mod, class_name in expected_modal_forms:
+            with self.subTest(form=f"{mod.__name__}.{class_name}"):
+                cls = getattr(mod, class_name, None)
+                self.assertIsNotNone(cls, f"Class {class_name} not found in {mod.__name__}")
+                self.assertTrue(
+                    issubclass(cls, (cm_forms.ModalModelForm, cm_forms.ModalForm)),
+                    f"{class_name} does not inherit from ModalModelForm or ModalForm"
+                )
+
+        # 3. Source check for deprecated patterns: ensure no form uses old Div(..., css_class="col-12") style wrappers
+        for mod in form_modules:
+            src = inspect.getsource(mod)
+            with self.subTest(module=mod.__name__):
+                self.assertNotIn('Div(css_class="col-12")', src)
+                self.assertNotIn("Div(css_class='col-12')", src)
+                self.assertNotIn('Div(css_class="col-6")', src)
+                self.assertNotIn("Div(css_class='col-6')", src)
+
 
 if __name__ == "__main__":
     unittest.main()

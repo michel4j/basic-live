@@ -25,3 +25,13 @@ Following the migration to Bootstrap 5, we decided to adopt the modal form frame
    - Systematically migrated modal views across `lims`, `crm`, `acl`, and `schedule` to inherit from `crisp_modals.views` (`ModalCreateView`, `ModalUpdateView`, `ModalDeleteView`, `ModalFormView`).
    - Standardized modal delete views to override `confirmed(*args, **kwargs)` for post-deletion actions and activity logging, returning clean JSON responses.
    - Replaced custom `AsyncFormMixin` with an alias inheriting from `crisp_modals.views.AjaxFormMixin` that emits a `DeprecationWarning`.
+
+5. **Modal Form Inheritance and Semantic Layout Classes**:
+   - Refactored all modal forms across `lims`, `crm`, `acl`, and `schedule` to inherit from `crisp_modals.forms.ModalModelForm` (or `ModalForm`).
+   - Eliminated boilerplate manual instantiations of `self.body = BodyHelper(self)` and `self.footer = FooterHelper(self)`, allowing `ModalModelForm.__init__` to initialize body and footer helpers automatically with sensible defaults.
+   - Replaced custom grid wrappers (`Div(..., css_class="col-*")` and `Div(..., css_class="row")`) with semantic layout components provided by `crisp_modals.forms`:
+     - `Row`: semantic form row wrapper.
+     - `FullWidth` (`col-12`), `HalfWidth` (`col-6`), `ThirdWidth` (`col-4`), `QuarterWidth` (`col-3`), `SixthWidth` (`col-2`), `TwoThirdWidth` (`col-8`), `ThreeQuarterWidth` (`col-9`), `FiveSixthWidth` (`col-10`).
+     - `Button`: styled button wrapper extending Crispy's `StrictButton`.
+     - Standardized modal action buttons via `self.footer.set_buttons(...)`.
+   - Aliased `BodyHelper` and `FooterHelper` in `basiclive.core.lims.forms` to their `crisp_modals.forms` counterparts to maintain backwards compatibility for host applications and custom extensions.
