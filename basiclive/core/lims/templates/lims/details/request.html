@@ -68,7 +68,7 @@
                 <tbody>
                 {% for sample in object.sample_list %}
                     <tr id="sample_{{ sample.pk }}" data-sample="{{ sample.pk }}">
-                        <td><a href="#!" data-form-link="{% url 'sample-edit' sample.pk %}">{{ sample.name }}</a></td>
+                        <td><a href="#!" data-modal-url="{% url 'sample-edit' sample.pk %}">{{ sample.name }}</a></td>
                         <td>{{ sample.group }}</td>
                         <td>{{ sample.location }}</td>
                         <td>{{ sample.container.name }}</td>

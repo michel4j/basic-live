@@ -521,8 +521,8 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIn("crisp_modals/modals.min.js", rendered_base)
         self.assertIn("jquery.form.min.js", rendered_base)
         self.assertIn("initModal", rendered_base)
-        self.assertIn("data-link", rendered_base)
-        self.assertIn("data-form-link", rendered_base)
+        self.assertIn("data-modal-url", rendered_base)
+        self.assertIn("data-modal-url", rendered_base)
 
         # 2. Re-based templates extend crisp_modals
         content_tmpl = get_template("lims/modal/content.html")

@@ -12,15 +12,15 @@
 {% if editable %}
     {% if support %}
         <div class="tools-box float-end pe-0 mb-0">
-            <a href="#!" data-form-link="{% url "support-edit" support.pk %}" title="Edit" class="pe-0">
+            <a href="#!" data-modal-url="{% url "support-edit" support.pk %}" title="Edit" class="pe-0">
                 {% show_icon icon='ti ti-sm ti-pencil' %}
             </a>
-            <a href="#!" data-form-link="{% url "support-delete" support.pk %}" title="Delete">
+            <a href="#!" data-modal-url="{% url "support-delete" support.pk %}" title="Delete">
                 {% show_icon icon='ti ti-sm ti-trash' %}
             </a>
         </div>
     {% else %}
-        <a href="#!" data-form-link="{% url "new-support" %}?date={{ date }}" title="Create">
+        <a href="#!" data-modal-url="{% url "new-support" %}?date={{ date }}" title="Create">
             {% show_icon icon='ti ti-md ti-user' %}
         </a>
     {% endif %}

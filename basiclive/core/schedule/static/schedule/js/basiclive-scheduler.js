@@ -111,7 +111,7 @@ function setupDowntimeEditor(sel, tog) {
         if($(tog).prop('checked')) {
             $(sel + ' [data-beamline]').css('cursor', 'nw-resize');
             $(sel + ' .downtime').css('cursor', 'pointer');
-            // Handle data-link, data-form-link and data-href
+            // Handle data-modal-url, data-modal-url and data-href
             $('.downtime').on('click', '[data-edit-link]', function () {
 
             });

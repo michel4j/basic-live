@@ -292,7 +292,7 @@ const projTemplate = _.template(
     '                       <i class="ti ti-md ti-zoom-in"></i>' +
     '                   </div>' +
     '               </a>' +
-    '               <a href="#!" data-form-link="/users/containers/<%= root_id %>/<%= parent %>/unload/<%= name.toLowerCase() %>/">' +
+    '               <a href="#!" data-modal-url="/users/containers/<%= root_id %>/<%= parent %>/unload/<%= name.toLowerCase() %>/">' +
     '                   <div class="icon-stack">' +
     '                       <i class="ti ti-md ti-share"></i>' +
     '                   </div>' +

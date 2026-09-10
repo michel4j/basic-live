@@ -8,7 +8,7 @@
 
 
 {% block object_tools %}
-    <a href="#!" class="float-end" data-link="{% url 'session-history' object.pk %}">
+    <a href="#!" class="float-end" data-modal-url="{% url 'session-history' object.pk %}">
         {% show_icon label='History' icon='ti ti-md ti-timer' %}
     </a>
 {% endblock %}

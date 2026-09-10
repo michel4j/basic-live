@@ -438,7 +438,7 @@ table {
 
 .table-hover {
   tr {
-    &[data-link]:hover, &[data-detail-url]:hover {
+    &[data-modal-url]:hover, &[data-detail-url]:hover {
       cursor: pointer;
     }
   }
@@ -833,7 +833,7 @@ ul.errorlist {
   background-color: white;
 }
 
-a[data-link], .back text[port], .cursor {
+a[data-modal-url], .back text[port], .cursor {
   cursor: pointer;
 }
 

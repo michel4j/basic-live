@@ -20,7 +20,7 @@
             </div>
             {% if editable %}
                 <div class="tools-box">
-                    <a href="#!" data-form-link="{% url 'request-edit' request.pk %}"
+                    <a href="#!" data-modal-url="{% url 'request-edit' request.pk %}"
                         title="Edit Request Parameters">
                         {% show_icon icon="ti ti-md ti-pencil" color="primary" %}
                     </a>

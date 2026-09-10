@@ -53,7 +53,7 @@ class AccessListView(AdminRequiredMixin, ItemListView):
     tool_template = "acl/tools-access.html"
     link_url = 'access-edit'
     link_kwarg = 'address'
-    link_attr = 'data-form-link'
+    link_attr = 'data-modal-url'
     ordering = ['name']
     template_name = "lims/list.html"
     page_title = 'Access Endpoints'
@@ -83,7 +83,7 @@ class AccessConnectionList(AdminRequiredMixin, ItemListView):
     ordering = ['-created']
     template_name = "lims/list.html"
     link_url = 'access-connection-detail'
-    link_attr = 'data-link'
+    link_attr = 'data-modal-url'
     page_title = 'Access Connections'
     plot_url = reverse_lazy("connection-stats")
     paginate_by = 100

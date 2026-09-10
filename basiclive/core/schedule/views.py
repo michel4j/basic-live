@@ -355,7 +355,7 @@ class EmailNotificationList(AdminRequiredMixin, ListViewMixin, ItemListView):
     ordering_proxies = {}
     list_transforms = {}
     show_project = False
-    link_attr = 'data-link'
+    link_attr = 'data-modal-url'
 
     def get_queryset(self):
         return super().get_queryset()

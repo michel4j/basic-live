@@ -24,10 +24,10 @@
     <a  href="{% url 'project-statistics' username=object.username %}">
         {% show_icon label='My Stats' icon='ti ti-md ti-pulse' %}
     </a>
-    <a  href="#!" data-form-link="{% url 'new-sshkey' username=object.username %}">
+    <a  href="#!" data-modal-url="{% url 'new-sshkey' username=object.username %}">
         {% show_icon label='Add SSH Key' icon='ti ti-md ti-key' %}
     </a>
-    <a  href="#!" data-form-link="{% url 'edit-profile' username=object.username %}">
+    <a  href="#!" data-modal-url="{% url 'edit-profile' username=object.username %}">
         {% show_icon label='Edit Profile' icon='ti ti-md ti-pencil' %}
     </a>
 {% endblock %}
@@ -57,7 +57,7 @@
                                         <p class="d-block mt-2 text-wrap text-sm font-monospace" style="word-wrap: break-word;">{{ key.fingerprint }}</p>
                                     </div>
                                     <div class="tools-box ms-auto my-0">
-                                        <a href="#!" data-form-link="{% url 'sshkey-delete' key.pk %}">
+                                        <a href="#!" data-modal-url="{% url 'sshkey-delete' key.pk %}">
                                             {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
                                         </a>
                                     </div>

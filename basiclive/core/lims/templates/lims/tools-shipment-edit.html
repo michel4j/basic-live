@@ -1,12 +1,12 @@
 {% load icons %}
 
-<a href="#!"  data-form-link="{% url 'shipment-add-containers' shipment.pk %}" title="Containers">
+<a href="#!"  data-modal-url="{% url 'shipment-add-containers' shipment.pk %}" title="Containers">
     {% show_icon icon="ti ti-md ti-package" label="Containers" %}
 </a>
-<a href="#!"  data-form-link="{% url 'shipment-add-groups' shipment.pk %}" title="Groups">
+<a href="#!"  data-modal-url="{% url 'shipment-add-groups' shipment.pk %}" title="Groups">
     {% show_icon icon="ti ti-md ti-layout-accordion-list" label="Groups" %}
 </a>
-<a  href="#!" data-form-link="{% url 'seat-samples' shipment.pk %}" title="Samples"
+<a  href="#!" data-modal-url="{% url 'seat-samples' shipment.pk %}" title="Samples"
     {% if shipment.num_samples == 0 %}
         title="No Samples"
         data-bs-toggle="popover"

@@ -20,7 +20,7 @@
             <td>
                 {% if user.is_superuser %}
                     {% if sample.pk %}
-                        <a href="#!" data-form-link="{% url 'sample-admin-edit' sample.pk %}" title="Edit Notes">
+                        <a href="#!" data-modal-url="{% url 'sample-admin-edit' sample.pk %}" title="Edit Notes">
                             <i class="ti ti-comment{% if sample.staff_comments %}-alt{% endif %}"></i>
                         </a>
                     {% endif %}

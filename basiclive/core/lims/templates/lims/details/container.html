@@ -34,7 +34,7 @@
 
 {% block object_tools %}
     {% if object.is_editable %}
-    <a href="#!" data-form-link="{% url 'edit-container-samples' object.pk %}"
+    <a href="#!" data-modal-url="{% url 'edit-container-samples' object.pk %}"
         {% if not object.samples.exists %}
             class="attention"
             title="No Samples"
@@ -54,12 +54,12 @@
     {% endif %}
     {% include "lims/tools-base.html" %}
     {% if object.parent_history.exists %}
-        <a href="#!" data-link="{% url 'container-history' object.pk %}">
+        <a href="#!" data-modal-url="{% url 'container-history' object.pk %}">
             {% show_icon label='History' icon='ti ti-md ti-timer' %}
         </a>
     {% endif %}
     {% if object.children_history.exists %}
-        <a class="float-end" data-link="{% url 'automounter-history' object.pk %}">
+        <a class="float-end" data-modal-url="{% url 'automounter-history' object.pk %}">
             {% show_icon label='Load History' icon='ti ti-md ti-timer' %}
         </a>
     {% endif %}

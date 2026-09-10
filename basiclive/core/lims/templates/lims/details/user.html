@@ -33,10 +33,10 @@
     <a href="{% url 'project-labels' object.username %}" title="Get Shipping Labels">
         {% show_icon label="Labels" icon="ti ti-md ti-tag" %}
     </a>
-    <a href="#!" data-form-link="{% url 'edit-profile' object.username %}" title="Edit Profile">
+    <a href="#!" data-modal-url="{% url 'edit-profile' object.username %}" title="Edit Profile">
         {% show_icon label="Edit" icon="ti ti-md ti-pencil-alt" %}
     </a>
-    <a href="#!" data-form-link="{% url 'project-reset' object.username %}" title="Reset API Key">
+    <a href="#!" data-modal-url="{% url 'project-reset' object.username %}" title="Reset API Key">
         {% show_icon label="Reset Key" icon="ti ti-md ti-key" %}
     </a>
 {% endif %}

@@ -23,7 +23,7 @@
 {% block object_tools %}
     {% with object.active_automounter as automounter %}
     {% if automounter.container.children_history.all %}
-        <a href="#!" data-link="{% url 'automounter-history' object.active_automounter.container.pk %}">
+        <a href="#!" data-modal-url="{% url 'automounter-history' object.active_automounter.container.pk %}">
             {% show_icon label='History' icon='ti ti-md ti-timer' %}
         </a>
     {% endif %}
@@ -37,7 +37,7 @@
         {% show_icon label='Sessions' icon='ti ti-md ti-calendar' %}
     </a>
     {% if automounter %}
-        <a href="#!" data-form-link="{% url 'automounter-edit' pk=automounter.pk %}">
+        <a href="#!" data-modal-url="{% url 'automounter-edit' pk=automounter.pk %}">
             {% show_icon label='Comment' icon='ti ti-md ti-comment-alt' %}
         </a>
     {% endif %}

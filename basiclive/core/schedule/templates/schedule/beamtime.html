@@ -4,7 +4,7 @@
     {% if bt.notification %}
     <div class="float-start">
 
-        <a href="#!" class="d-flex" data-form-link="{% url 'email-edit' bt.notification.pk %}" title="Edit Notification">
+        <a href="#!" class="d-flex" data-modal-url="{% url 'email-edit' bt.notification.pk %}" title="Edit Notification">
             {% if bt.notification.sent %}
                 {% show_icon icon='ti ti-sm ti-check-box' %}
             {% elif bt.notification.unsendable %}
@@ -18,10 +18,10 @@
     {% endif %}
 
     <div class="tools-box float-end pe-0 my-1">
-        <a href="#!" data-form-link="{% url 'beamtime-edit' bt.pk %}" title="Edit" class="pe-0">
+        <a href="#!" data-modal-url="{% url 'beamtime-edit' bt.pk %}" title="Edit" class="pe-0">
             {% show_icon icon='ti ti-sm ti-pencil' %}
         </a>
-        <a href="#!" data-form-link="{% url 'beamtime-delete' bt.pk %}" title="Delete">
+        <a href="#!" data-modal-url="{% url 'beamtime-delete' bt.pk %}" title="Delete">
             {% show_icon icon='ti ti-sm ti-trash' %}
         </a>
     </div>

@@ -24,14 +24,14 @@
 {% endblock %}
 
 {% block object_tools %}
-    <a href="#!" data-form-link="{% url 'requesttype-layout' object.pk %}">
+    <a href="#!" data-modal-url="{% url 'requesttype-layout' object.pk %}">
         {% show_icon label='Layout' icon='ti ti-md ti-layout' %}
     </a>
     <span class="separator"></span>
-    <a href="#!" data-form-link="{{ handler }}edit/">
+    <a href="#!" data-modal-url="{{ handler }}edit/">
         {% show_icon label='Edit' icon='ti ti-md ti-pencil-alt' %}
     </a>
-    <a href="#!" data-form-link="{{ handler }}delete/">
+    <a href="#!" data-modal-url="{{ handler }}delete/">
         {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
     </a>
 {% endblock %}

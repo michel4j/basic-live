@@ -14,7 +14,7 @@ Following the migration to Bootstrap 5, we decided to adopt the modal form frame
    - Re-based `lims/modal/content.html` on `crisp_modals/modal.html`.
    - Re-based `lims/modal/form.html` on `crisp_modals/form.html`.
    - Re-based `lims/modal/delete.html` on `crisp_modals/delete.html`.
-   - Configured `$('#modal-target').initModal(...)` in `lims/base.html` while retaining backward-compatible event listeners for `data-link` and `data-form-link` triggers alongside native `data-modal-url`.
+   - Configured `$('#modal-target').initModal(...)` in `lims/base.html` while retaining backward-compatible event listeners for `data-modal-url` and `data-modal-url` triggers alongside native `data-modal-url`.
 
 3. **Frontend Helper Consolidation**:
    - Retired and purged `basiclive-modals.js` and `basiclive-modals.min.js`.

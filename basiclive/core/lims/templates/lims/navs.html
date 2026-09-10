@@ -48,7 +48,7 @@
                         {% include "lims/address.html" with user=user %}
                     </div>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#!" data-form-link="{% url 'edit-profile' user.username %}">Edit Profile</a>
+                    <a class="dropdown-item" href="#!" data-modal-url="{% url 'edit-profile' user.username %}">Edit Profile</a>
                     <a class="dropdown-item" href="#!" id="logout-action">Log Out</a>
                 </div>
             </li>

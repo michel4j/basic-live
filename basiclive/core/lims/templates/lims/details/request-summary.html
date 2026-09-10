@@ -9,7 +9,7 @@
                 <div class="d-flex flex-row py-2">
                     <div class="box-status text-center me-3 align-middle">
                         {% if user.is_superuser%}
-                            <a href="#!" data-form-link="{% url 'request-admin-edit' request.pk %}"
+                            <a href="#!" data-modal-url="{% url 'request-admin-edit' request.pk %}"
                                title="Update Status">
                                 {% if request.staff_comments %}
                                     {% show_icon label=request.get_status_display icon='ti ti-md ti-comment-alt' %}

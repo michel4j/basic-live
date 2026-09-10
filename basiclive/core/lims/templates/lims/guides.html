@@ -28,7 +28,7 @@
                 <div class="card-body p-3">
                     {% if guide.url or guide.attachment %}
                         {% if guide.has_image %}
-                            <a href="#!" data-link="{% guide_link guide %}">
+                            <a href="#!" data-modal-url="{% guide_link guide %}">
                                 <div class="guide-overlaid-text">
                                     <img src="{{ guide.attachment.url}}" width="100%" />
                                     <h5><strong>{{ guide.title }}</strong></h5>
@@ -38,7 +38,7 @@
                                 </div>
                             </a>
                         {% elif guide.has_video or guide.get_kind_display == guide.TYPE.video %}
-                            <a href="#!" data-link="{% guide_link guide %}">
+                            <a href="#!" data-modal-url="{% guide_link guide %}">
                                 <div class="guide-overlaid-text">
                                     <img src="{% static 'lims/img/video-embed.png' %}" width="100%" />
                                     <h5>{{ guide.title }}</h5>
@@ -48,7 +48,7 @@
                                 </div>
                             </a>
                         {% elif guide.get_kind_display == guide.TYPE.image %}
-                            <a href="#!" data-link="{% guide_link guide %}">
+                            <a href="#!" data-modal-url="{% guide_link guide %}">
                                 <div class="guide-overlaid-text">
                                     <img src="{% static 'lims/img/image-embed.png' %}" width="100%" />
                                     <h5>{{ guide.title }}</h5>
@@ -59,7 +59,7 @@
                             </a>
                         {% elif guide.modal %}
                             <h5 class="text-condensed"><strong>{{ guide.title }}</strong></h5>
-                            <a href="#!" data-link="{% guide_link guide %}">
+                            <a href="#!" data-modal-url="{% guide_link guide %}">
                                 <div class="text-condensed guide-snippet">
                                     {{ guide.description | markdown }}
                                 </div>
@@ -91,11 +91,11 @@
                                 </a>
                             {% endif %}
                             {% if request.user.is_superuser %}
-                                <a href="#!" data-form-link="{% url 'guide-edit' guide.pk %}" title="Edit"
+                                <a href="#!" data-modal-url="{% url 'guide-edit' guide.pk %}" title="Edit"
                                    style="padding-left: 0; padding-right: 0;">
                                     {% show_icon icon='ti ti-md ti-pencil' %}
                                 </a>
-                                <a href="#!" data-form-link="{% url 'guide-delete' guide.pk %}" title="Delete">
+                                <a href="#!" data-modal-url="{% url 'guide-delete' guide.pk %}" title="Delete">
                                     {% show_icon icon='ti ti-md ti-trash' %}
                                 </a>
                             {% endif %}

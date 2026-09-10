@@ -47,7 +47,7 @@ class SupportAreaList(ListViewMixin, ItemListView):
     ordering = ['name']
     tool_template = 'crm/tools-support.html'
     link_url = 'supportarea-edit'
-    link_attr = 'data-form-link'
+    link_attr = 'data-modal-url'
 
 
 class SupportAreaCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
@@ -82,7 +82,7 @@ class FeedbackList(ListViewMixin, ItemListView):
     tool_template = 'crm/tools-support.html'
     show_project = False
     link_url = 'user-feedback-detail'
-    link_attr = 'data-link'
+    link_attr = 'data-modal-url'
     plot_url = reverse_lazy("user-feedback-stats")
 
 
@@ -141,7 +141,7 @@ class SupportEntryList(ListViewMixin, ItemListView):
     tool_template = 'crm/tools-support.html'
     link_url = 'supportrecord-edit'
     link_field = 'beamline'
-    link_attr = 'data-form-link'
+    link_attr = 'data-modal-url'
     plot_url = reverse_lazy("supportrecord-stats")
 
 

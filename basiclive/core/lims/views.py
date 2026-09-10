@@ -694,7 +694,7 @@ class DataList(ListViewMixin, ItemListView):
     list_search = ['id', 'name', 'beamline__name', 'sample__name', 'frames', 'project__name', 'modified']
     link_url = 'data-detail'
     link_field = 'name'
-    link_attr = 'data-link'
+    link_attr = 'data-modal-url'
     ordering = ['-modified']
     list_transforms = {}
     plot_url = reverse_lazy("data-stats")
@@ -848,7 +848,7 @@ class RequestDetail(DetailListMixin, SampleList):
         'priority': movable,
     }
     link_url = 'sample-edit'
-    link_attr = 'data-form-link'
+    link_attr = 'data-modal-url'
     detail_target = '#modal-target'
 
     def page_title(self):
@@ -1024,7 +1024,7 @@ class ActivityLogList(ListViewMixin, ItemListView):
     ordering_proxies = {}
     list_transforms = {}
     link_url = 'activitylog-detail'
-    link_attr = 'data-link'
+    link_attr = 'data-modal-url'
     detail_target = '#modal-target'
 
 
