@@ -65,7 +65,6 @@ class AccessListView(AdminRequiredMixin, ItemListView):
 
 class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = AccessForm
-    template_name = "lims/modal/form.html"
     model = models.AccessList
     success_url = reverse_lazy('access-list')
     success_message = "Access Control List has been updated."
