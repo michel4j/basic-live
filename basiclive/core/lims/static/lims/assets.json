@@ -45,10 +45,6 @@
         "sri": "sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
       },
       {
-        "path": "https://cdnjs.cloudflare.com/ajax/libs/jquery-migrate/1.1.1/jquery-migrate.min.js",
-        "sri": "sha512-c9tMa1UHAV5HK+LMSz07WQnJ/qS7yA5fy8Up6ZV+8w8jFoszs0gdncicJB/4GRWfcTNtn1veVL9NyUfKsbW/BQ=="
-      },
-      {
         "path": "https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js",
         "sri": "sha512-rCjfoab9CVKOH/w/T6GbBxnAH5Azhy4+q1EXW5XEURefHbIkRbQ++ZR+GBClo3/d3q583X/gO4FKmOFuhkKrdA=="
       },
