@@ -24,7 +24,6 @@
     <script src="{% static 'jquery/js/jquery.cookie.min.js' %}"></script>
     <script src="{% static 'jquery/js/jquery.form.min.js' %}"></script>
     <script src="{% static 'crisp_modals/modals.min.js' %}"></script>
-
     {% block pre_js %}{% endblock %}
 
 </head>
@@ -60,7 +59,7 @@
         </div>
     </main>
 {% endblock %}
-<div id="modal-target"></div>
+
 {% if user.is_authenticated %}
     <div class="footer text-muted">
         <div class="footer-wrapper overflow-ellipsis">
@@ -72,8 +71,8 @@
 {% endif %}
 
 {% include "lims/messages.html" %}
+<div id="modal-target"></div>
 {% block post_js %}{% endblock %}
-
 <script src="{% static 'misc/js/popper.min.js' %}"></script>
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
