@@ -1,6 +1,6 @@
-<div class="mini-profile">
+<div class="p-3">
     <strong>{{ user.contact_person|upper }}</strong><br/>
-    {{ user.organisation|upper }}<br/>
+    {{ user.organisation }}<br/>
     {% if user.department %}{{ user.department }} <br/>{% endif %}
     {{ user.address|upper }}<br/>
     {{ user.city|upper }} {{ user.province|upper }}&nbsp;&nbsp;&nbsp;{{ user.postal_code|upper }}<br/>

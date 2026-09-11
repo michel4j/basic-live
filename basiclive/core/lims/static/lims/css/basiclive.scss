@@ -3,7 +3,7 @@ $web-font-path: "https://fonts.googleapis.com/css?family=Fira+Code|Fira+Sans+Con
 $spacer: 1rem !default;
 $grid-gutter-width: 1rem !default;
 $half-spacer: 0.5 * $spacer;
-$primary: #69156A !default;
+$primary: #2E2632 !default;
 $white: #fff !default;
 $black: #000 !default;
 $info: #17a2b8 !default;
@@ -57,11 +57,11 @@ $min_font: 9px;
 $max_font: 14px;
 
 :root {
-//  --bs-primary: #{$primary};
-//  --bs-primary-rgb: 105, 21, 106;
-//  --bs-link-color: #{$primary};
-//  --bs-link-hover-color: $primary;
-//  --bs-border-color: #{$border-color};
+  --bs-primary: #{$primary};
+  --bs-primary-rgb: 43, 38, 50;
+  --bs-link-color: #{$primary};
+  --bs-link-hover-color: $primary;
+  --bs-border-color: #{$border-color};
   --bs-body-font-family: "#{$base-font}", sans-serif;
   --spacer: #{$spacer};
   --gutter: #{$grid-gutter-width};
@@ -638,11 +638,6 @@ p {
   }
 }
 
-.mini-profile {
-  padding: 1.5em;
-  min-width: 250px;
-}
-
 .inline-list {
   float: left;
 }
@@ -1038,6 +1033,10 @@ a[data-modal-url], .back text[port], .cursor {
   #frame-name {
     font-weight: bold;
   }
+}
+
+.dropdown-menu[aria-labelledby="profile-menu"] {
+    min-width: 200px;
 }
 
 /* image loading indicator kept separate */

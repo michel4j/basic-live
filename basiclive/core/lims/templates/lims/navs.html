@@ -44,9 +44,7 @@
                     <i class="ti ti-user"></i><span class="d-none d-md-inline-block">&nbsp;{{user.name.upper}}</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="profile-menu">
-                    <div class="">
-                        {% include "lims/address.html" with user=user %}
-                    </div>
+                    {% include "lims/address.html" with user=user %}
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="#!" data-modal-url="{% url 'edit-profile' user.username %}">Edit Profile</a>
                     <a class="dropdown-item" href="#!" id="logout-action">Log Out</a>

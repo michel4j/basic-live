@@ -30,7 +30,7 @@
     </div>
     <div class="row">
         <div class="col-6">
-            <div class="mini-profile">
+            <div class="p-3">
                 <strong class="text-condensed">{{ object.contact_person }}</strong><br/>
                 {{ object.contact_email|default_if_none:"" }}<br/>
                 <pre>{{ object.contact_phone|default_if_none:"" }}</pre>
@@ -38,7 +38,7 @@
         </div>
         <div class="col-6">
             {% if object.email %}
-                <div class="mini-profile">
+                <div class="p-3">
                     <strong class="text-condensed">{{ object.first_name }} {{ object.last_name }}</strong><br/>
                     {{ object.email|default_if_none:"" }}
                 </div>

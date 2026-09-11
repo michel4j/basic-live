@@ -4,7 +4,7 @@
     </div>
     <div class="row d-flex flex-row">
       <div class="col-6">
-        <div class="mini-profile">
+        <div class="p-3">
             <span class="text-condensed text-muted">CONTACT PERSON:</span>
             <strong>{{ object.contact_person|default_if_none:"" }}</strong><br/>
             {% if object.contact_email %}{{ object.contact_email }}<br/>{% endif %}
@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="col-6">
-        <div class="mini-profile text-end">
+        <div class="p-3 text-end">
             <span class="text-condensed text-muted">PRINCIPAL INVESTIGATOR:</span>
             <strong>{{ object.first_name }} {{ object.last_name }}</strong><br/>
             {% if object.email %}{{ object.email }}{% endif %}<br/>
@@ -33,13 +33,12 @@
             {% include "lims/address.html" with user=object %}
         </div>
         <div class="col-6">
-            <div class="text-center float-end">
+            <div class="p-3 text-center ms-auto">
                 <img src="/static/lims/img/{{ object.carrier|default_if_none:'walking'|slugify }}.png"
                      height="80px"
                      title="{{ object.carrier|default_if_none:'User'|title }}">
                 <h5>{{ object.account_number|default:"-- --- --- --" }}</h5>
             </div>
-
         </div>
     </div>
 </div>
