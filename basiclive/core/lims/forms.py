@@ -2,33 +2,27 @@ import re
 
 import fastjsonschema
 from crisp_modals.forms import (
-    BodyHelper,
     Button,
-    FooterHelper,
     FullWidth,
     HalfWidth,
-    ModalForm,
     ModalModelForm,
     QuarterWidth,
     Row,
+    FiveSixthWidth,
     SixthWidth,
-    StrictButton,
     ThirdWidth,
-    ThreeQuarterWidth,
     TwoThirdWidth,
 )
-from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Field, Layout
 from django import forms
-from basiclive.core.lims.conf import settings
 from django.db.models import Q
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 
+from basiclive.core.lims.conf import settings
 from .models import Guide, ProjectType, SSHKey, RequestType, Request, REQUEST_SPEC_SCHEMA
 from .models import Project, Shipment, Automounter, Sample, ComponentType, Container, Group, ContainerLocation, \
     ContainerType
-
 
 disabled_widget = forms.HiddenInput(attrs={'readonly': True})
 
