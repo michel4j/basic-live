@@ -61,11 +61,11 @@
 {% endblock %}
 
 {% if user.is_authenticated %}
-    <div class="footer text-muted">
+    <div class="footer">
         <div class="footer-wrapper overflow-ellipsis">
-            <div class="footer-item"> {{ version }}</div>
+            <div class="footer-item"> {{ APP_NAME }}  v{{ APP_VERSION }}</div>
             <div class="footer-item">&#9400; 2010&ndash;{% now "Y" %}</div>
-            <div class="footer-item"><a class="text-muted" href="/">Dashboard</a></div>
+            <div class="footer-item"><a href="/">Dashboard</a></div>
         </div>
     </div>
 {% endif %}

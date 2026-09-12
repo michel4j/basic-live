@@ -45,14 +45,15 @@ $modal-data: 526px !default;
 
 $min_width: 300px;
 $max_width: 1200px;
-$min_font: 10px;
-$max_font: 16px;
+$min_font: 9px;
+$max_font: 15px;
 
 :root {
   --bl-font-cursive: "Architects Daughter", sans-serif;
   --bl-font-condensed: "Fira Sans Condensed", sans-serif;
   --bs-font-monospace: "Fira Code", monospace;
   --bl-font-sans-serif: "Fira Sans", sans-serif;
+  --bl-accent: #91847C;
 
   --bs-link-color: #{$primary};
   --bs-link-hover-color: $primary;
@@ -1306,21 +1307,25 @@ a[data-modal-url], .back text[port], .cursor {
   }
 }
 
-.footer {
-  text-align: center;
-  position: absolute;
-  left: 50%;
-}
-
 .footer-wrapper {
-  left: -50%;
-  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+  justify-content: center;
 }
 
+.footer {
+  display: flex;
+  background-color: var(--bl-accent);
+  width: 100%;
+  font-size: 90%;
+  opacity: 0.7;
+  min-height: 100px;
+  padding: 1em;
+}
 .footer-item {
-  margin: 1rem 0;
-  padding: 0 1rem;
-  float: left;
+  padding: 0 1em;
 
   + .footer-item {
     border-left: 1px solid var(--bl-gray-alpha);
