@@ -1,22 +1,5 @@
 // Variables
 $web-font-path: "https://fonts.googleapis.com/css?family=Fira+Code|Fira+Sans+Condensed:400,800|Fira+Sans:200,400,800|Architects+Daughter&display=swap" !default;
-$spacer: 1rem !default;
-$grid-gutter-width: 1rem !default;
-$half-spacer: 0.5 * $spacer;
-$primary: #2E2632 !default;
-$white: #fff !default;
-$black: #000 !default;
-$info: #17a2b8 !default;
-$danger: #dc3545 !default;
-$warning: #ffc107 !default;
-$success: #28a745 !default;
-$gray-700: #495057 !default;
-
-$border-color: rgba(0, 0, 0, 0.15) !default;
-
-$modal-inner-padding: 1rem !default;
-$modal-lg: 850px !default;
-$modal-data: 526px !default;
 
 // import web-font
 @import url($web-font-path);
@@ -54,17 +37,14 @@ $max_font: 15px;
   --bs-font-monospace: "Fira Code", monospace;
   --bl-font-sans-serif: "Fira Sans", sans-serif;
   --bl-accent: #91847C;
-
-  --bs-link-color: #{$primary};
-  --bs-link-hover-color: $primary;
-  --bs-border-color: #{$border-color};
-  --spacer: #{$spacer};
-  --gutter: #{$grid-gutter-width};
-  --half-spacer: #{$half-spacer};
   --bl-gray-alpha: rgba(0, 0, 0, 0.15);
   --bl-gray-barely: rgba(0, 0, 0, 0.05);
-  --main-background: #{$white};
-  --main-text: #{$black};
+  --bl-data-modal-width: 526px;
+
+  --bs-link-color: var(--bs-primary);
+  --bs-link-hover-color: var(--bs-primary);
+  --bs-border-color: var(--bl-gray-alpha);
+
   --bs-table-bg: transparent;
   --bs-border-radius: 3px;
   --bs-border-radius-sm: 2px;
@@ -98,7 +78,7 @@ a {
 }
 
 header > nav {
-  background-color: var(--primary) !important;
+  background-color: var(--bs-primary);
   max-height: 51px !important;
 }
 
@@ -166,8 +146,8 @@ main {
 }
 
 .modal-dialog.data-viewer {
-  max-width: $modal-data;
-  min-width: $modal-data;
+  max-width: var(--bl-data-modal-width);
+  min-width: var(--bl-data-modal-width);
 
   div.section-entry {
     margin-bottom: 1rem;
@@ -187,7 +167,7 @@ main {
     height: 25rem;
   }
   .modal-dialog.data-viewer {
-    max-width: $modal-data;
+    max-width: var(--bl-data-modal-width);
   }
   .modal {
     --bs-modal-margin: 1.75rem;
@@ -510,7 +490,7 @@ table {
   border-color: var(--bl-gray-alpha);
 
   &:hover {
-    border-color: rgba(0, 0, 0, 0.05);
+    border-color: var(--bl-gray-barely);
   }
 }
 
@@ -573,10 +553,6 @@ p {
   &.empty {
     opacity: 0;
   }
-}
-
-.empty {
-  background-color: #eee;
 }
 
 .data-thumbnail {
@@ -764,8 +740,7 @@ form {
 }
 
 .list-group-hover .list-group-item:hover, .list-group-item.active-envelope {
-  background-color: #f5f5f5;
-  opacity: 1;
+  background-color: var(--bl-gray-barely);
 }
 
 form .tab-content {
@@ -991,7 +966,7 @@ a[data-modal-url], .back text[port], .cursor {
   }
 
   .meta-data li.separator {
-    border-top: 1px dotted #ccc;
+    border-top: 1px dotted var(--bs-border-color);
     margin-top: 2px;
   }
 
@@ -1025,53 +1000,16 @@ a[data-modal-url], .back text[port], .cursor {
 
 /* modal helpers */
 .data-viewer .modal-body {
-  padding: 0 0.5*$modal-inner-padding;
+  padding: 0 calc(0.75 * var(--bs-spacer));
 }
 
 .modal-flush {
-  margin: 0 (-$modal-inner-padding);
-  padding: 0 $modal-inner-padding;
+  margin: 0 calc(-1 * var(--bs-spacer));
+  padding: 0 var(--bs-spacer);
 }
 
 .modal-footer:empty {
   display: none;
-}
-
-.reverse-ellipsis {
-  text-overflow: clip;
-  position: relative;
-  background-color: white;
-
-  &:before {
-    content: '\02026';
-    position: absolute;
-    z-index: 1;
-    left: -1em;
-    background-color: inherit;
-    padding-left: 1em;
-    margin-left: 0.5em;
-  }
-
-  span {
-    min-width: 100%;
-    position: relative;
-    display: inline-block;
-    float: right;
-    overflow: visible;
-    background-color: inherit;
-    text-indent: -0.5em;
-
-    &:before {
-      content: '';
-      position: absolute;
-      display: inline-block;
-      width: 1em;
-      height: 1em;
-      background-color: inherit;
-      z-index: 200;
-      left: -1em;
-    }
-  }
 }
 
 .badge {
@@ -1079,7 +1017,7 @@ a[data-modal-url], .back text[port], .cursor {
 
   &.score {
     font-size: 0.95em;
-    border: 1px solid rgba(0, 0, 0, 0.075);
+    border: 1px solid var(--bl-gray-barely);
   }
 }
 
@@ -1102,209 +1040,10 @@ a[data-modal-url], .back text[port], .cursor {
   float: left;
 }
 
-/*************** SCROLLBAR BASE CSS ***************/
-
-.scroll-wrapper {
-  overflow: hidden !important;
-  padding: 0 !important;
-  position: relative;
-
-  > .scroll-content {
-    border: none !important;
-    box-sizing: content-box !important;
-    height: auto;
-    left: 0;
-    margin: 0;
-    max-height: none;
-    max-width: none !important;
-    overflow: scroll !important;
-    padding: 0;
-    position: relative !important;
-    top: 0;
-    width: auto !important;
-
-    &::-webkit-scrollbar {
-      height: 0;
-      width: 0;
-    }
-  }
-}
-
-.scroll-element {
-  display: none;
-  box-sizing: content-box;
-
-  div {
-    box-sizing: content-box;
-  }
-
-  &.scroll-x.scroll-scrollx_visible, &.scroll-y.scroll-scrolly_visible {
-    display: block;
-  }
-
-  .scroll-bar, .scroll-arrow {
-    cursor: default;
-  }
-}
-
-.scroll-textarea {
-  border: 1px solid #cccccc;
-  border-top-color: #999999;
-
-  > .scroll-content {
-    overflow: hidden !important;
-
-    > textarea {
-      border: none !important;
-      box-sizing: border-box;
-      height: 100% !important;
-      margin: 0;
-      max-height: none !important;
-      max-width: none !important;
-      overflow: scroll !important;
-      outline: none;
-      padding: 2px;
-      position: relative !important;
-      top: 0;
-      width: 100% !important;
-
-      &::-webkit-scrollbar {
-        height: 0;
-        width: 0;
-      }
-    }
-  }
-}
-
-/*************** SIMPLE INNER SCROLLBAR ***************/
-
-.scrollbar-inner > .scroll-element {
-  border: none;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  z-index: 10;
-
-  div {
-    border: none;
-    margin: 0;
-    padding: 0;
-    position: absolute;
-    z-index: 10;
-    display: block;
-    height: 100%;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-
-  &.scroll-x {
-    bottom: 2px;
-    height: 8px;
-    left: 0;
-    width: 100%;
-  }
-
-  &.scroll-y {
-    height: 100%;
-    right: 2px;
-    top: 0;
-    width: 8px;
-  }
-
-  .scroll-element_outer {
-    overflow: hidden;
-    border-radius: 8px;
-  }
-
-  .scroll-element_track, .scroll-bar {
-    border-radius: 8px;
-    filter: alpha(opacity=40);
-    opacity: 0.4;
-  }
-
-  .scroll-element_track {
-    background-color: #e0e0e0;
-  }
-
-  .scroll-bar {
-    background-color: #c2c2c2;
-  }
-
-  &:hover .scroll-bar, &.scroll-draggable .scroll-bar {
-    background-color: #919191;
-  }
-
-  &.scroll-x.scroll-scrolly_visible .scroll-element_track {
-    left: -12px;
-  }
-
-  &.scroll-y.scroll-scrollx_visible .scroll-element_track {
-    top: -12px;
-  }
-
-  &.scroll-x.scroll-scrolly_visible .scroll-element_size {
-    left: -12px;
-  }
-
-  &.scroll-y.scroll-scrollx_visible .scroll-element_size {
-    top: -12px;
-  }
-}
-
-/* update scrollbar offset if both scrolls are visible */
-.mini-thumbnail .list-group-item {
-  padding: 5px 10px;
-}
-
 .text-superscript {
   position: absolute !important;
   right: -4px !important;
   top: 4px !important;
-}
-
-
-.row .mini-thumbnail[class^=col-] {
-  padding: 5px;
-}
-
-.chosen-choices, .chosen-single {
-  border-radius: 0.25rem !important;
-}
-
-.sm-padding {
-  padding-left: 5px !important;
-  padding-right: 5px !important;
-}
-
-/* Carousel stuff */
-.carousel {
-  .jumbotron {
-    margin-bottom: 0;
-    padding-top: 24px;
-  }
-
-  .form-action {
-    margin: 0;
-    padding-bottom: 15px;
-  }
-}
-
-.carousel-indicators {
-  bottom: 60px;
-
-  li {
-    border-color: #bbb;
-
-    &.active {
-      background-color: #bbb;
-      height: 15px;
-      width: 15px;
-    }
-
-    height: 15px;
-    width: 15px;
-  }
 }
 
 .footer-wrapper {
@@ -1318,6 +1057,7 @@ a[data-modal-url], .back text[port], .cursor {
 .footer {
   display: flex;
   background-color: var(--bl-accent);
+  color: contrast-color(var(--bl-accent));
   width: 100%;
   font-size: 90%;
   opacity: 0.7;
@@ -1328,14 +1068,14 @@ a[data-modal-url], .back text[port], .cursor {
   padding: 0 1em;
 
   + .footer-item {
-    border-left: 1px solid var(--bl-gray-alpha);
+    border-left: 1px solid contrast-color(var(--bl-accent));
   }
 }
 
 .bulk-edit {
   input {
     height: 26px;
-    border: 1px solid #a0c4e3;
+    border: 1px solid var(--bs-border-color);
     outline: 0 none;
     padding-left: 3px;
     width: 100%;
@@ -1444,13 +1184,22 @@ svg * {
 }
 
 #container-spreadsheet td[contenteditable="true"] {
-  &:hover, &:focus {
-    background-color: rgba(217, 245, 255, 0.5);
+  &:hover {
+    background-color: var(--bs-secondary);
+    color: contrast-color(var(--bs-secondary));
+  }
+  &:focus {
+    outline: 0;
+    background-color: var(--bs-text-bg);
+    color: contrast-color(var(--bs-text-bg));
   }
 
   &.error {
-    color: $danger;
+    color: var(--bs-danger);
     font-weight: bold;
+  }
+  + td {
+    border-left: 1px solid var(--bs-border-color);
   }
 }
 
@@ -1531,13 +1280,13 @@ svg * {
     align-self: stretch;
     align-content: center;
     line-height: 1;
-    border: 1px solid rgba(0, 0, 0, 0.075);
+    border: 1px solid var(--bs-border-color);
   }
 
   .label-header {
     border-radius: 0.25rem 0 0 0.25rem;
-    background-color: #555;
-    text-shadow: 1px 1px 1px #000;
+    background-color: var(--bl-gray-barely);
+    text-shadow: 1px 1px 1px var(--bs-black);
   }
 
   .label-value {
@@ -1595,7 +1344,8 @@ svg * {
   .note {
     position: absolute;
     text-decoration: none;
-    color: $black;
+    color: var(--bs-black);
+    font-family: var(--bl-font-cursive);
     height: 12rem;
     width: 12rem;
     margin: 1rem;
@@ -1604,7 +1354,7 @@ svg * {
     bottom: 0;
     z-index: 5000;
     transition: .15s linear;
-    box-shadow: 5px 5px 7px rgba(0, 0, 0, 0.2);
+    box-shadow: 5px 5px 7px var(--bl-gray-alpha);
     background: #feeb77 linear-gradient(#feeb77, #fffeee);
 
   }
@@ -1638,44 +1388,14 @@ tr.sample-completed {
 
 .guide-snippet {
   font-size: 0.9rem;
-
   ol {
     padding-inline-start: 2rem;
   }
-
-}
-
-.guide-overlaid-text {
-  position: relative;
-  text-align: center;
-
-  > *:last-child {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    text-transform: uppercase;
-    font-weight: bold;
-    color: white;
-    transform: translate(-50%, -50%);
-    letter-spacing: 0.1em;
-    text-shadow: -1px -1px 3px #000,
-    1px -1px 3px #000,
-    -1px 1px 3px #000,
-    1px 1px 3px #000;
-  }
-
-  @supports (-webkit-text-stroke: 1px black) {
-    > * {
-      -webkit-text-stroke: 1px black;
-      -webkit-text-fill-color: white;
-    }
-  }
-
 }
 
 @keyframes glow {
   to {
-    opacity: 0 0 2px $info;
+    opacity: 0;
   }
 }
 
@@ -1786,8 +1506,8 @@ input::placeholder {
 
   .bcal-week {
     thead {
-      background-color: $gray-700;
-      color: var(--white);
+      background-color: var(--bs-gray-700);
+      color: var(--bs-white);
 
       th {
         text-align: center;
@@ -1812,7 +1532,7 @@ input::placeholder {
 
       &:after {
         content: "";
-        border-left: 20px solid $gray-700;
+        border-left: 20px solid var(--bs-gray-700);
         border-right: 20px solid transparent;
         border-bottom: 20px solid transparent;
         position: absolute;
@@ -1832,7 +1552,7 @@ input::placeholder {
 
 .today {
   td {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: var(--bl-gray-barely);
   }
 }
 
@@ -1854,7 +1574,7 @@ input::placeholder {
 
 .toggle-box {
   height: 100%;
-  border-left: 1px solid var(--bl-gray-alpha);
+  border-left: 1px solid var(--bl-gray-barely);
 
   input {
     position: absolute;
@@ -1887,7 +1607,7 @@ input::placeholder {
     width: 60px;
     height: 23px;
     float: right;
-    background: var(--secondary);
+    background: var(--bs-secondary);
     border-radius: 3px;
     -webkit-transition: all 200ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
     transition: all 200ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
@@ -1904,20 +1624,20 @@ input::placeholder {
     &:before {
       content: "OFF";
       left: 6px;
-      color: var(--secondary);
+      color: var(--bs-secondary);
     }
 
     &:after {
       content: "ON";
       right: 7px;
-      color: #fff;
+      color: var(--bs-white);
     }
   }
 
   .toggle__handler {
     display: inline-block;
     position: absolute;
-    background: #fff;
+    background: var(--bs-white);
     width: 28px;
     height: 19px;
     border-radius: 1px;
@@ -1938,7 +1658,7 @@ input::placeholder {
 
     &:hover {
       background-image: unset;
-      background-color: darken($info, 10%) !important;
+      background-color: var(--bs-primary) !important;
     }
   }
 

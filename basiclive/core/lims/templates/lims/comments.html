@@ -3,7 +3,7 @@
         {% if object.comments %}
         <div class="note-holder">
             <a class="note" href="#!">
-                <h5 class="text-thin text-muted my-0"><i class="ti ti-comments"></i>&nbsp;{{ object.project.username|upper }}</h5>
+                <h5 class="text-thin my-0"><i class="ti ti-comments"></i>&nbsp;{{ object.project.username|upper }}</h5>
                 <hr class="my-1"/>
                 <p class="comment">{{ object.comments }}</p>
             </a>
@@ -12,7 +12,7 @@
         {% if object.staff_comments %}
         <div class="note-holder">
             <a class="note" href="#!">
-                <h5 class="text-thin text-muted my-0"><i class="ti ti-comments"></i>&nbsp;<span>STAFF</span></h5>
+                <h5 class="text-thin my-0"><i class="ti ti-comments"></i>&nbsp;<span>STAFF</span></h5>
                 <hr class="my-1"/>
                 <p class="comment">{{ object.staff_comments }}</p>
             </a>

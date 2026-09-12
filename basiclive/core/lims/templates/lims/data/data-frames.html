@@ -145,14 +145,6 @@
                 const $element = $('#curr-frame');
                 $element.text(`${current_frame_id}`);
 
-                const $loadedImage = $('.loaded-image');
-                const maxWidth = parseInt($loadedImage.css('maxWidth'), 10);
-                if (maxWidth && $element.width() > maxWidth) {
-                    $loadedImage.addClass('reverse-ellipsis');
-                } else {
-                    $loadedImage.removeClass('reverse-ellipsis');
-                }
-
                 // Highlight active frame in list & scroll into view
                 $('#frames li').removeClass('active text-primary fw-bold');
                 const $activeItem = $(`#frames li[data-frame-id="${current_frame_id}"]`);

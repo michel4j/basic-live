@@ -29,7 +29,7 @@
                     {% if guide.url or guide.attachment %}
                         {% if guide.has_image %}
                             <a href="#!" data-modal-url="{% guide_link guide %}">
-                                <div class="guide-overlaid-text">
+                                <div>
                                     <img src="{{ guide.attachment.url}}" width="100%" />
                                     <h5><strong>{{ guide.title }}</strong></h5>
                                 </div>
@@ -39,7 +39,7 @@
                             </a>
                         {% elif guide.has_video or guide.get_kind_display == guide.TYPE.video %}
                             <a href="#!" data-modal-url="{% guide_link guide %}">
-                                <div class="guide-overlaid-text">
+                                <div>
                                     <img src="{% static 'lims/img/video-embed.png' %}" width="100%" />
                                     <h5>{{ guide.title }}</h5>
                                 </div>
@@ -49,7 +49,7 @@
                             </a>
                         {% elif guide.get_kind_display == guide.TYPE.image %}
                             <a href="#!" data-modal-url="{% guide_link guide %}">
-                                <div class="guide-overlaid-text">
+                                <div>
                                     <img src="{% static 'lims/img/image-embed.png' %}" width="100%" />
                                     <h5>{{ guide.title }}</h5>
                                 </div>
