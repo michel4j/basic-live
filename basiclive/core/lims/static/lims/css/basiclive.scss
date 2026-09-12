@@ -20,14 +20,6 @@ $modal-data: 526px !default;
 
 // import web-font
 @import url($web-font-path);
-
-$gray-alpha: rgba(0, 0, 0, 0.15);
-$gray-barely: rgba(0, 0, 0, 0.05);
-$base-font: "Fira Sans";
-$narrow-font: "Fira Sans Condensed";
-$mono-font: "Fira Code";
-
-
 @function strip-unit($value) {
   @return $value / ($value * 0 + 1);
 }
@@ -57,17 +49,19 @@ $min_font: 9px;
 $max_font: 14px;
 
 :root {
-  --bs-primary: #{$primary};
-  --bs-primary-rgb: 43, 38, 50;
+  --bl-font-cursive: "Architects Daughter", sans-serif;
+  --bl-font-condensed: "Fira Sans Condensed", sans-serif;
+  --bs-font-monospace: "Fira Code", monospace;
+  --bl-font-sans-serif: "Fira Sans", sans-serif;
+
   --bs-link-color: #{$primary};
   --bs-link-hover-color: $primary;
   --bs-border-color: #{$border-color};
-  --bs-body-font-family: "#{$base-font}", sans-serif;
   --spacer: #{$spacer};
   --gutter: #{$grid-gutter-width};
   --half-spacer: #{$half-spacer};
-  --gray-alpha: #{$gray-alpha};
-  --gray-barely: #{$gray-barely};
+  --bl-gray-alpha: rgba(0, 0, 0, 0.15);
+  --bl-gray-barely: rgba(0, 0, 0, 0.05);
   --main-background: #{$white};
   --main-text: #{$black};
   --bs-table-bg: transparent;
@@ -85,12 +79,12 @@ $max_font: 14px;
 }
 
 body, .tooltip, .popover {
-  font-family: $base-font, sans-serif !important;
+  font-family: var(--bs-font-sans-serif);
   font-weight: 400;
 }
 
 pre {
-  font-family: $mono-font, monospace;
+  font-family: var(--bs-font-monospace);
 }
 
 body {
@@ -133,7 +127,7 @@ main {
 }
 
 .folio-heading {
-  border-bottom: 1px solid var(--gray-alpha);
+  border-bottom: 1px solid var(--bl-gray-alpha);
   font-weight: 300;
 }
 
@@ -144,12 +138,12 @@ main {
 }
 
 .folio-footer {
-  border-top: 1px solid var(--gray-alpha);
+  border-top: 1px solid var(--bl-gray-alpha);
 }
 
 .folio-header {
   margin-top: -1em;
-  border-bottom: 1px solid var(--gray-alpha);
+  border-bottom: 1px solid var(--bl-gray-alpha);
 
   h1, h2, h3, h4, h5, h6 {
     margin: 0.5em 0;
@@ -327,11 +321,10 @@ a.navbar-brand {
 }
 
 .text-condensed, .text-narrow {
-  font-family: $narrow-font;
+  font-family: var(--bl-font-condensed);
 }
 
 .text-wide {
-  font-family: $base-font;
   letter-spacing: 0.125em;
 }
 
@@ -382,11 +375,11 @@ a.navbar-brand {
   padding-right: 0.25em !important;
   line-height: 1;
   text-align: center;
-  //border-left: 1px solid var(--gray-alpha);
+  //border-left: 1px solid var(--bl-gray-alpha);
 
   > * {
     &:first-child {
-      border-left: 1px solid var(--gray-alpha);
+      border-left: 1px solid var(--bl-gray-alpha);
       padding-left: 0.5em;
     }
 
@@ -402,7 +395,7 @@ a.navbar-brand {
     display: inline-block;
     align-self: stretch;
     width: 1px;
-    border-left: 1px solid var(--gray-alpha);
+    border-left: 1px solid var(--bl-gray-alpha);
     margin: 0 0.25em;
   }
 
@@ -420,7 +413,7 @@ a.navbar-brand {
 .box-status {
   width: 65px;
   min-width: 65px;
-  border-right: 1px solid var(--gray-alpha);
+  border-right: 1px solid var(--bl-gray-alpha);
 }
 
 .overflow-ellipsis {
@@ -512,7 +505,7 @@ table {
 .btn-white {
   color: inherit;
   background-color: var(--white);
-  border-color: var(--gray-alpha);
+  border-color: var(--bl-gray-alpha);
 
   &:hover {
     border-color: rgba(0, 0, 0, 0.05);
@@ -520,12 +513,12 @@ table {
 }
 
 .status-bar {
-  background-color: var(--gray-barely);
+  background-color: var(--bl-gray-barely);
   padding: 0.25em 1em;
 }
 
 .underline {
-  border-bottom: 1px solid var(--gray-alpha);
+  border-bottom: 1px solid var(--bl-gray-alpha);
 }
 
 .indent {
@@ -645,14 +638,14 @@ p {
   float: none;
   display: flex;
   justify-content: flex-end;
-  border-top: 1px solid var(--gray-alpha);
+  border-top: 1px solid var(--bl-gray-alpha);
   padding: 1rem 0 0;
   margin-top: 1rem;
 }
 
 form .list-group-item {
   border: none;
-  border-top: 1px solid var(--gray-alpha);
+  border-top: 1px solid var(--bl-gray-alpha);
   padding-top: 5px;
 }
 
@@ -665,7 +658,7 @@ svg {
   }
 
   &.empty > .envelope {
-    fill: var(--gray-alpha);
+    fill: var(--bl-gray-alpha);
   }
 
   &.ignore > .envelope {
@@ -690,7 +683,7 @@ svg {
   padding: 0 0.5em;
 
   + * {
-    border-left: 1px solid var(--gray-alpha);
+    border-left: 1px solid var(--bl-gray-alpha);
   }
 }
 
@@ -700,7 +693,7 @@ svg {
   }
 
   .row + .row {
-    border-top: 1px solid var(--gray-alpha);
+    border-top: 1px solid var(--bl-gray-alpha);
   }
 }
 
@@ -878,11 +871,11 @@ a[data-modal-url], .back text[port], .cursor {
   padding-bottom: 0.5rem;
 
   &:nth-child(even) {
-    background-color: $gray-barely;
+    background-color: var(--bl-gray-barely);
   }
 
   & + .repeat-row {
-    border-top: 1px solid $border-color;
+    border-top: 1px solid var(--bl-gray-alpha);
   }
 }
 
@@ -946,7 +939,7 @@ a[data-modal-url], .back text[port], .cursor {
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    border: 1px solid var(--gray-alpha);
+    border: 1px solid var(--bl-gray-alpha);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1003,7 +996,7 @@ a[data-modal-url], .back text[port], .cursor {
   /* viewer specifics */
   .viewer {
     width: 100%;
-    border: 1px solid var(--gray-alpha);
+    border: 1px solid var(--bl-gray-alpha);
     position: relative;
     margin-bottom: 5px;
   }
@@ -1329,7 +1322,7 @@ a[data-modal-url], .back text[port], .cursor {
   float: left;
 
   + .footer-item {
-    border-left: 1px solid var(--gray-alpha);
+    border-left: 1px solid var(--bl-gray-alpha);
   }
 }
 
@@ -1378,7 +1371,7 @@ a {
     margin-left: -1rem;
     margin-right: -1rem;
     margin-top: -1rem;
-    border-bottom: 1px solid $gray-barely;
+    border-bottom: 1px solid var(--bl-gray-barely);
   }
 
   .mb-3,
@@ -1401,7 +1394,7 @@ a {
 }
 
 .item-list th {
-  font-family: $narrow-font, sans-serif;
+  font-family: var(--bl-font-condensed);
 }
 
 @keyframes spin {
@@ -1419,12 +1412,12 @@ a {
 }
 
 .report-viewer table.table tbody td {
-  font-family: $mono-font, sans-serif;
+  font-family: var(--bs-font-monospace);
   font-size: 0.85rem;
 }
 
 svg * {
-  font-family: $base-font, sans-serif !important;
+  font-family: var(--bs-font-sans-serif) !important;
 }
 
 .spaced-buttons {
@@ -1560,7 +1553,7 @@ svg * {
 
   .comment {
     font-size: .8rem;
-    font-family: "Architects Daughter", sans-serif;
+    font-family: var(--bl-cursive-font);
   }
 
   .note-holder {
@@ -1838,7 +1831,7 @@ input::placeholder {
 }
 
 .full {
-  @include striped_bg($gray-barely);
+  @include striped_bg(var(--bl-gray-barely));
 }
 
 .cancelled {
@@ -1855,7 +1848,7 @@ input::placeholder {
 
 .toggle-box {
   height: 100%;
-  border-left: 1px solid $gray-alpha;
+  border-left: 1px solid var(--bl-gray-alpha);
 
   input {
     position: absolute;
