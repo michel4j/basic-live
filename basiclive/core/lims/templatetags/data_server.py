@@ -20,26 +20,28 @@ GOOG20_COLORS = [
 register = template.Library()
 
 
-@register.simple_tag
-def get_frame_name(data, frame):
-    return data.file_name.format(frame)
-
-
-@register.simple_tag
-def get_frame_url(data, frame):
-    return '{}/{}'.format(data.url, data.file_name.format(frame))
-
-
 @register.filter
-def format_frame_name(data, frame):
-    return data.file_name.format(frame)
+def truncate_middle(value, max_length):
+    """
+    Truncates a string in the middle with an ellipsis if it exceeds max_length.
+    Usage: {{ value|truncate_middle:20 }}
+    """
+    text = str(value)
+    max_length = int(max_length)
 
+    if len(text) <= max_length:
+        return text
 
-@register.filter("second_view")
-def second_view(angle):
-    if angle:
-        return float(angle) < 270 and float(angle) + 90 or float(angle) - 270
-    return angle
+    # Account for the 1 character of the ellipsis (…)
+    remaining_length = max_length - 1
+    if remaining_length <= 0:
+        return '…'
+
+    # Split the remaining length between the start and the end
+    front_len = remaining_length // 2
+    back_len = remaining_length - front_len
+
+    return f"{text[:front_len]}…{text[-back_len:]}"
 
 
 @register.filter

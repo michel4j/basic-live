@@ -1299,8 +1299,10 @@ class FrameField(models.TextField):
             except:
                 pass
             if isinstance(value, list):
-                val_str = ",".join([r[0] == r[1] and "{}".format(r[0]) or "{}-{}".format(r[0], r[1])
-                                    for r in list(frame_ranges(value))])
+                val_str = ",".join([
+                    r[0] == r[1] and f"{r[0]}" or f"{r[0]}-{r[1]}"
+                    for r in list(frame_ranges(value))
+                ])
                 return val_str
         return value
 
@@ -1375,20 +1377,45 @@ class Data(ActiveStatusMixin):
         return '%s (%d)' % (self.name, self.num_frames)
 
     def identity(self):
-        return 'DAT-{:07,d}'.format(self.id).replace(',', '-')
+        return f'DAT-{self.id:07,d}'.replace(',', '-')
 
     def get_absolute_url(self):
         return reverse('data-detail', kwargs={'pk': self.id})
 
     def download_url(self):
-        return "{}/{}.tar.gz".format(self.url, self.name)
+        return f"{self.url}/{self.name}.tar.gz"
 
     def frame_sets(self):
         if isinstance(self.frames, list):
-            val_str = ",".join([r[0] == r[1] and "{}".format(r[0]) or "{}-{}".format(r[0], r[1])
-                                for r in list(frame_ranges(self.frames))])
+            val_str = ",".join([
+                r[0] == r[1] and f"{r[0]}" or f"{r[0]}-{r[1]}"
+                for r in list(frame_ranges(self.frames))
+            ])
             return val_str
         return self.frames
+
+    def frame_records(self):
+        if not self.frames:
+            return []
+
+        start_angle = float(self.meta_data.get('start_angle', 0))
+        delta_angle = round(float(self.meta_data.get('delta_angle', 0)), 2)
+
+        def _rounder(x):
+            return round(x/delta_angle, 0)*delta_angle
+
+        records = [
+            {
+                "file_name": self.file_name.format(f),
+                "frame": f,
+                "url": f'{self.url}/{self.file_name.format(f)}',
+                "start": f"{_rounder(start_angle + delta_angle * (f - 1)):g}",
+                "end": f"{_rounder(start_angle + delta_angle * f):g}"
+            }
+            for f in self.frames
+        ]
+        print(self.file_name)
+        return records
 
     def first_frame(self):
         return 1 if not len(self.frames) else self.frames[0]
@@ -1397,7 +1424,7 @@ class Data(ActiveStatusMixin):
         return self.file_name.format(self.first_frame())
 
     def snapshot_url(self):
-        return "{}/{}.png".format(self.url, self.name)
+        return f"{self.url}/{self.name}.png"
 
     def get_meta_data(self):
         return OrderedDict([(k, self.meta_data.get(k)) for k in self.kind.metadata if k in self.meta_data])
