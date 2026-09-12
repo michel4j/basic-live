@@ -45,8 +45,8 @@ $modal-data: 526px !default;
 
 $min_width: 300px;
 $max_width: 1200px;
-$min_font: 9px;
-$max_font: 14px;
+$min_font: 10px;
+$max_font: 16px;
 
 :root {
   --bl-font-cursive: "Architects Daughter", sans-serif;
@@ -70,7 +70,8 @@ $max_font: 14px;
   --bs-border-radius-lg: 4px;
   --bs-border-radius-xl: 4px;
   --bs-border-radius-xxl: 1em;
-
+  --bs-font-sans-serif: var(--bl-font-sans-serif);
+  --bs-body-font-family: var(--bl-font-sans-serif);
   @include fluid-type($min_width, $max_width, $min_font, $max_font);
 }
 
