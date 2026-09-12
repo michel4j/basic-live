@@ -1,33 +1,28 @@
 /*
-* iviewer Widget for jQuery UI
-* https://github.com/can3p/iviewer
-*
-* Copyright (c) 2009 - 2012 Dmitry Petrov
-* Dual licensed under the MIT and GPL licenses.
-* - http://www.opensource.org/licenses/mit-license.php
-* - http://www.gnu.org/copyleft/gpl.html
-*
-* Author: Dmitry Petrov
-* Version: 0.7
-*
-* BasicLIVE: 'iviewer' changed to 'diffviewer' throughout.
-*/
+ * BasicLIVE Diffraction Image Viewer Based on iviewer.js, originally from:
+ * https://github.com/can3p/iviewer
+ *
+ * Copyright (c) 2009 - 2012 Dmitry Petrov
+ * Dual licensed under the MIT and GPL licenses.
+ */
 
+(function ($) {
+    "use strict";
 
-(function ($, undefined) {
-
-//this code was taken from the https://github.com/furf/jquery-ui-touch-punch
-    let mouseEvents = {
+    // Touch event to mouse event mapping (based on jquery-ui-touch-punch)
+    const mouseEvents = {
         touchstart: 'mousedown',
         touchmove: 'mousemove',
         touchend: 'mouseup'
     };
 
     /**
-     * Convert a touch event to a mouse-like
+     * Convert a touch event to a mouse-like event.
+     * @param {jQuery.Event} event
+     * @return {jQuery.Event}
      */
     function makeMouseEvent(event) {
-        let touch = event.originalEvent.changedTouches[0];
+        const touch = event.originalEvent.changedTouches[0];
 
         return $.extend(event, {
             type: mouseEvents[event.type],
@@ -42,165 +37,115 @@
         });
     }
 
-    var mouseProto = $.ui.mouse.prototype,
-        _mouseInit = $.ui.mouse.prototype._mouseInit;
-
-    mouseProto._mouseInit = function () {
-        var self = this;
-        self._touchActive = false;
-
-        this.element.on('touchstart.' + this.widgetName, function (event) {
-            self._touchActive = true;
-            return self._mouseDown(makeMouseEvent(event));
-        });
-
-        var self = this;
-        // these delegates are required to keep context
-        this._mouseMoveDelegate = function (event) {
-            if (self._touchActive) {
-                return self._mouseMove(makeMouseEvent(event));
-            }
-        };
-        this._mouseUpDelegate = function (event) {
-            if (self._touchActive) {
-                self._touchActive = false;
-                return self._mouseUp(makeMouseEvent(event));
-            }
-        };
-
-        $(document)
-            .on('touchmove.' + this.widgetName, this._mouseMoveDelegate)
-            .on('touchend.' + this.widgetName, this._mouseUpDelegate);
-
-        _mouseInit.apply(this);
-    };
-
     /**
-     * Simple implementation of jQuery like getters/setters
-     * var val = something();
-     * something(val);
+     * Simple implementation of jQuery-like getters/setters.
+     * @param {Function} setterFn
+     * @param {Function} getterFn
+     * @return {Function}
      */
-    var setter = function (setter, getter) {
+    const setter = function (setterFn, getterFn) {
         return function (val) {
             if (arguments.length === 0) {
-                return getter.apply(this);
-            } else {
-                setter.apply(this, arguments);
+                return getterFn.apply(this);
             }
+            return setterFn.apply(this, arguments);
+        };
+    };
+
+    const util = {
+        scaleValue: function (value, toZoom) {
+            return value * toZoom / 100;
+        },
+
+        descaleValue: function (value, fromZoom) {
+            return value * 100 / fromZoom;
         }
     };
 
     $.widget("ui.diffviewer", $.ui.mouse, {
         widgetEventPrefix: "diffviewer",
         options: {
-            /**
-             * start zoom value for image, not used now
-             * may be equal to "fit" to fit image into container or scale in %
-             **/
-            zoom: "fit",
-            /**
-             * base value to scale image
-             **/
-            zoom_base: 100,
-            /**
-             * maximum zoom
-             **/
-            zoom_max: 800,
-            /**
-             * minimum zoom
-             **/
-            zoom_min: 25,
-            /**
-             * base of rate multiplier.
-             * zoom is calculated by formula: zoom_base * zoom_delta^rate
-             **/
-            zoom_delta: 1.4,
-            /**
-             * whether the zoom should be animated.
-             */
-            zoom_animation: true,
-            /**
-             * if true plugin doesn't add its own controls
-             **/
-            ui_disabled: false,
-            /**
-             * if false, plugin doesn't bind resize event on window and this must
-             * be handled manually
-             **/
-            update_on_resize: true,
-            /**
-             * function is called to calculate resolution
-             **/
-            resFunc: function (a) {
+            zoom: "fit",            // start zoom value, "fit" or scale in %
+            zoom_base: 100,         // base zoom value in %
+            zoom_max: 800,          // maximum zoom value in %
+            zoom_min: 25,           // minimum zoom value in %
+            zoom_delta: 1.4,        // zoom multiplier rate, zoom = zoom_base * zoom_delta^rate
+            zoom_animation: true,   // whether the zoom should be animated
+            ui_disabled: false,     // whether to disable the built-in UI controls
+            update_on_resize: true, // whether to update container size on window resize
+            resFunc: function (a) { // default resolution function, returns the input value
                 return a;
             },
-            /**
-             * event is triggered when zoom value is changed
-             * @param int new zoom value
-             * @return boolean if false zoom action is aborted
-             **/
-            onZoom: jQuery.noop,
-            /**
-             * event is triggered when zoom value is changed after image is set to the new dimensions
-             * @param int new zoom value
-             * @return boolean if false zoom action is aborted
-             **/
-            onAfterZoom: jQuery.noop,
-            /**
-             * event is fired on drag begin
-             * @param object coords mouse coordinates on the image
-             * @return boolean if false is returned, drag action is aborted
-             **/
-            onStartDrag: jQuery.noop,
-            /**
-             * event is fired on drag action
-             * @param object coords mouse coordinates on the image
-             **/
-            onDrag: jQuery.noop,
-            /**
-             * event is fired on drag stop
-             * @param object coords mouse coordinates on the image
-             **/
-            onStopDrag: jQuery.noop,
-            /**
-             * event is fired when mouse moves over image
-             * @param object coords mouse coordinates on the image
-             **/
-            onMouseMove: jQuery.noop,
-            /**
-             * mouse click event
-             * @param object coords mouse coordinates on the image
-             **/
-            onClick: jQuery.noop,
-            /**
-             * event is fired when image starts to load
-             */
-            onStartLoad: null,
-            /**
-             * event is fired, when image is loaded and initially positioned
-             */
-            onFinishLoad: null
+            onZoom: $.noop,         // triggered when zoom value is changed, return false to cancel zoom
+            onAfterZoom: $.noop,    // triggered after image is set to the new dimensions
+            onStartDrag: $.noop,    // event fired on drag begin
+            onDrag: $.noop,         // event fired on drag action
+            onStopDrag: $.noop,     // event fired on drag stop
+            onMouseMove: $.noop,    // event fired when mouse moves over image
+            onClick: $.noop,        // event fired when mouse clicks on image
+            onStartLoad: null,      // event fired when image starts to load
+            onFinishLoad: null      // event fired when image is loaded and initially positioned
+        },
+
+        /**
+         * Initialize mouse and touch handling specifically for diffviewer without prototype pollution.
+         */
+        _mouseInit: function () {
+            const self = this;
+            this._touchActive = false;
+
+            this.element.on('touchstart.' + this.widgetName, function (event) {
+                self._touchActive = true;
+                return self._mouseDown(makeMouseEvent(event));
+            });
+
+            this._mouseMoveDelegate = function (event) {
+                if (self._touchActive) {
+                    return self._mouseMove(makeMouseEvent(event));
+                }
+            };
+
+            this._mouseUpDelegate = function (event) {
+                if (self._touchActive) {
+                    self._touchActive = false;
+                    return self._mouseUp(makeMouseEvent(event));
+                }
+            };
+
+            $(document)
+                .on('touchmove.' + this.widgetName, this._mouseMoveDelegate)
+                .on('touchend.' + this.widgetName, this._mouseUpDelegate);
+
+            $.ui.mouse.prototype._mouseInit.call(this);
+        },
+
+        _mouseDestroy: function () {
+            this.element.off('touchstart.' + this.widgetName);
+            $(document)
+                .off('touchmove.' + this.widgetName, this._mouseMoveDelegate)
+                .off('touchend.' + this.widgetName, this._mouseUpDelegate);
+
+            $.ui.mouse.prototype._mouseDestroy.call(this);
         },
 
         _create: function () {
-            var me = this;
+            const self = this;
 
-            //drag variables
+            // Drag state
             this.dx = 0;
             this.dy = 0;
-            this.dragged = false; /*** BasicLIVE: thumb dragging ***/
+            this.dragged = false;
+            this._thumbOffset = null;
+            this._posRafId = null;
 
-            /* object containing actual information about image
-    * @img_object.object - jquery img object
-    * @img_object.orig_{width|height} - original dimensions
-    * @img_object.display_{width|height} - actual dimensions
-    */
-            this.img_object = {};
-
-            this.zoom_object = {}; //object to show zoom status
+            this.img_object = null;
+            this.zoom_object = null;
+            this.overview_object = null;
+            this.overview_img = null;
+            this.overview_box = null;
+            this.ui_buttons = null;
 
             this._angle = 0;
-
             this.current_zoom = this.options.zoom;
 
             if (this.options.src === null) {
@@ -208,39 +153,41 @@
             }
 
             this.container = this.element;
-
             this._updateContainerInfo();
-
-            //init container
             this.container.css("overflow", "hidden");
 
-            if (this.options.update_on_resize == true) {
-                $(window).resize(function () {
-                    me._updateContainerInfo();
-                });
+            if (this.options.update_on_resize) {
+                this._windowResizeHandler = function () {
+                    self._updateContainerInfo();
+                };
+                $(window).on('resize.diffviewer', this._windowResizeHandler);
             }
 
             this.img_object = new $.ui.diffviewer.ImageObject(this.options.zoom_animation);
 
-            //init object
+            // Bind image events
             this.img_object.object()
-            //bind mouse events
-                .click(function (e) {
-                    return me._click(e)
+                .on('click', function (e) {
+                    return self._click(e);
                 })
-                .mousewheel(function (ev, delta) {
-                    //this event is there instead of containing div, because
-                    //at opera it triggers many times on div
-                    var zoom = (delta > 0) ? 1 : -1;
-                    me.zoom_by(zoom);
+                .on('wheel', function (ev) {
+                    const delta = ev.originalEvent.deltaY < 0 ? 1 : -1;
+                    self.zoom_by(delta);
+                    return false;
+                })
+                .on('mousewheel', function (ev, delta) {
+                    const zoom = delta > 0 ? 1 : -1;
+                    self.zoom_by(zoom);
                     return false;
                 })
                 .prependTo(this.container);
 
-            this.container.on('mousemove', function (e) {
-                return me.update_pos(e);
-            });
+            this._mouseMoveHandler = function (e) {
+                return self.update_pos(e);
+            };
+            this.container.on('mousemove.diffviewer', this._mouseMoveHandler);
 
+            this._initOverview();
             this.loadImage(this.options.src);
 
             if (!this.options.ui_disabled) {
@@ -250,32 +197,64 @@
             this._mouseInit();
         },
 
-        destroy: function () {
+        _destroy: function () {
+            if (this._windowResizeHandler) {
+                $(window).off('resize.diffviewer', this._windowResizeHandler);
+                this._windowResizeHandler = null;
+            }
+
+            if (this.container) {
+                this.container.off('.diffviewer');
+                this.container.removeClass("diffviewer_cursor diffviewer_drag_cursor");
+            }
+
+            $(document).off('.diffviewer_thumb');
+
+            if (this._posRafId) {
+                cancelAnimationFrame(this._posRafId);
+                this._posRafId = null;
+            }
+
+            if (this.overview_object) {
+                this.overview_object.remove();
+                this.overview_object = null;
+                this.overview_img = null;
+                this.overview_box = null;
+            }
+
+            if (this.zoom_object) {
+                this.zoom_object.remove();
+                this.zoom_object = null;
+            }
+
+            if (this.ui_buttons) {
+                this.ui_buttons.remove();
+                this.ui_buttons = null;
+            }
+
             this._mouseDestroy();
         },
 
+        destroy: function () {
+            this._destroy();
+            $.Widget.prototype.destroy.call(this);
+        },
+
         _updateContainerInfo: function () {
-            /*** BasicLIVE: force square image ***/
-            let size = Math.max(this.container.height(), this.container.width());
+            const size = Math.max(this.container.height(), this.container.width());
             this.options.height = size;
             this.options.width = size;
         },
 
-        loadImage: function (src) {
-            /*** BasicLIVE: moved this here to clear out image before loading next one ***/
-            this.img_object.object()
-                .removeAttr("src")
-                .removeAttr("width")
-                .removeAttr("height")
-                .removeAttr("style");
-            try {
-                this.overview_object.hide();
-            } catch (e) {
+        /**
+         * Initialize the overview thumbnail elements once.
+         */
+        _initOverview: function () {
+            if (this.overview_object) {
+                return;
             }
+            const self = this;
 
-            /**************************************************************************/
-
-            /*** BasicLIVE: Added initiation of overview objects ***/
             this.overview_img = $("<img>").css({
                 position: "absolute",
                 bottom: "0px",
@@ -283,168 +262,214 @@
                 width: "128px",
                 height: "128px"
             });
-            this.overview_object = $("<div>").addClass("diffviewer_overview_img").addClass("diffviewer_common").click(function (e) {
-                return me.thumb_click(e)
-            }).mousedown(function (e) {
-                return me.thumb_drag_start(e)
-            }).mousemove(function (e) {
-                return me.thumb_drag(e)
-            }).mouseup(function (e) {
-                return me.thumb_drag_end(e)
-            }).appendTo(this.container);
+
+            this.overview_object = $("<div>")
+                .addClass("diffviewer_overview_img diffviewer_common")
+                .on('click', function (e) {
+                    return self.thumb_click(e);
+                })
+                .on('mousedown', function (e) {
+                    return self.thumb_drag_start(e);
+                })
+                .appendTo(this.container);
+
             this.overview_img.appendTo(this.overview_object);
-            this.overview_box = $("<div>").addClass("diffviewer_overview_box").addClass("diffviewer_common");
-            this.overview_box.appendTo(this.overview_object);
-            /****************************************************/
+
+            this.overview_box = $("<div>")
+                .addClass("diffviewer_overview_box diffviewer_common")
+                .appendTo(this.overview_object);
+        },
+
+        /**
+         * Load a new image source into the viewer.
+         * @param {string} src
+         */
+        loadImage: function (src) {
+            this.img_object.object()
+                .removeAttr("src")
+                .removeAttr("width")
+                .removeAttr("height")
+                .removeAttr("style")
+                .css({ position: "absolute", top: "0px", left: "0px" });
+
+            if (!this.overview_object) {
+                this._initOverview();
+            } else {
+                this.overview_object.hide();
+            }
 
             this.current_zoom = this.options.zoom;
-            var me = this;
+            const self = this;
 
             this._trigger('onStartLoad', 0, src);
 
             this.img_object.load(src, function () {
-                me.container.addClass("diffviewer_cursor");
+                self.container.addClass("diffviewer_cursor");
 
-                if (me.options.zoom == "fit") {
-                    me.fit(true);
+                if (self.options.zoom === "fit") {
+                    self.fit(true);
                 } else {
-                    me.set_zoom(me.options.zoom, true);
+                    self.set_zoom(self.options.zoom, true);
                 }
 
-                if (me.options.onFinishLoad) {
-                    me._trigger('onFinishLoad', 0, src);
+                if (self.options.onFinishLoad) {
+                    self._trigger('onFinishLoad', 0, src);
                 }
             });
+
             this.overview_img.attr("src", src);
         },
 
         /**
-         * fits image in the container
-         *
+         * Fits image in the container.
          * @param {boolean} skip_animation
-         **/
+         */
         fit: function (skip_animation) {
-            var aspect_ratio = this.img_object.orig_width() / this.img_object.orig_height();
-            var window_ratio = this.options.width / this.options.height;
-            var choose_left = (aspect_ratio > window_ratio);
-            var new_zoom = 0;
-
-            if (choose_left) {
-                new_zoom = this.options.width / this.img_object.orig_width() * 100;
-            } else {
-                new_zoom = this.options.height / this.img_object.orig_height() * 100;
+            const origW = this.img_object.orig_width();
+            const origH = this.img_object.orig_height();
+            if (!origW || !origH) {
+                return;
             }
 
-            this.set_zoom(new_zoom, skip_animation);
+            const aspectRatio = origW / origH;
+            const windowRatio = this.options.width / this.options.height;
+            const chooseLeft = (aspectRatio > windowRatio);
+            let newZoom = 0;
+
+            if (chooseLeft) {
+                newZoom = this.options.width / origW * 100;
+            } else {
+                newZoom = this.options.height / origH * 100;
+            }
+
+            this.set_zoom(newZoom, skip_animation);
         },
 
         /**
-         * center image in container
-         **/
+         * Center image in container.
+         */
         center: function () {
-            this.setCoords(-Math.round((this.img_object.display_width() - this.options.width) / 2),
-                -Math.round((this.img_object.display_height() - this.options.height) / 2));
+            this.setCoords(
+                -Math.round((this.img_object.display_width() - this.options.width) / 2),
+                -Math.round((this.img_object.display_height() - this.options.height) / 2)
+            );
         },
 
         /**
-         * move a point in container to the center of display area
-         * @param x a point in container
-         * @param y a point in container
-         **/
+         * Move a point in container to the center of display area.
+         * @param {number} x Point in container
+         * @param {number} y Point in container
+         */
         moveTo: function (x, y) {
-            var dx = x - Math.round(this.options.width / 2);
-            var dy = y - Math.round(this.options.height / 2);
+            const dx = x - Math.round(this.options.width / 2);
+            const dy = y - Math.round(this.options.height / 2);
 
-            var new_x = this.img_object.x() - dx;
-            var new_y = this.img_object.y() - dy;
+            const newX = this.img_object.x() - dx;
+            const newY = this.img_object.y() - dy;
 
-            this.setCoords(new_x, new_y);
+            this.setCoords(newX, newY);
         },
 
         /**
          * Get container offset object.
+         * @return {Object}
          */
         getContainerOffset: function () {
-            return jQuery.extend({}, this.container.offset());
+            return $.extend({}, this.container.offset());
         },
 
         /**
-         * set coordinates of upper left corner of image object
-         **/
+         * Set coordinates of upper-left corner of image object.
+         * @param {number} x
+         * @param {number} y
+         */
         setCoords: function (x, y) {
-            //do nothing while image is being loaded
             if (!this.img_object.loaded()) {
                 return;
             }
 
-            var coords = this._correctCoords(x, y);
+            const coords = this._correctCoords(x, y);
             this.img_object.x(coords.x);
             this.img_object.y(coords.y);
 
-            this.setBoxCoords(x, y); /*** BasicLIVE: call new function ***/
+            this.setBoxCoords(x, y);
         },
 
-        /*** BasicLIVE: new function just to set overview_box coords ***/
+        /**
+         * Set coordinates of the overview box.
+         * @param {number} x
+         * @param {number} y
+         */
         setBoxCoords: function (x, y) {
-            // set the coordinates of the overview box
-            var ox, oy, ow, oh;
-            ox = 126 * x / this.img_object.display_width();
-            oy = 126 * y / this.img_object.display_height();
-            ow = 126 * this.options.width / this.img_object.display_width();
-            oh = 126 * this.options.height / this.img_object.display_height();
+            const dispW = this.img_object.display_width();
+            const dispH = this.img_object.display_height();
+            if (!dispW || !dispH || !this.overview_box) {
+                return;
+            }
+
+            let ox = 126 * x / dispW;
+            let oy = 126 * y / dispH;
+            const ow = 126 * this.options.width / dispW;
+            const oh = 126 * this.options.height / dispH;
+
             if (ox > 0) {
                 ox = 0;
             } else if (Math.abs(ox) > (126 - ow)) {
                 ox = -(126 - ow);
             }
+
             if (oy > 0) {
                 oy = 0;
             } else if (Math.abs(oy) > (126 - oh)) {
                 oy = -(126 - oh);
             }
-            this.overview_box.css("top", -oy + "px")
-                .css("left", -ox + "px")
-                .css("width", ow + "px")
-                .css("height", oh + "px");
+
+            this.overview_box.css({
+                top: -oy + "px",
+                left: -ox + "px",
+                width: ow + "px",
+                height: oh + "px"
+            });
         },
-        /*************************************************************/
 
         _correctCoords: function (x, y) {
             x = parseInt(x, 10);
             y = parseInt(y, 10);
 
-            //check new coordinates to be correct (to be in rect)
             if (y > 0) {
                 y = 0;
             }
             if (x > 0) {
                 x = 0;
             }
-            if (y + this.img_object.display_height() < this.options.height) {
-                y = this.options.height - this.img_object.display_height();
+
+            const dispW = this.img_object.display_width();
+            const dispH = this.img_object.display_height();
+
+            if (y + dispH < this.options.height) {
+                y = this.options.height - dispH;
             }
-            if (x + this.img_object.display_width() < this.options.width) {
-                x = this.options.width - this.img_object.display_width();
+            if (x + dispW < this.options.width) {
+                x = this.options.width - dispW;
             }
-            if (this.img_object.display_width() <= this.options.width) {
-                x = -(this.img_object.display_width() - this.options.width) / 2;
+            if (dispW <= this.options.width) {
+                x = -(dispW - this.options.width) / 2;
             }
-            if (this.img_object.display_height() <= this.options.height) {
-                y = -(this.img_object.display_height() - this.options.height) / 2;
+            if (dispH <= this.options.height) {
+                y = -(dispH - this.options.height) / 2;
             }
 
-            return {x: x, y: y};
+            return { x: x, y: y };
         },
 
-
         /**
-         * convert coordinates on the container to the coordinates on the image (in original size)
-         *
-         * @return object with fields x,y according to coordinates or false
-         * if initial coords are not inside image
-         **/
+         * Convert coordinates on the container to coordinates on the original image.
+         * @param {number} x
+         * @param {number} y
+         * @return {{x: number, y: number}}
+         */
         containerToImage: function (x, y) {
-            var coords = {
+            let coords = {
                 x: x - this.img_object.x(),
                 y: y - this.img_object.y()
             };
@@ -458,12 +483,13 @@
         },
 
         /**
-         * convert coordinates on the image (in original size, and zero angle) to the coordinates on the container
-         *
-         * @return object with fields x,y according to coordinates
-         **/
+         * Convert coordinates on the image to coordinates on the container.
+         * @param {number} x
+         * @param {number} y
+         * @return {{x: number, y: number}}
+         */
         imageToContainer: function (x, y) {
-            var coords = {
+            const coords = {
                 x: util.scaleValue(x, this.current_zoom),
                 y: util.scaleValue(y, this.current_zoom)
             };
@@ -472,34 +498,31 @@
         },
 
         /**
-         * get mouse coordinates on the image
-         * @param e - object containing pageX and pageY fields, e.g. mouse event object
-         *
-         * @return object with fields x,y according to coordinates or false
-         * if initial coords are not inside image
-         **/
+         * Get mouse coordinates on the image.
+         * @param {jQuery.Event} e
+         * @return {{x: number, y: number}}
+         */
         _getMouseCoords: function (e) {
-            /*** BasicLIVE: Change this function ***/
-            var img_offset = this.img_object.object().offset();
-            var $x = util.descaleValue(e.pageX - img_offset.left, this.current_zoom);
-            var $y = util.descaleValue(e.pageY - img_offset.top, this.current_zoom);
+            const imgOffset = this.img_object.object().offset();
+            if (!imgOffset) {
+                return { x: 0, y: 0 };
+            }
+            const x = util.descaleValue(e.pageX - imgOffset.left, this.current_zoom);
+            const y = util.descaleValue(e.pageY - imgOffset.top, this.current_zoom);
 
-            return {x: $x, y: $y};
-            /************************************/
+            return { x: x, y: y };
         },
 
         /**
-         * set image scale to the new_zoom
-         *
-         * @param {number} new_zoom image scale in %
+         * Set image scale to new_zoom.
+         * @param {number} new_zoom Image scale in %
          * @param {boolean} skip_animation
-         **/
+         */
         set_zoom: function (new_zoom, skip_animation) {
-            if (this._trigger('onZoom', 0, new_zoom) == false) {
+            if (this._trigger('onZoom', 0, new_zoom) === false) {
                 return;
             }
 
-            //do nothing while image is being loaded
             if (!this.img_object.loaded()) {
                 return;
             }
@@ -510,71 +533,66 @@
                 new_zoom = this.options.zoom_max;
             }
 
-            /* we fake these values to make fit zoom properly work */
-            if (this.current_zoom == "fit") {
-                var old_x = Math.round(this.options.width / 2 + this.img_object.orig_width() / 2);
-                var old_y = Math.round(this.options.height / 2 + this.img_object.orig_height() / 2);
+            let oldX, oldY;
+            if (this.current_zoom === "fit") {
+                oldX = Math.round(this.options.width / 2 + this.img_object.orig_width() / 2);
+                oldY = Math.round(this.options.height / 2 + this.img_object.orig_height() / 2);
                 this.current_zoom = 100;
             } else {
-                var old_x = -this.img_object.x() + Math.round(this.options.width / 2);
-                var old_y = -this.img_object.y() + Math.round(this.options.height / 2);
+                oldX = -this.img_object.x() + Math.round(this.options.width / 2);
+                oldY = -this.img_object.y() + Math.round(this.options.height / 2);
             }
 
-            var new_width = util.scaleValue(this.img_object.orig_width(), new_zoom);
-            var new_height = util.scaleValue(this.img_object.orig_height(), new_zoom);
-            var new_x = util.scaleValue(util.descaleValue(old_x, this.current_zoom), new_zoom);
-            var new_y = util.scaleValue(util.descaleValue(old_y, this.current_zoom), new_zoom);
+            const newWidth = util.scaleValue(this.img_object.orig_width(), new_zoom);
+            const newHeight = util.scaleValue(this.img_object.orig_height(), new_zoom);
+            let newX = util.scaleValue(util.descaleValue(oldX, this.current_zoom), new_zoom);
+            let newY = util.scaleValue(util.descaleValue(oldY, this.current_zoom), new_zoom);
 
-            new_x = this.options.width / 2 - new_x;
-            new_y = this.options.height / 2 - new_y;
+            newX = this.options.width / 2 - newX;
+            newY = this.options.height / 2 - newY;
 
-            this.img_object.display_width(new_width);
-            this.img_object.display_height(new_height);
+            this.img_object.display_width(newWidth);
+            this.img_object.display_height(newHeight);
 
-            var coords = this._correctCoords(new_x, new_y),
-                self = this;
+            const coords = this._correctCoords(newX, newY);
+            const self = this;
 
-            this.setBoxCoords(new_x, new_y);
-            /*** BasicLIVE: set only box coords ***/
-            this.img_object.setImageProps(new_width, new_height, coords.x, coords.y,
-                skip_animation, function () {
-                    self._trigger('onAfterZoom', 0, new_zoom);
-                });
+            this.setBoxCoords(newX, newY);
+            this.img_object.setImageProps(newWidth, newHeight, coords.x, coords.y, skip_animation, function () {
+                self._trigger('onAfterZoom', 0, new_zoom);
+            });
             this.current_zoom = new_zoom;
 
             this.update_status();
         },
 
         /**
-         * changes zoom scale by delta
-         * zoom is calculated by formula: zoom_base * zoom_delta^rate
-         * @param Integer delta number to add to the current multiplier rate number
-         **/
+         * Changes zoom scale by delta.
+         * Formula: zoom_base * zoom_delta^rate
+         * @param {number} delta Delta number to add to current multiplier rate number
+         */
         zoom_by: function (delta) {
-            var closest_rate = this.find_closest_zoom_rate(this.current_zoom);
+            const closestRate = this.find_closest_zoom_rate(this.current_zoom);
+            const nextRate = closestRate + delta;
+            let nextZoom = this.options.zoom_base * Math.pow(this.options.zoom_delta, nextRate);
 
-            var next_rate = closest_rate + delta;
-            var next_zoom = this.options.zoom_base * Math.pow(this.options.zoom_delta, next_rate)
-            if (delta > 0 && next_zoom < this.current_zoom) {
-                next_zoom *= this.options.zoom_delta;
+            if (delta > 0 && nextZoom < this.current_zoom) {
+                nextZoom *= this.options.zoom_delta;
             }
 
-            if (delta < 0 && next_zoom > this.current_zoom) {
-                next_zoom /= this.options.zoom_delta;
+            if (delta < 0 && nextZoom > this.current_zoom) {
+                nextZoom /= this.options.zoom_delta;
             }
 
-            this.set_zoom(next_zoom, true);
+            this.set_zoom(nextZoom, true);
         },
 
         /**
-         * Rotate image
-         * @param {num} deg Degrees amount to rotate. Positive values rotate image clockwise.
-         * Currently 0, 90, 180, 270 and -90, -180, -270 values are supported
-         *
-         * @param {boolean} abs If the flag is true if, the deg parameter will be considered as
-         * a absolute value and relative otherwise.
-         * @return {num|null} Method will return current image angle if called without any arguments.
-         **/
+         * Rotate image.
+         * @param {number} deg Amount to rotate (multiples of 90).
+         * @param {boolean} abs If true, absolute angle; otherwise relative.
+         * @return {number|undefined} Current angle if called with no arguments.
+         */
         angle: function (deg, abs) {
             if (arguments.length === 0) {
                 return this.img_object.angle();
@@ -583,6 +601,7 @@
             if (deg < -270 || deg > 270 || deg % 90 !== 0) {
                 return;
             }
+
             if (!abs) {
                 deg += this.img_object.angle();
             }
@@ -598,74 +617,47 @@
             }
 
             this.img_object.angle(deg);
-            //the rotate behavior is different in all editors. For now we just center the
-            //image. However, it will be better to try to keep the position.
             this.center();
-            this._trigger('angle', 0, {angle: this.img_object.angle()});
+            this._trigger('angle', 0, { angle: this.img_object.angle() });
         },
 
         /**
-         * finds closest multiplier rate for value
-         * basing on zoom_base and zoom_delta values from settings
-         * @param Number value zoom value to examine
-         **/
+         * Finds closest multiplier rate for zoom value in O(1).
+         * @param {number} value
+         * @return {number}
+         */
         find_closest_zoom_rate: function (value) {
-            if (value == this.options.zoom_base) {
+            if (value === this.options.zoom_base) {
                 return 0;
             }
-
-            function div(val1, val2) {
-                return val1 / val2
-            };
-
-            function mul(val1, val2) {
-                return val1 * val2
-            };
-
-            var func = (value > this.options.zoom_base) ? mul : div;
-            var sgn = (value > this.options.zoom_base) ? 1 : -1;
-
-            var mltplr = this.options.zoom_delta;
-            var rate = 1;
-
-            while (Math.abs(func(this.options.zoom_base, Math.pow(mltplr, rate)) - value) >
-            Math.abs(func(this.options.zoom_base, Math.pow(mltplr, rate + 1)) - value)) {
-                rate++;
-            }
-
-            return sgn * rate;
-        },
-
-        /* update scale info in the container */
-        update_status: function () {
-            if (!this.options.ui_disabled) {
-                var percent = Math.round(100 * this.img_object.display_height() / this.img_object.orig_height());
-                if (percent) {
-                    try {
-                        this.zoom_object.html(percent + "%");
-                    } catch (e) {
-                    }
-                }
-            }
-
-            /*** BasicLIVE ***/
-            /* Show overview if zoom is at least 10% above minimum */
-            if (percent > this.options.zoom_min + 10) {
-                this.overview_object.show();
-            } else {
-                this.overview_object.hide();
-            }
-            /***************/
+            return Math.round(Math.log(value / this.options.zoom_base) / Math.log(this.options.zoom_delta));
         },
 
         /**
-         * Get some information about the image.
-         * Currently orig_(width|height), display_(width|height), angle, zoom and src params are supported.
-         *
-         * @param {string} parameter to check
-         * @param {boolean} withoutRotation if param is orig_width or orig_height and this flag is set to true,
-         * method will return original image width without considering rotation.
-         *
+         * Update scale information in the container.
+         */
+        update_status: function () {
+            const origH = this.img_object.orig_height();
+            const percent = origH ? Math.round(100 * this.img_object.display_height() / origH) : 0;
+
+            if (!this.options.ui_disabled && this.zoom_object && percent) {
+                this.zoom_object.html(percent + "%");
+            }
+
+            // Show overview if zoom is at least 10% above minimum
+            if (this.overview_object) {
+                if (percent > this.options.zoom_min + 10) {
+                    this.overview_object.show();
+                } else {
+                    this.overview_object.hide();
+                }
+            }
+        },
+
+        /**
+         * Get information about the image.
+         * @param {string} param Parameter name: orig_width, orig_height, display_width, display_height, angle, zoom, src
+         * @param {boolean} withoutRotation
          */
         info: function (param, withoutRotation) {
             if (!param) {
@@ -676,12 +668,13 @@
                 case 'orig_width':
                 case 'orig_height':
                     if (withoutRotation) {
-                        return (this.img_object.angle() % 180 === 0 ? this.img_object[param]() :
-                            param === 'orig_width' ? this.img_object.orig_height() :
-                                this.img_object.orig_width());
-                    } else {
-                        return this.img_object[param]();
+                        return (this.img_object.angle() % 180 === 0
+                            ? this.img_object[param]()
+                            : param === 'orig_width'
+                                ? this.img_object.orig_height()
+                                : this.img_object.orig_width());
                     }
+                    return this.img_object[param]();
                 case 'display_width':
                 case 'display_height':
                 case 'angle':
@@ -693,52 +686,41 @@
             }
         },
 
-        /**
-         * callback for handling mousdown event to start dragging image
-         **/
         _mouseStart: function (e) {
             $.ui.mouse.prototype._mouseStart.call(this, e);
             if (this._trigger('onStartDrag', 0, this._getMouseCoords(e)) === false) {
                 return false;
             }
 
-            /* start drag event*/
             this.container.addClass("diffviewer_drag_cursor");
-
             this.dx = e.pageX - this.img_object.x();
             this.dy = e.pageY - this.img_object.y();
             return true;
         },
 
-        _mouseCapture: function (e) {
+        _mouseCapture: function () {
             return true;
         },
 
-        /**
-         * Handle mouse move if needed. User can avoid using this callback, because
-         * he can get the same information through public methods.
-         * @param {jQuery.Event} e
-         */
         _handleMouseMove: function (e) {
             this._trigger('onMouseMove', e, this._getMouseCoords(e));
         },
 
-        /**
-         * callback for handling mousemove event to drag image
-         **/
         _mouseDrag: function (e) {
             $.ui.mouse.prototype._mouseDrag.call(this, e);
-            var ltop = e.pageY - this.dy;
-            var lleft = e.pageX - this.dx;
+            const ltop = e.pageY - this.dy;
+            const lleft = e.pageX - this.dx;
 
             this.setCoords(lleft, ltop);
             this._trigger('onDrag', e, this._getMouseCoords(e));
             return false;
         },
+        _setOffsetCoords: function (e, offsets) {
+            const x = (e.pageX - offsets.left) * this.img_object.display_width() / 128 - this.options.width / 2;
+            const y = (e.pageY - offsets.top) * this.img_object.display_height() / 128 - this.options.height / 2;
+            this.setCoords(-x, -y);
+        },
 
-        /**
-         * callback for handling stop drag
-         **/
         _mouseStop: function (e) {
             $.ui.mouse.prototype._mouseStop.call(this, e);
             this.container.removeClass("diffviewer_drag_cursor");
@@ -749,108 +731,156 @@
             this._trigger('onClick', 0, this._getMouseCoords(e));
         },
 
-        /*** BasicLIVE: callback for handling mousdown event to start dragging image ***/
+        /**
+         * Handle mousedown on overview thumbnail.
+         * Binds mousemove and mouseup to $(document) so drag does not get stuck.
+         */
         thumb_drag_start: function (e) {
-            /* start drag event*/
+            const self = this;
             this.dragged = true;
             this.container.addClass("diffviewer_drag_cursor");
+
+            // Cache overview offset once at drag start to avoid layout thrashing during mousemove
+            this._thumbOffset = this.overview_img.offset();
+
+            $(document)
+                .off('.diffviewer_thumb')
+                .on('mousemove.diffviewer_thumb', function (ev) {
+                    return self.thumb_drag(ev);
+                })
+                .on('mouseup.diffviewer_thumb', function (ev) {
+                    return self.thumb_drag_end(ev);
+                });
 
             return false;
         },
 
-        /*** BasicLIVE: callback for handling mousmove event to drag thumbnail image ***/
+        /**
+         * Handle mousemove to drag thumbnail image.
+         */
         thumb_drag: function (e) {
             if (this.dragged) {
-                this.options.onDrag &&
-                this.options.onDrag.call(this, this._getMouseCoords(e));
-
-                var x, y, offsets = this.overview_img.offset();
-                x = (e.pageX - offsets.left) * this.img_object.display_width() / 128 - this.options.width / 2;
-                y = (e.pageY - offsets.top) * this.img_object.display_height() / 128 - this.options.height / 2;
-
-                this.setCoords(-x, -y);
+                if (this.options.onDrag) {
+                    this.options.onDrag.call(this, this._getMouseCoords(e));
+                }
+                const offsets = this._thumbOffset || this.overview_img.offset();
+                this._setOffsetCoords(e, offsets);
                 return false;
             }
         },
 
-        /*** BasicLIVE: callback for handling stop thumbnail drag ***/
-        thumb_drag_end: function (e) {
+        /**
+         * Handle stop thumbnail drag.
+         */
+        thumb_drag_end: function () {
             this.container.removeClass("diffviewer_drag_cursor");
             this.dragged = false;
-
+            this._thumbOffset = null;
+            $(document).off('.diffviewer_thumb');
         },
 
-        /*** BasicLIVE: callback for clicking within overview ***/
+        /**
+         * Handle clicking within overview.
+         */
         thumb_click: function (e) {
-            var x, y, offsets = this.overview_img.offset();
-            x = (e.pageX - offsets.left) * this.img_object.display_width() / 128 - this.options.width / 2;
-            y = (e.pageY - offsets.top) * this.img_object.display_height() / 128 - this.options.height / 2;
-            this.setCoords(-x, -y);
+            const offsets = this.overview_img.offset();
+            this._setOffsetCoords(e, offsets);
             return false;
         },
 
-        /*** BasicLIVE: update image position ***/
+        /**
+         * Update resolution reading on mousemove over image.
+         * Scoped locally to avoid polluting window.x, window.y, window.z.
+         * Throttled via requestAnimationFrame.
+         */
         update_pos: function (e) {
-            var coords = this._getMouseCoords(e);
-            x = 2.0 * Math.abs((Math.min(Math.max(coords.x, 0.0), this.img_object.orig_width()) / this.img_object.orig_width()) - 0.5);
-            y = 2.0 * Math.abs((Math.min(Math.max(coords.y, 0.0), this.img_object.orig_height()) / this.img_object.orig_height()) - 0.5);
-            z = this.options.resFunc.call(this, Math.sqrt(x * x + y * y));
-            z = z.toFixed(2);
-            this.zoom_object.html('<span>Res: ' + z + ' &#8491;</span>');
+            const origW = this.img_object.orig_width();
+            const origH = this.img_object.orig_height();
+            if (!origW || !origH) {
+                return true;
+            }
+
+            const coords = this._getMouseCoords(e);
+            const normX = 2.0 * Math.abs((Math.min(Math.max(coords.x, 0.0), origW) / origW) - 0.5);
+            const normY = 2.0 * Math.abs((Math.min(Math.max(coords.y, 0.0), origH) / origH) - 0.5);
+            const res = this.options.resFunc.call(this, Math.sqrt(normX * normX + normY * normY));
+            const formatted = typeof res === 'number' ? res.toFixed(2) : res;
+
+            if (this.zoom_object) {
+                if (this._posRafId) {
+                    cancelAnimationFrame(this._posRafId);
+                }
+                const self = this;
+                this._posRafId = requestAnimationFrame(function () {
+                    self.zoom_object.html('<span>Res: ' + formatted + ' &#8491;</span>');
+                    self._posRafId = null;
+                });
+            }
             return true;
         },
 
         /**
-         * create zoom buttons info box
-         **/
+         * Create zoom buttons and resolution status box.
+         */
         createui: function () {
-            var me = this;
+            const self = this;
 
-            $("<div>", {'class': "diffviewer_zoom_in diffviewer_common diffviewer_button"})
-                .on('mousedown touchstart', function () {
-                    me.zoom_by(1);
+            const makeBtn = function (btnClass, iconClass, title, onClick) {
+                return $("<div>", {
+                    'class': btnClass + " diffviewer_common diffviewer_button",
+                    'role': "button",
+                    'tabindex': "0",
+                    'aria-label': title,
+                    'title': title
+                })
+                .on('mousedown touchstart', function (e) {
+                    e.preventDefault();
+                    onClick();
                     return false;
                 })
-                .html('<i class="ti ti-zoom-in"></i>')
-                .attr('title', 'Zoom In')
-                .appendTo(this.container);
-
-            $("<div>", {'class': "diffviewer_zoom_out diffviewer_common diffviewer_button"})
-                .on('mousedown touchstart', function () {
-                    me.zoom_by(-1);
-                    return false;
+                .on('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onClick();
+                    }
                 })
-                .html('<i class="ti ti-zoom-out"></i>')
-                .attr('title', 'Zoom Out')
+                .html('<i class="' + iconClass + '"></i>')
+                .appendTo(self.container);
+            };
+
+            const btnIn = makeBtn("diffviewer_zoom_in", "ti ti-zoom-in", "Zoom In", function () {
+                self.zoom_by(1);
+            });
+
+            const btnOut = makeBtn("diffviewer_zoom_out", "ti ti-zoom-out", "Zoom Out", function () {
+                self.zoom_by(-1);
+            });
+
+            const btnFit = makeBtn("diffviewer_zoom_fit", "ti ti-reload", "Reset Zoom", function () {
+                self.fit(true);
+            });
+
+            this.ui_buttons = btnIn.add(btnOut).add(btnFit);
+
+            this.zoom_object = $("<div>")
+                .addClass("diffviewer_zoom_status diffviewer_common")
                 .appendTo(this.container);
 
-            $("<div>", {'class': "diffviewer_zoom_fit diffviewer_common diffviewer_button"})
-                .on('mousedown touchstart', function () {
-                    me.fit(this);
-                    return false;
-                })
-                .html('<i class="ti ti-reload"></i>')
-                .attr('title', 'Reset Zoom')
-                .appendTo(this.container);
-
-            this.zoom_object = $("<div>").addClass("diffviewer_zoom_status diffviewer_common")
-                .appendTo(this.container);
-
-            this.update_status(); //initial status update
+            this.update_status();
         }
-
     });
 
     /**
-     * @class $.ui.diffviewer.ImageObject Class represents image and provides public api without
-     * extending image prototype.
+     * ImageObject represents image and provides public API without extending image prototype.
      * @constructor
-     * @param {boolean} do_anim Do we want to animate image on dimension changes?
+     * @param {boolean} do_anim
      */
     $.ui.diffviewer.ImageObject = function (do_anim) {
-        this._img = $("<img>")
-        //this is needed, because chromium sets them auto otherwise
-            .css({position: "absolute", top: "0px", left: "0px"});
+        this._img = $("<img>").css({
+            position: "absolute",
+            top: "0px",
+            left: "0px"
+        });
 
         this._loaded = false;
         this._swapDimensions = false;
@@ -860,15 +890,7 @@
         this.angle(0);
     };
 
-
-    /** @lends $.ui.diffviewer.ImageObject.prototype */
     (function () {
-        /**
-         * Restore initial object state.
-         *
-         * @param {number} w Image width.
-         * @param {number} h Image height.
-         */
         this._reset = function (w, h) {
             this._angle = 0;
             this._swapDimensions = false;
@@ -881,34 +903,19 @@
             this.display_height(h);
         };
 
-        /**
-         * Check if image is loaded.
-         *
-         * @return {boolean}
-         */
         this.loaded = function () {
             return this._loaded;
         };
 
-        /**
-         * Load image.
-         *
-         * @param {string} src Image url.
-         * @param {Function=} loaded Function will be called on image load.
-         */
         this.load = function (src, loaded) {
-            var self = this;
-
-            loaded = loaded || jQuery.noop;
+            const self = this;
+            loaded = loaded || $.noop;
             this._loaded = false;
 
-            //If we assign new image url to the this._img IE9 fires onload event and image width and
-            //height are set to zero. So, we create another image object and load image through it.
-            var img = new Image();
+            const img = new Image();
             img.onload = function () {
                 self._loaded = true;
                 self._reset(this.width, this.height);
-
                 self._img[0].src = src;
                 loaded();
             };
@@ -919,62 +926,47 @@
                 .removeAttr("width")
                 .removeAttr("height")
                 .removeAttr("style")
-                .css({position: "absolute", top: "0px", left: "0px"})
+                .css({ position: "absolute", top: "0px", left: "0px" });
 
             this.angle(0);
         };
 
         this._dimension = function (prefix, name) {
-            var horiz = '_' + prefix + '_' + name,
-                vert = '_' + prefix + '_' + (name === 'height' ? 'width' : 'height');
-            return setter(function (val) {
+            const horiz = '_' + prefix + '_' + name;
+            const vert = '_' + prefix + '_' + (name === 'height' ? 'width' : 'height');
+            return setter(
+                function (val) {
                     this[this._swapDimensions ? horiz : vert] = val;
                 },
                 function () {
                     return this[this._swapDimensions ? horiz : vert];
-                });
+                }
+            );
         };
 
-        /**
-         * Getters and setter for common image dimensions.
-         * display_ means real image tag dimensions
-         * orig_ means physical image dimensions.
-         * Note, that dimensions are swapped if image is rotated. It necessary,
-         * because as little as possible code should know about rotation.
-         */
-        this.display_width = this._dimension('display', 'width'),
-            this.display_height = this._dimension('display', 'height'),
-            this.display_diff = function () {
-                return Math.floor(this.display_width() - this.display_height())
-            };
-        this.orig_width = this._dimension('orig', 'width'),
-            this.orig_height = this._dimension('orig', 'height'),
+        this.display_width = this._dimension('display', 'width');
+        this.display_height = this._dimension('display', 'height');
+        this.display_diff = function () {
+            return Math.floor(this.display_width() - this.display_height());
+        };
 
-            /**
-             * Setter for X coordinate. If image is rotated we need to additionaly shift an
-             * image to map image coordinate to the visual position.
-             *
-             * @param {number} val Coordinate value.
-             * @param {boolean} skipCss If true, we only set the value and do not touch the dom.
-             */
-            this.x = setter(function (val, skipCss) {
-                    this._x = val;
-                    if (!skipCss) {
-                        this._img.css("left", this._x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
-                    }
-                },
-                function () {
-                    return this._x;
-                });
+        this.orig_width = this._dimension('orig', 'width');
+        this.orig_height = this._dimension('orig', 'height');
 
-        /**
-         * Setter for Y coordinate. If image is rotated we need to additionaly shift an
-         * image to map image coordinate to the visual position.
-         *
-         * @param {number} val Coordinate value.
-         * @param {boolean} skipCss If true, we only set the value and do not touch the dom.
-         */
-        this.y = setter(function (val, skipCss) {
+        this.x = setter(
+            function (val, skipCss) {
+                this._x = val;
+                if (!skipCss) {
+                    this._img.css("left", this._x + (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
+                }
+            },
+            function () {
+                return this._x;
+            }
+        );
+
+        this.y = setter(
+            function (val, skipCss) {
                 this._y = val;
                 if (!skipCss) {
                     this._img.css("top", this._y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px");
@@ -982,113 +974,71 @@
             },
             function () {
                 return this._y;
-            });
+            }
+        );
 
-        /**
-         * Perform image rotation.
-         *
-         * @param {number} deg Absolute image angle. The method will work with values 0, 90, 180, 270 degrees.
-         */
-        this.angle = setter(function (deg) {
-                var prevSwap = this._swapDimensions;
+        this.angle = setter(
+            function (deg) {
+                const prevSwap = this._swapDimensions;
 
                 this._angle = deg;
                 this._swapDimensions = deg % 180 !== 0;
 
                 if (prevSwap !== this._swapDimensions) {
-                    var verticalMod = this._swapDimensions ? -1 : 1;
+                    const verticalMod = this._swapDimensions ? -1 : 1;
                     this.x(this.x() - verticalMod * this.display_diff() / 2, true);
                     this.y(this.y() + verticalMod * this.display_diff() / 2, true);
                 }
-                ;
 
-                var cssVal = 'rotate(' + deg + 'deg)',
-                    img = this._img;
-
-                jQuery.each(['', '-webkit-', '-moz-', '-o-', '-ms-'], function (i, prefix) {
-                    img.css(prefix + 'transform', cssVal);
-                });
+                this._img.css('transform', 'rotate(' + deg + 'deg)');
             },
             function () {
                 return this._angle;
-            });
+            }
+        );
 
-        /**
-         * Map point in the container coordinates to the point in image coordinates.
-         * You will get coordinates of point on image with respect to rotation,
-         * but will be set as if image was not rotated.
-         * So, if image was rotated 90 degrees, it's (0,0) point will be on the
-         * top right corner.
-         *
-         * @param {{x: number, y: number}} point Point in container coordinates.
-         * @return {{x: number, y: number}}
-         */
         this.toOriginalCoords = function (point) {
             switch (this.angle()) {
                 case 0:
-                    return {x: point.x, y: point.y}
+                    return { x: point.x, y: point.y };
                 case 90:
-                    return {x: point.y, y: this.display_width() - point.x}
+                    return { x: point.y, y: this.display_width() - point.x };
                 case 180:
-                    return {x: this.display_width() - point.x, y: this.display_height() - point.y}
+                    return { x: this.display_width() - point.x, y: this.display_height() - point.y };
                 case 270:
-                    return {x: this.display_height() - point.y, y: point.x}
+                    return { x: this.display_height() - point.y, y: point.x };
             }
         };
 
-        /**
-         * Map point in the image coordinates to the point in container coordinates.
-         * You will get coordinates of point on container with respect to rotation.
-         * Note, if image was rotated 90 degrees, it's (0,0) point will be on the
-         * top right corner.
-         *
-         * @param {{x: number, y: number}} point Point in container coordinates.
-         * @return {{x: number, y: number}}
-         */
         this.toRealCoords = function (point) {
             switch (this.angle()) {
                 case 0:
-                    return {x: this.x() + point.x, y: this.y() + point.y}
+                    return { x: this.x() + point.x, y: this.y() + point.y };
                 case 90:
-                    return {x: this.x() + this.display_width() - point.y, y: this.y() + point.x}
+                    return { x: this.x() + this.display_width() - point.y, y: this.y() + point.x };
                 case 180:
-                    return {x: this.x() + this.display_width() - point.x, y: this.y() + this.display_height() - point.y}
+                    return { x: this.x() + this.display_width() - point.x, y: this.y() + this.display_height() - point.y };
                 case 270:
-                    return {x: this.x() + point.y, y: this.y() + this.display_height() - point.x}
+                    return { x: this.x() + point.y, y: this.y() + this.display_height() - point.x };
             }
         };
 
-        /**
-         * @return {jQuery} Return image node. this is needed to add event handlers.
-         */
-        this.object = setter(jQuery.noop,
-            function () {
-                return this._img;
-            });
+        this.object = function () {
+            return this._img;
+        };
 
-        /**
-         * Change image properties.
-         *
-         * @param {number} disp_w Display width;
-         * @param {number} disp_h Display height;
-         * @param {number} x
-         * @param {number} y
-         * @param {boolean} skip_animation If true, the animation will be skiped despite the
-         * value set in constructor.
-         * @param {Function=} complete Call back will be fired when zoom will be complete.
-         */
         this.setImageProps = function (disp_w, disp_h, x, y, skip_animation, complete) {
-            complete = complete || jQuery.noop;
+            complete = complete || $.noop;
 
             this.display_width(disp_w);
             this.display_height(disp_h);
             this.x(x, true);
             this.y(y, true);
 
-            var w = this._swapDimensions ? disp_h : disp_w;
-            var h = this._swapDimensions ? disp_w : disp_h;
+            const w = this._swapDimensions ? disp_h : disp_w;
+            const h = this._swapDimensions ? disp_w : disp_h;
 
-            var params = {
+            const params = {
                 width: w,
                 height: h,
                 top: y - (this._swapDimensions ? this.display_diff() / 2 : 0) + "px",
@@ -1102,21 +1052,9 @@
                 });
             } else {
                 this._img.css(params);
-                setTimeout(complete, 0); //both if branches should behave equally.
+                setTimeout(complete, 0);
             }
         };
-
     }).apply($.ui.diffviewer.ImageObject.prototype);
 
-
-    var util = {
-        scaleValue: function (value, toZoom) {
-            return value * toZoom / 100;
-        },
-
-        descaleValue: function (value, fromZoom) {
-            return value * 100 / fromZoom;
-        }
-    };
-
-})(jQuery, undefined);
+})(jQuery);

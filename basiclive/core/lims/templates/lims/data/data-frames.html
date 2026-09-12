@@ -200,7 +200,7 @@
         }
 
         function toFrame(frame, frame_id) {
-            var index = $.inArray(frame_id, $expanded_frame_set);
+            const index = $.inArray(frame_id, $expanded_frame_set);
             if (index !== -1) {
                 $current_frame_to_display = frame;
                 $current_frame_id = frame_id;
