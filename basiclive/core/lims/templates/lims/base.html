@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" type="text/css"/>
         <link rel="stylesheet" href="{% static 'misc/css/slimselect.min.css' %}" type="text/css"/>
         <link rel="stylesheet" href="{% static 'lims/css/basiclive.min.css' %}" type="text/css"/>
-        <link rel="stylesheet" href="{% static 'css/mxlive.min.css' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'lims/css/instance.min.css' %}" type="text/css">
     {% endblock %}
     {% block extra_css %}{% endblock %}
     <script src="{% static 'lims/js/theme-switcher.min.js' %}"></script>
@@ -83,8 +83,9 @@
                     <span class="fs-5">{{ APP_NAME }}</span> </a>
                     <ul class="list-unstyled small">
                         <li class="mb-2">
-                            Based on the <a href="https://github.com/michel4j/basic-live/">BasicLIVE</a>.
-                            Designed and built at the <a href="https://www.lightsource.ca">Canadian Light Source </a>.
+                            This system is built using <a href="https://github.com/michel4j/basic-live/">BasicLIVE</a>
+                            &mdash; a framework for building laboratory information management systems.
+                            &copy; 2010&ndash;{% now "Y" %} <a href="https://www.lightsource.ca">Canadian Light Source, Inc </a>.
                         </li>
                         <li class="mb-2">
                             Code licensed <a href="https://github.com/michel4j/mxlive/blob/main/LICENSE" target="_blank"
