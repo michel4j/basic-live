@@ -2,9 +2,10 @@
 {% load humanize %}
 {% load markup %}
 {% load icons %}
+{% load states %}
 {% load static %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3>
         <span class="text-thin">Group |</span>
         <span class="text-condensed">
@@ -24,7 +25,7 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     {%  if object.status == object.STATES.DRAFT %}
         {% if object.shipment %}
             <a href="#!" data-modal-url="{% url 'seat-samples' object.shipment.pk %}" title="Sample Seat Selection">
@@ -43,31 +44,22 @@
     {% include "lims/tools-base.html" %}
 {% endblock %}
 
-{% block object_status %}
-    <div class="status-bar">
-        <div class="row">
-            <div class="col d-flex flex-row">
-                <h3 class="align-self-center m-0 p-0">
-                    <span class="badge text-bg-{% if object.status == object.STATES.ACTIVE %}info
-                                {% elif object.status == object.STATES.DRAFT %}warning
-                                {% elif object.status == object.STATES.COMPLETE %}success
-                                {% elif object.status == object.STATES.ARCHIVED and not user.is_superuser %}success
-                                {% else %}primary{% endif %}">{{ object.get_status_display }}</span>
-                </h3>
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Shipment:</small><br>
-                {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
-            </div>
-            <div class="col float-end text-end">
-                <small class="text-muted text-condensed">Number of Samples:</small><br>
-                <strong>{{ object.num_samples }}</strong>
-            </div>
-        </div>
+{% block page-status-style %}callout callout-info{% endblock %}
+{% block page-status-bar %}
+    <span class="status-badge badge bg-{% state_tag object.status warning=object.STATES.DRAFT success=object.STATES.COMPLETE info=object.STATES.ARCHIVED default='primary' %} text-condensed">
+        {{ object.get_status_display }}
+    </span>
+    <div>
+        <small class="text-muted text-condensed">Shipment:</small><br>
+        {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
+    </div>
+    <div >
+        <small class="text-muted text-condensed">Number of Samples:</small><br>
+        <strong>{{ object.num_samples }}</strong>
     </div>
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
 <div class="row">
     <div class="col-sm-12 bulk-edit">
         {% if object.status == object.STATES.DRAFT %}

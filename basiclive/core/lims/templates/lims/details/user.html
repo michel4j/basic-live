@@ -9,7 +9,7 @@
     <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
 {% endblock %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3 class="text-condensed">
         <span class="text-muted">{{ object.name|upper }}</span> | <strong>{{ object.first_name }} {{ object.last_name }}</strong>
     </h3>
@@ -18,7 +18,7 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     <a href="{% url 'data-list' %}?search={{ object.username }}" title="Go to Data for {{ object.username }}">
         {% show_icon label="Data" icon="ti ti-md ti-layout-grid3" badge=object.datasets.count %}
     </a>
@@ -42,7 +42,8 @@
 {% endif %}
 {% endblock %}
 
-{% block object_status %}
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
     <div class="status-bar">
         <div class="row">
             <div class="col-2">
@@ -68,7 +69,7 @@
     </div>
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
 
     <div class="row">
          <div class="{% if object.sshkeys.all %}col-md-8{% endif %} col-12">

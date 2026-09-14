@@ -1,6 +1,3 @@
-{% extends "lims/base.html" %}
-{% load static %}
+{% extends "lims/list.html" %}
 
-{% block page_heading %}<h3>{{ view.page_title }}</h3>{% endblock %}
-
-{% block object_tools %}{% include "publications/tools.html" %}{% endblock %}
+{% block page-tools %}{% include "publications/tools.html" %}{% endblock %}

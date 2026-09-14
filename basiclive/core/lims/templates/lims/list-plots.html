@@ -4,7 +4,7 @@
 {% load icons %}
 {% load jsutils %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3>
         {{ view.page_title }} Statistics
     </h3>
@@ -21,7 +21,7 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     {% if view.list_url %}
         <a href="{{ view.list_url }}" title="Support Areas">
             {% show_icon label='List' icon='ti ti-md ti-list' %}
@@ -38,7 +38,7 @@
     <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
     <div class="row">
         <div class="col">
             {% include "itemlist/filters.html" %}

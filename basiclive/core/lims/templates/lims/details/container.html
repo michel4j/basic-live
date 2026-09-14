@@ -2,6 +2,7 @@
 {% load humanize %}
 {% load markup %}
 {% load icons %}
+{% load states %}
 {% load static %}
 
 {% block pre_js %}
@@ -10,7 +11,7 @@
     <script src="{% static 'lims/js/basiclive-layouts.min.js' %}"></script>
 {% endblock %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3>
         <span class="text-thin">Container |</span>
         <span class="text-condensed">
@@ -32,7 +33,7 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     {% if object.is_editable %}
     <a href="#!" data-modal-url="{% url 'edit-container-samples' object.pk %}"
         {% if not object.samples.exists %}
@@ -65,52 +66,42 @@
     {% endif %}
 {% endblock %}
 
-{% block object_status %}
-    <div class="status-bar">
-        <div class="row">
-            <div class="col-2">
-                <h3 class="no-vmargin">
-                    <span class="badge text-bg-{% if object.status == object.STATES.ON_SITE %}info
-                                {% elif object.status == object.STATES.DRAFT %}warning
-                                {% elif object.status == object.STATES.SENT %}success
-                                {% elif object.status == object.STATES.RETURNED and not user.is_superuser %}success
-                                {% else %}secondary{% endif %}">{% if object.parent %}Loaded{% else %}{{ object.get_status_display }}{% endif %}</span>
-                </h3>
-            </div>
-            <div class="col-3">
-            {% if object.accepts_children %}
-                <small class="text-muted text-condensed">Beamline:</small><br>
-                {% if object.automounter %}<a href="{% url 'beamline-detail' object.automounter.beamline.pk %}">{{ object.automounter.beamline.acronym }}</a>{% endif %}
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+    <span class="status-badge badge bg-{% state_tag object.status warning=object.STATES.DRAFT success=object.STATES.SENT info=object.STATES.ON_SITE default='primary' %} text-condensed">
+        {{ object.get_status_display }}
+    </span>
+    <div>
+    {% if object.accepts_children %}
+        <small class="text-muted text-condensed">Beamline:</small><br>
+        {% if object.automounter %}<a href="{% url 'beamline-detail' object.automounter.beamline.pk %}">{{ object.automounter.beamline.acronym }}</a>{% endif %}
+    {% else %}
+        <small class="text-muted text-condensed">Shipment:</small><br>
+        {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
+    {% endif %}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Number of {% if object.accepts_children %}Containers{% else %}Samples{% endif %}:</small><br>
+        <strong>{% if object.accepts_children %}{{ object.children.count }}{% else %}{{ object.num_samples }}{% endif %}</strong>{% if object.kind.locations.count %} / {{ object.kind.locations.count }}{% endif %}
+    </div>
+    {% if object.parent %}
+        <div>
+            <small class="text-muted text-condensed">Location:</small><br>
+            {% if object.automounter %}
+                {{ object.automounter.beamline }}
             {% else %}
-                <small class="text-muted text-condensed">Shipment:</small><br>
-                {% if object.shipment %}<a href="{% url 'shipment-detail' object.shipment.pk %}">{{object.shipment.name}}</a>{% endif %}
-            {% endif %}
-            </div>
-            <div class="col-2 float-end text-end">
-                <small class="text-muted text-condensed">Number of {% if object.accepts_children %}Containers{% else %}Samples{% endif %}:</small><br>
-                <strong>{% if object.accepts_children %}{{ object.children.count }}{% else %}{{ object.num_samples }}{% endif %}</strong>{% if object.kind.locations.count %} / {{ object.kind.locations.count }}{% endif %}
-            </div>
-            {% if object.parent %}
-                <div class="col-3 float-end text-end">
-                    <small class="text-muted text-condensed">Location:</small><br>
-                    {% if object.automounter %}
-                        {{ object.automounter.beamline }}
-                    {% else %}
-                        {{ object.parent.kind.name }} {{ object.parent.name }}
-                    {% endif %} | <strong>{{ object.port }}</strong>
-                </div>
-            {% endif %}
-
-            <div class="col-{% if object.parent %}2{% else %}5{% endif %} float-end text-end">
-                <small class="text-muted text-condensed">Type:</small><br>
-                {{ object.kind }}
-            </div>
-
+                {{ object.parent.kind.name }} {{ object.parent.name }}
+            {% endif %} | <strong>{{ object.port }}</strong>
         </div>
+    {% endif %}
+
+    <div>
+        <small class="text-muted text-condensed">Type:</small><br>
+        {{ object.kind }}
     </div>
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
     {% if object.accepts_children %}
         <div class="row">
             <div {% if user.is_superuser %}id="admin-assign"{% endif %} class="col-sm-7 p-4">

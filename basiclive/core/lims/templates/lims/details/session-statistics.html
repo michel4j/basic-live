@@ -7,7 +7,7 @@
 
 
 
-{% block object_tools %}
+{% block page-tools %}
     <a href="#!" class="float-end" data-modal-url="{% url 'session-history' object.pk %}">
         {% show_icon label='History' icon='ti ti-md ti-timer' %}
     </a>
@@ -18,7 +18,7 @@
     <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
 <div class="row">
     <div id="data-stats" class="col-12"></div>
 </div>

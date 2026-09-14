@@ -8,7 +8,7 @@
 {% load progress_extras %}
 {% load settings %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3>
         <span class="text-thin">Session |</span>
         <span class="text-condensed">
@@ -21,7 +21,7 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     <a href="{% url 'session-reports' object.pk %}" title="Go to Reports from this session">
         {% show_icon label='Reports' icon='ti ti-md ti-bar-chart-alt' badge=object.num_reports %}
     </a>
@@ -51,7 +51,8 @@
     {% endif %}
 {% endblock %}
 
-{% block object_status %}
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
     <div class="status-bar">
         <div class="row">
             {% if object.is_active %}
@@ -79,7 +80,7 @@
     </div>
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
 <div class="row">
     <div class="col-12">
         {% for group in object.groups %}

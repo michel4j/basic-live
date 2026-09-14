@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{% static "lims/css/print.min.css" %}" type="text/css" media="print"/>
 {% endblock %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3>
         <span class="text-thin">{% block title %}{% endblock %} |</span>
         <span class="text-condensed">
@@ -21,7 +21,7 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     {% url 'shipment-data' shipment.pk as data_url %}
     {% url 'shipment-reports' shipment.pk as report_url %}
     {% url 'shipment-requests' shipment.pk as request_url %}
@@ -48,7 +48,8 @@
     {% endif %}
 {% endblock %}
 
-{% block object_status %}
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
     <div class="status-bar">
         <div class="row">
             <div class="col">

@@ -10,7 +10,7 @@
     <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
 {% endblock %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3 class="text-condensed">
         <strong class="text-muted">{{ object.username|upper }}</strong> | Project Statistics
     </h3>
@@ -19,16 +19,16 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     <a  href="{% url 'project-profile' username=object.username %}">
         {% show_icon label='My Profile' icon='ti ti-md ti-user' %}
     </a>
 {% endblock %}
 
-{% block object_status %}
+{% block page-status-bar %}
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
     <div class="row">
         <div id="data-stats" class="col-12"></div>
     </div>

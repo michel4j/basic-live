@@ -3,7 +3,7 @@
 {% load static %}
 {% load icons %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3 class="text-condensed">
         <strong class="text-muted"> {{ beamline }}</strong> | {{ view.page_title }}
     </h3>
@@ -11,8 +11,8 @@
         {{ object.name }}
     </span>
 {% endblock %}
-
-{% block object_status %}
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
     <div class="status-bar">
         <div class="row">
             <h5 class="col my-0 p-2">
@@ -28,7 +28,7 @@
     </div>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
 
 {% endblock %}
 
@@ -38,7 +38,7 @@
 {% endblock %}
 
 
-{% block full %}
+{% block page-content %}
     <div class="row">
         <div class="col-12">
             <div id="beamtime-stats" class="row"></div>

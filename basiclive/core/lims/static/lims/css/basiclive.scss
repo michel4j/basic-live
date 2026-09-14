@@ -37,6 +37,10 @@ $max_font: 15px;
   --bs-font-monospace: "Fira Code", monospace;
   --bl-font-sans-serif: "Fira Sans", sans-serif;
   --bl-accent: var(--bs-primary);
+  --bl-accent-0: #75507b;
+  --bl-accent-1: #3d3c3c;
+  --bl-accent-text-0: #fff;
+  --bl-accent-text-1: #b3b3b3;
   --bl-gray-alpha: rgba(0, 0, 0, 0.15);
   --bl-gray-barely: rgba(0, 0, 0, 0.05);
   --bl-data-modal-width: 526px;
@@ -95,51 +99,6 @@ main {
   margin-top: 51px;
   ////padding-bottom: 51px;
   flex: 1;
-}
-
-.folio {
-  border-bottom: none !important;
-  border-top: 0;
-  margin-bottom: 1rem;
-  padding-top: 1rem;
-  position: relative;
-  transition: padding 500ms ease 0s;
-  min-height: calc(50vh);
-
-  .folio {
-    box-shadow: none;
-    transition: none;
-    padding-top: 0;
-    padding-left: 0;
-  }
-}
-
-.folio-body {
-  padding: 1rem;
-}
-
-.folio-heading {
-  border-bottom: 1px solid var(--bl-gray-alpha);
-  font-weight: 300;
-}
-
-.folio-footer, .folio-header {
-  padding: 0.5em 1em;
-  min-height: 55px;
-  position: relative;
-}
-
-.folio-footer {
-  border-top: 1px solid var(--bl-gray-alpha);
-}
-
-.folio-header {
-  margin-top: -1em;
-  border-bottom: 1px solid var(--bl-gray-alpha);
-
-  h1, h2, h3, h4, h5, h6 {
-    margin: 0.5em 0;
-  }
 }
 
 // Modal tweaks
@@ -434,6 +393,7 @@ a.text-muted:hover {
   padding-top: 0.35rem;
   min-width: 3rem;
   margin: 0 0.5rem;
+  text-align: center;
 }
 
 
@@ -595,20 +555,8 @@ p {
   cursor: pointer;
 }
 
-.heading-box {
-  align-self: center;
-
-  h3, h4 {
-    margin: 0;
-  }
-}
-
 .inline-list {
   float: left;
-}
-
-.folio-body {
-  overflow: auto;
 }
 
 
@@ -1678,9 +1626,6 @@ input::placeholder {
 }
 
 .survey {
-  .folio-body {
-    overflow: unset;
-  }
 
   td label {
     display: block;
@@ -1726,4 +1671,187 @@ body::before {
   opacity: calc(var(--bl-progress-opacity, 1) * 0.75);
   background: var(--bl-accent-color-0, --bs-primary);
   transition: width 0.3s ease-in, opacity 0.3s ease-out;
+}
+
+.form-select-multiple {
+  --ss-primary-color: var(--bs-primary);
+  --ss-bg-color: var(--bs-body-bg);
+  --ss-font-color: var(--bs-body-color);
+  --ss-font-placeholder-color: var(--bs-secondary);
+  --ss-disabled-color: var(--bs-secondary);
+  --ss-border-color: var(--bs-border-color);
+  --ss-highlight-color: var(--bs-warning-bg-subtle);
+  --ss-success-color: var(--bs-success);
+  --ss-error-color: var(--bs-danger);
+  --ss-focus-color: var(--bs-primary);
+  --ss-main-height: 2.4rem;
+  --ss-content-height: 300px;
+  --ss-spacing-l: 7px;
+  --ss-spacing-m: 5px;
+  --ss-spacing-s: 3px;
+  --ss-spacing: 0.75rem;
+  --ss-animation-timing: 0.2s;
+  --ss-border-radius: var(--bs-border-radius-sm);
+  --ss-disabled-color: var(--bs-secondary-bg);
+  font-weight: 400;
+}
+
+.form-select, .form-select-multiple {
+  font-size: 0.9rem;
+}
+
+.ss-content .ss-list .ss-option.ss-disabled {
+  display: none !important;
+}
+
+.page-title {
+  font-weight: 300 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.page-subtitle {
+  color: var(--bs-secondary);
+}
+
+.page-pre-title {
+  font-size: .75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.page {
+  background: var(--bs-body-bg);
+  border-bottom: none !important;
+  border-top: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: padding 500ms ease 0s;
+
+  .list-group {
+    list-style: none outside;
+
+    li.list-group-item {
+      border: 0;
+    }
+
+    li.list-group-item + li.list-group-item {
+      border-top: 1px solid var(--bs-border-color-translucent);
+    }
+  }
+}
+
+.page-body {
+  padding: 1em;
+
+  & + .page-body {
+    padding-top: 0;
+  }
+}
+
+.page-heading {
+  border-bottom: 1px solid var(--bs-border-color-translucent);
+  font-weight: 300;
+}
+
+.page-footer {
+  padding: 0.5em 1em;
+  min-height: 37px;
+  position: relative;
+  border-top: 1px solid var(--bs-border-color-translucent);
+}
+.page-status {
+  padding: 1em;
+  gap: 1em;
+
+  > * {
+    height: 100%;
+  }
+
+  > h3:first-of-type, div.h3:first-of-type {
+    align-self: center;
+  }
+
+  > .status-badge {
+    align-self: center;
+    font-size: calc(0.9rem + 0.6vw);
+    font-weight: 400;
+    text-wrap: nowrap;
+  }
+
+  &:empty {
+    padding: 0 !important;
+    margin: 0 !important;
+    border-top: 1px solid var(--bs-border-color-translucent);
+  }
+}
+
+$state-names: (info, primary, success, secondary, warning, danger);
+$category-colors: (
+  (0, 211, 36%, 48%),
+  (1, 30, 88%, 56%),
+  (2, 359, 70%, 61%),
+  (3, 175, 31%, 59%),
+  (4, 113, 34%, 47%),
+  (5, 47, 82%, 61%),
+  (6, 316, 25%, 58%),
+  (7, 354, 100%, 81%),
+  (8, 22, 24%, 49%),
+  (9, 20, 10%, 70%),
+);
+
+.callout {
+  padding: 1.25rem;
+  color: var(--bl-callout-color, inherit);
+  background-color: var(--bl-callout-bg, rgba(var(--bs-emphasis-color-rgb), 0.05));
+  border-left: .25rem solid var(--bl-callout-border, rgba(var(--bs-emphasis-color-rgb), 0.25));
+
+  &.callout-sm {
+    border-left-width: 0.125rem;
+  }
+
+  &.callout-lg {
+    border-left-width: 0.375rem;
+  }
+
+  &.callout-xl {
+    border-left-width: 0.5rem;
+  }
+
+  &.callout-xxl {
+    border-left-width: 0.75rem;
+  }
+
+  @each $state in $state-names {
+    &.callout-#{$state} {
+      --bl-callout-color: var(--bs-#{$state}-text-emphasis);
+      --bl-callout-bg: var(--bs-#{$state}-bg-subtle);
+      --bl-callout-border: var(--bs-#{$state}-border-subtle)
+    }
+  }
+
+  @each $key, $hue, $saturation, $lightness in $category-colors {
+    &.callout-#{$key} {
+      --bl-callout-color: hsla(#{$hue}, #{$saturation}, #{$lightness}, 1);
+      --bl-callout-bg: hsla(#{$hue}, #{$saturation}, #{$lightness}, 0.05);
+      --bl-callout-border: hsla(#{$hue}, #{$saturation}, #{$lightness}, 0.25);
+    }
+  }
+
+  h4 {
+    margin-bottom: 0.25rem;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
 }

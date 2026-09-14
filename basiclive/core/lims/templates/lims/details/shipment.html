@@ -12,7 +12,7 @@
     <script src="{% static 'lims/js/basiclive-layouts.min.js' %}"></script>
 {% endblock %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3>
         <span class="text-thin">Shipment |</span>
         <span class="text-condensed">
@@ -32,11 +32,12 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     {% include "lims/tools-shipment.html" %}
 {% endblock %}
 
-{% block object_status %}
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
     <div class="status-bar">
         <div class="row">
             <div class="col">
@@ -115,7 +116,7 @@
     </div>
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
     <div class="row">
         <div class="col-sm-7 col-12">
             <div class="row">

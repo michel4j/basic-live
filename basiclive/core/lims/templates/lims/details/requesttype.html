@@ -13,7 +13,7 @@
     <script src="{% static "misc/js/repeatable-fields.min.js" %}"></script>
 {% endblock %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3 class="text-condensed">
         <i class="text-muted fa fa-fw"></i>
         <strong>{{ object.name }}</strong>
@@ -23,7 +23,7 @@
     </span>
 {% endblock %}
 
-{% block object_tools %}
+{% block page-tools %}
     <a href="#!" data-modal-url="{% url 'requesttype-layout' object.pk %}">
         {% show_icon label='Layout' icon='ti ti-md ti-layout' %}
     </a>
@@ -36,26 +36,25 @@
     </a>
 {% endblock %}
 
-{% block object_status %}
-    <div class="status-bar">
-        <div class="row">
-            <div class="col-2">
-                <h3 class="no-vmargin">
-                    <span class="badge text-bg-{% if object.active %}success{% else %}secondary{% endif %}">
-                        {% if object.active %}ACTIVE{% else %}INACTIVE{% endif %}
-                    </span>
-                </h3>
-            </div>
-            <div class="col-10 float-end text-end">
-                <small class="text-muted text-condensed">Template:</small><br>
-                {{ object.template }}
-            </div>
-        </div>
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
+
+    <div class="col-2">
+        <h3 class="no-vmargin">
+            <span class="badge text-bg-{% if object.active %}success{% else %}secondary{% endif %}">
+                {% if object.active %}ACTIVE{% else %}INACTIVE{% endif %}
+            </span>
+        </h3>
     </div>
+    <div class="col-10 float-end text-end">
+        <small class="text-muted text-condensed">Template:</small><br>
+        {{ object.template }}
+    </div>
+
     {% include "lims/comments.html" with object=object %}
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
     <div class="row">
         <div class="modal-dialog">
             <div class="modal-content">

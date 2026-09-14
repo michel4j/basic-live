@@ -4,7 +4,7 @@
 {% load settings %}
 {% load icons %}
 
-{% block page_heading %}
+{% block page-title %}
     <h3>
         <span class="text-thin">Warning |</span>
         <span class="text-condensed">
@@ -16,8 +16,8 @@
         UH-OH | Please contact staff or go back.
     </span>
 {% endblock %}
-
-{% block object_status %}
+{% block page-status-style %}callout{% endblock %}
+{% block page-status-bar %}
     <div class="status-bar">
         <div class="row">
             <div class="col-12">
@@ -30,7 +30,7 @@
     </div>
 {% endblock %}
 
-{% block full %}
+{% block page-content %}
 <div id="content" class="row">
     <div class="col-12" style="padding: 3em 8em;">
         <img src="{% static 'img/cls-unplugged.png' %}" style="max-width: 100%;"/>
