@@ -4,6 +4,7 @@
 {% load bl_icons %}
 {% load bl_tags %}
 
+{% block page-pre-title %}Report on{% endblock %}
 {% block page-title %}
     <h3 class="text-condensed">
         <strong class="text-muted"> {{ tag|default:"All" }}</strong> | {{ view.page_title }}
@@ -15,38 +16,36 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <div class="status-bar hidden-print">
-        <div class="row">
-            <h5 class="my-0 p-2">
-            {% if tag %}
-                <a href="{% url 'section-stats' tag %}"><span class="badge text-bg-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
-                {% for yr in years %}
-                    <a href="{% url 'section-yearly-stats' tag  yr %}"><span class="badge text-bg-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
-                {% endfor %}
-            {% else %}
-                <a href="{% url 'all-stats' %}"><span class="badge text-bg-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
-                {% for yr in years %}
-                    <a href="{% url 'all-yearly-stats' yr %}"><span class="badge text-bg-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
-                {% endfor %}
-            {% endif %}
-            </h5>
-            <h5 class="my-0 ms-auto p-2">
-            <a href="{% url 'all-stats' %}"><span class="badge text-bg-{% if tag %}warning{% else %}success{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
-            {% if year %}
-                {% for tagname in tags %}
-                    <a href="{% url 'section-yearly-stats' tagname year %}">
-                        <span class="badge text-bg-{% if tagname == tag %}success{% else %}warning{% endif %}">{{ tagname }}</span>
-                    </a>
-                {% endfor %}
-            {% else %}
-                {% for tagname in tags %}
-                    <a href="{% url 'section-stats' tagname %}">
-                        <span class="badge text-bg-{% if tagname == tag %}success{% else %}warning{% endif %}">{{ tagname }}</span>
-                    </a>
-                {% endfor %}
-            {% endif %}
-            </h5>
-        </div>
+    <div class="my-0 p-2 text-condensed">
+    <h5>
+    {% if tag %}
+        <a href="{% url 'section-stats' tag %}"><span class="badge text-bg-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
+        {% for yr in years %}
+            <a href="{% url 'section-yearly-stats' tag  yr %}"><span class="badge text-bg-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
+        {% endfor %}
+    {% else %}
+        <a href="{% url 'all-stats' %}"><span class="badge text-bg-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
+        {% for yr in years %}
+            <a href="{% url 'all-yearly-stats' yr %}"><span class="badge text-bg-{% if yr == year %}primary{% else %}info{% endif %}">{{ yr }}</span></a>
+        {% endfor %}
+    {% endif %}
+    </h5>
+    <h5>
+    <a href="{% url 'all-stats' %}"><span class="badge text-bg-{% if tag %}warning{% else %}success{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
+    {% if year %}
+        {% for tagname in tags %}
+            <a href="{% url 'section-yearly-stats' tagname year %}">
+                <span class="badge text-bg-{% if tagname == tag %}success{% else %}warning{% endif %}">{{ tagname }}</span>
+            </a>
+        {% endfor %}
+    {% else %}
+        {% for tagname in tags %}
+            <a href="{% url 'section-stats' tagname %}">
+                <span class="badge text-bg-{% if tagname == tag %}success{% else %}warning{% endif %}">{{ tagname }}</span>
+            </a>
+        {% endfor %}
+    {% endif %}
+    </h5>
     </div>
 {% endblock %}
 
