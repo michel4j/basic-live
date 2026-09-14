@@ -129,7 +129,7 @@
 
 {% block extra_js %}
 <script>
-    {% if not object.accepts_chidren %}
+    {% if not object.accepts_children %}
     $(document).ready(function() {
         $(document).on('click', 'svg.sample[data-id]', function(){
             let url = '{% url "sample-detail" 0 %}';
