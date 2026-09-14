@@ -3,22 +3,13 @@ from django.template import Library
 from django.urls import reverse
 import mimetypes
 
-from basiclive.core.lims import models
 
 register = Library()
 
 
-@register.inclusion_tag('lims/guides.html', takes_context=True)
-def load_guides(context):
-    return {
-        'guides': models.Guide.objects.all(),
-        'request': context
-    }
-
-
 # maps url names to regex for generating parameter values from the guide url field value
 # Examples:
-#   youtube - "youtube:u2-SdXDI1gs"
+#   YouTube - "youtube:u2-SdXDI1gs"
 #   flickr  - "flickr:97079436@N04:49122723877_3af6c8ebd9_k.jpg"
 EMBED_URLS = {
     'guide-youtube': re.compile(r'^youtube:(?P<video>[\w-]{11})$'),

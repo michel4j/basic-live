@@ -1328,22 +1328,6 @@ tr.sample-completed {
   animation: flash 1s infinite alternate;
 }
 
-.accordion {
-  [aria-expanded]:after {
-    font-family: "Themify";
-    margin-left: auto;
-    opacity: 0.5;
-  }
-
-  [aria-expanded="false"]:after {
-    content: "\e649";
-  }
-
-  [aria-expanded="true"]:after {
-    content: "\e64b";
-  }
-}
-
 .guide-snippet {
   font-size: 0.9rem;
   ol {
