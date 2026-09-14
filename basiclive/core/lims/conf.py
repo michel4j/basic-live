@@ -2,6 +2,7 @@ from basiclive.utils.conf import AppSettings
 
 DEFAULTS = {
     "APP_NAME": "BasicLIVE",
+    "APP_VERSION": "0.0.0",
     "SUPPORT_EMAIL": "support@lightsource.ca",
     "USE_SCHEDULE": True,
     "USE_ACL": True,

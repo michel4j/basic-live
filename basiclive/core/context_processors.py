@@ -11,7 +11,8 @@ def export_settings(request):
     :return: A dictionary containing the exported settings.
     """
     return {
-        'APP_VERSION': basiclive.__version__,
+        'APP_VERSION': lims_settings.APP_VERSION,
+        'BASIC_LIVE_VERSION': basiclive.__version__,
         'APP_NAME': lims_settings.APP_NAME,
         'USE_SCHEDULE': lims_settings.USE_SCHEDULE,
         'USE_PUBLICATIONS': lims_settings.USE_PUBLICATIONS,
