@@ -16,7 +16,7 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <div class="my-0 p-2 text-condensed">
+    <div class="text-condensed">
     <h5>
     {% if tag %}
         <a href="{% url 'section-stats' tag %}"><span class="badge text-bg-{% if year %}info{% else %}primary{% endif %}">&emsp;All&emsp;</span></a>&nbsp;
