@@ -1,12 +1,9 @@
 {% extends "lims/base.html" %}
 
-{% load icons %}
+{% load bl_icons %}
 {% load humanize %}
-{% load converter %}
 {% load static %}
-{% load time_extras %}
-{% load progress_extras %}
-{% load settings %}
+{% load bl_tags %}
 
 {% block page-title %}
     <h3>
@@ -53,30 +50,26 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <div class="status-bar">
-        <div class="row">
-            {% if object.is_active %}
-                <div class="col">
-                    <h3 class="m-0"><span class="badge text-bg-info">Active</span></h3>
-                </div>
-            {% endif %}
-            <div class="col">
-                <small class="text-muted text-condensed">Datasets:</small><br>
-                {{ object.datasets.count }}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Reports:</small><br>
-                {{ object.num_reports }}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Total Time:</small><br>
-                {{ object.total_time|humanize_duration }}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Start:</small><br>
-                {{ object.start|naturalday }}
-            </div>
+    {% if object.is_active %}
+        <div>
+            <h3 class="m-0"><span class="badge text-bg-info">Active</span></h3>
         </div>
+    {% endif %}
+    <div>
+        <small class="text-muted text-condensed">Datasets:</small><br>
+        {{ object.datasets.count }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Reports:</small><br>
+        {{ object.num_reports }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Total Time:</small><br>
+        {{ object.total_time|humanize_duration }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Start:</small><br>
+        {{ object.start|naturalday }}
     </div>
 {% endblock %}
 

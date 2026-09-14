@@ -1,8 +1,8 @@
 {% extends "lims/base.html" %}
 {% load humanize %}
 {% load markup %}
-{% load icons %}
-{% load states %}
+{% load bl_icons %}
+{% load bl_themes %}
 {% load static %}
 
 {% block pre_js %}
@@ -68,7 +68,7 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <span class="status-badge badge bg-{% state_tag object.status warning=object.STATES.DRAFT success=object.STATES.SENT info=object.STATES.ON_SITE default='primary' %} text-condensed">
+    <span class="status-badge badge bg-{% status_theme object.status warning=object.STATES.DRAFT success=object.STATES.SENT info=object.STATES.ON_SITE default='primary' %} text-condensed">
         {{ object.get_status_display }}
     </span>
     <div>

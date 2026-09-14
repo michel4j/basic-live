@@ -1,10 +1,11 @@
 {% extends "lims/base.html" %}
 
-{% load humanize static %}
-{% load badges %}
-{% load data_server %}
-{% load icons %}
-{% load jsutils %}
+{% load humanize %}
+{% load static %}
+{% load bl_badges %}
+{% load bl_data_tags %}
+{% load bl_icons %}
+{% load bl_tags %}
 
 {% block extra_css %}
     <link href="{% static "misc/css/c3.min.css" %}" rel="stylesheet">
@@ -25,11 +26,9 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <div>
-        <h3 class="m-0">
-            {% score_badge object.score %}
-        </h3>
-    </div>
+    <h3 class="m-0">
+        {% score_badge object.score %}
+    </h3>
     <div>
         <small class="text-muted text-condensed">Session:</small><br>
         {% for session in object.sessions %}

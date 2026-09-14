@@ -19,7 +19,7 @@ from django.views.generic import View
 from basiclive.core.lims.conf import settings as lims_settings
 from basiclive.core.lims.models import ActivityLog, Beamline, Container, Automounter, Data, DataType
 from basiclive.core.lims.models import AnalysisReport, Project, Session
-from basiclive.core.lims.templatetags.converter import humanize_duration
+from basiclive.core.lims.templatetags.bl_tags import humanize_duration
 from basiclive.utils.data import parse_frames
 from basiclive.utils.signing import Signer, InvalidSignature
 

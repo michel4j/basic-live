@@ -1,7 +1,8 @@
 {% extends "lims/base.html" %}
-{% load icons %}
-{% load static %}
+{% load bl_icons %}
 {% load humanize %}
+{% load static %}
+{% load bl_tags %}
 
 {% block page-title %}
     <h3 class="text-condensed">
@@ -20,30 +21,25 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <div class="status-bar">
-        <div class="row">
-            <div class="col-4">
-                <small class="text-muted text-condensed">Session:</small><br>
-                <a href="{% url 'session-detail' session.pk %}">{{session.name}}</a>
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Total Time:</small><br>
-                {{ session.total_time|floatformat }} hour{{ session.total_time|pluralize }}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Start:</small><br>
-                {{ session.start|naturalday }}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Comments:</small><br>
-                {{ session.comments }}
-            </div>
-        </div>
+    <div>
+        <small class="text-muted text-condensed">Session:</small><br>
+        <a href="{% url 'session-detail' session.pk %}">{{session.name}}</a>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Total Time:</small><br>
+        {{ session.total_time|humanize_duration }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Start:</small><br>
+        {{ session.start|naturalday }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Comments:</small><br>
+        {{ session.comments }}
     </div>
 {% endblock %}
 
 {% block page-content %}
-
     <div class="row">
         <div class="col-sm-12">
             {% include "itemlist/embed_list.html" %}

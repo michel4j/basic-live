@@ -1,6 +1,6 @@
 {% extends "lims/base.html" %}
 
-{% load icons %}
+{% load bl_icons %}
 
 {% block page-title %}
     <h3 class="text-condensed">
@@ -39,19 +39,20 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-
-    <div class="col-2">
-        <h3 class="no-vmargin">
-            <span class="badge text-bg-{% if object.container.status == object.container.STATES.ON_SITE %}info
+    {% spaceless %}
+    <span class="status-badge badge bg-{% if object.container.status == object.container.STATES.ON_SITE %}info
                                      {% elif object.container.status < object.container.STATES.ON_SITE %}warning
-                                     {% else %}secondary{% endif %}">
-                {% if object.container.status < object.container.STATES.SENT %}Draft
-                {% elif object.container.status < object.container.STATES.RETURNED %}{{ object.automounter.beamline.acronym|default:"Pending" }}
-                {% else %}Done{% endif %}
-            </span>
-        </h3>
-    </div>
-    <div class="col-3">
+                                     {% else %}secondary{% endif %} text-condensed">
+            {% if object.container.status < object.container.STATES.SENT %}
+                Draft
+            {% elif object.container.status < object.container.STATES.RETURNED %}
+                {{ object.automounter.beamline.acronym|default:"Pending" }}
+            {% else %}
+                Done
+            {% endif %}
+    </span>
+    {% endspaceless %}
+    <div>
         <small class="text-muted text-condensed">Shipment:</small><br>
         {% if object.container.shipment %}
         <a href="{% url 'shipment-detail' object.container.shipment.pk %}">{{object.container.shipment.name}}</a>
@@ -59,19 +60,18 @@
             Not in Shipment
         {% endif  %}
     </div>
-    <div class="col-2 float-end text-end">
+    <div>
         <small class="text-muted text-condensed">Location:</small><br>
         <strong>{{ object.automounter|default_if_none:"" }} {{ object.port }}</strong>
     </div>
-    <div class="col-3 float-start">
+    <div>
         <small class="text-muted text-condensed">Group:</small><br>
         <a href="{% url 'group-detail' object.group.pk %}">{{ object.group }}</a>
     </div>
-    <div class="col-2">
+    <div>
         <small class="text-muted text-condensed">Container:</small><br>
         <a href="{% url 'container-detail' object.container.pk %}">{{ object.container.name }}</a>
     </div>
-
     {% include "lims/comments.html" with object=object %}
 {% endblock %}
 

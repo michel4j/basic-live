@@ -1,6 +1,6 @@
 {% load humanize %}
-{% load icons %}
-{% load converter %}
+{% load bl_icons %}
+{% load bl_tags %}
 
 <div class="list-group-item p-2 {{ connection.beamtime.access.name }} {% if not connection.beamtime %}empty{% endif %}"
      data-highlight="project" data-reference="{{ connection.user.username }}">

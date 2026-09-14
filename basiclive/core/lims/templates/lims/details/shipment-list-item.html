@@ -1,4 +1,4 @@
-{% load icons %}
+{% load bl_icons %}
 <div class="p-2 list-group-item list-group-item-{% if shipment.status == shipment.STATES.ON_SITE %}info{% elif shipment.status == shipment.STATES.DRAFT %}warning{% elif shipment.status == shipment.STATES.SENT %}success{% elif shipment.status == shipment.STATES.RETURNED and not user.is_superuser %}empty{% else %}default{% endif %}">
     <div class="d-flex flex-row">
         <div class="box-status text-center">

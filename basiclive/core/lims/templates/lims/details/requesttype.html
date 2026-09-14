@@ -1,6 +1,6 @@
 {% extends "lims/base.html" %}
 
-{% load icons %}
+{% load bl_icons %}
 {% load static %}
 {% load crispy_forms_tags %}
 
@@ -38,19 +38,13 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-
-    <div class="col-2">
-        <h3 class="no-vmargin">
-            <span class="badge text-bg-{% if object.active %}success{% else %}secondary{% endif %}">
-                {% if object.active %}ACTIVE{% else %}INACTIVE{% endif %}
-            </span>
-        </h3>
-    </div>
-    <div class="col-10 float-end text-end">
+    <span class="status-badge badge bg-{% status_theme object.active warning=False success=True default='primary' %} text-condensed">
+        {% if object.active %}ACTIVE{% else %}INACTIVE{% endif %}
+    </span>
+    <div>
         <small class="text-muted text-condensed">Template:</small><br>
         {{ object.template }}
     </div>
-
     {% include "lims/comments.html" with object=object %}
 {% endblock %}
 

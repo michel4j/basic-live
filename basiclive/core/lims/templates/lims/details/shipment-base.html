@@ -1,6 +1,6 @@
 {% extends "lims/base.html" %}
 {% load static %}
-{% load icons %}
+{% load bl_icons %}
 {% load progress_extras %}
 
 {% block extra_css %}
@@ -50,24 +50,20 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <div class="status-bar">
-        <div class="row">
-            <div class="col">
-                <small class="text-muted text-condensed">Shipment:</small><br>
-                <a href="{% url 'shipment-detail' shipment.pk %}">{{shipment.name}}</a>
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Samples:</small><br>
-                {{ shipment.num_samples }}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Groups:</small><br>
-                {{ shipment.groups.count }}
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">Comments:</small><br>
-                {{ shipment.comments }}
-            </div>
-        </div>
+    <div>
+        <small class="text-muted text-condensed">Shipment:</small><br>
+        <a href="{% url 'shipment-detail' shipment.pk %}">{{shipment.name}}</a>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Samples:</small><br>
+        {{ shipment.num_samples }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Groups:</small><br>
+        {{ shipment.groups.count }}
+    </div>
+    <div>
+        <small class="text-muted text-condensed">Comments:</small><br>
+        {{ shipment.comments }}
     </div>
 {% endblock %}

@@ -1,9 +1,9 @@
 {% extends "lims/base.html" %}
 
 {% load static %}
-{% load jsutils %}
-{% load stats %}
-{% load icons %}
+{% load bl_tags %}
+{% load bl_stats %}
+{% load bl_icons %}
 
 {% block extra_css %}
     <link href="{% static 'misc/css/c3.min.css' %}" rel="stylesheet">
@@ -25,8 +25,7 @@
     </a>
 {% endblock %}
 
-{% block page-status-bar %}
-{% endblock %}
+{% block page-status-bar %}{% endblock %}
 
 {% block page-content %}
     <div class="row">

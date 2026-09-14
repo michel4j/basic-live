@@ -1,11 +1,13 @@
 {% extends "lims/base.html" %}
 {% load humanize %}
-{% load badges %}
-{% load layout %}
+{% load bl_badges %}
+{% load bl_layouts %}
 {% load markup %}
 {% load static %}
-{% load icons %}
-{% load misc_tags %}
+{% load bl_themes %}
+{% load bl_icons %}
+{% load bl_tags %}
+
 {% block pre_js %}
     <script src="{% static 'd3/js/d3.min.js' %}"></script>
     <script src="{% static 'd3/js/d3-selection-multi.v1.min.js' %}"></script>
@@ -38,82 +40,76 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <div class="status-bar">
-        <div class="row">
-            <div class="col">
-                <h3 class="m-0">
-                    <span class="badge text-bg-{% if shipment.status == shipment.STATES.ON_SITE %}info
-                                {% elif shipment.status == shipment.STATES.DRAFT %}warning
-                                {% elif shipment.status == shipment.STATES.SENT %}success
-                                {% elif shipment.status == shipment.STATES.RETURNED and not user.is_superuser %}success
-                                {% else %}secondary{% endif %}">{{ shipment.get_status_display }}</span>
-                </h3>
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">#&nbsp;Containers:</small><br>
-                <strong>{{ shipment.containers.count }}</strong>
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">#&nbsp;Groups:</small><br>
-                <strong>{{ shipment.groups.count }}</strong>
-            </div>
-            <div class="col">
-                <small class="text-muted text-condensed">#&nbsp;Samples:</small><br>
-                <strong>{{ shipment.num_samples }}</strong>
-            </div>
-            {% if shipment.status >= shipment.STATES.ON_SITE %}
-                <div class="col">
-                    {% if shipment.status > shipment.STATES.ON_SITE %}
-                        <small class="text-muted text-condensed">On-Site:</small><br>
-                        {% if shipment.date_received %}{{ shipment.date_received|naturalday }}{% else %}
-                            {{ shipment.date_shipped|naturalday }}{% endif %} - {{ shipment.date_returned|naturalday }}
-                    {% else %}
-                        <small class="text-muted text-condensed">Location:</small><br>
-                        {{ shipment.storage_location }}
-                    {% endif %}
-                </div>
-            {% endif %}
-
-            {% if shipment.status == shipment.STATES.DRAFT %}
-                <div class="col">
-                    <small class="text-muted text-condensed">Ready to Ship:</small><br>
-                    {{ shipment.shipping_errors|yesno:"No,Yes" }}
-                </div>
-                {% else %}{% if shipment.status < shipment.STATES.RETURNED %}
-                    <div class="col-3">
-                        <small class="text-muted text-condensed">Sent:</small><br>
-                        <span class="text-muted">via</span> {{ shipment.carrier }}
-                        {% if shipment.tracking_code and shipment.carrier %}
-                            [<a href="{{ shipment.carrier.url }}{{ shipment.tracking_code }}"
-                                title="Track with {{ shipment.carrier }}">{{ shipment.tracking_code }}</a>]
-                        {% endif %}
-                    </div>
-                {% endif %}
-            {% endif%}
-            {% if shipment.status >= shipment.STATES.RETURNED %}
-                <div class="col">
-                    {% if shipment.status < shipment.STATES.RETURNED %}
-                        <small class="text-muted text-condensed">Ready to Return:</small><br>
-                        {{ shipment.is_returnable|yesno:"No,Yes" }}
-                    {% else %}
-                        <small class="text-muted text-condensed">Returned:</small><br>
-                        via {{ shipment.carrier }} {% if shipment.return_code and shipment.carrier %}
-                        [<a href="{{ shipment.carrier.url }}{{ shipment.return_code }}"
-                            title="Track with {{ shipment.carrier }}">{{ shipment.return_code }}</a>]
-                    {% endif %}
-                    {% endif %}
-                </div>
-            {% endif %}
-            {% if shipment.components.count %}
-                <div class="col text-end">
-                    <small class="text-muted text-condensed">Included Items</small><br>
-                    {% for c in shipment.components.all %}
-                        <span class="badge text-bg-warning p-2">{{ c.kind }}</span>
-                    {% endfor %}
-                </div>
+    <span class="status-badge badge bg-{% if shipment.status == shipment.STATES.ON_SITE %}info
+                        {% elif shipment.status == shipment.STATES.DRAFT %}warning
+                        {% elif shipment.status == shipment.STATES.SENT %}success
+                        {% elif shipment.status == shipment.STATES.RETURNED and not user.is_superuser %}success
+                        {% else %}secondary{% endif %} text-condensed">
+        {{ shipment.get_status_display }}
+    </span>
+    <div>
+        <small class="text-muted text-condensed">#&nbsp;Containers:</small><br>
+        <strong>{{ shipment.containers.count }}</strong>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">#&nbsp;Groups:</small><br>
+        <strong>{{ shipment.groups.count }}</strong>
+    </div>
+    <div>
+        <small class="text-muted text-condensed">#&nbsp;Samples:</small><br>
+        <strong>{{ shipment.num_samples }}</strong>
+    </div>
+    {% if shipment.status >= shipment.STATES.ON_SITE %}
+        <div>
+            {% if shipment.status > shipment.STATES.ON_SITE %}
+                <small class="text-muted text-condensed">On-Site:</small><br>
+                {% if shipment.date_received %}{{ shipment.date_received|naturalday }}{% else %}
+                    {{ shipment.date_shipped|naturalday }}{% endif %} - {{ shipment.date_returned|naturalday }}
+            {% else %}
+                <small class="text-muted text-condensed">Location:</small><br>
+                {{ shipment.storage_location }}
             {% endif %}
         </div>
-    </div>
+    {% endif %}
+
+    {% if shipment.status == shipment.STATES.DRAFT %}
+        <div>
+            <small class="text-muted text-condensed">Ready to Ship:</small><br>
+            {{ shipment.shipping_errors|yesno:"No,Yes" }}
+        </div>
+        {% else %}{% if shipment.status < shipment.STATES.RETURNED %}
+            <div>
+                <small class="text-muted text-condensed">Sent:</small><br>
+                <span class="text-muted">via</span> {{ shipment.carrier }}
+                {% if shipment.tracking_code and shipment.carrier %}
+                    [<a href="{{ shipment.carrier.url }}{{ shipment.tracking_code }}"
+                        title="Track with {{ shipment.carrier }}">{{ shipment.tracking_code }}</a>]
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endif%}
+    {% if shipment.status >= shipment.STATES.RETURNED %}
+        <div>
+            {% if shipment.status < shipment.STATES.RETURNED %}
+                <small class="text-muted text-condensed">Ready to Return:</small><br>
+                {{ shipment.is_returnable|yesno:"No,Yes" }}
+            {% else %}
+                <small class="text-muted text-condensed">Returned:</small><br>
+                via {{ shipment.carrier }} {% if shipment.return_code and shipment.carrier %}
+                [<a href="{{ shipment.carrier.url }}{{ shipment.return_code }}"
+                    title="Track with {{ shipment.carrier }}">{{ shipment.return_code }}</a>]
+            {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+    {% if shipment.components.count %}
+        <div>
+            <small class="text-muted text-condensed">Included Items</small><br>
+            {% for c in shipment.components.all %}
+                <span class="badge text-bg-warning p-2">{{ c.kind }}</span>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block page-content %}

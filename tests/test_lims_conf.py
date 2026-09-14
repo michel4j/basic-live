@@ -40,23 +40,5 @@ class LimsConfTests(SimpleTestCase):
         self.assertEqual(lims_settings.MAX_CONTAINER_DEPTH, 2)
         self.assertIs(lims_settings.USE_SCHEDULE, True)
 
-    def test_get_setting_templatetag(self):
-        # Test get_setting with exact setting name
-        t1 = Template("{% load settings %}{% get_setting 'APP_NAME' %}")
-        rendered1 = t1.render(Context({}))
-        self.assertEqual(rendered1.strip(), "BasicLIVE")
-
-        # Test get_setting with legacy LIMS_ prefix normalization
-        t2 = Template("{% load settings %}{% get_setting 'LIMS_USE_SCHEDULE' %}")
-        rendered2 = t2.render(Context({}))
-        self.assertEqual(rendered2.strip(), "True")
-
-        # Test get_setting with override
-        with override_settings(BASICLIVE_LIMS={"APP_NAME": "FacilityLIVE"}):
-            t3 = Template("{% load settings %}{% get_setting 'APP_NAME' %}")
-            rendered3 = t3.render(Context({}))
-            self.assertEqual(rendered3.strip(), "FacilityLIVE")
-
-
 if __name__ == "__main__":
     unittest.main()

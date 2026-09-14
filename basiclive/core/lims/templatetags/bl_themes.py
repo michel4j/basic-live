@@ -3,8 +3,8 @@ from django.template import Library
 register = Library()
 
 
-@register.simple_tag(name='state_tag')
-def state_tag(state, default="", **kwargs) -> str:
+@register.simple_tag(name='status_theme')
+def status_theme(state, default="", **kwargs) -> str:
     """
     Returns the key from kwargs that matches the given state. Can be used to map a state to a specific tag or label.
     If no match is found, it returns the default value.

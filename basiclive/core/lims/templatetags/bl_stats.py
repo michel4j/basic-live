@@ -7,7 +7,7 @@ from django import template
 from django.utils.safestring import mark_safe
 
 from basiclive.core.lims.models import *
-from .converter import humanize_duration
+from .bl_tags import humanize_duration
 from ..stats import SHIFT, get_data_periods
 
 register = template.Library()

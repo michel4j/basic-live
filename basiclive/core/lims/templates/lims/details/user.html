@@ -1,8 +1,9 @@
 {% extends "lims/base.html" %}
 {% load static %}
 {% load humanize %}
-{% load icons %}
-{% load jsutils %}
+{% load bl_icons %}
+{% load bl_tags %}
+{% load bl_themes %}
 
 {% block extra_css %}
     <link href="{% static 'misc/css/c3.min.css' %}" rel="stylesheet">
@@ -44,28 +45,22 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <div class="status-bar">
-        <div class="row">
-            <div class="col-2">
-                <h3 class="m-0">
-                    <div class="badge text-bg-{% if object.active_status == 'Active' %}info{% else %}{% if object.active_status == 'Idle' %}secondary{% else %}success{% endif %}{% endif %}"
-                         title="Last session on {{ object.last_session }}"><span class="text-thin">{{ object.kind }} | </span>{{ object.active_status }}</div>
-                </h3>
-            </div>
-            <div class="col-3 float-end text-end">
-                <small class="text-muted text-condensed">Groups:</small><br>
-                {{ object.sample_groups.count }}
-            </div>
-            <div class="col-2 float-end text-end">
-                <small class="text-muted text-condensed">Shipments:</small><br>
-                {{ object.shipments.count }}
-            </div>
-            <div class="col-2 float-end text-end">
-                <small class="text-muted text-condensed">Samples:</small><br>
-                {{ object.samples.count }}
-            </div>
-
-        </div>
+    <span class="status-badge badge bg-{% status_theme object.active_status info="Active" secondary="Idle" %}"
+        title="Last session on {{ object.last_session }}"
+    >
+        <span class="fw-lighter">{{ object.kind }} | </span>{{ object.active_status }}
+    </span>
+    <div class="col-3 float-end text-end">
+        <small class="text-muted text-condensed">Groups:</small><br>
+        {{ object.sample_groups.count }}
+    </div>
+    <div class="col-2 float-end text-end">
+        <small class="text-muted text-condensed">Shipments:</small><br>
+        {{ object.shipments.count }}
+    </div>
+    <div class="col-2 float-end text-end">
+        <small class="text-muted text-condensed">Samples:</small><br>
+        {{ object.samples.count }}
     </div>
 {% endblock %}
 

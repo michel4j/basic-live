@@ -1,4 +1,4 @@
-{% load icons %}
+{% load bl_icons %}
 {% if object.status == object.STATES.DRAFT or object.comments or object.staff_comments %}
     {% if object.status == object.STATES.DRAFT %}
         <a href="#!" data-modal-url="{{ handler }}edit/">
