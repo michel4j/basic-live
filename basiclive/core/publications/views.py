@@ -38,7 +38,7 @@ class PubEntryList(AdminRequiredMixin, ItemListView):
 
     }
     ordering = ['-published']
-    paginate_by = 25
+    paginate_by = 16
     page_title = 'Publication Entries'
 
 
@@ -57,7 +57,7 @@ class PDBEntryList(AdminRequiredMixin, ItemListView):
         'title': 'w-65',
     }
     ordering = ['-released']
-    paginate_by = 25
+    paginate_by = 16
     page_title = 'PDB Depositions'
     link_field = 'code'
 
@@ -92,8 +92,8 @@ class SubjectAreasList(AdminRequiredMixin, ItemListView):
     list_columns = ['id', 'name', 'code', 'parent__name', ]
     list_search = ['name', 'description', 'code']
     ordering = ['code']
-    paginate_by = 25
-    page_title = 'PDB Depositions'
+    paginate_by = 16
+    page_title = 'Subject Areas'
 
 
 class JournalList(AdminRequiredMixin, ItemListView):
@@ -105,7 +105,7 @@ class JournalList(AdminRequiredMixin, ItemListView):
     list_transforms = {
         'codes': lambda codes, obj: mark_safe(f"<span class='no-wrap'>{" / ".join(codes)}</span>")
     }
-    paginate_by = 25
+    paginate_by = 16
     page_title = 'Journals'
 
 

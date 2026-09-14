@@ -1,6 +1,7 @@
 import json
 
 import requests
+from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView, ModalFormView
 from django import http
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -17,7 +18,6 @@ from django.views.generic import edit, detail, View
 from formtools.wizard.views import SessionWizardView
 from itemlist.views import ItemListView
 
-from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView, ModalFormView
 from basiclive.core.lims.conf import settings
 from basiclive.utils import filters
 from basiclive.utils.mixins import AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
@@ -125,7 +125,7 @@ class ProjectLabels(AdminRequiredMixin, detail.DetailView):
 
 
 class ListViewMixin(LoginRequiredMixin):
-    paginate_by = 25
+    paginate_by = 16
     template_name = "lims/list.html"
     link_data = False
     show_project = True
@@ -150,7 +150,7 @@ class DetailListMixin(OwnerRequiredMixin):
     extra_model = None
     add_url = None
     list_filters = []
-    paginate_by = 25
+    paginate_by = 16
 
     def get_context_data(self, **kwargs):
         c = super(DetailListMixin, self).get_context_data(**kwargs)
@@ -174,7 +174,6 @@ class ShipmentList(ListViewMixin, ItemListView):
     link_url = 'shipment-detail'
     link_data = False
     ordering = ['status', '-modified']
-    paginate_by = 25
 
     def get_queryset(self):
         if self.request.user.is_superuser:
@@ -482,6 +481,7 @@ class ContainerList(ListViewMixin, ItemListView):
     ordering = ['-created']
     ordering_proxies = {}
     list_transforms = {}
+    paginate_by = 16
 
 
 class ContainerDetail(DetailListMixin, SampleList):
@@ -1410,7 +1410,7 @@ def fetch_archive(request, url):
 
 class ProjectList(AdminRequiredMixin, ItemListView):
     model = models.Project
-    paginate_by = 25
+    paginate_by = 16
     template_name = "lims/details/user-list.html"
     list_filters = ['created', 'modified', 'kind', 'designation']
     list_columns = ['username', 'contact_person', 'contact_phone', 'contact_email', 'kind']

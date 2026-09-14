@@ -36,12 +36,13 @@ $max_font: 15px;
   --bl-font-condensed: "Fira Sans Condensed", sans-serif;
   --bs-font-monospace: "Fira Code", monospace;
   --bl-font-sans-serif: "Fira Sans", sans-serif;
-  --bl-accent: #91847C;
+  --bl-accent: var(--bs-primary);
   --bl-gray-alpha: rgba(0, 0, 0, 0.15);
   --bl-gray-barely: rgba(0, 0, 0, 0.05);
   --bl-data-modal-width: 526px;
 
   --bs-link-color: var(--bs-primary);
+  --bs-link-color-rgb: var(--bs-primary-rgb);
   --bs-link-hover-color: var(--bs-primary);
   --bs-border-color: var(--bl-gray-alpha);
 
@@ -60,6 +61,11 @@ $max_font: 15px;
   outline: 0;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
 body, .tooltip, .popover {
   font-family: var(--bs-font-sans-serif);
   font-weight: 400;
@@ -70,7 +76,9 @@ pre {
 }
 
 body {
-  min-height: calc(100vh - 51px - 2rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 a {
@@ -79,12 +87,14 @@ a {
 
 header > nav {
   background-color: var(--bs-primary);
+  color: contrast-color(var(--bs-primary));
   max-height: 51px !important;
 }
 
 main {
-  margin-top: calc(51px + 1rem);
-  padding-bottom: 51px;
+  margin-top: 51px;
+  ////padding-bottom: 51px;
+  flex: 1;
 }
 
 .folio {
@@ -94,7 +104,7 @@ main {
   padding-top: 1rem;
   position: relative;
   transition: padding 500ms ease 0s;
-  min-height: calc(100vh - 51px - 2rem);
+  min-height: calc(50vh);
 
   .folio {
     box-shadow: none;
@@ -1056,8 +1066,8 @@ a[data-modal-url], .back text[port], .cursor {
 
 .footer {
   display: flex;
-  background-color: var(--bl-accent);
-  color: contrast-color(var(--bl-accent));
+  background-color: var(--bs-secondary-bg, inherit);
+  color: var(--bs-secondary-color, inherit);
   width: 100%;
   font-size: 90%;
   opacity: 0.7;
@@ -1703,4 +1713,17 @@ input::placeholder {
   content: "✔";
   float: right;
   font-size: 110%
+}
+
+body::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--bl-progress-percent, 0) * 1vw);
+  display: var(--bl-progress-display, block);
+  height: 2px;
+  content: "";
+  opacity: calc(var(--bl-progress-opacity, 1) * 0.75);
+  background: var(--bl-accent-color-0, --bs-primary);
+  transition: width 0.3s ease-in, opacity 0.3s ease-out;
 }
