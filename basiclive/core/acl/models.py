@@ -6,6 +6,7 @@ from typing import NamedTuple
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from model_utils.models import TimeStampedModel
 from model_utils import Choices
 
 from basiclive.core.lims.conf import settings as lims_settings
@@ -142,13 +143,13 @@ class Access(models.Model):
     user = models.ForeignKey("lims.Project", on_delete=models.CASCADE)
     userlist = models.ForeignKey(AccessList, related_name="connections", on_delete=models.CASCADE)
     status = models.CharField(max_length=20)
-    created = models.DateTimeField('date created', auto_now_add=True, editable=True)
-    end = models.DateTimeField('date ended', null=True, blank=True)
+    start_time = models.DateTimeField('Start Time', default=timezone.now)
+    end_time = models.DateTimeField('End Time', null=True, blank=True)
 
     def is_active(self):
         return self.status in ['Connected', 'Disconnected']
 
     def total_time(self):
-        end = self.end or timezone.now()
-        return (end - self.created).total_seconds()/3600.
+        end = self.end_time or timezone.now()
+        return (end - self.start_time).total_seconds()/3600.
     total_time.short_description = "Duration"

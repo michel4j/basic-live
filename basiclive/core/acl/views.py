@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import msgpack
 from django.contrib.auth import get_user_model
@@ -131,8 +132,9 @@ class EndpointList(View):
                     errors.append(f"User '{connection['project']}' not found.")
                 status = connection['status']
                 try:
-                    event_time = datetime.strptime(connection['date'], "%Y-%m-%d %H:%M:%S")
-                    dt = timezone.make_aware(event_time, timezone.get_current_timezone())
+                    event_time = datetime.fromisoformat(connection['date'])
+                    dt = event_time.replace(tzinfo=ZoneInfo('UTC'))
+                    print(project, dt)
                     r, created = models.Access.objects.get_or_create(
                         name=connection['name'], userlist=user_list, user=project
                     )
