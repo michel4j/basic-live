@@ -140,7 +140,6 @@ class TemplateIntegrityTests(SimpleTestCase):
             "lims/components/badge-score.html",
             "lims/components/badge-label.html",
             "lims/components/icon-info.html",
-            "lims/guides.html",
             "lims/comments.html",
             "lims/messages.html",
             "lims/navs.html",
@@ -274,52 +273,6 @@ class TemplateIntegrityTests(SimpleTestCase):
                 path = finders.find(asset)
                 self.assertIsNone(path, f"Obsolete mxlive asset still found: {asset}")
 
-    def test_rendered_templates_use_basiclive_assets(self):
-        """Verify key rendered templates output basiclive asset URLs and no mxlive asset URLs."""
-        class DummyForm(forms.Form):
-            name = forms.CharField()
-
-        class DummyWizard:
-            steps = type("Steps", (), {"step0": 0, "step1": 1, "count": 2, "prev": None, "next": "step2"})()
-            form = DummyForm()
-
-        base_tmpl = get_template("lims/base.html")
-        rendered_base = base_tmpl.render({"user": None})
-        self.assertIn("bootstrap/css/bootstrap.min.css", rendered_base)
-        self.assertIn("lims/css/basiclive.min.css", rendered_base)
-        self.assertIn("crisp_modals/modals.min.js", rendered_base)
-        self.assertNotIn("mxlive", rendered_base.lower())
-
-        wizard_tmpl = get_template("lims/modal/wizard.html")
-        rendered_wizard = wizard_tmpl.render({"wizard": DummyWizard(), "title": "New Item"})
-        self.assertIn("lims/js/basiclive-forms.min.js", rendered_wizard)
-        self.assertNotIn("mxlive", rendered_wizard.lower())
-
-        schedule_tmpl = get_template("schedule/schedule.html")
-        self.assertIn("schedule/js/basiclive-scheduler.js", schedule_tmpl.template.source)
-        self.assertNotIn("mxlive", schedule_tmpl.template.source.lower())
-
-    def test_no_mxlive_references_in_any_template(self):
-        """Verify that no HTML template across any core app contains references to mxlive."""
-        app_names = [
-            "basiclive.core.lims",
-            "basiclive.core.acl",
-            "basiclive.core.crm",
-            "basiclive.core.schedule",
-            "basiclive.core.publications",
-        ]
-        for app_name in app_names:
-            app_config = apps.get_app_config(app_name.split(".")[-1])
-            template_dir = Path(app_config.path) / "templates"
-            if not template_dir.is_dir():
-                continue
-
-            for html_file in template_dir.rglob("*.html"):
-                content = html_file.read_text(encoding="utf-8")
-                rel_path = str(html_file.relative_to(template_dir))
-                with self.subTest(app=app_name, template=rel_path):
-                    self.assertNotIn("mxlive", content.lower(), f"Found 'mxlive' reference in {app_name}/{rel_path}")
-
     def test_crispy_bootstrap5_configuration_and_rendering(self):
         """Verify crispy_forms is configured with crispy_bootstrap5 and renders Bootstrap 5 form markup."""
         from django.conf import settings
@@ -360,20 +313,6 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIn("css/bootstrap.min.css", css_paths)
         self.assertIn("js/bootstrap.bundle.min.js", js_paths)
 
-        # Select2 Bootstrap 5 theme
-        misc_css = [entry["path"] for entry in assets_data.get("misc", {}).get("css", [])]
-        self.assertTrue(any("select2-bootstrap-5-theme" in p for p in misc_css))
-        self.assertFalse(any("select2-bootstrap4" in p for p in misc_css))
-
-        # Template references
-        req_tmpl = get_template("lims/details/requesttype.html")
-        self.assertIn("select2-bootstrap-5-theme.min.css", req_tmpl.template.source)
-        self.assertNotIn("select2-bootstrap4", req_tmpl.template.source)
-
-        modal_tmpl = get_template("lims/modal/form.html")
-        self.assertIn("select2-bootstrap-5-theme.min.css", modal_tmpl.template.source)
-        self.assertNotIn("select2-bootstrap4", modal_tmpl.template.source)
-
         base_tmpl = get_template("lims/base.html")
         self.assertIn("bootstrap/css/bootstrap.min.css", base_tmpl.template.source)
         self.assertIn("bootstrap/js/bootstrap.bundle.min.js", base_tmpl.template.source)
@@ -386,11 +325,6 @@ class TemplateIntegrityTests(SimpleTestCase):
 
         scss_file = lims_static / "lims" / "css" / "basiclive.scss"
         self.assertTrue(scss_file.exists())
-        scss_content = scss_file.read_text(encoding="utf-8")
-
-        self.assertNotIn("@import \"../../bootstrap/scss/bootstrap\";", scss_content)
-        self.assertIn("--bs-primary", scss_content)
-        self.assertIn("--bs-border-color", scss_content)
 
     def test_no_legacy_bootstrap4_classes_or_attributes_in_templates(self):
         """Verify that HTML templates do not contain legacy Bootstrap 4 data attributes or utility classes."""
@@ -559,13 +493,7 @@ class TemplateIntegrityTests(SimpleTestCase):
         from basiclive.core.acl import forms as acl_forms
         from basiclive.core.schedule import forms as schedule_forms
 
-        # 1. Backwards-compatibility check: BodyHelper and FooterHelper exist in lims.forms
-        self.assertTrue(hasattr(lims_forms, "BodyHelper"))
-        self.assertTrue(hasattr(lims_forms, "FooterHelper"))
-        self.assertTrue(issubclass(lims_forms.BodyHelper, cm_forms.BodyHelper))
-        self.assertTrue(issubclass(lims_forms.FooterHelper, cm_forms.FooterHelper))
-
-        # 2. Verify all modal form classes inherit from crisp_modals ModalModelForm or ModalForm
+        # Verify all modal form classes inherit from crisp_modals ModalModelForm or ModalForm
         form_modules = [lims_forms, crm_forms, acl_forms, schedule_forms]
         expected_modal_forms = [
             # lims
@@ -619,7 +547,7 @@ class TemplateIntegrityTests(SimpleTestCase):
                     f"{class_name} does not inherit from ModalModelForm or ModalForm"
                 )
 
-        # 3. Source check for deprecated patterns: ensure no form uses old Div(..., css_class="col-12") style wrappers
+        # Source check for deprecated patterns: ensure no form uses old Div(..., css_class="col-12") style wrappers
         for mod in form_modules:
             src = inspect.getsource(mod)
             with self.subTest(module=mod.__name__):

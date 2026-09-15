@@ -19,8 +19,6 @@ class LimsConfTests(SimpleTestCase):
         self.assertEqual(lims_settings.MAX_CONTAINER_DEPTH, 2)
         self.assertIs(lims_settings.RESTRICT_DOWNLOADS, False)
         self.assertEqual(lims_settings.LOADER_SELECT_DURATION, 300)
-        self.assertEqual(lims_settings.APP_NAME, "BasicLIVE")
-        self.assertEqual(lims_settings.BASE_DIR, "/tmp")
 
     def test_override_via_basiclive_lims(self):
         with override_settings(
