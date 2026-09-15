@@ -7,26 +7,26 @@ register = template.Library()
 @register.filter("dataset")
 def dataset(data):
     if data.kind.acronym in ['RASTER', 'SCREEN', 'XRD', 'DATA']:
-        return "{} imgs".format(len(data.frames))
+        return f"{len(data.frames)} imgs"
     else:
-        return "{} keV".format(data.energy)
+        return f"{data.energy} keV"
 
 
 @register.filter("report_summary")
 def report_summary(report):
-    return "{:0.2f}".format(report.score)
+    return f"{report.score:0.2f}"
 
 
 @register.inclusion_tag('lims/components/badge-score.html')
 def score_badge(score):
     rgba = colors.colormap(score)
+    r, g, b, a = rgba
     return {
         'score': round(score, 2),
         'styles': (
-            "text-shadow: 0 0 2px rgba(0, 0, 0, 0.9); "
-            "color: #fff; "
-            "background-color: rgba({}, {}, {}, {:0.2f});"
-        ).format(*rgba)
+            f"background-color: rgba({r}, {g}, {b}, {a:0.2f});"
+            f"color: contrast-color(rgba({r}, {g}, {b}, {a:0.2f}));"
+        )
     }
 
 
@@ -34,11 +34,12 @@ def score_badge(score):
 def label_badge(header="", classes="", value=0, score=None):
     if score is not None:
         rgba = colors.colormap(score)
+        r, g, b, a = rgba
         styles = (
-            "text-shadow: 0 0 2px rgba(0, 0, 0, 0.9); "
-            "color: #fff; font-weight: 600;"
-            "background-color: rgba({}, {}, {}, {:0.2f});"
-        ).format(*rgba)
+            "font-weight: 600;"
+            f"background-color: rgba({r}, {g}, {b}, {a:0.2f});"
+            f"color: contrast-color(rgba({r}, {g}, {b}, {a:0.2f}));"
+        )
     else:
         styles = ""
     return {

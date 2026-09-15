@@ -1234,7 +1234,7 @@ svg * {
 .label {
   > * {
     color: var(--white);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     padding: 0.2rem 0.4rem;
     text-align: center;
     align-self: stretch;
@@ -1245,8 +1245,7 @@ svg * {
 
   .label-header {
     border-radius: 0.25rem 0 0 0.25rem;
-    background-color: var(--bl-gray-barely);
-    text-shadow: 1px 1px 1px var(--bs-black);
+    background-color: var(--bs-border-color);
   }
 
   .label-value {
@@ -1268,7 +1267,7 @@ svg * {
 
   .comment {
     font-size: .8rem;
-    font-family: var(--bl-cursive-font);
+    font-family: var(--bl-cursive-font), sans-serif;
   }
 
   .note-holder {
@@ -1305,7 +1304,7 @@ svg * {
     position: absolute;
     text-decoration: none;
     color: var(--bs-black);
-    font-family: var(--bl-font-cursive);
+    font-family: var(--bl-font-cursive), sans-serif;
     height: 12rem;
     width: 12rem;
     margin: 1rem;
