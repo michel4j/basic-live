@@ -109,7 +109,7 @@ class EndpointList(View):
     def get(self, request, *args, **kwargs):
         client_addr = get_client_address(request)
 
-        userlist = models.AccessList.objects.filter(address=client_addr, active=True).first()
+        userlist = models.AccessList.objects.active_for_ip(client_addr)
 
         if userlist:
             return JsonResponse(userlist.authorized_users(), safe=False)
@@ -118,7 +118,7 @@ class EndpointList(View):
 
     def post(self, request, *args, **kwargs):
         client_addr = get_client_address(request)
-        user_list = models.AccessList.objects.filter(address=client_addr, active=True).first()
+        user_list = models.AccessList.objects.active_for_ip(client_addr)
 
         errors = []
 
@@ -162,7 +162,7 @@ class AccessKeys(AuthenticationRequiredMixin, View):
     def get(self, request, *args, **kwargs):
 
         client_addr = get_client_address(request)
-        user_list = models.AccessList.objects.filter(address=client_addr, active=True).first()
+        user_list = models.AccessList.objects.active_for_ip(client_addr)
         user = User.objects.filter(username=self.kwargs.get('username')).first()
 
         msg = ''
