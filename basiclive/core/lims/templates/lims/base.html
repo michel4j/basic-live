@@ -156,7 +156,9 @@
                 $(this).removeClass('form-select').addClass('form-select-multiple');
                 new SlimSelect({
                     select: this,
-                    maxValuesShown: 40
+                    settings: {
+                        maxValuesShown: 40
+                    }
                 })
             });
 
@@ -167,7 +169,9 @@
                     $(this).removeClass('form-select').addClass('form-select-multiple');
                     new SlimSelect({
                         select: this,
-                        maxValuesShown: 40
+                        settings: {
+                            maxValuesShown: 40
+                        }
                     })
                 });
 
