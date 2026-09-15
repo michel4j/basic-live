@@ -155,7 +155,8 @@
             $(document).find('select[multiple].selectmultiple').each(function () {
                 $(this).removeClass('form-select').addClass('form-select-multiple');
                 new SlimSelect({
-                    select: this
+                    select: this,
+                    maxValuesShown: 40
                 })
             });
 
@@ -165,7 +166,8 @@
                 $('#modal-target').find('select[multiple]').each(function () {
                     $(this).removeClass('form-select').addClass('form-select-multiple');
                     new SlimSelect({
-                        select: this
+                        select: this,
+                        maxValuesShown: 40
                     })
                 });
 
