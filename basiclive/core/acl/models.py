@@ -6,10 +6,12 @@ from typing import NamedTuple
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
 from model_utils import Choices
 
 from basiclive.core.lims.conf import settings as lims_settings
+from basiclive.utils.misc import natural_duration
 
 
 def validate_ip_or_network(value):
@@ -133,23 +135,23 @@ class AccessList(models.Model):
 
 
 class Access(TimeStampedModel):
-    STATES = Choices(
-        ('CONNECTED', 'Connected'),
-        ('DISCONNECTED', 'Disconnected'),
-        ('FAILED', 'Failed'),
-        ('FINISHED', 'Finished'),
-    )
-    name = models.CharField(max_length=48)
+    class Status(models.TextChoices):
+        CONNECTED = 'Connected', _('Connected')
+        DISCONNECTED = 'Disconnected', _('Disconnected')
+        FINISHED = 'Finished', _('Finished')
+        FAILED = 'Failed', _('Failed')
+
+    name = models.CharField(max_length=48, unique=True)
     user = models.ForeignKey("lims.Project", on_delete=models.CASCADE)
     userlist = models.ForeignKey(AccessList, related_name="connections", on_delete=models.CASCADE)
-    status = models.CharField(max_length=20)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.FINISHED)
     start_time = models.DateTimeField('Start Time', default=timezone.now)
     end_time = models.DateTimeField('End Time', null=True, blank=True)
 
     def is_active(self):
-        return self.status in ['Connected', 'Disconnected']
+        return self.status in [self.Status.CONNECTED, self.Status.DISCONNECTED]
 
     def total_time(self):
         end = self.end_time or timezone.now()
-        return (end - self.start_time).total_seconds()/3600.
+        return natural_duration(end - self.start_time)
     total_time.short_description = "Duration"

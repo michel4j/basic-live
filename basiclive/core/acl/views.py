@@ -75,10 +75,10 @@ class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
 
 class AccessConnectionList(AdminRequiredMixin, ItemListView):
     model = models.Access
-    list_columns = ['user', 'name', 'userlist', 'status', 'created', 'end']
-    list_filters = ['created', filters.YearFilter('created', reverse=True), 'userlist', 'status']
-    list_search = ['user__username', 'name', 'status', 'userlist__name', 'created']
-    ordering = ['-created']
+    list_columns = ['user', 'name', 'userlist', 'status', 'start_time', 'end_time', 'total_time']
+    list_filters = ['start_time', filters.YearFilter('start_time', reverse=True), 'userlist', 'status']
+    list_search = ['user__username', 'name', 'status', 'userlist__name', 'start_time']
+    ordering = ['-start_time']
     template_name = "lims/list.html"
     link_url = 'access-connection-detail'
     link_attr = 'data-modal-url'
@@ -89,7 +89,7 @@ class AccessConnectionList(AdminRequiredMixin, ItemListView):
 
 class AccessConnectionStats(PlotViewMixin, AccessConnectionList):
     plot_fields = {'user__kind__name': {}, 'userlist__name': {}, 'status': {}}
-    date_field = 'created'
+    date_field = 'start_time'
     list_url = reverse_lazy("access-connections")
 
 
@@ -125,27 +125,31 @@ class EndpointList(View):
 
         if user_list:
             connections = msgpack.loads(request.body)
+
             for connection in connections:
                 try:
                     project = User.objects.get(username=connection['project'])
-                except User.DoesNotExist:
-                    errors.append(f"User '{connection['project']}' not found.")
-                status = connection['status']
-                try:
-                    event_time = datetime.fromisoformat(connection['date'])
-                    dt = event_time.replace(tzinfo=ZoneInfo('UTC'))
-                    print(project, dt)
+                    start_time = datetime.fromisoformat(connection['start_time'])
+                    end_time = None if not connection.get('end_time') else datetime.fromisoformat(connection['end_time'])
+                    name = connection['name']
+                    status = {
+                        'Finished': models.Access.Status.FINISHED,
+                        'Connected': models.Access.Status.CONNECTED,
+                        'Failed': models.Access.Status.FAILED,
+                        'Disconnected': models.Access.Status.DISCONNECTED,
+                    }.get(connection['status'], models.Access.Status.CONNECTED)
+
                     r, created = models.Access.objects.get_or_create(
-                        name=connection['name'], userlist=user_list, user=project
+                        name=name, userlist=user_list, user=project
                     )
+
                     r.status = status
-                    if created:
-                        r.created = dt
-                    else:
-                        r.end = dt
+                    r.start_time = start_time
+                    r.end_time = end_time
                     r.save()
-                except Exception as e:
-                    pass
+
+                except User.DoesNotExist as e:
+                    errors.append(f"User '{connection['project']}' not found.")
 
             return JsonResponse(user_list.authorized_users(), safe=False)
         else:
