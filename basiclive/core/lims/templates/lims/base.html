@@ -74,51 +74,35 @@
 
 {% if user.is_authenticated %}
     <footer class="bl-footer bg-body-tertiary">
-        <div class="container-fluid p-5 text-body-secondary">
+        <div class="container-fluid p-4 text-body-secondary">
             <div class="row">
-                <div class="col-lg-3 small"><a
+                <div class="col small"><a
                         class="d-inline-flex align-items-center text-body-emphasis text-decoration-none" href="/"
                         aria-label="{{ APP_NAME }}">
-                    <span class="fs-6">{{ APP_NAME }} v{{ APP_VERSION }}</span></a>
-                    <ul class="list-unstyled small">
+                    <span class="fs-6">{{ APP_NAME }} <span class="fw-light">v{{ APP_VERSION }}</span></span></a>
+                    <ul class="list-unstyled mb-0 small">
                         <li class="mb-1">
                             This system is built using <a href="https://github.com/michel4j/basic-live/">BasicLIVE</a>
                             &mdash; a framework for building laboratory information management systems.
                         </li>
-                        <li class="mb-1">
+                        <li>
                             Code licensed <a href="https://github.com/michel4j/mxlive/blob/main/LICENSE" target="_blank"
                                              rel="license noopener">MIT</a>, docs <a
                                 href="https://creativecommons.org/licenses/by/3.0/" target="_blank"
-                                rel="license noopener">CC BY 3.0</a> <a href="https://www.lightsource.ca">Canadian Light Source, Inc </a>
+                                rel="license noopener">CC BY 3.0</a> &copy; 2010&ndash;{% now "Y" %}
+                            <a href="https://www.lightsource.ca">Canadian Light Source, Inc </a>
                         </li>
                     </ul>
                 </div>
-                <div class="col col-lg-2 offset-lg-1 small"><h6>Links</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="/">Home</a></li>
-                        <li><a href="/docs/">Docs</a></li>
-                        <li><a href="https://github.com/michel4j/mxlive/issues">Issues</a></li>
-                    </ul>
-                </div>
-                <div class="col col-lg-2 small"><h6>Guides</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="/docs/5.3/getting-started">Managing Shipments</a></li>
-                        <li><a href="/docs/5.3/examples/starter-template">Adding Samples</a></li>
-                        <li><a href="/docs/5.3/getting-started/webpack">Experiment Requests</a></li>
-                    </ul>
-                </div>
-                <div class="col col-lg-2 small"><h6>Related Projects</h6>
-                    <ul class="list-unstyled">
-                        <li>
-                            <a href="https://github.com/michel4j/basic-live" target="_blank" rel="noopener">BasicLIVE</a>
-                        </li>
-                        <li>
-                            <a href="https://github.com/michel4j/django-crisp-modals" target="_blank" rel="noopener">Crisp Modals</a>
-                        </li>
-                        <li>
-                            <a href="https://github.com/michel4j/django-itemlist" target="_blank" rel="noopener">Item List</a>
-                        </li>
-                    </ul>
+                <div class="col small">
+                    <div class="d-flex flex-row justify-content-end align-items-stretch h-100">
+                        <ol class="breadcrumb d-flex align-self-end">
+                            <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="https://katyjg.github.io/mxlive/">Documentation</a></li>
+                            <li class="breadcrumb-item"><a href="https://github.com/michel4j/mxlive/issues">Issues</a></li>
+                            <li class="breadcrumb-item"><a href="https://github.com/michel4j/mxlive">Source Code</a></li>
+                        </ol>
+                    </div>
                 </div>
             </div>
         </div>
