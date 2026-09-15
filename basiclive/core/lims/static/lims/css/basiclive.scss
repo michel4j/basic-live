@@ -43,12 +43,13 @@ $max_font: 15px;
   --bl-accent-text-1: #b3b3b3;
   --bl-gray-alpha: rgba(0, 0, 0, 0.15);
   --bl-gray-barely: rgba(0, 0, 0, 0.05);
+  --bl-shaded-bg: rgba(0, 0, 0, 0.05);
   --bl-data-modal-width: 526px;
 
   --bs-link-color: var(--bs-primary);
   --bs-link-color-rgb: var(--bs-primary-rgb);
   --bs-link-hover-color: var(--bs-primary);
-  --bs-border-color: var(--bl-gray-alpha);
+  //--bs-border-color: var(--bl-gray-alpha);
 
   --bs-table-bg: transparent;
   --bs-border-radius: 3px;
@@ -415,6 +416,7 @@ table {
     margin-bottom: 0;
     --bs-table-bg: transparent;
   }
+
 }
 
 .table-hover {
@@ -1795,7 +1797,8 @@ $category-colors: (
 );
 
 .callout {
-  padding: 1.25rem;
+  padding: 1rem;
+
   color: var(--bl-callout-color, inherit);
   background-color: var(--bl-callout-bg, rgba(var(--bs-emphasis-color-rgb), 0.05));
   border-left: .25rem solid var(--bl-callout-border, rgba(var(--bs-emphasis-color-rgb), 0.25));
@@ -1820,7 +1823,7 @@ $category-colors: (
     &.callout-#{$state} {
       --bl-callout-color: var(--bs-#{$state}-text-emphasis);
       --bl-callout-bg: var(--bs-#{$state}-bg-subtle);
-      --bl-callout-border: var(--bs-#{$state}-border-subtle)
+      --bl-callout-border: var(--bs-#{$state}-border-subtle);
     }
   }
 
