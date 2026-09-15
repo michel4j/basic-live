@@ -52,7 +52,7 @@ class AccessListView(AdminRequiredMixin, ItemListView):
     list_search = ['name', 'description']
     tool_template = "acl/tools-access.html"
     link_url = 'access-edit'
-    link_kwarg = 'address'
+    link_kwarg = 'pk'
     link_attr = 'data-modal-url'
     ordering = ['name']
     template_name = "lims/list.html"
@@ -70,9 +70,6 @@ class AccessEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     success_message = "Access Control List has been updated."
     allowed_roles = ['owner', 'admin']
     admin_roles = ['admin']
-
-    def get_object(self, queryset=None):
-        return self.model.objects.get(address=self.kwargs.get('address'))
 
 
 class AccessConnectionList(AdminRequiredMixin, ItemListView):

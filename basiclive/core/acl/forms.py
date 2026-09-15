@@ -17,7 +17,7 @@ class AccessForm(ModalModelForm):
         self.fields['users'].queryset = self.fields['users'].queryset.order_by('name')
 
         self.body.title = "Edit Remote Access List"
-        self.body.form_action = reverse_lazy('access-edit', kwargs={'address': self.instance.address})
+        self.body.form_action = reverse_lazy('access-edit', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout(
             Row(
                 FullWidth(Field('users', css_class="select")),
