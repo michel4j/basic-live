@@ -132,7 +132,7 @@ class AccessList(models.Model):
         verbose_name = "Access List"
 
 
-class Access(models.Model):
+class Access(TimeStampedModel):
     STATES = Choices(
         ('CONNECTED', 'Connected'),
         ('DISCONNECTED', 'Disconnected'),
