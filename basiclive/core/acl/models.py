@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-from ipaddress import ip_network
+from ipaddress import ip_address, ip_network
 from typing import NamedTuple
 
 from django.core.exceptions import ValidationError
@@ -39,6 +39,32 @@ def get_storage_path(instance, filename):
     return os.path.join('uploads/', 'links', filename)
 
 
+class AccessListQuerySet(models.QuerySet):
+    def active_for_ip(self, ip_str: str):
+        if not ip_str:
+            return None
+        try:
+            target_ip = ip_address(ip_str)
+        except (ValueError, TypeError):
+            return None
+
+        active_lists = self.filter(active=True)
+        matching = []
+        for al in active_lists:
+            try:
+                net = al.network
+                if target_ip in net:
+                    matching.append((net.prefixlen, al))
+            except (ValueError, TypeError):
+                continue
+
+        if matching:
+            # Sort by prefix length descending (most specific first)
+            matching.sort(key=lambda x: x[0], reverse=True)
+            return matching[0][1]
+        return None
+
+
 class AccessList(models.Model):
     name = models.CharField(max_length=60, unique=True)
     description = models.TextField(blank=True, null=True)
@@ -48,6 +74,21 @@ class AccessList(models.Model):
     created = models.DateTimeField('date created', auto_now_add=True, editable=False)
     modified = models.DateTimeField('date modified', auto_now_add=True, editable=False)
     beamline = models.ManyToManyField("lims.Beamline", blank=True, related_name="access_lists")
+
+    objects = AccessListQuerySet.as_manager()
+
+    @property
+    def network(self):
+        return ip_network(self.address, strict=False)
+
+    def matches(self, ip_str: str) -> bool:
+        if not ip_str:
+            return False
+        try:
+            target_ip = ip_address(ip_str)
+            return target_ip in self.network
+        except (ValueError, TypeError):
+            return False
 
     def authorized_users(self):
         return [u.username for u in self.annotated_users()]
