@@ -1,12 +1,21 @@
 import os
 from datetime import timedelta
+from ipaddress import ip_network
 from typing import NamedTuple
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from model_utils import Choices
 
 from basiclive.core.lims.conf import settings as lims_settings
+
+
+def validate_ip_or_network(value):
+    try:
+        ip_network(value, strict=False)
+    except (ValueError, TypeError) as e:
+        raise ValidationError(f"'{value}' is not a valid IP address or network: {e}")
 
 
 class AnnotatedUser(NamedTuple):
@@ -33,7 +42,7 @@ def get_storage_path(instance, filename):
 class AccessList(models.Model):
     name = models.CharField(max_length=60, unique=True)
     description = models.TextField(blank=True, null=True)
-    address = models.GenericIPAddressField()
+    address = models.CharField(max_length=45, validators=[validate_ip_or_network])
     users = models.ManyToManyField("lims.Project", blank=True)
     active = models.BooleanField(default=False)
     created = models.DateTimeField('date created', auto_now_add=True, editable=False)
