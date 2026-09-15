@@ -1798,10 +1798,11 @@ $category-colors: (
 
 .callout {
   padding: 1rem;
+  border-radius: var(--bs-border-radius-lg);
 
   color: var(--bl-callout-color, inherit);
   background-color: var(--bl-callout-bg, rgba(var(--bs-emphasis-color-rgb), 0.05));
-  border-left: .25rem solid var(--bl-callout-border, rgba(var(--bs-emphasis-color-rgb), 0.25));
+    border-left: 0.75rem solid var(--bl-callout-border, rgba(var(--bs-emphasis-color-rgb), 0.25));
 
   &.callout-sm {
     border-left-width: 0.125rem;

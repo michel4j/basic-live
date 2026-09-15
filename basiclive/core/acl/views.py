@@ -120,7 +120,6 @@ class EndpointList(View):
             return JsonResponse([], safe=False)
 
     def post(self, request, *args, **kwargs):
-
         client_addr = get_client_address(request)
         user_list = models.AccessList.objects.filter(address=client_addr, active=True).first()
 
@@ -130,8 +129,8 @@ class EndpointList(View):
             connections = msgpack.loads(request.body)
             for connection in connections:
                 try:
-                    project = models.Project.objects.get(username=connection['project'])
-                except models.Project.DoesNotExist:
+                    project = User.objects.get(username=connection['project'])
+                except User.DoesNotExist:
                     errors.append(f"User '{connection['project']}' not found.")
                 status = connection['status']
                 try:
@@ -155,26 +154,7 @@ class EndpointList(View):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class SSHKeys(View):
-    """
-    Returns SSH keys for specified user if the remote server referenced by the IP number inferred from
-    the request exists.
-
-    :key: r'^accesskeys/<username>$'
-    """
-
-    def get(self, request, *args, **kwargs):
-        user = models.Project.objects.filter(username=self.kwargs.get('username')).first()
-
-        msg = ''
-        if user:
-            msg = '\n'.join(user.sshkeys.values_list('key', flat=True)).encode()
-
-        return HttpResponse(msg, content_type='text/plain')
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class AccessSSHKeys(AuthenticationRequiredMixin, View):
+class AccessKeys(AuthenticationRequiredMixin, View):
     """
     Returns SSH keys for the user if the remote server referenced by the IP number inferred from
     the request exists and the user is specifically allowed to access the host.
@@ -186,7 +166,7 @@ class AccessSSHKeys(AuthenticationRequiredMixin, View):
 
         client_addr = get_client_address(request)
         user_list = models.AccessList.objects.filter(address=client_addr, active=True).first()
-        user = models.Project.objects.filter(username=self.kwargs.get('username')).first()
+        user = User.objects.filter(username=self.kwargs.get('username')).first()
 
         msg = ''
         if user and user_list and user.username in user_list.authorized_users():
