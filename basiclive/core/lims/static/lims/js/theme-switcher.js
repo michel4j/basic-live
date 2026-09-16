@@ -63,7 +63,7 @@
 })()
 
 // Ajax Progress
-function monitorProgress() {
+function setupAjaxProgress() {
     const $body = $("body");
 
     // Handle Spinner for all ajax calls
