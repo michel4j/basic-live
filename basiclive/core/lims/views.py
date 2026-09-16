@@ -699,19 +699,17 @@ class DataList(ListViewMixin, ItemListView):
     list_transforms = {}
     plot_url = reverse_lazy("data-stats")
 
-    def get_queryset(self):
-        return super(DataList, self).get_queryset().defer('meta_data', 'url')
-
 
 class DataStats(PlotViewMixin, DataList):
-    plot_fields = { 'beam_size': {'kind': 'pie'},
-                    'kind__name': {'kind': 'columnchart'},
-                    'reports__score': {'kind': 'histogram', 'range': (0.01, 1)},
-                    'energy': {'kind': 'histogram', 'range': (4., 18.), 'bins': 8},
-                    'exposure_time': {'kind': 'histogram', 'range': (0.01, 20)},
-                    'attenuation': {'kind': 'histogram'},
-                    'num_frames': {'kind': 'histogram'},
-                    }
+    plot_fields = {
+        'beam_size': {'kind': 'pie'},
+        'kind__name': {'kind': 'columnchart'},
+        'reports__score': {'kind': 'histogram', 'range': (0.01, 1)},
+        'energy': {'kind': 'histogram', 'range': (4., 18.), 'bins': 8},
+        'exposure_time': {'kind': 'histogram', 'range': (0.01, 20)},
+        'attenuation': {'kind': 'histogram'},
+        'num_frames': {'kind': 'histogram'},
+    }
     date_field = 'modified'
     list_url = reverse_lazy("data-list")
 
@@ -725,7 +723,8 @@ class UsageSummary(PlotViewMixin, DataList):
     list_filters = [
         'beamline',
         'kind',
-        filters.YearFilter('modified'),
+        filters.StartYearFilter('modified'),
+        filters.EndYearFilter('modified'),
         filters.MonthFilter('modified'),
         filters.QuarterFilter('modified'),
         filters.TimeScaleFilter()
@@ -736,7 +735,7 @@ class UsageSummary(PlotViewMixin, DataList):
 
     def page_title(self):
         if self.kwargs.get('year'):
-            return '{} Usage Metrics'.format(self.kwargs['year'])
+            return f'{self.kwargs["year"]} Usage Metrics'
         else:
             return 'Usage Metrics'
 
@@ -765,9 +764,6 @@ class ReportList(ListViewMixin, ItemListView):
     list_transforms = {
         'score': format_score
     }
-
-    def get_queryset(self):
-        return super().get_queryset().defer('details', 'url')
 
 
 class ReportDetail(OwnerRequiredMixin, detail.DetailView):

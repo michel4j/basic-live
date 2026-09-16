@@ -1,6 +1,7 @@
 from urllib import parse
 
 from django import http
+from django.contrib import admin
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import JsonResponse, HttpRequest
 from django.utils.decorators import method_decorator
@@ -80,10 +81,21 @@ class PlotViewMixin:
         return self.plot_fields
 
     def get_active_filters(self):
+        filter_specs, has_filters, filter_use_distinct = self.get_filters()
         qsl = self.get_query_string()
         if self.date_field:
             for part in ['year', 'month', 'day', 'quarter']:
-                qsl = qsl.replace('{}_{}'.format(self.date_field, part), '{}__{}'.format(self.date_field, part))
+                qsl = qsl.replace(f'{self.date_field}_{part}', f'{self.date_field}__{part}')
+
+            # update time range filters
+            for part in ['since', 'until', 'before', 'after']:
+                lookup_opr = {
+                    'since': 'year__gte',
+                    'until': 'year__lte',
+                    'before': 'year__lt',
+                    'after': 'year__gt'
+                }.get(part)
+                qsl = qsl.replace(f'{self.date_field}_{part}', f'{self.date_field}__{lookup_opr}')
         return dict(parse.parse_qsl(qsl.strip('?')))
 
     def get_metrics(self):

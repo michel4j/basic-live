@@ -16,8 +16,8 @@ class PubEntryList(AdminRequiredMixin, ItemListView):
     model = models.Publication
     list_filters = [
         'created', 'modified',
-        filters.StartYearFilter(model, 'published'),
-        filters.EndYearFilter(model, 'published'),
+        filters.StartYearFilter('published'),
+        filters.EndYearFilter('published'),
         filters.MonthFilter('published'),
         filters.QuarterFilter('published'),
         'tags'

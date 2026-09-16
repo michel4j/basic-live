@@ -3,7 +3,7 @@ import calendar
 import datetime
 from datetime import date, timedelta
 from enum import IntEnum
-
+from typing import Literal
 from django.contrib import admin
 from django.db.models import Min, ExpressionWrapper, F, fields
 from django.utils import timezone
@@ -23,37 +23,44 @@ class FilterFactory(abc.ABC):
         ...
 
 
-class DateLimitFilterFactory(FilterFactory):
+class YearLimitFilterFactory(FilterFactory):
 
     @classmethod
-    def new(cls, model, field_name='date', filter_title='Start date', limit=DateLimit.BOTH):
-        class DateLimitListFilterClass(admin.SimpleListFilter):
+    def new(
+            cls, field_name='created', filter_type: Literal['before', 'after', 'since', 'until'] = 'after',
+            filter_title=None
+    ):
+        filter_title = filter_title if filter_title else f"{field_name.replace('_', ' ').title()} {filter_type.title()}"
+
+        class YearLimitListFilter(admin.SimpleListFilter):
             title = filter_title
-            parameter_name = '{}{}'.format(
-                field_name, {
-                    DateLimit.LEFT: '_gte', DateLimit.RIGHT: '_lte'
-                }.get(limit, '')
-            )
+            parameter_name = f'{field_name}_{filter_type}'
+            lookup_opr = {
+                'since': '__gte',
+                'until': '__lte',
+                'before': '__lt',
+                'after': '__gt'
+            }.get(filter_type)
+
+            def __init__(self, request, new_params, model, *args, **kwargs):
+                self.model = model
+                super().__init__(request, new_params, model, *args, **kwargs)
 
             def lookups(self, request, model_admin):
-                choices = sorted(
-                    {v[field_name].year for v in model.objects.values(field_name).order_by(field_name).distinct()},
-                    reverse=True
-                )
-                return [(yr, f'{yr}') for yr in choices]
+                qs = self.model.objects.filter()
+                value_field = f'{field_name}__year'
+                choices = qs.values_list(value_field, flat=True).order_by(value_field).distinct()
+                return ((yr, f'{yr}') for yr in choices)
 
             def queryset(self, request, queryset):
-                flt = {}
-                if self.value() and limit <= DateLimit.BOTH:
-                    dt = date(int(self.value()), 1, 1)
-                    flt[field_name + '__gte'] = dt
-                if self.value() and limit >= DateLimit.RIGHT:
-                    dt = date(int(self.value()), 12, 31)
-                    flt[field_name + '__lte'] = dt
-
+                try:
+                    value = int(self.value())
+                    flt = {f'{field_name}__year{self.lookup_opr}': value}
+                except (ValueError, TypeError):
+                    flt = {}
                 return queryset.filter(**flt)
 
-        return DateLimitListFilterClass
+        return YearLimitListFilter
 
 
 class YearFilterFactory(FilterFactory):
@@ -138,7 +145,7 @@ class FutureDateListFilterFactory(FilterFactory):
     @classmethod
     def new(cls, field_name='due_date'):
         class FutureDateListFilter(admin.SimpleListFilter):
-            parameter_name = '{}_due'.format(field_name)
+            parameter_name = f'{field_name}_due'
             title = field_name.title().replace('_', ' ')
 
             def lookups(self, request, model_admin):
@@ -214,15 +221,15 @@ class NewEntryFilterFactory(FilterFactory):
 
 
 def DateLimitFilter(*args, **kwargs):
-    return DateLimitFilterFactory.new(*args, **kwargs)
+    return YearLimitFilterFactory.new(*args, **kwargs)
 
 
-def StartYearFilter(model, field_name, filter_title='Start Year'):
-    return DateLimitFilterFactory.new(model, field_name=field_name, filter_title=filter_title, limit=DateLimit.LEFT)
+def StartYearFilter(field_name, filter_title='Start Year'):
+    return YearLimitFilterFactory.new(field_name=field_name, filter_title=filter_title, filter_type='since')
 
 
-def EndYearFilter(model, field_name, filter_title='End Year'):
-    return DateLimitFilterFactory.new(model, field_name=field_name, filter_title=filter_title, limit=DateLimit.RIGHT)
+def EndYearFilter(field_name, filter_title='End Year'):
+    return YearLimitFilterFactory.new(field_name=field_name, filter_title=filter_title, filter_type='until')
 
 
 def YearFilter(*args, **kwargs):

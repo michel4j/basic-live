@@ -154,12 +154,12 @@ def usage_summary(period='year', **all_filters):
     samples_per_dataset = {key: samples_measured.get(key, 0) / dataset_counts.get(key, 1) for key in periods}
     # Sample Throughput (/h)
     sample_throughput = {
-        entry[field]: 3600. * entry['num_samples'] / entry['time'].total_seconds()
+        entry[field]: 0.0 if entry['time'].total_seconds() == 0.0 else 3600. * entry['num_samples'] / entry['time'].total_seconds()
         for entry in throughput_info if entry['time'] and entry['num_samples']
     }
     # MX Dataset Throughput (/h)
     data_throughput = {
-        entry[field]: 3600. * entry['num_datasets'] / entry['time'].total_seconds()
+        entry[field]: 0.0 if entry['time'].total_seconds() == 0.0 else 3600. * entry['num_datasets'] / entry['time'].total_seconds()
         for entry in throughput_info if entry['time'] and entry['num_datasets']
     }
 
