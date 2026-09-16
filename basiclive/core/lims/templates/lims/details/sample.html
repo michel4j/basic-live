@@ -23,7 +23,7 @@
         <a href="#!" data-modal-url="{% url 'request-new' %}?samples={{ object.pk }}" title="Add a Request">
             {% show_icon label='Request' icon="ti ti-md ti-ruler-pencil" badge="+" color="primary" %}
         </a>
-        <div class="separator"></div>
+
     {% endif %}
     {% if object.container.status == object.container.STATES.DRAFT or object.comments or object.staff_comments %}
     {% if object.container.status == object.container.STATES.DRAFT %}

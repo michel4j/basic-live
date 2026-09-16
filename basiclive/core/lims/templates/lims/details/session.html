@@ -34,7 +34,7 @@
         </a>
     {% endif %}
     {% if object.datasets.count %}
-        <div class="separator"></div>
+
         <a href="{% url 'files-proxy' section='archive' path=object.download_url %}">
             {% show_icon label='Download' icon='ti ti-md ti-download' %}
         </a>

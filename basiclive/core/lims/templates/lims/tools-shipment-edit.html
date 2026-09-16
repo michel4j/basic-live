@@ -23,7 +23,7 @@
 {% endif %}
 </a>
 {% if user.is_superuser and shipment.status == shipment.STATES.ON_SITE %}
-    <div class="separator"></div>
+
     <a href="{% url 'shipment-detail' shipment.pk %}">
         {% show_icon label='Done' icon='ti ti-md ti-check'%}
     </a>

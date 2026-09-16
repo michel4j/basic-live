@@ -18,10 +18,10 @@
     </a>
 {% endif %}
 {% if user == shipment.project %}
-    <div class="separator"></div>
+
     {% if shipment.status == shipment.STATES.DRAFT %}
         {% include "lims/tools-shipment-edit.html" %}
-        <div class="separator"></div>
+
         <a href="#!" data-modal-url="{% url 'shipment-delete' shipment.pk %}">
             {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
         </a>
@@ -44,7 +44,7 @@
     {% endif %}
 {% elif user.is_superuser %}
     {% comment %}Staff Actions{% endcomment %}
-    <div class="separator"></div>
+
     <a href="{% url 'shipment-labels' shipment.pk %}">
         {% show_icon label='Labels' icon='ti ti-md ti-tag' %}
     </a>
@@ -59,7 +59,7 @@
         <a href="#!" data-modal-url="{% url "shipment-return" shipment.pk %}">
             {% show_icon label='Return' icon='ti ti-md ti-location-arrow' %}
         </a>
-        <div class="separator"></div>
+
         <a href="{% url 'shipment-revise' shipment.pk %}">
             {% show_icon label='Revise' icon='ti ti-md ti-pencil'%}
         </a>

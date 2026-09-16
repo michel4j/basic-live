@@ -304,7 +304,6 @@ a.navbar-brand {
 }
 
 .list-group-item .tools-box, .panel-heading .tools-box {
-  margin-right: -0.5rem;
 }
 
 .list-group-item .tools-box + .tools-box, .panel-heading .tools-box + .tools-box {
@@ -322,21 +321,15 @@ a.navbar-brand {
   flex-direction: row;
   align-items: center;
   justify-content: space-evenly;
-  padding: 0 0.5em;
-  margin: 0.5em 0;
-  padding-right: 0.25em !important;
-  line-height: 1;
   text-align: center;
-  //border-left: 1px solid var(--bl-gray-alpha);
+  gap: 0.5rem;
 
   > * {
     &:first-child {
-      border-left: 1px solid var(--bl-gray-alpha);
-      padding-left: 0.5em;
+      border-left: 1px solid var(--bs-border-color-translucent);
+      padding-left: 0.5rem;
     }
-
     text-align: center;
-    padding: 0 0.125em;
   }
 
   &:empty, &:blank, &:-moz-only-whitespace {
@@ -347,7 +340,7 @@ a.navbar-brand {
     display: inline-block;
     align-self: stretch;
     width: 1px;
-    border-left: 1px solid var(--bl-gray-alpha);
+    border-left: 1px solid var(--bs-border-color-translucent);
     margin: 0 0.25em;
   }
 
@@ -363,9 +356,9 @@ a.navbar-brand {
 }
 
 .box-status {
-  width: 65px;
-  min-width: 65px;
-  border-right: 1px solid var(--bl-gray-alpha);
+  width: 60px;
+  min-width: 60px;
+  border-right: 1px solid var(--bs-border-color-translucent);
 }
 
 .overflow-ellipsis {
@@ -393,7 +386,6 @@ a.text-muted:hover {
   line-height: 0.75;
   padding-top: 0.35rem;
   min-width: 3rem;
-  margin: 0 0.5rem;
   text-align: center;
 }
 
@@ -405,10 +397,6 @@ a.text-muted:hover {
     display: none;
   }
 
-  .fa-stack-center-xs {
-    display: table;
-    margin: -1em auto;
-  }
 }
 
 table {
@@ -432,28 +420,33 @@ table {
 }
 
 .ti-xs {
-  font-size: 0.75em;
+  font-size: 0.8rem;
   margin-bottom: 2px;
 }
 
 .ti-sm {
-  font-size: 0.8em;
+  font-size: 1.1rem;
   margin-bottom: 2px;
 }
 
 .ti-md {
-  font-size: 1.5em;
+  font-size: 1.5rem;
   margin-bottom: 2px;
 }
 
 .ti-lg {
-  font-size: 2em;
+  font-size: 2rem;
   margin-bottom: 2px;
 }
 
 .ti-xl {
-  font-size: 3.0em;
+  font-size: 3.0rem;
   margin-bottom: 2px;
+}
+
+i {
+  font-style: normal !important;
+  font-synthesis: none;
 }
 
 .btn-white {
@@ -974,15 +967,16 @@ a[data-modal-url], .back text[port], .cursor {
 
 .badge {
   margin: 1px;
+  --bs-badge-font-size: 0.85rem;
 
   &.score {
-    font-size: 0.95em;
+    font-size: 0.95rem;
     border: 1px solid var(--bl-gray-barely);
   }
 }
 
 .badge-md {
-  font-size: 0.9em;
+  font-size: 0.9rem;
   font-weight: 400;
 }
 
