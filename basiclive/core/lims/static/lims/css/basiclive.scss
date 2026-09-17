@@ -36,11 +36,9 @@ $max_font: 15px;
   --bl-font-condensed: "Fira Sans Condensed", sans-serif;
   --bs-font-monospace: "Fira Code", monospace;
   --bl-font-sans-serif: "Fira Sans", sans-serif;
-  --bl-accent: var(--bs-primary);
-  --bl-accent-0: #75507b;
-  --bl-accent-1: #3d3c3c;
-  --bl-accent-text-0: #fff;
-  --bl-accent-text-1: #b3b3b3;
+  --bl-brand-accent: var(--bs-primary);
+  --bl-brand-secondary: var(--bs-secondary-bg);
+  --bl-brand-neutral: var(--bs-tertiary-bg);
   --bl-gray-alpha: rgba(0, 0, 0, 0.15);
   --bl-gray-barely: rgba(0, 0, 0, 0.05);
   --bl-shaded-bg: rgba(0, 0, 0, 0.05);
@@ -91,8 +89,8 @@ a {
 }
 
 header > nav {
-  background-color: var(--bs-primary);
-  color: contrast-color(var(--bs-primary));
+  background-color: var(--bl-brand-accent);
+  color: contrast-color(var(--bl-brand-accent));
   max-height: 51px !important;
 }
 
@@ -1022,7 +1020,7 @@ a[data-modal-url], .back text[port], .cursor {
   padding: 0 1em;
 
   + .footer-item {
-    border-left: 1px solid contrast-color(var(--bl-accent));
+    border-left: 1px solid contrast-color(var(--bl-brand-accent));
   }
 }
 
@@ -1648,7 +1646,7 @@ body::before {
   height: 2px;
   content: "";
   opacity: calc(var(--bl-progress-opacity, 1) * 0.75);
-  background: var(--bl-accent-color-0, --bs-primary);
+  background: var(--bl-brand-accent, var(--bs-primary));
   transition: width 0.3s ease-in, opacity 0.3s ease-out;
 }
 

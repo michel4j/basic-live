@@ -45,7 +45,7 @@
 
 {% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
-    <span class="status-badge badge bg-{% status_theme object.active_status info="Active" secondary="Idle" %}"
+    <span class="status-badge badge bg-{% status_theme object.active_status info='Active' secondary='Idle' %}"
         title="Last session on {{ object.last_session }}"
     >
         <span class="fw-lighter">{{ object.kind }} | </span>{{ object.active_status }}

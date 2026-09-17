@@ -34,9 +34,14 @@ class HiddenArea(forms.HiddenInput):
 class ProjectForm(ModalModelForm):
     class Meta:
         model = Project
-        fields = ('first_name', 'last_name', 'email', 'contact_person', 'contact_email', 'contact_phone',
-                  'carrier', 'account_number', 'organisation', 'department', 'address', 'city', 'province',
-                  'postal_code', 'country', 'kind', 'alias', 'designation')
+        fields = (
+            'first_name', 'last_name', 'email', 'contact_person', 'contact_email', 'contact_phone',
+            'carrier', 'account_number', 'shipping_notes', 'organisation', 'department', 'address', 'city', 'province',
+            'postal_code', 'country', 'kind', 'alias', 'designation'
+        )
+        widgets = {
+            'shipping_notes': forms.Textarea(attrs={'rows': "2"}),
+        }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
@@ -57,19 +62,19 @@ class ProjectForm(ModalModelForm):
 
         self.body.layout = Layout(
             Row(
-                HalfWidth('first_name'),
-                HalfWidth('last_name'),
+                ThirdWidth('first_name'),
+                ThirdWidth('last_name'),
+                ThirdWidth(Field('kind', css_class='select')),
+                style="g-2"
+            ),
+            Row(
                 HalfWidth('email') if self.user.is_superuser else FullWidth('email'),
-                HalfWidth(Field('designation', css_class='select')) if self.user.is_superuser else Div('designation'),
+                QuarterWidth(Field('designation', css_class='select')) if self.user.is_superuser else Div('designation'),
+                QuarterWidth('alias'),
                 style="g-2"
             ),
             Row(
-                HalfWidth(Field('kind', css_class='select')),
-                HalfWidth('alias'),
                 FullWidth('contact_person'),
-                style="g-2"
-            ),
-            Row(
                 HalfWidth('contact_email'),
                 HalfWidth(
                     Field(
@@ -85,25 +90,22 @@ class ProjectForm(ModalModelForm):
                 style="g-2"
             ),
             Row(
-                FullWidth('organisation'),
+                FullWidth('shipping_notes'),
+            ),
+            Row(
+                HalfWidth('organisation'),
+                HalfWidth('department'),
                 style="g-2"
             ),
             Row(
-                FullWidth('department'),
+                TwoThirdWidth('address'),
+                ThirdWidth('city'),
                 style="g-2"
             ),
             Row(
-                FullWidth('address'),
-                style="g-2"
-            ),
-            Row(
-                HalfWidth('city'),
-                HalfWidth('province'),
-                style="g-2"
-            ),
-            Row(
-                HalfWidth('country'),
-                HalfWidth('postal_code'),
+                ThirdWidth('province'),
+                ThirdWidth('country'),
+                ThirdWidth('postal_code'),
                 style="g-2"
             )
         )

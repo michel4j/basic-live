@@ -157,7 +157,8 @@ class Project(AbstractUser):
     contact_person = models.CharField(max_length=200, blank=True, null=True)
     contact_email = models.EmailField(max_length=100, blank=True, null=True)
     carrier = models.ForeignKey(Carrier, blank=True, null=True, on_delete=models.SET_NULL)
-    account_number = models.CharField(max_length=50, blank=True, null=True)
+    account_number = models.CharField("Carrier Account Number", max_length=50, blank=True, null=True)
+    shipping_notes = models.TextField("Shipping Notes", blank=True, null=True)
     department = models.CharField(max_length=600, blank=True, null=True)
     address = models.CharField(max_length=600, blank=True, null=True)
     city = models.CharField(max_length=180, blank=True, null=True)
@@ -902,8 +903,19 @@ class Container(TransitStatusMixin):
         if hasattr(self, 'port_name'):  # fetch from default annotation
             return self.port_name
         elif self.parent and self.location:
-            return "{}{}".format(self.parent.port(), self.location.name)
+            return f"{self.parent.port()}{self.location.name}"
         return ""
+
+    def loaded_name(self):
+        name_parts = []
+        automounter = self.automounter()
+        if automounter:
+            name_parts.append(automounter.beamline.acronym)
+        port = self.port()
+        if port:
+            name_parts.append(port)
+        name_parts.append(self.name)
+        return ' | '.join(name_parts)
 
     def get_project(self):
         if self.children.count():

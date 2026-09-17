@@ -1,3 +1,5 @@
+{%load bl_tags %}
+
 <div class="card mb-4">
     <div class="card-header p-1 text-center text-wide text-muted">
         <small>CONTACTS</small>
@@ -37,7 +39,7 @@
                 <img src="/static/lims/img/{{ object.carrier|default_if_none:'walking'|slugify }}.png"
                      height="80px"
                      title="{{ object.carrier|default_if_none:'User'|title }}">
-                <h5>{{ object.account_number|default:"-- --- --- --" }}</h5>
+                <h5>{{ object.account_number|human_code|default:"-- --- --- --" }}</h5>
             </div>
         </div>
     </div>

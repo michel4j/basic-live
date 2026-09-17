@@ -1,12 +1,12 @@
 import json
 from datetime import timedelta
 
+import numpy
 from django import template
 from django.utils.safestring import mark_safe
-from basiclive.utils.misc import natural_seconds
-from basiclive.utils.functions import get_hours_per_shift
 
-import numpy
+from basiclive.utils.functions import get_hours_per_shift
+from basiclive.utils.misc import natural_seconds
 
 register = template.Library()
 
@@ -70,6 +70,56 @@ def humanize_duration(duration, sec=False):
 @register.filter("natural_duration")
 def natural_duration(delta):
     return natural_seconds(delta.total_seconds())
+
+
+@register.filter("human_number")
+def human_number(value):
+    """Comma formatted numbers."""
+    return f"{value:,}"
+
+
+@register.filter("human_code")
+def human_code(text):
+    """Comma formatted numbers."""
+    if not text:
+        text = "9" * 10
+    text = text.replace(' ', '')
+
+    n = len(text)
+    # Handle base cases where string is too short to follow the rule
+    if n < 3:
+        return [text] if text else []
+    if n == 5:
+        return [text]  # 5 cannot be split into groups of 3 and 4 cleanly
+
+    remainder = n % 3
+
+    if remainder == 0:
+        num_groups_of_4 = 0
+    elif remainder == 1:
+        num_groups_of_4 = 1
+    else:  # remainder == 2
+        num_groups_of_4 = 2
+
+    # Total characters used by the 4-character groups
+    chars_for_4s = num_groups_of_4 * 4
+    # The rest are filled by 3-character groups
+    num_groups_of_3 = (n - chars_for_4s) // 3
+
+    groups = []
+    idx = 0
+
+    # Extract the 3-character groups first
+    for _ in range(num_groups_of_3):
+        groups.append(text[idx:idx + 3])
+        idx += 3
+
+    # Extract the 4-character groups next
+    for _ in range(num_groups_of_4):
+        groups.append(text[idx:idx + 4])
+        idx += 4
+
+    return '-'.join(groups)
 
 
 class NumpyEncoder(json.JSONEncoder):

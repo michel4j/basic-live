@@ -722,6 +722,7 @@ class UsageSummary(PlotViewMixin, DataList):
     list_url = reverse_lazy("data-list")
     list_filters = [
         'beamline',
+        'beamline__active',
         'kind',
         filters.StartYearFilter('modified'),
         filters.EndYearFilter('modified'),

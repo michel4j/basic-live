@@ -28,7 +28,8 @@
         {% elif shipment.status == shipment.STATES.SENT %}Sent {{ shipment.date_shipped|naturalday }}
         {% elif shipment.status == shipment.STATES.ON_SITE %}Received
             {% if shipment.date_received %}{{ shipment.date_received|naturalday }}{% else %}
-                {{ shipment.date_shipped|naturalday }}{% endif %}
+                {{ shipment.date_shipped|naturalday }}
+        {% endif %}
         {% else %}Returned {{ shipment.date_returned|naturalday }}
         {% endif %}
     </span>
@@ -123,12 +124,8 @@
                                 <a href="{% url 'container-detail' pk=container.pk %}">
                                     {% if container.parent %}
                                         <span class="badge text-bg-primary text-thin" title="Loaded">
-                                        {% with automounters|get_item:container.pk as am %}
-                                            {% if am %}{{ am.beamline }} |
-                                            {% else %}{{ container.parent.kind.name }} {{ container.parent.name }} |
-                                            {% endif %}{{ container.port }}&nbsp;|&nbsp;{{ container.name }}
-                                        {% endwith %}
-                                    </span>
+                                            {{ container.loaded_name }}
+                                        </span>
                                     {% else %}
                                         <span class="badge text-bg-secondary text-thin">{{ container.name }}</span>
                                     {% endif %}
