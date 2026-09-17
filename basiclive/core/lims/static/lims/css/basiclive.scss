@@ -43,6 +43,7 @@ $max_font: 15px;
   --bl-gray-barely: rgba(0, 0, 0, 0.05);
   --bl-shaded-bg: rgba(0, 0, 0, 0.05);
   --bl-data-modal-width: 526px;
+  --bl-layout-port-color: var(--bs-body-color);
 
   --bs-link-color: var(--bs-primary);
   --bs-link-color-rgb: var(--bs-primary-rgb);
@@ -582,12 +583,14 @@ form .list-group-item {
 
 svg {
   &.outline > .envelope {
-    stroke: var(--bs-dark);
-    fill: var(--bs-light);
+    stroke: var(--bs-border-color-translucent);
+    fill: var(--bs-body-color);
+    fill-opacity: 0.075;
   }
 
   &.empty > .envelope {
-    fill: var(--bl-gray-alpha);
+    fill: var(--bs-body-color);
+    fill-opacity: 0.1;
   }
 
   &.ignore > .envelope {
@@ -597,10 +600,14 @@ svg {
 
   &.occupied > .envelope {
     fill: var(--bs-info);
+    fill-opacity: 0.5;
+    + text {
+      fill: contrast-color(var(--bs-info));
+    }
   }
 
   &.started > .envelope {
-    opacity: 0.30;
+    opacity: 0.35;
   }
 
   .active-envelope {

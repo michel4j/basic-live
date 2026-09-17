@@ -57,7 +57,7 @@ function initTooltips(selector) {
                         .attrs({cx: '50%', cy: '50%', r: '49%', x: '0%', y: '0%', width: '100%', height: '100%'})
                         .attr('fill', 'none')
                         .attr('class', 'envelope')
-                        .attr('stroke', 'black')
+                        .attr('stroke', 'currentColor')
                         .style('pointer-events', 'visibleStroke');
                 }
 
@@ -199,10 +199,10 @@ function initTooltips(selector) {
             added.append("text")
                 .attr("x", '50%')
                 .attr("y", '50%')
-                .attr("font-size", '75%')
-                .attr("fill", "black")
+                .attr("font-size", '90%')
+                .attr("fill", "currentColor")
                 .attr("text-anchor", 'middle')
-                .attr("opacity", d => (d.id) ? 0.7 : 0.3)
+                //.attr("opacity", d => (d.id) ? 0.7 : 0.3)
                 .attr('dominant-baseline', 'middle')
                 .text(function (d, i) {
                     return d.loc;

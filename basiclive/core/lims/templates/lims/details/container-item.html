@@ -1,19 +1,19 @@
 <div class="col-6 col-sm-4">
     <a href="{% url "container-detail" pk=container.pk %}">
-        <div class="border p-2">
+        <div
+            {% if container.parent %}
+                class="rounded-3 fw-bold text-bg-cat-6 p-2"
+                title="Loaded in {{ container.parent }}"
+            {% else %}
+                class="rounded-3 text-bg-cat-3 p-2"
+            {% endif %}
+        >
             <div class="text-center">
-                <div class="underline text-condensed overflow-ellipsis mb-1">
+                <div class="text-condensed overflow-ellipsis mb-1">
                     {{ container.name }}
                 </div>
             </div>
             {% include "lims/details/container-layout.html" %}
-            <div class="text-center">
-                {% if container.parent %}
-                    <span class="badge text-bg-info fw-light" title="Loaded in {{ container.parent }}">Loaded</span>
-                {% else %}
-                    <span class="badge text-bg-secondary fw-light" title="Not Loaded">None</span>
-                {% endif %}
-            </div>
         </div>
     </a>
 </div>
