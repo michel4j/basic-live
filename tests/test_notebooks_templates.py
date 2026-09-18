@@ -17,7 +17,6 @@ from basiclive.core.notebooks.models import (
     Entry,
     EntryType,
     Notebook,
-    Page,
     Theme,
 )
 
@@ -61,9 +60,8 @@ class NotebookTemplatesTestCase(TestCase):
         )
 
         self.today = timezone.localdate(timezone.now())
-        self.page = Page.objects.create(book=self.notebook, date=self.today)
         self.entry = Entry.objects.create(
-            page=self.page,
+            notebook=self.notebook,
             created=timezone.now(),
             author=self.user,
             text="Hello **Markdown** world!",
@@ -74,7 +72,7 @@ class NotebookTemplatesTestCase(TestCase):
     def test_notebooks_templatetags_direct(self):
         """Test notebooks template tags and filters directly."""
         template = Template(
-            "{% load notebooks %}"
+            "{% load bl_notebooks %}"
             "{{ text|clean_json }}"
             "{{ dt|simpletime }}"
             "{{ dt|timeish }}"
@@ -89,7 +87,6 @@ class NotebookTemplatesTestCase(TestCase):
         self.assertIn('"a":1', rendered)
         self.assertIn('"key": "value"', rendered)
 
-
     def test_load_data_and_plot_axes_tags(self):
         """Test load_data and plot_axes templatetags on tabular data entry."""
         table_json = json.dumps({
@@ -101,14 +98,14 @@ class NotebookTemplatesTestCase(TestCase):
             }
         })
         data_entry = Entry.objects.create(
-            page=self.page,
+            notebook=self.notebook,
             created=timezone.now(),
             author=self.user,
             text=table_json,
             kind=self.data_type,
         )
         template = Template(
-            "{% load notebooks %}"
+            "{% load bl_notebooks %}"
             "{% load_data entry as d %}"
             "{% plot_axes entry as axes %}"
             "Headers: {{ d.headers|join:',' }}; Axes: {{ axes|join:',' }}"
@@ -126,13 +123,13 @@ class NotebookTemplatesTestCase(TestCase):
             t = loader.get_template(f"notebooks/entries/{kind}.html")
             data_text = '{"headers": ["X", "Y"], "data": {"0": [1, 2], "1": [3, 4]}}' if kind == "data" else "Content"
             entry_obj = Entry.objects.create(
-                page=self.page,
+                notebook=self.notebook,
                 created=timezone.now(),
                 author=self.user,
                 text=data_text,
                 kind=EntryType.objects.get(name=kind),
             )
-            rendered = t.render({"entry": entry_obj, "page": self.page, "user": self.user}, request)
+            rendered = t.render({"entry": entry_obj, "notebook": self.notebook, "user": self.user}, request)
             self.assertIn(f"entry-{kind}", rendered)
 
     def test_render_page_and_pages_templates(self):
@@ -141,12 +138,14 @@ class NotebookTemplatesTestCase(TestCase):
         request.user = self.user
 
         t_page = loader.get_template("notebooks/page.html")
-        rendered_page = t_page.render({"page": self.page, "user": self.user}, request)
-        self.assertIn(f"page-{self.page.pk}", rendered_page)
+        rendered_page = t_page.render({"entries": [self.entry], "user": self.user}, request)
+        self.assertIn("page-separator", rendered_page)
+        self.assertIn(f"entry-{self.entry.pk}", rendered_page)
 
         t_pages = loader.get_template("notebooks/pages.html")
-        rendered_pages = t_pages.render({"pages": [self.page], "user": self.user}, request)
-        self.assertIn(f"page-{self.page.pk}", rendered_pages)
+        rendered_pages = t_pages.render({"entries": [self.entry], "user": self.user}, request)
+        self.assertIn("entry-page", rendered_pages)
+        self.assertIn(f"entry-{self.entry.pk}", rendered_pages)
 
     def test_render_index_templates(self):
         """Verify index.html and index_entry.html render cleanly."""
@@ -193,13 +192,12 @@ class NotebookTemplatesTestCase(TestCase):
         rendered = t_detail.render({
             "notebook": self.notebook,
             "object": self.notebook,
-            "pages": [self.page],
             "entries": [self.entry],
             "user": self.user,
         }, request)
         self.assertIn(self.notebook.title, rendered)
         self.assertIn("notebook-content", rendered)
-        self.assertIn("notebook-index", rendered)
+        self.assertIn("entry-selector", rendered)
 
     def test_bootstrap_5_compliance_in_templates(self):
         """Ensure no legacy Bootstrap 4 classes or obsolete tags exist in templates."""

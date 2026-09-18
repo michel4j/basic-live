@@ -10,7 +10,7 @@ from tests import setup_django
 setup_django()
 
 from basiclive.core.notebooks.forms import NotebookForm
-from basiclive.core.notebooks.models import Notebook, Theme
+from basiclive.core.notebooks.models import Notebook
 import basiclive.core.notebooks as notebooks_pkg
 
 User = get_user_model()
@@ -33,8 +33,6 @@ class NotebookFormsTestCase(TestCase):
         self.other = User.objects.create_user(username="other", password="password123", name="Other")
         self.admin = User.objects.create_superuser(username="admin", password="password123", name="Admin")
 
-        self.theme, _ = Theme.objects.get_or_create(name="default")
-
         self.notebook = Notebook.objects.create(
             name="existing-notebook",
             title="Existing Notebook",
@@ -42,7 +40,6 @@ class NotebookFormsTestCase(TestCase):
             owner=self.owner,
             access=Notebook.ACCESS.private,
             editor=Notebook.EDITOR.owner,
-            theme=self.theme,
         )
 
     def test_notebook_form_create_init(self):
@@ -52,7 +49,6 @@ class NotebookFormsTestCase(TestCase):
         self.assertEqual(form.fields['owner'].initial, self.owner)
         self.assertIn("title", form.fields)
         self.assertIn("description", form.fields)
-        self.assertIn("theme", form.fields)
 
         # Check footer buttons
         buttons = form.footer.layout.fields
@@ -88,7 +84,6 @@ class NotebookFormsTestCase(TestCase):
             'access': Notebook.ACCESS.internal,
             'editor': Notebook.EDITOR.team,
             'members': [self.member.pk],
-            'theme': self.theme.pk,
         }
         form = NotebookForm(data=data, user=self.owner)
         self.assertTrue(form.is_valid(), form.errors)
@@ -113,7 +108,6 @@ class NotebookFormsTestCase(TestCase):
             'owner': self.owner.pk,
             'access': Notebook.ACCESS.public,
             'editor': Notebook.EDITOR.owner,
-            'theme': self.theme.pk,
         }
         response = self.client.post(reverse('notebooks:create-notebook'), data=data)
         self.assertEqual(response.status_code, 200)
@@ -139,7 +133,6 @@ class NotebookFormsTestCase(TestCase):
             'owner': self.owner.pk,
             'access': Notebook.ACCESS.private,
             'editor': Notebook.EDITOR.owner,
-            'theme': self.theme.pk,
         }
         response = self.client.post(
             reverse('notebooks:notebook-edit', kwargs={'pk': self.notebook.pk}),

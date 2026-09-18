@@ -67,24 +67,24 @@ class NotebooksAssetsTestCase(TestCase):
             self.static_dir / "icons" / "fonts" / "Myeln-Icons.ttf",
             self.static_dir / "icons" / "fonts" / "Myeln-Icons.woff",
             self.static_dir / "img" / "text-color.png",
-            self.static_dir / "themes" / "_notebooks.scss",
-            self.static_dir / "themes" / "notebooks.min.css",
-            self.static_dir / "themes" / "floral.notebooks.min.css",
+            self.static_dir / "notebooks.scss",
+            self.static_dir / "notebooks.min.css",
             self.static_dir / "calendar.min.css",
             self.static_dir / "notebooks.js",
+            self.static_dir / "notebooks.min.js",
         ]
         for f in required_files:
             self.assertTrue(f.exists(), f"Required native asset '{f.name}' not found at {f}")
 
     def test_relative_asset_paths_clean(self):
         """Verify native SCSS/CSS does not contain dead /static/ext references."""
-        scss_file = self.static_dir / "themes" / "_notebooks.scss"
+        scss_file = self.static_dir / "notebooks.scss"
         with open(scss_file, "r") as f:
             scss_content = f.read()
         self.assertNotIn("/static/ext/tinycolorpicker/text-color.png", scss_content)
         self.assertIn("../img/text-color.png", scss_content)
 
-        default_css = self.static_dir / "themes" / "notebooks.min.css"
+        default_css = self.static_dir / "notebooks.min.css"
         with open(default_css, "r") as f:
             css_content = f.read()
         self.assertNotIn("/static/ext/", css_content)
