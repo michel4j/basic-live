@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{% static 'assets/highlight/css/github.min.css' %}">
 {% endblock %}
 
+{% block page-pre-title %}Notebook{% endblock %}
 {% block page-title %}{{ notebook.title }}{% endblock %}
 
 {% block page-tools %}
@@ -44,9 +45,6 @@
         </div>
     </div>
     {% endif %}
-    <div class="index-slider col-3" id="notebook-index">
-        {% include 'notebooks/index.html' %}
-    </div>
     <div id="nav-tools">
         <a href="#!" id="to-bottom" title="End of Page"><i class="mi mi-arrow-down-circle"></i></a>
     </div>
