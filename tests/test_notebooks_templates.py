@@ -17,7 +17,6 @@ from basiclive.core.notebooks.models import (
     Entry,
     EntryType,
     Notebook,
-    Theme,
 )
 
 User = get_user_model()
@@ -42,7 +41,6 @@ class NotebookTemplatesTestCase(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.user = User.objects.create_user(username="testuser", password="password123", name="Test User")
-        self.theme, _ = Theme.objects.get_or_create(name="default")
         self.text_type, _ = EntryType.objects.get_or_create(name="text", defaults={"description": "Text"})
         self.data_type, _ = EntryType.objects.get_or_create(name="data", defaults={"description": "Data"})
         self.file_type, _ = EntryType.objects.get_or_create(name="file", defaults={"description": "File"})

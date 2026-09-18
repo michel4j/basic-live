@@ -17,7 +17,6 @@ class NotebooksConfTests(SimpleTestCase):
 
     def test_default_settings(self):
         self.assertEqual(notebook_settings.PAGE_SIZE, 10)
-        self.assertEqual(notebook_settings.DEFAULT_THEME, "default")
         self.assertEqual(notebook_settings.MAX_ENTRY_SIZE, 25 * 1024 * 1024)
         self.assertIs(lims_settings.USE_NOTEBOOKS, True)
 
@@ -25,17 +24,14 @@ class NotebooksConfTests(SimpleTestCase):
         with override_settings(
             BASICLIVE_NOTEBOOKS={
                 "PAGE_SIZE": 25,
-                "DEFAULT_THEME": "floral",
                 "MAX_ENTRY_SIZE": 50 * 1024 * 1024,
             }
         ):
             self.assertEqual(notebook_settings.PAGE_SIZE, 25)
-            self.assertEqual(notebook_settings.DEFAULT_THEME, "floral")
             self.assertEqual(notebook_settings.MAX_ENTRY_SIZE, 50 * 1024 * 1024)
 
         # Restores defaults after context exit
         self.assertEqual(notebook_settings.PAGE_SIZE, 10)
-        self.assertEqual(notebook_settings.DEFAULT_THEME, "default")
         self.assertEqual(notebook_settings.MAX_ENTRY_SIZE, 25 * 1024 * 1024)
 
     def test_lims_use_notebooks_override(self):

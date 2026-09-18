@@ -3,12 +3,6 @@ from django.contrib import admin
 from . import models
 
 
-@admin.register(models.Theme)
-class ThemeAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
-
-
 @admin.register(models.EntryType)
 class EntryTypeAdmin(admin.ModelAdmin):
     list_display = ('name',)

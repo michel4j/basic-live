@@ -16,7 +16,6 @@ from basiclive.core.notebooks.models import (
     Entry,
     EntryType,
     Notebook,
-    Theme,
 )
 from basiclive.core.notebooks import views
 
@@ -41,7 +40,6 @@ class NotebookViewsTestCase(TestCase):
         self.other = User.objects.create_user(username="other", password="password123", name="Other")
         self.admin = User.objects.create_superuser(username="admin", password="password123", name="Admin")
 
-        self.theme, _ = Theme.objects.get_or_create(name="default")
         self.text_type, _ = EntryType.objects.get_or_create(name="text", defaults={"description": "Text"})
         self.data_type, _ = EntryType.objects.get_or_create(name="data", defaults={"description": "Data"})
 

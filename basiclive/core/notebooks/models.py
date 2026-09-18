@@ -12,23 +12,6 @@ from .fields import StringListField
 from .utils import timeish
 
 
-class ThemeManager(models.Manager):
-    def get_by_natural_key(self, name):
-        return self.get(name=name)
-
-
-class Theme(models.Model):
-    name = models.SlugField(_('name'), max_length=20, unique=True)
-
-    objects = ThemeManager()
-
-    def natural_key(self):
-        return (self.name,)
-
-    def __str__(self):
-        return self.name
-
-
 class Notebook(models.Model):
     ACCESS = Choices(
         (0, 'private', _('Private')),

@@ -17,7 +17,6 @@ from basiclive.core.notebooks.models import (
     Entry,
     EntryType,
     Notebook,
-    Theme,
     entry_storage,
 )
 from basiclive.core.notebooks.fields import StringListField, DelimitedTextFormField
@@ -43,7 +42,6 @@ class NotebookModelsTestCase(TestCase):
         self.other = User.objects.create_user(username="other", password="password123", name="Other")
         self.admin = User.objects.create_superuser(username="admin", password="password123", name="Admin")
 
-        self.theme, _ = Theme.objects.get_or_create(name="default")
         self.entry_type_text, _ = EntryType.objects.get_or_create(name="text")
         self.entry_type_data, _ = EntryType.objects.get_or_create(name="data")
 
@@ -56,12 +54,6 @@ class NotebookModelsTestCase(TestCase):
             editor=Notebook.EDITOR.owner,
         )
         self.notebook.members.add(self.member)
-
-    def test_theme_natural_key(self):
-        self.assertEqual(self.theme.natural_key(), ("default",))
-        fetched = Theme.objects.get_by_natural_key("default")
-        self.assertEqual(fetched, self.theme)
-        self.assertEqual(str(self.theme), "default")
 
     def test_entry_type_natural_key(self):
         self.assertEqual(self.entry_type_text.natural_key(), ("text",))
