@@ -1,4 +1,4 @@
-{% load notebooks %}
+{% load bl_notebooks %}
 
 <li class="list-item notebook-entry entry-{{ entry.kind.name }}" data-index-url="{% url 'notebooks:notebook-index' entry.pk %}"
     data-page="{{ entry.page.pk }}" data-entry-pk="{{ entry.pk }}" id="entry-{{ entry.pk }}">

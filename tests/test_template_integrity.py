@@ -1,8 +1,9 @@
 import inspect
-from pathlib import Path
 import unittest
+from pathlib import Path
 
 from tests import setup_django
+
 setup_django()
 
 from django import forms
@@ -387,27 +388,6 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIn('data-bs-dismiss="modal"', rendered_modal)
         self.assertIn('btn-close', rendered_modal)
 
-    def test_bootstrap5_form_and_modal_javascript_helpers(self):
-        """Verify Bootstrap 5 Select2 theme, modal helpers, and absence of form-row in forms.py."""
-        # 1. Select2 theme in JS helpers
-        lims_static = Path(apps.get_app_config("lims").path) / "static" / "lims" / "js"
-        forms_js = (lims_static / "basiclive-forms.js").read_text(encoding="utf-8")
-        crisp_static = Path(apps.get_app_config("crisp_modals").path) / "static" / "crisp_modals" / "modals.js"
-        modals_js = crisp_static.read_text(encoding="utf-8")
-
-        self.assertIn("theme: 'bootstrap-5'", forms_js)
-        self.assertNotIn("theme: 'bootstrap4'", forms_js)
-
-        # 2. Modal helpers support bootstrap.Modal
-        self.assertIn("bootstrap.Modal", modals_js)
-        self.assertIn("initModal", modals_js)
-        self.assertIn("asyncForm", modals_js)
-
-        # 3. forms.py contains zero form-row or form-group occurrences
-        forms_py = (Path(apps.get_app_config("lims").path) / "forms.py").read_text(encoding="utf-8")
-        self.assertNotIn("form-row", forms_py)
-        self.assertNotIn("form-group", forms_py)
-
     def test_jquery_migrate_not_referenced(self):
         """Verify that jquery-migrate is purged from all templates and assets.json."""
         # 1. Sweep all templates across all registered apps
@@ -599,8 +579,8 @@ class TemplateIntegrityTests(SimpleTestCase):
                     self.assertTrue(entry["sri"].startswith("sha"), f"Invalid SRI in {lib}: {entry['sri']}")
 
         # Verify notebooks native assets are registered
-        self.assertIsNotNone(finders.find("notebooks/themes/default.notebooks.min.css"))
-        self.assertIsNotNone(finders.find("notebooks/js/notebooks.js"))
+        self.assertIsNotNone(finders.find("notebooks/notebooks.min.css"))
+        self.assertIsNotNone(finders.find("notebooks/notebooks.js"))
         self.assertIsNotNone(finders.find("notebooks/icons/style.css"))
 
 

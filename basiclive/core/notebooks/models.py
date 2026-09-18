@@ -50,7 +50,6 @@ class Notebook(models.Model):
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='shared_notebooks')
     access = models.SmallIntegerField(_('access'), choices=ACCESS, default=ACCESS.private)
     editor = models.SmallIntegerField(_('editor'), choices=EDITOR, default=EDITOR.owner)
-    theme = models.ForeignKey(Theme, on_delete=models.SET_NULL, null=True, blank=True)
     session = models.ForeignKey('lims.Session', on_delete=models.SET_NULL, null=True, blank=True, related_name='notebooks')
     project = models.ForeignKey('lims.Project', on_delete=models.SET_NULL, null=True, blank=True, related_name='project_notebooks')
 

@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from . import models
 
 
@@ -17,7 +18,7 @@ class EntryTypeAdmin(admin.ModelAdmin):
 @admin.register(models.Notebook)
 class NotebookAdmin(admin.ModelAdmin):
     list_display = ('title', 'name', 'owner', 'access', 'editor', 'created', 'modified')
-    list_filter = ('access', 'editor', 'theme')
+    list_filter = ('access', 'editor')
     search_fields = ('title', 'name', 'description', 'owner__username', 'owner__name')
 
 

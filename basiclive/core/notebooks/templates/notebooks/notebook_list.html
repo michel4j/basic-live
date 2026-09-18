@@ -1,9 +1,9 @@
 {% extends "lims/base.html" %}
 {% load static %}
-{% load notebooks %}
+{% load bl_notebooks %}
 
 {% block extra_css %}
-    <link href="{% themed_static 'notebooks/themes/notebooks.min.css' %}" rel="stylesheet">
+    <link href="{% static 'notebooks/notebooks.min.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block page-title %}Notebooks{% endblock %}

@@ -1,12 +1,11 @@
 import json
-from datetime import timedelta
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.template import Context, Template, loader
 from django.test import RequestFactory, TestCase, override_settings
-from django.urls import include, path, reverse
+from django.urls import include, path
 from django.utils import timezone
 
 from tests import setup_django
@@ -15,7 +14,6 @@ setup_django()
 
 import basiclive.core.notebooks as notebooks_pkg
 from basiclive.core.notebooks.models import (
-    Annotation,
     Entry,
     EntryType,
     Notebook,
@@ -92,14 +90,6 @@ class NotebookTemplatesTestCase(TestCase):
         self.assertIn('"a":1', rendered)
         self.assertIn('"key": "value"', rendered)
 
-    def test_themed_static_tag(self):
-        """Test themed_static tag generates proper theme static path."""
-        template = Template(
-            "{% load notebooks %}"
-            "{% themed_static 'notebooks/themes/notebooks.min.css' 'floral' %}"
-        )
-        rendered = template.render(Context({}))
-        self.assertIn("floral.notebooks.min.css", rendered)
 
     def test_load_data_and_plot_axes_tags(self):
         """Test load_data and plot_axes templatetags on tabular data entry."""

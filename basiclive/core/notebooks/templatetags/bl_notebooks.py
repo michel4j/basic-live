@@ -1,10 +1,8 @@
 import json
-import os
 import time
 
 from django import template
 from django.conf import settings
-from django.templatetags.static import static
 from django.utils.safestring import mark_safe
 
 from ..models import EntryType
@@ -82,13 +80,3 @@ def do_clean(text):
     return mark_safe(clean_json(text))
 
 
-@register.simple_tag
-def themed_static(path, theme='default'):
-    """
-    Join the given path with the STATIC_URL setting for given theme.
-    """
-    theme = theme if theme else 'default'
-    directory = os.path.dirname(path)
-    asset = os.path.basename(path)
-    themed_path = os.path.join(directory, f'{theme}.{asset}')
-    return static(themed_path)

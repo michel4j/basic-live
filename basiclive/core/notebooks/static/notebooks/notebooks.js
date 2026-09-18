@@ -1094,7 +1094,7 @@ function getSelectionText() {
                 )({showHighlight: !hideHighlight}),
                 template: (
                     '<div class="popover menu" role="tooltip">' +
-                    '   <div class="arrow"></div>' +
+                    '   <div class="popover-arrow arrow"></div>' +
                     '   <h3 class="popover-header"></h3>' +
                     '   <div class="popover-body"></div>' +
                     '</div>'
@@ -1148,7 +1148,7 @@ function getSelectionText() {
                 content: menu,
                 template: (
                     '<div class="popover menu" role="tooltip">' +
-                    '   <div class="arrow"></div>' +
+                    '   <div class="popover-arrow arrow"></div>' +
                     '   <h3 class="popover-header"></h3>' +
                     '   <div class="popover-body"></div>' +
                     '</div>'
@@ -1173,9 +1173,11 @@ function getSelectionText() {
         // close popup menu on next click outside
         $(document).on('mousedown touchstart', function (e) {
             if (MyelnNotebooks.annotation) {
-                var popover = MyelnNotebooks.annotation.node.data('bs.popover');
+                var nodeEl = MyelnNotebooks.annotation.node[0];
+                var popover = (window.bootstrap && bootstrap.Popover ? bootstrap.Popover.getInstance(nodeEl) : null) || MyelnNotebooks.annotation.node.data('bs.popover');
                 if (popover) {
-                    if (!$(popover).is(e.target) && $(popover).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+                    var popoverTip = popover.tip || (popover.getTipElement ? popover.getTipElement() : null) || popover;
+                    if (!$(popoverTip).is(e.target) && $(popoverTip).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
                         MyelnNotebooks.annotation.node.popover('dispose');
                         MyelnNotebooks.annotation = null;
                     }
@@ -1221,7 +1223,7 @@ function addComment() {
             content: template,
             template: (
                 '<div class="popover form menu" role="tooltip">' +
-                '   <div class="arrow"></div>' +
+                '   <div class="popover-arrow arrow"></div>' +
                 '   <h3 class="popover-header"></h3>' +
                 '   <div class="popover-body"></div>' +
                 '</div>'
@@ -1341,18 +1343,18 @@ function submitAnnotation() {
 
 function markAnnotations(selector){
     $(selector).each(function(){
-        var entry = $(this);
+        const entry = $(this);
         //highlights
-        var highlights = [];
+        let highlights = [];
         entry.find('.annotations > script.highlight-annotation').each( function() {
-            var item = JSON.parse($(this).text());
+            let item = JSON.parse($(this).text());
             item.isAuthor = $(this).data('isauthor');
             highlights.push(item);
         });
 
         //mark each one
         $.each(highlights, function(i, item){
-            var node = entry.children().eq((item.node));
+            const node = entry.children().eq((item.node));
             if (node) {
                 node.mark(item.selections,{
                     caseSensitive: true,
@@ -1373,7 +1375,7 @@ function markAnnotations(selector){
         });
 
         //comments
-        var comments_template = _.template(
+        const comments_template = _.template(
             '<div class="node-comments dropdown-menu">' +
             '    <% _.each(comments, function(comment) { %>' +
             '    <div class="comments-content" data-pk="<%= comment.id %>" onmouseenter="markComment(this);" onmouseleave="unmarkComment(this);">' +
@@ -1393,10 +1395,10 @@ function markAnnotations(selector){
         );
 
         entry.children().each(function (){
-            var node = $(this);
-            var items = [];
+            const node = $(this);
+            let items = [];
             entry.find('.annotations > script.comment-'+node.index()).each(function(){
-                var item = JSON.parse($(this).text());
+                let item = JSON.parse($(this).text());
                 item.isAuthor = $(this).data('isauthor');
                 items.push(item);
             });
@@ -1487,7 +1489,7 @@ function editTags(elem){
         content: template,
         template: (
             '<div class="popover form menu" role="tooltip">' +
-            '   <div class="arrow"></div>' +
+            '   <div class="popover-arrow arrow"></div>' +
             '   <div class="popover-body"></div>' +
             '</div>'
         )

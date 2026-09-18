@@ -24,7 +24,6 @@ class NotebookForm(ModalModelForm):
             'access',
             'editor',
             'members',
-            'theme',
             'session',
             'project',
         ]
@@ -67,7 +66,6 @@ class NotebookForm(ModalModelForm):
                 ThirdWidth(Field('access', css_class='select')),
                 ThirdWidth(Field('editor', css_class='select')),
                 HalfWidth(Field('members', css_class='select')),
-                HalfWidth(Field('theme', css_class='select')),
                 HalfWidth(Field('session', css_class='select')),
                 HalfWidth(Field('project', css_class='select')),
                 style="g-2",

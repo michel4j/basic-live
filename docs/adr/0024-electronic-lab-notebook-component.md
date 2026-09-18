@@ -31,7 +31,7 @@ We decided to integrate the electronic lab notebook application directly into Ba
 - **Manifest Architecture**: Vendor packages are declared in `basiclive/core/notebooks/static/notebooks/assets.json` specifying canonical CDN URLs, target relative paths, and Subresource Integrity (SRI) hashes (`sha256`, `sha384`, `sha512`):
   - SimpleMDE, KaTeX & Auto-render, Dropzone, Atrament, PapaParse, D3 & D3-legend, CLNDR, Moment.js, TinyColorPicker, HTML5Sortable, Highlight.js, and Mark.js.
 - **Asset Fetching**: Automated retrieval via `python manage.py collectassets` validates SRI hashes upon download.
-- **Native Assets**: Only native SCSS/CSS themes (`default.notebooks.scss`, `floral.notebooks.scss`), custom calendar styling, `Myeln-Icons` fonts, and `notebooks.js` are tracked in git. Dead `/static/ext` references were eliminated in favor of clean relative paths.
+- **Native Assets**: Only native SCSS/CSS styles (`notebooks.scss`), custom calendar styling, `Myeln-Icons` fonts, and `notebooks.js` are tracked in git. Dead `/static/ext` references were eliminated in favor of clean relative paths.
 
 ### 4. Modal Forms and django-crisp-modals
 - **Crispy Modal Forms**: `NotebookForm` inherits from `crisp_modals.forms.ModalModelForm`.
@@ -42,7 +42,7 @@ We decided to integrate the electronic lab notebook application directly into Ba
 ### 5. Bootstrap 5 and Template Modernization
 - **Template Namespacing**: All 12 templates reside under `basiclive/core/notebooks/templates/notebooks/` and extend `lims/base.html`.
 - **Bootstrap 5 Conventions**: Replaced all legacy Bootstrap 4 classes and attributes (`text-right`, `float-right`, `custom-select`, `data-toggle`, `data-target`, `data-dismiss`) with modern equivalents (`text-end`, `float-end`, `form-select`, `data-bs-*`).
-- **Markdown & Templatetags**: Deprecated `django-markdown2` was replaced with BasicLIVE's native `markup` library (`{% load markup %}` and `{{ text|markdown }}`). Templatetags in `notebooks.py` (and alias `notebook_tags.py`) provide data loading, JSON formatting, and dynamic theme resolution.
+- **Markdown & Templatetags**: Deprecated `django-markdown2` was replaced with BasicLIVE's native `markup` library (`{% load markup %}` and `{{ text|markdown }}`). Templatetags in `bl_notebooks.py` provide data loading and JSON formatting.
 - **JavaScript Modernization**: `notebooks.js` was refactored to use standard `bootstrap.Popover` and `bootstrap.Modal` instances.
 
 ### 6. Metrics and Template Integrity

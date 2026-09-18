@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-import unittest
+
 from django.apps import apps
 from django.test import TestCase
 
@@ -68,7 +68,7 @@ class NotebooksAssetsTestCase(TestCase):
             self.static_dir / "icons" / "fonts" / "Myeln-Icons.woff",
             self.static_dir / "img" / "text-color.png",
             self.static_dir / "themes" / "_notebooks.scss",
-            self.static_dir / "themes" / "default.notebooks.min.css",
+            self.static_dir / "themes" / "notebooks.min.css",
             self.static_dir / "themes" / "floral.notebooks.min.css",
             self.static_dir / "calendar.min.css",
             self.static_dir / "notebooks.js",
@@ -84,7 +84,7 @@ class NotebooksAssetsTestCase(TestCase):
         self.assertNotIn("/static/ext/tinycolorpicker/text-color.png", scss_content)
         self.assertIn("../img/text-color.png", scss_content)
 
-        default_css = self.static_dir / "themes" / "default.notebooks.min.css"
+        default_css = self.static_dir / "themes" / "notebooks.min.css"
         with open(default_css, "r") as f:
             css_content = f.read()
         self.assertNotIn("/static/ext/", css_content)
