@@ -58,7 +58,6 @@ class NotebookTemplatesTestCase(TestCase):
             owner=self.user,
             access=Notebook.ACCESS.public,
             editor=Notebook.EDITOR.owner,
-            theme=self.theme,
         )
 
         self.today = timezone.localdate(timezone.now())

@@ -1,9 +1,8 @@
 import json
-from unittest.mock import MagicMock, patch
 from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import include, path, reverse
@@ -14,7 +13,6 @@ from tests import setup_django
 setup_django()
 
 from basiclive.core.notebooks.models import (
-    Annotation,
     Entry,
     EntryType,
     Notebook,
@@ -56,7 +54,6 @@ class NotebookViewsTestCase(TestCase):
             owner=self.owner,
             access=Notebook.ACCESS.public,
             editor=Notebook.EDITOR.owner,
-            theme=self.theme,
         )
 
         self.internal_nb = Notebook.objects.create(
@@ -66,7 +63,6 @@ class NotebookViewsTestCase(TestCase):
             owner=self.owner,
             access=Notebook.ACCESS.internal,
             editor=Notebook.EDITOR.team,
-            theme=self.theme,
         )
         self.internal_nb.members.add(self.member)
 
@@ -77,7 +73,6 @@ class NotebookViewsTestCase(TestCase):
             owner=self.owner,
             access=Notebook.ACCESS.private,
             editor=Notebook.EDITOR.team,
-            theme=self.theme,
         )
         self.private_nb.members.add(self.member)
 
@@ -88,7 +83,6 @@ class NotebookViewsTestCase(TestCase):
             owner=self.other,
             access=Notebook.ACCESS.private,
             editor=Notebook.EDITOR.owner,
-            theme=self.theme,
         )
 
         # Create pages and entries for testing
@@ -399,7 +393,6 @@ class NotebookViewsTestCase(TestCase):
             owner=self.owner,
             access=Notebook.ACCESS.private,
             editor=Notebook.EDITOR.owner,
-            theme=self.theme,
         )
         temp_page = Page.objects.create(book=del_nb, date=self.today)
         temp_entry = Entry.objects.create(

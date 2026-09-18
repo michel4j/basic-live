@@ -1,13 +1,13 @@
-from datetime import timedelta
 import json
 import unittest
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
 
-from django.core.management import call_command
 from tests import setup_django
 
 setup_django()
@@ -54,7 +54,6 @@ class NotebookModelsTestCase(TestCase):
             owner=self.owner,
             access=Notebook.ACCESS.private,
             editor=Notebook.EDITOR.owner,
-            theme=self.theme,
         )
         self.notebook.members.add(self.member)
 
