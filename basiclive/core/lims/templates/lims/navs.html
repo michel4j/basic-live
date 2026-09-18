@@ -16,6 +16,13 @@
                     <i class="ti ti-home"></i><span class="d-none d-md-inline-block">&nbsp;Dashboard</span>
                 </a>
             </li>
+            {% if USE_NOTEBOOKS %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'notebooks:notebook-list' %}">
+                    <i class="ti ti-book"></i><span class="d-none d-md-inline-block">&nbsp;Notebooks</span>
+                </a>
+            </li>
+            {% endif %}
             <li class="nav-item dropdown">
                 <a class="nav-link  dropdown-toggle me-md-2" href="#"
                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="search-menu">
@@ -31,6 +38,10 @@
                     <a class="dropdown-item" href="{% url 'data-list' %}">Datasets</a>
                     <a class="dropdown-item" href="{% url 'result-list' %}">Reports</a>
                     <div class="dropdown-divider"></div>
+                    {% if USE_NOTEBOOKS %}
+                    <a class="dropdown-item" href="{% url 'notebooks:notebook-list' %}">Notebooks</a>
+                    <div class="dropdown-divider"></div>
+                    {% endif %}
                     <a class="dropdown-item" href="{% url 'session-list' %}">Sessions</a>
                     {% if user.is_superuser %}
                         <a class="dropdown-item" href="{% url 'requesttype-list' %}">Request Types</a>

@@ -1489,16 +1489,19 @@ def record_login(sender, user, request, **kwargs):
     """ Login a user into the system """
     if user.is_authenticated:
         models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGIN, '{} logged-in'.format(user.username))
-        last_login = models.ActivityLog.objects.last_login(request)
-        if last_login is not None:
-            last_host = last_login.ip_number
-            message = 'Your previous login was on {date} from {ip}.'.format(
-                date=dateformat.format(timezone.localtime(last_login.created), 'M jS @ P'),
-                ip=last_host)
-            messages.info(request, message)
-        elif not request.user.is_staff:
-            message = 'You are logging in for the first time. Please make sure your profile is updated.'
-            messages.info(request, message)
+        last_login = models.ActivityLog.objects.last_login(request, user=user)
+        try:
+            if last_login is not None:
+                last_host = last_login.ip_number
+                message = 'Your previous login was on {date} from {ip}.'.format(
+                    date=dateformat.format(timezone.localtime(last_login.created), 'M jS @ P'),
+                    ip=last_host)
+                messages.info(request, message)
+            elif not user.is_staff:
+                message = 'You are logging in for the first time. Please make sure your profile is updated.'
+                messages.info(request, message)
+        except Exception:
+            pass
 
 
 user_logged_in.connect(record_login)

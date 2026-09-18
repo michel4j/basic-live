@@ -23,6 +23,9 @@ import basiclive.core.acl.urls as acl_urls
 import basiclive.core.crm.urls as crm_urls
 import basiclive.core.schedule.urls as schedule_urls
 import basiclive.core.publications.urls as pub_urls
+import basiclive.core.notebooks.views as notebooks_views
+import basiclive.core.notebooks.urls as notebooks_urls
+import basiclive.core.notebooks.forms as notebooks_forms
 
 
 class TemplateIntegrityTests(SimpleTestCase):
@@ -34,6 +37,7 @@ class TemplateIntegrityTests(SimpleTestCase):
         crm_views,
         schedule_views,
         pub_views,
+        notebooks_views,
     ]
 
     URL_MODULES = [
@@ -42,6 +46,7 @@ class TemplateIntegrityTests(SimpleTestCase):
         crm_urls,
         schedule_urls,
         pub_urls,
+        notebooks_urls,
     ]
 
     def test_all_view_template_names_exist(self):
@@ -166,6 +171,7 @@ class TemplateIntegrityTests(SimpleTestCase):
             "basiclive.core.crm",
             "basiclive.core.schedule",
             "basiclive.core.publications",
+            "basiclive.core.notebooks",
         ]
         loaded_count = 0
         for app_name in app_names:
@@ -336,6 +342,7 @@ class TemplateIntegrityTests(SimpleTestCase):
             "basiclive.core.crm",
             "basiclive.core.schedule",
             "basiclive.core.publications",
+            "basiclive.core.notebooks",
         ]
 
         legacy_patterns = [
@@ -410,6 +417,7 @@ class TemplateIntegrityTests(SimpleTestCase):
             "basiclive.core.crm",
             "basiclive.core.schedule",
             "basiclive.core.publications",
+            "basiclive.core.notebooks",
         ]
         for app_name in app_names:
             app_config = apps.get_app_config(app_name.split(".")[-1])
@@ -494,7 +502,7 @@ class TemplateIntegrityTests(SimpleTestCase):
         from basiclive.core.schedule import forms as schedule_forms
 
         # Verify all modal form classes inherit from crisp_modals ModalModelForm or ModalForm
-        form_modules = [lims_forms, crm_forms, acl_forms, schedule_forms]
+        form_modules = [lims_forms, crm_forms, acl_forms, schedule_forms, notebooks_forms]
         expected_modal_forms = [
             # lims
             (lims_forms, "ProjectForm"),
@@ -536,6 +544,8 @@ class TemplateIntegrityTests(SimpleTestCase):
             (schedule_forms, "BeamlineSupportForm"),
             (schedule_forms, "DowntimeForm"),
             (schedule_forms, "EmailNotificationForm"),
+            # notebooks
+            (notebooks_forms, "NotebookForm"),
         ]
 
         for mod, class_name in expected_modal_forms:
@@ -556,6 +566,44 @@ class TemplateIntegrityTests(SimpleTestCase):
                 self.assertNotIn('Div(css_class="col-6")', src)
                 self.assertNotIn("Div(css_class='col-6')", src)
 
+    def test_notebooks_assets_json_and_static_files(self):
+        """Verify basiclive.core.notebooks assets.json contains valid SRI hashes and CDN URLs."""
+        import json
+        assets_file = Path(apps.get_app_config("notebooks").path) / "static" / "notebooks" / "assets.json"
+        self.assertTrue(assets_file.exists())
+        with open(assets_file, "r") as f:
+            assets_data = json.load(f)
+
+        expected_libs = [
+            "simplemde",
+            "katex",
+            "dropzone",
+            "atrament",
+            "papaparse",
+            "d3",
+            "clndr",
+            "moment",
+            "tinycolorpicker",
+            "html5sortable",
+            "highlight",
+            "markjs",
+        ]
+        for lib in expected_libs:
+            self.assertIn(lib, assets_data)
+            lib_info = assets_data[lib]
+            self.assertIn("url", lib_info)
+            for asset_type in ("js", "css"):
+                for entry in lib_info.get(asset_type, []):
+                    self.assertIn("path", entry)
+                    self.assertIn("sri", entry)
+                    self.assertTrue(entry["sri"].startswith("sha"), f"Invalid SRI in {lib}: {entry['sri']}")
+
+        # Verify notebooks native assets are registered
+        self.assertIsNotNone(finders.find("notebooks/themes/default.notebooks.min.css"))
+        self.assertIsNotNone(finders.find("notebooks/js/notebooks.js"))
+        self.assertIsNotNone(finders.find("notebooks/icons/style.css"))
+
 
 if __name__ == "__main__":
     unittest.main()
+

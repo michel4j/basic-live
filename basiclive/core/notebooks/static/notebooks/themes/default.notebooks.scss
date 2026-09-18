@@ -1,0 +1,39 @@
+
+$monospace-stack: 'Fira Code', monospace;
+$default-text-color: #333;
+$primary: #007bff;
+$light: #f8f9fa;
+$dark: #343a40;
+$info: #4bc2c7;
+$caption-background: #fffdf1;
+
+
+.page-separator {
+  $separator-height: 2rem;
+  position: relative;
+  width: 100%;
+  margin: 1rem 0;
+  padding: 0.5em;
+
+  .date {
+    background: $info;
+    color: #ffffff;
+    padding: 0.75em;
+    font-size: 0.75*$separator-height;
+    line-height: $separator-height;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+}
+
+header {
+  background: $light;
+  nav.navbar {
+    a {
+      color: inherit;
+    }
+  }
+}
+
+@import 'notebooks';
+

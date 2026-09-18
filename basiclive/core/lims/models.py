@@ -1527,7 +1527,7 @@ class ActivityLogManager(models.Manager):
             e.user_description = request.user.username
         except:
             e.user_description = _("System")
-        e.ip_number = request.META['REMOTE_ADDR']
+        e.ip_number = request.META.get('REMOTE_ADDR', '127.0.0.1')
         e.action_type = action_type
         e.description = description
         if obj is not None:
@@ -1536,8 +1536,12 @@ class ActivityLogManager(models.Manager):
             e.object_repr = 'N/A'
         e.save()
 
-    def last_login(self, request):
-        logs = self.filter(user__exact=request.user, action_type__exact=ActivityLog.TYPE.LOGIN)
+    def last_login(self, request, user=None):
+        if user is None:
+            user = getattr(request, 'user', None)
+        if not user or not getattr(user, 'is_authenticated', False):
+            return None
+        logs = self.filter(user__exact=user, action_type__exact=ActivityLog.TYPE.LOGIN)
         if logs.count() > 1:
             return logs[1]
         else:

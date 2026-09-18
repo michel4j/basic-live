@@ -1,0 +1,51 @@
+{% extends "lims/base.html" %}
+{% load static %}
+{% load notebooks %}
+
+{% block extra_css %}
+    <link href="{% themed_static 'notebooks/themes/notebooks.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block page-title %}Notebooks{% endblock %}
+
+{% block page-tools %}
+{% if user.is_authenticated %}
+    <a class="btn btn-sm btn-primary" href="#!" data-modal-url="{% url 'notebooks:create-notebook' %}" title="Create Notebook">
+        <i class="ti ti-plus"></i> New Notebook
+    </a>
+{% endif %}
+{% endblock %}
+
+{% block page-content %}
+    <div class="row">
+        <div class="col-12 py-3">
+        {% for notebook in notebooks.private %}
+            {% if forloop.first %}<h4 class="border-bottom pb-2">Private Notebooks</h4><ul class="list-unstyled mb-4">{% endif %}
+            <li class="py-1">
+                <i class="ti ti-book text-muted"></i>&nbsp;
+                <a href="{% url 'notebooks:notebook-detail' pk=notebook.pk %}"><strong>{{ notebook.title }}</strong></a> &ndash;
+                {{ notebook.description }}
+            </li>
+            {% if forloop.last %}</ul>{% endif %}
+        {% endfor %}
+        {% for notebook in notebooks.internal %}
+            {% if forloop.first %}<h4 class="border-bottom pb-2">Internal Notebooks</h4><ul class="list-unstyled mb-4">{% endif %}
+            <li class="py-1">
+                <i class="ti ti-book text-muted"></i>&nbsp;
+                <a href="{% url 'notebooks:notebook-detail' pk=notebook.pk %}"><strong>{{ notebook.title }}</strong></a> &ndash;
+                {{ notebook.description }}
+            </li>
+            {% if forloop.last %}</ul>{% endif %}
+        {% endfor %}
+        {% for notebook in notebooks.public %}
+            {% if forloop.first %}<h4 class="border-bottom pb-2">Public Notebooks</h4><ul class="list-unstyled mb-4">{% endif %}
+            <li class="py-1">
+                <i class="ti ti-book text-muted"></i>&nbsp;
+                <a href="{% url 'notebooks:notebook-detail' pk=notebook.pk %}"><strong>{{ notebook.title }}</strong></a> &ndash;
+                {{ notebook.description }}
+            </li>
+            {% if forloop.last %}</ul>{% endif %}
+        {% endfor %}
+        </div>
+    </div>
+{% endblock %}

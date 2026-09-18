@@ -6,10 +6,12 @@ def setup_django():
     if not settings.configured:
         settings.configure(
             SECRET_KEY="test-secret-key",
+            ALLOWED_HOSTS=["*"],
             INSTALLED_APPS=[
                 "django.contrib.auth",
                 "django.contrib.contenttypes",
                 "django.contrib.sessions",
+                "django.contrib.messages",
                 "django.contrib.humanize",
                 "crispy_forms",
                 "crispy_bootstrap5",
@@ -20,8 +22,16 @@ def setup_django():
                 "basiclive.core.api",
                 "basiclive.core.publications",
                 "basiclive.core.crm",
+                "basiclive.core.notebooks",
                 "basiclive.auth.ldap",
                 "basiclive.auth.cas",
+            ],
+            MIDDLEWARE=[
+                "django.contrib.sessions.middleware.SessionMiddleware",
+                "django.middleware.common.CommonMiddleware",
+                "django.middleware.csrf.CsrfViewMiddleware",
+                "django.contrib.auth.middleware.AuthenticationMiddleware",
+                "django.contrib.messages.middleware.MessageMiddleware",
             ],
             AUTH_USER_MODEL="lims.Project",
             DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},

@@ -1,0 +1,113 @@
+{% extends "lims/base.html" %}
+{% load static %}
+{% load markup %}
+{% load notebooks %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'notebooks/icons/style.css' %}">
+    <link rel="stylesheet" href="{% static 'notebooks/calendar.min.css' %}">
+    <link rel="stylesheet" href="{% themed_static 'notebooks/themes/notebooks.min.css' notebook.theme.name %}{% nocache_static %}">
+    <link rel="stylesheet" href="{% static 'assets/simplemde/css/simplemde.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/katex/css/katex.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/dropzone/css/dropzone.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/highlight/css/github.min.css' %}">
+{% endblock %}
+
+{% block page-title %}{{ notebook.title }}{% endblock %}
+
+{% block page-tools %}
+    <a class="btn btn-sm btn-outline-secondary" href="#!" id="calendar-button" title="Calendar">
+        <i class="ti ti-calendar"></i>
+    </a>
+    {% if user.is_superuser or notebook.owner == user %}
+    <a class="btn btn-sm btn-outline-secondary" href="#!" data-modal-url="{% url 'notebooks:notebook-edit' pk=notebook.pk %}" title="Edit Notebook">
+        <i class="ti ti-settings"></i>
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block page-content %}
+<div class="row position-relative">
+    <div class="notebook-content col-9" id="notebook-content" data-annotate-url="{% url 'notebooks:annotate-notebook' pk=notebook.id %}">
+        {% include 'notebooks/pages.html' %}
+    </div>
+    {% if notebook|is_editable_by:user %}
+    <div class="col-10" style="display: none; position: relative;" id="entry-editor">
+        <div class="border rounded" id="editor-body" data-url="{% url 'notebooks:create-entry' pk=object.pk %}" data-notebook="{{ object.pk }}"></div>
+        <div class="submit-tools">
+            <button type="button" title="Cancel" onclick="closeEditor();" class="btn btn-sm btn-light">
+                <i class="mi mi-cross mi-fw"></i>
+            </button>
+            <button id="save-btn" type="button" title="Save" onclick="submitEntry();" class="btn btn-sm btn-success">
+                <i class="mi mi-save mi-fw"></i>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+    <div class="index-slider col-3" id="notebook-index">
+        {% include 'notebooks/index.html' %}
+    </div>
+    <div id="nav-tools">
+        <a href="#!" id="to-bottom" title="End of Page"><i class="mi mi-arrow-down-circle"></i></a>
+    </div>
+</div>
+{% if notebook|is_editable_by:user %}
+<div id="entry-selector" class="w-100 border-top bg-light p-2 mt-3">
+    <div class="container-fluid">
+        <div class="row">
+            <ul class="list-unstyled col-12 px-0 my-0 d-flex flex-wrap gap-3 align-items-center">
+                {% get_entry_types as entry_types %}
+                {% for entry_type in entry_types %}
+                    <li class="list-item entry-selector-icon">
+                        <a href="#!" title="Add {{ entry_type.name|title }} Entry"
+                           data-kind="{{ entry_type.name }}" onclick="create_{{ entry_type.name }}_entry();" class="text-decoration-none text-body">
+                            <i class="mi entry-selector-{{ entry_type.name }}"></i> {{ entry_type.name|title }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+<div class="dropdown-menu rounded-0" style="display: none;" id="finder" tabindex="-1">
+    <div class="container contents"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'assets/katex/js/katex.min.js' %}"></script>
+    <script src="{% static 'assets/katex/js/auto-render.min.js' %}"></script>
+    <script src="{% static 'assets/simplemde/js/simplemde.min.js' %}"></script>
+    <script src="{% static 'assets/dropzone/js/dropzone.min.js' %}"></script>
+    <script src="{% static 'assets/atrament/js/atrament.min.js' %}"></script>
+    <script src="{% static 'assets/moment/js/moment.min.js' %}"></script>
+    <script src="{% static 'assets/clndr/js/clndr.min.js' %}"></script>
+    <script src="{% static 'assets/tinycolorpicker/js/jquery.tinycolorpicker.min.js' %}"></script>
+    <script src="{% static 'assets/papaparse/js/papaparse.min.js' %}"></script>
+    <script src="{% static 'assets/html5sortable/js/html5sortable.min.js' %}"></script>
+    <script src="{% static 'assets/d3/js/d3.min.js' %}"></script>
+    <script src="{% static 'assets/d3/js/d3-legend.min.js' %}"></script>
+    <script src="{% static 'assets/highlight/js/highlight.min.js' %}"></script>
+    <script src="{% static 'assets/markjs/js/jquery.mark.min.js' %}"></script>
+    <script src="{% static 'notebooks/js/notebooks.js' %}{% nocache_static %}"></script>
+
+    <script>
+        $(document).ready(function(){
+            $("#to-bottom").click(function () {
+                loadPage($(".entry-page").last(), 'rest', true);
+                return false;
+            });
+
+            $('#calendar-button').myelnCalendar({
+                'eventSource': "{% url 'notebooks:notebook-dates' pk=notebook.id %}",
+                'selectTarget': "{% url 'notebooks:notebook-detail' pk=notebook.id %}",
+                'currentMonth': "{{ pages.0.date.isoformat }}",
+                'target': '#finder'
+            });
+            $('#notebook-content').annotate('.notebook-entry');
+
+            initEntries('.notebook-entry');
+        });
+    </script>
+{% endblock %}

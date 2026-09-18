@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'basiclive.core.schedule',
     'basiclive.core.crm',
     'basiclive.core.publications',
+    'basiclive.core.notebooks',
 
     "crispy_forms",
     "crispy_bootstrap5",

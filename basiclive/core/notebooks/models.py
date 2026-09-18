@@ -1,0 +1,210 @@
+import mimetypes
+import os
+import uuid
+
+from django.conf import settings
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+from model_utils import Choices
+
+from .fields import StringListField
+from .utils import timeish
+
+
+class ThemeManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
+class Theme(models.Model):
+    name = models.SlugField(_('name'), max_length=20, unique=True)
+
+    objects = ThemeManager()
+
+    def natural_key(self):
+        return (self.name,)
+
+    def __str__(self):
+        return self.name
+
+
+class Notebook(models.Model):
+    ACCESS = Choices(
+        (0, 'private', _('Private')),
+        (1, 'internal', _('Internal')),
+        (2, 'public', _('Public')),
+    )
+    EDITOR = Choices(
+        (0, 'owner', _('Owner')),
+        (1, 'team', _('Members')),
+        (2, 'users', _('All')),
+    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created = models.DateTimeField(_('created'), auto_now_add=True)
+    modified = models.DateTimeField(_('modified'), auto_now=True)
+    name = models.SlugField(_('name'), max_length=100, db_index=True)
+    title = models.CharField(_('title'), max_length=256)
+    description = models.TextField(_('description'), blank=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notebooks')
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='shared_notebooks')
+    access = models.SmallIntegerField(_('access'), choices=ACCESS, default=ACCESS.private)
+    editor = models.SmallIntegerField(_('editor'), choices=EDITOR, default=EDITOR.owner)
+    theme = models.ForeignKey(Theme, on_delete=models.SET_NULL, null=True, blank=True)
+    session = models.ForeignKey('lims.Session', on_delete=models.SET_NULL, null=True, blank=True, related_name='notebooks')
+    project = models.ForeignKey('lims.Project', on_delete=models.SET_NULL, null=True, blank=True, related_name='project_notebooks')
+
+    def __str__(self):
+        return self.title or self.name
+
+    def can_edit(self, user):
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_superuser or self.owner == user:
+            return True
+        if self.editor == self.EDITOR.users:
+            return True
+        if self.editor == self.EDITOR.team and self.members.filter(pk=user.pk).exists():
+            return True
+        return False
+
+    def can_view(self, user):
+        if self.access == self.ACCESS.public:
+            return True
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_superuser or self.owner == user:
+            return True
+        if self.access == self.ACCESS.internal:
+            return True
+        if self.access == self.ACCESS.private and self.members.filter(pk=user.pk).exists():
+            return True
+        return False
+
+
+class Page(models.Model):
+    book = models.ForeignKey(Notebook, on_delete=models.CASCADE, related_name='pages')
+    date = models.DateField(_('date'), default=timezone.localdate, db_index=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['book', 'date'], name='unique_notebook_page_date')
+        ]
+
+    def is_current(self):
+        return self.date == timezone.localdate(timezone.now())
+
+    def __str__(self):
+        return f'{self.book.name}-{self.date.isoformat()}'
+
+
+class EntryTypeManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
+class EntryType(models.Model):
+    name = models.SlugField(_('name'), max_length=20, unique=True)
+
+    objects = EntryTypeManager()
+
+    def natural_key(self):
+        return (self.name,)
+
+    def __str__(self):
+        return self.name
+
+
+def entry_storage(instance, filename):
+    """
+    Generate a path name for storing an entry file
+    :param instance: Entry instance
+    :param filename: filename of file being stored
+    :return: relative storage path
+    """
+    extension = os.path.splitext(filename)[1]
+    new_filename = f'{instance.kind.name}-{instance.pk or uuid.uuid4().hex[:8]}{extension.lower()}'
+    return os.path.join(
+        'notebooks',
+        str(instance.page.book.pk),
+        instance.page.date.isoformat(),
+        new_filename
+    )
+
+
+class Entry(models.Model):
+    created = models.DateTimeField(_('created'), default=timezone.now)
+    modified = models.DateTimeField(_('modified'), auto_now=True)
+    page = models.ForeignKey(Page, related_name='entries', on_delete=models.CASCADE)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='entries')
+    tags = StringListField(_('tags'), blank=True)
+    kind = models.ForeignKey(EntryType, on_delete=models.CASCADE)
+    text = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to=entry_storage, blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = 'entries'
+        ordering = ['created']
+
+    def __str__(self):
+        return f'{self.page}-{self.created.isoformat()}'
+
+    def is_editable(self):
+        return timezone.localdate(self.created) == timezone.localdate(timezone.now()) and not self.annotations.exists()
+
+    def can_edit(self, user):
+        if not user or not user.is_authenticated:
+            return False
+        return self.is_editable() and (user == self.author or user.is_superuser)
+
+    def can_view(self, user):
+        return self.page.book.can_view(user)
+
+    def mimetype(self):
+        if not self.file:
+            return None
+        mime, _ = mimetypes.guess_type(self.file.name)
+        return mime
+
+    def tag_string(self):
+        return ','.join(self.tags)
+
+
+class AnnotationQueryset(models.QuerySet):
+    def highlights(self):
+        return self.filter(kind=Annotation.ANNOTATION_TYPE.highlight)
+
+    def comments(self):
+        return self.filter(kind=Annotation.ANNOTATION_TYPE.comment)
+
+
+class AnnotationManager(models.Manager.from_queryset(AnnotationQueryset)):
+    use_for_related_fields = True
+
+
+class Annotation(models.Model):
+    ANNOTATION_TYPE = Choices(
+        ('comment', _('Comment')),
+        ('highlight', _('Highlight')),
+    )
+    kind = models.CharField(max_length=15, choices=ANNOTATION_TYPE, default=ANNOTATION_TYPE.highlight)
+    created = models.DateTimeField(_('created'), default=timezone.now)
+    entry = models.ForeignKey(Entry, related_name='annotations', on_delete=models.CASCADE)
+    node_index = models.IntegerField(default=0)
+    selections = StringListField(blank=True)
+    text = models.TextField(blank=True)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='annotations')
+
+    objects = AnnotationManager()
+
+    def json(self):
+        return {
+            'author': f'@{self.author.username}',
+            'time': timeish(timezone.localtime(self.created)),
+            'node': self.node_index,
+            'selections': self.selections,
+            'text': self.text,
+            'entry_id': self.entry_id,
+            'type': self.kind,
+            'id': self.pk,
+        }

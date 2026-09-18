@@ -1,0 +1,236 @@
+import json
+from datetime import timedelta
+from pathlib import Path
+
+from django.contrib.auth import get_user_model
+from django.core.management import call_command
+from django.template import Context, Template, loader
+from django.test import RequestFactory, TestCase, override_settings
+from django.urls import include, path, reverse
+from django.utils import timezone
+
+from tests import setup_django
+
+setup_django()
+
+import basiclive.core.notebooks as notebooks_pkg
+from basiclive.core.notebooks.models import (
+    Annotation,
+    Entry,
+    EntryType,
+    Notebook,
+    Page,
+    Theme,
+)
+
+User = get_user_model()
+
+from django.contrib.auth import views as auth_views
+
+urlpatterns = [
+    path("", include("basiclive.core.lims.urls")),
+    path("login/", auth_views.LoginView.as_view(), name="login"),
+    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
+    path("notebooks/", include("basiclive.core.notebooks.urls")),
+]
+
+
+@override_settings(ROOT_URLCONF="tests.test_notebooks_templates")
+class NotebookTemplatesTestCase(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        call_command('migrate', verbosity=0)
+        super().setUpClass()
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username="testuser", password="password123", name="Test User")
+        self.theme, _ = Theme.objects.get_or_create(name="default")
+        self.text_type, _ = EntryType.objects.get_or_create(name="text", defaults={"description": "Text"})
+        self.data_type, _ = EntryType.objects.get_or_create(name="data", defaults={"description": "Data"})
+        self.file_type, _ = EntryType.objects.get_or_create(name="file", defaults={"description": "File"})
+        self.sketch_type, _ = EntryType.objects.get_or_create(name="sketch", defaults={"description": "Sketch"})
+        self.image_type, _ = EntryType.objects.get_or_create(name="image", defaults={"description": "Image"})
+        self.video_type, _ = EntryType.objects.get_or_create(name="video", defaults={"description": "Video"})
+
+        self.notebook = Notebook.objects.create(
+            name="test-nb",
+            title="Test Notebook",
+            description="Test notebook description",
+            owner=self.user,
+            access=Notebook.ACCESS.public,
+            editor=Notebook.EDITOR.owner,
+            theme=self.theme,
+        )
+
+        self.today = timezone.localdate(timezone.now())
+        self.page = Page.objects.create(book=self.notebook, date=self.today)
+        self.entry = Entry.objects.create(
+            page=self.page,
+            created=timezone.now(),
+            author=self.user,
+            text="Hello **Markdown** world!",
+            kind=self.text_type,
+            tags=["sample", "test"],
+        )
+
+    def test_notebooks_templatetags_direct(self):
+        """Test notebooks template tags and filters directly."""
+        template = Template(
+            "{% load notebooks %}"
+            "{{ text|clean_json }}"
+            "{{ dt|simpletime }}"
+            "{{ dt|timeish }}"
+            "{{ data|json }}"
+        )
+        ctx = Context({
+            "text": '{"a": 1}',
+            "dt": timezone.now(),
+            "data": {"key": "value"},
+        })
+        rendered = template.render(ctx)
+        self.assertIn('"a":1', rendered)
+        self.assertIn('"key": "value"', rendered)
+
+    def test_themed_static_tag(self):
+        """Test themed_static tag generates proper theme static path."""
+        template = Template(
+            "{% load notebooks %}"
+            "{% themed_static 'notebooks/themes/notebooks.min.css' 'floral' %}"
+        )
+        rendered = template.render(Context({}))
+        self.assertIn("floral.notebooks.min.css", rendered)
+
+    def test_load_data_and_plot_axes_tags(self):
+        """Test load_data and plot_axes templatetags on tabular data entry."""
+        table_json = json.dumps({
+            "headers": ["Time", "Intensity", "Label"],
+            "data": {
+                "0": [0.0, 1.0, 2.0],
+                "1": [10.5, 20.3, 30.1],
+                "2": ["A", "B", "C"],
+            }
+        })
+        data_entry = Entry.objects.create(
+            page=self.page,
+            created=timezone.now(),
+            author=self.user,
+            text=table_json,
+            kind=self.data_type,
+        )
+        template = Template(
+            "{% load notebooks %}"
+            "{% load_data entry as d %}"
+            "{% plot_axes entry as axes %}"
+            "Headers: {{ d.headers|join:',' }}; Axes: {{ axes|join:',' }}"
+        )
+        rendered = template.render(Context({"entry": data_entry}))
+        self.assertIn("Headers: Time,Intensity,Label", rendered)
+        self.assertIn("Axes: Time,Intensity", rendered)
+
+    def test_render_entries_templates(self):
+        """Verify all entry kind templates render without syntax errors."""
+        request = self.factory.get("/")
+        request.user = self.user
+
+        for kind in ["text", "data", "file", "sketch", "image", "video"]:
+            t = loader.get_template(f"notebooks/entries/{kind}.html")
+            data_text = '{"headers": ["X", "Y"], "data": {"0": [1, 2], "1": [3, 4]}}' if kind == "data" else "Content"
+            entry_obj = Entry.objects.create(
+                page=self.page,
+                created=timezone.now(),
+                author=self.user,
+                text=data_text,
+                kind=EntryType.objects.get(name=kind),
+            )
+            rendered = t.render({"entry": entry_obj, "page": self.page, "user": self.user}, request)
+            self.assertIn(f"entry-{kind}", rendered)
+
+    def test_render_page_and_pages_templates(self):
+        """Verify page.html and pages.html render cleanly."""
+        request = self.factory.get("/")
+        request.user = self.user
+
+        t_page = loader.get_template("notebooks/page.html")
+        rendered_page = t_page.render({"page": self.page, "user": self.user}, request)
+        self.assertIn(f"page-{self.page.pk}", rendered_page)
+
+        t_pages = loader.get_template("notebooks/pages.html")
+        rendered_pages = t_pages.render({"pages": [self.page], "user": self.user}, request)
+        self.assertIn(f"page-{self.page.pk}", rendered_pages)
+
+    def test_render_index_templates(self):
+        """Verify index.html and index_entry.html render cleanly."""
+        request = self.factory.get("/")
+        request.user = self.user
+
+        t_index = loader.get_template("notebooks/index.html")
+        rendered_index = t_index.render({"entries": [self.entry], "active": self.entry.pk}, request)
+        self.assertIn(f"index-{self.entry.pk}", rendered_index)
+
+    def test_render_notebook_search_template(self):
+        """Verify notebook_search.html renders results correctly."""
+        request = self.factory.get("/notebooks/search/?q=test")
+        request.user = self.user
+
+        t_search = loader.get_template("notebooks/notebook_search.html")
+        rendered = t_search.render({"notebooks": [self.notebook], "entries": [self.entry]}, request)
+        self.assertIn(self.notebook.title, rendered)
+        self.assertIn("NOTEBOOKS", rendered)
+
+    def test_render_notebook_list_template(self):
+        """Verify notebook_list.html renders cleanly."""
+        request = self.factory.get("/notebooks/")
+        request.user = self.user
+
+        t_list = loader.get_template("notebooks/notebook_list.html")
+        rendered = t_list.render({
+            "notebooks": {
+                "public": [self.notebook],
+                "private": [],
+                "internal": [],
+            },
+            "user": self.user,
+        }, request)
+        self.assertIn("Public Notebooks", rendered)
+        self.assertIn(self.notebook.title, rendered)
+
+    def test_render_notebook_detail_template(self):
+        """Verify notebook.html renders cleanly extending lims/base.html."""
+        request = self.factory.get(f"/notebooks/{self.notebook.pk}/")
+        request.user = self.user
+
+        t_detail = loader.get_template("notebooks/notebook.html")
+        rendered = t_detail.render({
+            "notebook": self.notebook,
+            "object": self.notebook,
+            "pages": [self.page],
+            "entries": [self.entry],
+            "user": self.user,
+        }, request)
+        self.assertIn(self.notebook.title, rendered)
+        self.assertIn("notebook-content", rendered)
+        self.assertIn("notebook-index", rendered)
+
+    def test_bootstrap_5_compliance_in_templates(self):
+        """Ensure no legacy Bootstrap 4 classes or obsolete tags exist in templates."""
+        templates_dir = Path(notebooks_pkg.__file__).parent / "templates" / "notebooks"
+        html_files = list(templates_dir.rglob("*.html"))
+        self.assertTrue(len(html_files) > 0, "Template files must exist")
+
+        legacy_patterns = [
+            'data-toggle="',
+            'text-right',
+            'float-right',
+            'custom-select',
+            '{% load md2 %}',
+        ]
+
+        for path in html_files:
+            content = path.read_text(encoding="utf-8")
+            for pattern in legacy_patterns:
+                self.assertNotIn(
+                    pattern,
+                    content,
+                    f"Found legacy pattern '{pattern}' in {path.relative_to(templates_dir)}"
+                )

@@ -1,0 +1,93 @@
+$event-color: #007bff;
+$video-color: #ff6347;
+$text-color: #6495ed;
+$default-color: rgba(0, 0, 0, .5);
+$image-color:  #67b051;
+$sketch-color: #ff00ff;
+$border-color: rgba(187, 187, 187, 0.6);
+$light-border-color: rgba(0, 0, 0, 0.05);
+$highlight-color: #fffdf1;
+
+
+.no-select {
+  -webkit-user-select: none;  /* Chrome all / Safari all */
+  -moz-user-select: none;     /* Firefox all */
+  -ms-user-select: none;      /* IE 10+ */
+  user-select: none;
+}
+
+#notebook-clndr .clndr {
+  $calendar-width: 15rem;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+
+  .clndr-previous-button, .clndr-next-button {
+    font-size: 4vw;
+    opacity: 0.2;
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.4;
+    }
+  }
+  .control {
+    text-align: center;
+    width: 15%;
+    opacity: 0.6;
+    a {
+      text-decoration: none;
+    }
+  }
+  .month {
+    font-weight: 100;
+    font-size: 1.5rem;
+  }
+  .year {
+    font-weight: 900;
+    font-size: 1.2rem;
+  }
+  .days-container {
+    width: $calendar-width;
+    .days {
+      display: flex;
+      flex-flow: row wrap;
+      width: 100%;
+      .headers {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-evenly;
+        width: 100%;
+        font-weight: 800;
+      }
+      .day, .day-header {
+        display: inline-block;
+        width: $calendar-width/7;
+        line-height: $calendar-width/10;
+        text-align: center;
+      }
+      .day {
+        font-size: 0.8rem;
+        cursor: default;
+        font-weight: normal;
+        &.last-month, &.next-month {
+          color: $border-color;
+        }
+      }
+      .day.event {
+        cursor: pointer;
+        font-weight: 800;
+        color: $event-color;
+        text-shadow: 0 0 1px $event-color;
+      }
+    }
+  }
+
+}
+
+
+

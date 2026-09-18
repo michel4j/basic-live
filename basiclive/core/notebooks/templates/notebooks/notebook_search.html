@@ -1,0 +1,28 @@
+{% for notebook in notebooks %}
+    {% if forloop.first %}
+    <ul class="list-unstyled col-12">
+        <li class="results-section fw-bold text-muted border-bottom pb-1 mb-2">
+            <i class="ti ti-book text-muted"></i>&nbsp;NOTEBOOKS
+        </li>
+    {% endif %}
+    <li class="results-links py-1">
+        <a href="{% url 'notebooks:notebook-detail' pk=notebook.pk %}"><strong>{{ notebook.title }}</strong> &ndash;
+        {{ notebook.description|truncatechars:80 }}
+        </a>
+    </li>
+{% if forloop.last %}</ul>{% endif %}
+{% endfor %}
+{% for entry in entries %}
+    {% if forloop.first %}
+    <ul class="list-unstyled col-12 mt-3">
+        <li class="results-section fw-bold text-muted border-bottom pb-1 mb-2">
+            <i class="ti ti-align-left text-muted"></i>&nbsp;ENTRIES
+        </li>
+    {% endif %}
+    <li class="results-links py-1">
+        <a href="{% url 'notebooks:notebook-detail' pk=entry.page.book.pk %}?date={{ entry.page.date.isoformat }}#entry-{{ entry.id }}"><strong>{{ entry.page }}</strong> &ndash;
+        {{ entry.text|truncatechars:80 }}
+        </a>
+    </li>
+{% if forloop.last %}</ul>{% endif %}
+{% endfor %}

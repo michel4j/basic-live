@@ -1,0 +1,10 @@
+{% load notebooks %}
+<ul class="list-unstyled my-0 entry-page {% if last_page %}current-page{% endif %}"
+    data-page-url="{% url 'notebooks:notebook-page' pk=page.pk %}" id="page-{{ page.pk }}">
+    <li class="page-separator" id="separator-{{ page.pk }}">
+        <div class="date px-4 text-center">{{ page.date|date:"M j, Y"|upper }}</div>
+    </li>
+    {% for entry in page.entries.all %}
+        {% show_entry entry %}
+    {% endfor %}
+</ul>

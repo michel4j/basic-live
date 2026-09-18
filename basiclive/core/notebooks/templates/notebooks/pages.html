@@ -1,0 +1,7 @@
+{% for page in pages %}
+    {% if forloop.last %}
+    {% include 'notebooks/page.html' with last_page=True %}
+    {% else %}
+    {% include 'notebooks/page.html' %}
+    {% endif %}
+{% endfor %}

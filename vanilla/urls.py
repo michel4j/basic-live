@@ -44,6 +44,9 @@ if lims_settings.USE_SCHEDULE:
 if lims_settings.USE_PUBLICATIONS:
     urlpatterns += [path('publications/', include('basiclive.core.publications.urls'))]
 
+if lims_settings.USE_NOTEBOOKS:
+    urlpatterns += [path('notebooks/', include('basiclive.core.notebooks.urls'))]
+
 if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

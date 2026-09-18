@@ -8,6 +8,7 @@ DEFAULTS = {
     "USE_ACL": True,
     "USE_CRM": True,
     "USE_PUBLICATIONS": True,
+    "USE_NOTEBOOKS": True,
     "DOWNLOAD_PROXY_URL": "http://basiclive.core-data/download",
     "MAX_CONTAINER_DEPTH": 2,
     "RESTRICT_DOWNLOADS": False,
