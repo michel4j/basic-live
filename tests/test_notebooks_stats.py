@@ -13,7 +13,6 @@ from basiclive.core.notebooks.models import (
     Entry,
     EntryType,
     Notebook,
-    Page,
 )
 from basiclive.core.notebooks import stats
 
@@ -70,16 +69,15 @@ class NotebooksStatsTestCase(TestCase):
             access=Notebook.ACCESS.private,
         )
 
-        # Pages and entries
-        self.page1 = Page.objects.create(book=self.nb_pub, date=timezone.localdate())
+        # Entries
         self.entry1 = Entry.objects.create(
-            page=self.page1,
+            notebook=self.nb_pub,
             kind=self.text_type,
             author=self.user1,
             text="Note 1",
         )
         self.entry2 = Entry.objects.create(
-            page=self.page1,
+            notebook=self.nb_pub,
             kind=self.data_type,
             author=self.user1,
             text='{"title": "Data 1"}',
@@ -98,7 +96,7 @@ class NotebooksStatsTestCase(TestCase):
         self.assertEqual(metrics["public_notebooks"], 1)
         self.assertEqual(metrics["internal_notebooks"], 1)
         self.assertEqual(metrics["private_notebooks"], 2)
-        self.assertEqual(metrics["total_pages"], 1)
+        self.assertEqual(metrics["total_days"], 1)
         self.assertEqual(metrics["total_entries"], 2)
         self.assertEqual(metrics["total_annotations"], 1)
         self.assertEqual(metrics["entries_by_kind"], {"text": 1, "data": 1})
@@ -139,13 +137,13 @@ class NotebooksStatsTestCase(TestCase):
         """Verify project_notebook_metrics filters notebooks correctly."""
         metrics1 = stats.project_notebook_metrics(self.user1)
         self.assertEqual(metrics1["total_notebooks"], 3)
-        self.assertEqual(metrics1["total_pages"], 1)
+        self.assertEqual(metrics1["total_days"], 1)
         self.assertEqual(metrics1["total_entries"], 2)
         self.assertEqual(metrics1["entries_by_kind"], {"text": 1, "data": 1})
 
         metrics2 = stats.project_notebook_metrics(self.user2)
         self.assertEqual(metrics2["total_notebooks"], 1)
-        self.assertEqual(metrics2["total_pages"], 0)
+        self.assertEqual(metrics2["total_days"], 0)
         self.assertEqual(metrics2["total_entries"], 0)
         self.assertEqual(metrics2["entries_by_kind"], {})
 
