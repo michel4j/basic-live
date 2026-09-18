@@ -16,7 +16,6 @@ from basiclive.core.notebooks.models import (
     Entry,
     EntryType,
     Notebook,
-    Page,
     Theme,
 )
 from basiclive.core.notebooks import views
@@ -85,15 +84,14 @@ class NotebookViewsTestCase(TestCase):
             editor=Notebook.EDITOR.owner,
         )
 
-        # Create pages and entries for testing
+        # Create entries for testing
         self.now = timezone.now()
         self.today = timezone.localdate(self.now)
         self.yesterday = self.today - timedelta(days=1)
         self.yesterday_dt = self.now - timedelta(days=1)
 
-        self.page_yesterday = Page.objects.create(book=self.private_nb, date=self.yesterday)
         self.entry_yesterday = Entry.objects.create(
-            page=self.page_yesterday,
+            notebook=self.private_nb,
             created=self.yesterday_dt,
             author=self.owner,
             text="Yesterday entry text",
@@ -101,9 +99,8 @@ class NotebookViewsTestCase(TestCase):
             tags=["sample", "protein"],
         )
 
-        self.page_today = Page.objects.create(book=self.private_nb, date=self.today)
         self.entry_today = Entry.objects.create(
-            page=self.page_today,
+            notebook=self.private_nb,
             created=self.now,
             author=self.owner,
             text="Today entry text",
@@ -123,7 +120,7 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(reverse("notebooks:notebook-dates", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/dates/")
         self.assertEqual(reverse("notebooks:annotate-notebook", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/annotate/")
         self.assertEqual(reverse("notebooks:tag-notebook", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/tag/")
-        self.assertEqual(reverse("notebooks:notebook-page", kwargs={"pk": self.page_today.pk}), f"/notebooks/page/{self.page_today.pk}/")
+        self.assertEqual(reverse("notebooks:notebook-page", kwargs={"pk": self.entry_today.pk}), f"/notebooks/page/{self.entry_today.pk}/")
         self.assertEqual(reverse("notebooks:entry-data", kwargs={"pk": self.entry_today.pk}), f"/notebooks/entry/{self.entry_today.pk}/")
         self.assertEqual(reverse("notebooks:notebook-index", kwargs={"pk": self.entry_today.pk}), f"/notebooks/index/{self.entry_today.pk}/")
 
@@ -233,17 +230,17 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(len(context['entries']), 0)
 
     def test_notebook_detail_view(self):
-        """Test NotebookDetail context and page ordering."""
+        """Test NotebookDetail context and entry ordering."""
         view = views.NotebookDetail()
         request = self.factory.get(f"/notebooks/{self.private_nb.pk}/")
         request.user = self.owner
         view.request = request
         view.object = self.private_nb
         context = view.get_context_data()
-        self.assertEqual(len(context['pages']), 2)
-        # Pages should be chronological
-        self.assertEqual(context['pages'][0], self.page_yesterday)
-        self.assertEqual(context['pages'][1], self.page_today)
+        self.assertEqual(len(context['entries']), 2)
+        # Entries should be chronological
+        self.assertEqual(context['entries'][0], self.entry_yesterday)
+        self.assertEqual(context['entries'][1], self.entry_today)
 
     def test_notebook_dates_endpoint(self):
         """Test NotebookDates returns JSON list of page dates in given month."""
@@ -284,22 +281,22 @@ class NotebookViewsTestCase(TestCase):
         mock_get_template.return_value = mock_template
 
         self.client.force_login(self.owner)
-        # Load single page
+        # Load single entry anchor
         response = self.client.get(
-            reverse("notebooks:notebook-page", kwargs={"pk": self.page_today.pk})
+            reverse("notebooks:notebook-page", kwargs={"pk": self.entry_today.pk})
         )
         self.assertEqual(response.status_code, 200)
 
-        # Load prev page
+        # Load prev entries
         response = self.client.get(
-            reverse("notebooks:notebook-page", kwargs={"pk": self.page_today.pk}),
+            reverse("notebooks:notebook-page", kwargs={"pk": self.entry_today.pk}),
             {"load": "prev"},
         )
         self.assertEqual(response.status_code, 200)
 
         # Load non-existent next page should return 204
         response = self.client.get(
-            reverse("notebooks:notebook-page", kwargs={"pk": self.page_today.pk}),
+            reverse("notebooks:notebook-page", kwargs={"pk": self.entry_today.pk}),
             {"load": "next"},
         )
         self.assertEqual(response.status_code, 204)
@@ -320,7 +317,7 @@ class NotebookViewsTestCase(TestCase):
 
     @patch("basiclive.core.notebooks.views.loader.get_template")
     def test_save_entry_create_text(self, mock_get_template):
-        """Test SaveEntry creates a new entry on current day page."""
+        """Test SaveEntry creates a new entry on current day."""
         mock_template = MagicMock()
         mock_template.render.return_value = "<div>new entry</div>"
         mock_get_template.return_value = mock_template
@@ -332,7 +329,7 @@ class NotebookViewsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
-            Entry.objects.filter(page__book=self.public_nb, text="Brand new note").exists()
+            Entry.objects.filter(notebook=self.public_nb, text="Brand new note").exists()
         )
 
     @patch("basiclive.core.notebooks.views.loader.get_template")
@@ -353,7 +350,7 @@ class NotebookViewsTestCase(TestCase):
             {"text": raw_json, "kind": "data"},
         )
         self.assertEqual(response.status_code, 200)
-        entry = Entry.objects.filter(page__book=self.public_nb, kind=self.data_type).first()
+        entry = Entry.objects.filter(notebook=self.public_nb, kind=self.data_type).first()
         self.assertIsNotNone(entry)
         parsed = json.loads(entry.text)
         self.assertIn("headers", parsed)
@@ -385,8 +382,8 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_delete_entry_success(self):
-        """Authorized user can delete today's entry; empty page deleted."""
-        # Create a dedicated notebook with a single page and entry for today
+        """Authorized user can delete today's entry."""
+        # Create a dedicated notebook with a single entry for today
         del_nb = Notebook.objects.create(
             name="del-nb",
             title="Delete Notebook",
@@ -394,9 +391,8 @@ class NotebookViewsTestCase(TestCase):
             access=Notebook.ACCESS.private,
             editor=Notebook.EDITOR.owner,
         )
-        temp_page = Page.objects.create(book=del_nb, date=self.today)
         temp_entry = Entry.objects.create(
-            page=temp_page,
+            notebook=del_nb,
             created=timezone.now(),
             author=self.owner,
             text="Delete me",
@@ -410,7 +406,6 @@ class NotebookViewsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Entry.objects.filter(pk=temp_entry.pk).exists())
-        self.assertFalse(Page.objects.filter(pk=temp_page.pk).exists())
 
     def test_delete_historical_entry_forbidden(self):
         """Historical entry from a previous day is immutable and cannot be deleted."""

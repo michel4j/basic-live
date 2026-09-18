@@ -25,8 +25,6 @@ from .forms import NotebookForm
 from .models import Annotation, Entry, EntryType, Notebook
 from .utils import clean_json, fuzzy_time
 
-Page = None
-
 
 class NotebookAccessMixin:
     """Restricts queryset based on notebook access and user authentication."""
@@ -111,7 +109,7 @@ class NotebookSearch(NotebookAccessMixin, ListView):
                 | Q(description__icontains=search_string)
             )[:10]
             context['entries'] = Entry.objects.filter(
-                Q(page__book__in=self.object_list) & query
+                Q(notebook__in=self.object_list) & query
             ).distinct().order_by('-created')[:10]
         else:
             context['notebooks'] = self.model.objects.none()
@@ -126,17 +124,16 @@ class NotebookDetail(NotebookAccessMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         date = self.request.GET.get('date')
-        if self.object.pages.exists():
+        entries_qs = self.object.entries.all()
+        if entries_qs.exists():
             if date:
-                pages = list(self.object.pages.filter(date__gte=date)[:2])
+                entries = list(entries_qs.filter(created__date__gte=date).order_by('created')[:20])
             else:
-                pages = list(self.object.pages.order_by('-date')[:2])
-                pages.reverse()
-            context['pages'] = pages
-            context['entries'] = Entry.objects.filter(page__in=pages)
+                entries = list(entries_qs.order_by('-created')[:20])
+                entries.reverse()
+            context['entries'] = entries
         else:
-            context['pages'] = []
-            context['entries'] = Entry.objects.none()
+            context['entries'] = []
         return context
 
 
@@ -169,33 +166,38 @@ class UpdateNotebook(NotebookEditMixin, SuccessMessageMixin, ModalUpdateView):
 
 
 class NotebookPage(View):
-    model = Page
+    model = Entry
     template_name = "notebooks/pages.html"
 
     def get(self, request, *args, **kwargs):
         load = self.request.GET.get('load')
+        count_val = self.request.GET.get('count', 20)
         try:
-            obj = Page.objects.get(pk=self.kwargs.get('pk'))
-        except Page.DoesNotExist:
-            return HttpResponseNotFound("Page does not exist")
+            count = int(count_val)
+        except (ValueError, TypeError):
+            count = 20
+        try:
+            obj = Entry.objects.get(pk=self.kwargs.get('pk'))
+        except Entry.DoesNotExist:
+            return HttpResponseNotFound("Entry does not exist")
 
-        if obj.book.can_view(self.request.user):
-            if load:
-                try:
-                    if load == 'next':
-                        pages = [obj.get_next_by_date(book=obj.book)]
-                    elif load == 'prev':
-                        pages = [obj.get_previous_by_date(book=obj.book)]
-                    elif load == 'rest':
-                        pages = list(obj.book.pages.filter(pk__gt=obj.pk))
-                    else:
-                        pages = [obj]
-                except Page.DoesNotExist:
-                    return HttpResponse(status=204)
+        if obj.notebook.can_view(self.request.user):
+            book = obj.notebook
+            if load == 'next':
+                entries = list(book.entries.filter(created__gt=obj.created).order_by('created')[:count])
+            elif load == 'prev':
+                entries = list(book.entries.filter(created__lt=obj.created).order_by('-created')[:count])
+                entries.reverse()
+            elif load == 'rest':
+                entries = list(book.entries.filter(created__gt=obj.created).order_by('created'))
             else:
-                pages = [obj]
+                entries = [obj]
+
+            if not entries:
+                return HttpResponse(status=204)
+
             t = loader.get_template(self.template_name)
-            return HttpResponse(t.render({"pages": pages}, request))
+            return HttpResponse(t.render({"entries": entries, "notebook": book}, request))
         else:
             return HttpResponse(status=204)
 
@@ -216,8 +218,8 @@ class NotebookIndex(View):
         except Entry.DoesNotExist:
             return HttpResponseNotFound("Entry does not exist")
 
-        if obj.page.book.can_view(self.request.user):
-            entries = list(Entry.objects.filter(page__book=obj.page.book))
+        if obj.notebook.can_view(self.request.user):
+            entries = list(Entry.objects.filter(notebook=obj.notebook))
             load = math.ceil(num_load / 2)
             try:
                 index = entries.index(obj)
@@ -266,32 +268,26 @@ class SaveEntry(View):
         if kind.name == 'data' and text:
             text = clean_json(text)
         author = request.user
-        dt = timezone.localdate(timezone.now())
 
         if data.get('pk'):
             try:
-                entry = Entry.objects.get(pk=data.get('pk'), page__book=book)
+                entry = Entry.objects.get(pk=data.get('pk'), notebook=book)
             except Entry.DoesNotExist:
                 return HttpResponseNotFound("Entry not found")
             if not entry.can_edit(request.user):
                 return HttpResponseForbidden("Not allowed to edit entry")
             entry.text = text
             entry.save()
-            created_page = False
         else:
-            page, created_page = Page.objects.get_or_create(book=book, date=dt)
-            entry = Entry.objects.create(page=page, author=author, text=text, kind=kind)
+            entry = Entry.objects.create(notebook=book, author=author, text=text, kind=kind)
 
         file_upload = request.FILES.get('file')
         if file_upload:
             entry.file.save(file_upload.name, file_upload)
             entry.save()
 
-        if created_page:
-            t = loader.get_template("notebooks/page.html")
-        else:
-            t = loader.get_template(f"notebooks/entries/{kind.name}.html")
-        return HttpResponse(t.render({"entry": entry, "page": entry.page}, request))
+        t = loader.get_template(f"notebooks/entries/{kind.name}.html")
+        return HttpResponse(t.render({"entry": entry, "notebook": book}, request))
 
 
 class DeleteEntry(View):
@@ -301,17 +297,14 @@ class DeleteEntry(View):
         data = request.POST
         try:
             book = Notebook.objects.get(id=self.kwargs.get('pk'))
-            entry = Entry.objects.get(page__book=book, id=data.get('pk', 0))
+            entry = Entry.objects.get(notebook=book, id=data.get('pk', 0))
         except (Notebook.DoesNotExist, Entry.DoesNotExist):
             return HttpResponseNotFound("Notebook entry not found!")
 
         if not (book.can_edit(request.user) and entry.can_edit(request.user)):
             return HttpResponseForbidden("Not allowed to delete entry!")
 
-        page = entry.page
         entry.delete()
-        if not page.entries.exists():
-            page.delete()
         return HttpResponse("", status=200)
 
 
@@ -322,7 +315,7 @@ class AnnotateEntry(View):
         data = request.POST
         try:
             book = Notebook.objects.get(id=self.kwargs.get('pk'))
-            entry = Entry.objects.get(page__book=book, pk=data.get('entry_id', 0))
+            entry = Entry.objects.get(notebook=book, pk=data.get('entry_id', 0))
         except (Notebook.DoesNotExist, Entry.DoesNotExist):
             return HttpResponseNotFound("Notebook entry not found!")
 
@@ -344,7 +337,7 @@ class AnnotateEntry(View):
             entry.annotations.filter(pk=data['pk'], author=request.user).delete()
 
         t = loader.get_template(f"notebooks/entries/{entry.kind.name}.html")
-        return HttpResponse(t.render({"entry": entry, "page": entry.page}, request))
+        return HttpResponse(t.render({"entry": entry, "notebook": book}, request))
 
 
 class TagEntry(View):
@@ -354,7 +347,7 @@ class TagEntry(View):
         data = request.POST
         try:
             book = Notebook.objects.get(id=self.kwargs.get('pk'))
-            entry = Entry.objects.get(page__book=book, id=data.get('pk', 0))
+            entry = Entry.objects.get(notebook=book, id=data.get('pk', 0))
         except (Notebook.DoesNotExist, Entry.DoesNotExist):
             return HttpResponseNotFound("Notebook entry not found!")
 
@@ -370,7 +363,7 @@ class TagEntry(View):
         entry.save()
 
         t = loader.get_template(f"notebooks/entries/{entry.kind.name}.html")
-        return HttpResponse(t.render({"entry": entry, "page": entry.page}, request))
+        return HttpResponse(t.render({"entry": entry, "notebook": book}, request))
 
 
 class EntryData(DetailView):
@@ -406,15 +399,15 @@ class NotebookDates(NotebookAccessMixin, DetailView):
         month_list = [m.strip() for m in months.split(',') if len(m.strip()) == 6]
         if month_list:
             query = functools.reduce(operator.or_, [
-                Q(date__year=int(m[:4]), date__month=int(m[-2:])) for m in month_list
+                Q(created__year=int(m[:4]), created__month=int(m[-2:])) for m in month_list
             ])
-            pages_qs = notebook.pages.filter(query)
+            dates_qs = notebook.entries.filter(query).dates('created', 'day')
         else:
-            pages_qs = notebook.pages.none()
+            dates_qs = []
 
         data = [
-            {'date': page.date.isoformat(), 'title': '', 'location': ''}
-            for page in pages_qs
+            {'date': d.isoformat(), 'title': '', 'location': ''}
+            for d in dates_qs
         ]
 
         return JsonResponse(data, safe=False)
