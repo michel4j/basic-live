@@ -20,9 +20,10 @@ We decided to integrate the electronic lab notebook application directly into Ba
   - `access` levels: `private` (0), `internal` (1), `public` (2).
   - `editor` roles: `owner` (0), `team` (1), `users` (2).
   - `members` ManyToMany relationship for granting shared team access.
-- **Temporal Organization & Immutability**:
-  - `Page` partitions entries by calendar date (`date`) with unique constraint `(book, date)`.
-  - `Entry` records individual content items classified by `EntryType` (`text`, `data`, `file`, `sketch`, `image`, `video`).
+- **Direct Entry Attachment & Native Temporal Partitioning**:
+  - `Entry` records individual content items classified by `EntryType` (`text`, `data`, `file`, `sketch`, `image`, `video`) and links directly to `Notebook` via a ForeignKey (`related_name='entries'`).
+  - Native ORM Partitioning: Date partitioning and calendar indexing are handled natively via the Django ORM using indexed timestamp queries (`created__date`, `dates('created', 'day')`, `TruncDate`). The obsolete `Page` intermediary model has been eliminated.
+  - Windowed Pagination: Entries are loaded in count-based batches (`PAGE_SIZE`), rendering dynamic date separators (`page-separator`) when the calendar day changes across consecutive entries.
   - Immutability rule: `Entry.is_editable()` permits modification and deletion only on the calendar day of creation, provided no `Annotation` records have been attached. Historical entries are permanent audit records.
   - `Annotation` enables collaborative text highlighting and comments anchored to entry node indices.
 
@@ -46,5 +47,5 @@ We decided to integrate the electronic lab notebook application directly into Ba
 - **JavaScript Modernization**: `notebooks.js` was refactored to use standard `bootstrap.Popover` and `bootstrap.Modal` instances.
 
 ### 6. Metrics and Template Integrity
-- **Metrics API**: `basiclive.core.notebooks.stats` provides `notebook_metrics(user=None)` and `project_notebook_metrics(project)` for aggregate reporting.
+- **Metrics API**: `basiclive.core.notebooks.stats` provides `notebook_metrics(user=None)` and `project_notebook_metrics(project)` for aggregate reporting (`total_notebooks`, `total_entries`, `total_days`). Active days are computed natively via `entries.dates('created', 'day').count()`.
 - **Integrity Suite**: Registered in `tests/test_template_integrity.py` to continuously verify template compilation, view template existence, URL routing, modal form inheritance, Bootstrap 5 compliance, and `assets.json` integrity.

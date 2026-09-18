@@ -138,13 +138,9 @@ _Avoid_: Structure Entry, Protein Deposit, Database Record.
 A digital laboratory notebook owned by a User (or Project), optionally associated with a Session or Project, organizing date-stamped experimental records, observations, and data attachments.
 _Avoid_: Logbook, Diary, Journal.
 
-**Page**:
-A calendar-date partition within a Notebook containing the chronological sequence of entries recorded on that day.
-_Avoid_: Daily Sheet, Log Page, Day Record.
-
 **Entry**:
-An individual content record on a Page, classified by an EntryType (such as text, data, file, sketch, image, or video). Entries recorded on previous calendar days or with existing annotations are immutable.
-_Avoid_: Note, Post, Record Item, Log Item.
+An individual content record attached directly to a Notebook, classified by an EntryType (such as text, data, file, sketch, image, or video). Chronological date grouping and partitioning are handled dynamically at the presentation and query layers. Entries recorded on previous calendar days or with existing annotations are immutable.
+_Avoid_: Note, Post, Record Item, Log Item, Page.
 
 **EntryType**:
 A specification defining the content format, metadata structure, and rendering template of an Entry.
@@ -153,8 +149,4 @@ _Avoid_: Note Type, Kind, Block Type.
 **Annotation**:
 A reviewer comment or text highlight attached to a specific Entry or node within an Entry.
 _Avoid_: Feedback, Note on Note, Markup.
-
-**Theme**:
-A visual styling and color palette preset (such as `default` or `floral`) applied to a Notebook's layout and rendering.
-_Avoid_: Skin, Template Style, Color Scheme.
 
