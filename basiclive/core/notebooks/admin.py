@@ -22,18 +22,11 @@ class NotebookAdmin(admin.ModelAdmin):
     search_fields = ('title', 'name', 'description', 'owner__username', 'owner__name')
 
 
-@admin.register(models.Page)
-class PageAdmin(admin.ModelAdmin):
-    list_display = ('book', 'date')
-    list_filter = ('date',)
-    search_fields = ('book__title', 'book__name')
-
-
 @admin.register(models.Entry)
 class EntryAdmin(admin.ModelAdmin):
-    list_display = ('page', 'author', 'kind', 'created')
+    list_display = ('notebook', 'author', 'kind', 'created')
     list_filter = ('kind', 'created')
-    search_fields = ('text', 'tags', 'author__username')
+    search_fields = ('text', 'tags', 'author__username', 'notebook__title', 'notebook__name')
 
 
 @admin.register(models.Annotation)

@@ -81,22 +81,6 @@ class Notebook(models.Model):
         return False
 
 
-class Page(models.Model):
-    book = models.ForeignKey(Notebook, on_delete=models.CASCADE, related_name='pages')
-    date = models.DateField(_('date'), default=timezone.localdate, db_index=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['book', 'date'], name='unique_notebook_page_date')
-        ]
-
-    def is_current(self):
-        return self.date == timezone.localdate(timezone.now())
-
-    def __str__(self):
-        return f'{self.book.name}-{self.date.isoformat()}'
-
-
 class EntryTypeManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
@@ -123,18 +107,19 @@ def entry_storage(instance, filename):
     """
     extension = os.path.splitext(filename)[1]
     new_filename = f'{instance.kind.name}-{instance.pk or uuid.uuid4().hex[:8]}{extension.lower()}'
+    entry_date = timezone.localdate(instance.created) if instance.created else timezone.localdate()
     return os.path.join(
         'notebooks',
-        str(instance.page.book.pk),
-        instance.page.date.isoformat(),
+        str(instance.notebook.pk),
+        entry_date.isoformat(),
         new_filename
     )
 
 
 class Entry(models.Model):
-    created = models.DateTimeField(_('created'), default=timezone.now)
+    created = models.DateTimeField(_('created'), default=timezone.now, db_index=True)
     modified = models.DateTimeField(_('modified'), auto_now=True)
-    page = models.ForeignKey(Page, related_name='entries', on_delete=models.CASCADE)
+    notebook = models.ForeignKey(Notebook, related_name='entries', on_delete=models.CASCADE)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='entries')
     tags = StringListField(_('tags'), blank=True)
     kind = models.ForeignKey(EntryType, on_delete=models.CASCADE)
@@ -146,7 +131,7 @@ class Entry(models.Model):
         ordering = ['created']
 
     def __str__(self):
-        return f'{self.page}-{self.created.isoformat()}'
+        return f'{self.notebook.name}-{self.created.isoformat()}'
 
     def is_editable(self):
         return timezone.localdate(self.created) == timezone.localdate(timezone.now()) and not self.annotations.exists()
@@ -157,7 +142,7 @@ class Entry(models.Model):
         return self.is_editable() and (user == self.author or user.is_superuser)
 
     def can_view(self, user):
-        return self.page.book.can_view(user)
+        return self.notebook.can_view(user)
 
     def mimetype(self):
         if not self.file:

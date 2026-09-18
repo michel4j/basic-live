@@ -4,7 +4,9 @@ from collections import Counter
 from django.db.models import Count, Q
 from django.utils import timezone
 
-from .models import Annotation, Entry, EntryType, Notebook, Page
+from .models import Annotation, Entry, EntryType, Notebook
+
+Page = None
 
 
 def notebook_metrics(user=None):

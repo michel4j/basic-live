@@ -17,8 +17,8 @@ from basiclive.core.notebooks.models import (
     Entry,
     EntryType,
     Notebook,
-    Page,
     Theme,
+    entry_storage,
 )
 from basiclive.core.notebooks.fields import StringListField, DelimitedTextFormField
 from basiclive.core.notebooks.utils import (
@@ -104,19 +104,54 @@ class NotebookModelsTestCase(TestCase):
         self.notebook.save()
         self.assertTrue(self.notebook.can_edit(self.other))
 
-    def test_page_uniqueness_and_current(self):
-        page1 = Page.objects.create(book=self.notebook)
-        self.assertTrue(page1.is_current())
-        self.assertIn(self.notebook.name, str(page1))
+    def test_entry_direct_attachment_and_storage(self):
+        entry = Entry.objects.create(
+            notebook=self.notebook,
+            author=self.owner,
+            kind=self.entry_type_text,
+            text="Direct entry notes",
+        )
+        self.assertEqual(entry.notebook, self.notebook)
+        self.assertIn(entry, self.notebook.entries.all())
+        self.assertIn(self.notebook.name, str(entry))
 
-        # Creating another page on the same book and date must fail UniqueConstraint
-        with self.assertRaises(IntegrityError):
-            Page.objects.create(book=self.notebook)
+        # Verify entry storage path uses notebook pk and date
+        path = entry_storage(entry, "scan.dat")
+        today_iso = timezone.localdate(entry.created).isoformat()
+        expected_prefix = f"notebooks/{self.notebook.pk}/{today_iso}/"
+        self.assertTrue(path.startswith(expected_prefix), f"Expected path to start with {expected_prefix}, got {path}")
+
+    def test_entry_date_queries_via_orm(self):
+        now = timezone.now()
+        yesterday_dt = now - timedelta(days=1)
+        entry1 = Entry.objects.create(
+            notebook=self.notebook,
+            author=self.owner,
+            kind=self.entry_type_text,
+            created=yesterday_dt,
+            text="Yesterday entry",
+        )
+        entry2 = Entry.objects.create(
+            notebook=self.notebook,
+            author=self.owner,
+            kind=self.entry_type_text,
+            created=now,
+            text="Today entry",
+        )
+
+        # Query distinct dates via ORM
+        dates = list(self.notebook.entries.dates('created', 'day'))
+        self.assertEqual(len(dates), 2)
+        self.assertEqual(dates[0], timezone.localdate(yesterday_dt))
+        self.assertEqual(dates[1], timezone.localdate(now))
+
+        # Filter by created__date
+        today_entries = self.notebook.entries.filter(created__date=timezone.localdate(now))
+        self.assertEqual(list(today_entries), [entry2])
 
     def test_entry_lifecycle_and_tags(self):
-        page = Page.objects.create(book=self.notebook)
         entry = Entry.objects.create(
-            page=page,
+            notebook=self.notebook,
             author=self.owner,
             kind=self.entry_type_text,
             tags=["crystallography", "calibration"],
@@ -134,9 +169,8 @@ class NotebookModelsTestCase(TestCase):
         self.assertEqual(entry.tags, ["crystallography", "calibration"])
 
     def test_annotation_functionality(self):
-        page = Page.objects.create(book=self.notebook)
         entry = Entry.objects.create(
-            page=page,
+            notebook=self.notebook,
             author=self.owner,
             kind=self.entry_type_text,
             text="Sample collected with 12 keV",

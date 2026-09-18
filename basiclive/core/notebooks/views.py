@@ -22,8 +22,10 @@ from django.views.generic import DetailView, ListView, View
 from crisp_modals.views import ModalCreateView, ModalUpdateView
 
 from .forms import NotebookForm
-from .models import Annotation, Entry, EntryType, Notebook, Page
+from .models import Annotation, Entry, EntryType, Notebook
 from .utils import clean_json, fuzzy_time
+
+Page = None
 
 
 class NotebookAccessMixin:
