@@ -93,14 +93,14 @@
     <script>
         $(document).ready(function(){
             $("#to-bottom").click(function () {
-                loadPage($(".entry-page").last(), 'rest', true);
+                loadPage($(".notebook-entry").last(), 'rest', true);
                 return false;
             });
 
             $('#calendar-button').myelnCalendar({
                 'eventSource': "{% url 'notebooks:notebook-dates' pk=notebook.id %}",
                 'selectTarget': "{% url 'notebooks:notebook-detail' pk=notebook.id %}",
-                'currentMonth': "{{ pages.0.date.isoformat }}",
+                'currentMonth': "{{ entries.0.created|date:'Y-m-d' }}",
                 'target': '#finder'
             });
             $('#notebook-content').annotate('.notebook-entry');

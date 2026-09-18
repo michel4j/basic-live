@@ -471,16 +471,42 @@ function submitEntry() {
             if (entry_pk) {
                 $('#entry-'+entry_pk + ' [title]').tooltip('hide');
                 $('#entry-'+entry_pk).replaceWith(response);
+                initEntries('#entry-'+entry_pk);
             } else {
-                if ($(response).is('ul.entry-page')) {
-                    $('ul.entry-page').removeClass('current-page');
-                    $("#notebook-content").append(response);
+                var newEntry = $(response);
+                var entryDate = newEntry.data('entry-date');
+                var sep = $('#notebook-content .page-separator[data-date="' + entryDate + '"]');
+
+                if (sep.length === 0) {
+                    var months = ["JAN.", "FEB.", "MAR.", "APR.", "MAY", "JUN.", "JUL.", "AUG.", "SEP.", "OCT.", "NOV.", "DEC."];
+                    var parts = entryDate ? entryDate.split('-') : [];
+                    var dateStr = "";
+                    if (parts.length === 3) {
+                        var mIdx = parseInt(parts[1], 10) - 1;
+                        var day = parseInt(parts[2], 10);
+                        dateStr = months[mIdx] + " " + day + ", " + parts[0];
+                    } else {
+                        var now = new Date();
+                        dateStr = months[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear();
+                    }
+                    var sepElem = $('<li class="page-separator" data-date="' + entryDate + '" id="separator-' + entryDate + '"><div class="date px-4 text-center">' + dateStr + '</div></li>');
+                    var targetList = $('#notebook-content ul.entry-page').last();
+                    if (targetList.length === 0) {
+                        targetList = $('<ul class="list-unstyled my-0 entry-page current-page"></ul>').appendTo('#notebook-content');
+                    }
+                    targetList.append(sepElem);
+                    targetList.append(newEntry);
                 } else {
-                    $('ul.entry-page.current-page').append(response);
+                    var entriesForDate = $('#notebook-content .notebook-entry[data-entry-date="' + entryDate + '"]');
+                    if (entriesForDate.length > 0) {
+                        entriesForDate.last().after(newEntry);
+                    } else {
+                        sep.after(newEntry);
+                    }
                 }
+                initEntries(newEntry);
             }
             closeEditor();
-            initEntries('#entry-'+entry_pk);
         }
     });
 }
@@ -502,9 +528,16 @@ function deleteEntry(elem){
 			success: function() {
 			    button.popover('hide');
 			    $('#entry-'+entry_id + ' [data-original-title]').tooltip('dispose');
+                var entryDate = entry.data('entry-date');
                 entry.remove();
+                if (entryDate) {
+                    var remaining = $('#notebook-content .notebook-entry[data-entry-date="' + entryDate + '"]');
+                    if (remaining.length === 0) {
+                        $('#notebook-content .page-separator[data-date="' + entryDate + '"]').remove();
+                    }
+                }
                 var last_page = $('ul.entry-page').last();
-                if (last_page.find('li').length < 2) {
+                if (last_page.find('.notebook-entry').length === 0) {
                     last_page.remove();
                 }
             },
@@ -1548,39 +1581,73 @@ function submitTags() {
 function loadPage(element, dir, scroll, pk) {
     scroll = scroll || false;
     var container = $('#notebook-content');
+    var url = $(element).data('page-url');
+    if (!url) {
+        var anchor = (dir === 'prev') ? $(element).find('.notebook-entry').first() : $(element).find('.notebook-entry').last();
+        url = anchor.data('page-url');
+    }
+    if (!url) {
+        var anchor = (dir === 'prev') ? $('.notebook-entry').first() : $('.notebook-entry').last();
+        url = anchor.data('page-url');
+    }
+    if (!url) {
+        MyelnNotebooks.loading = false;
+        return;
+    }
+
     $.ajax({
         type: 'GET',
-        url: $(element).data('page-url'),
+        url: url,
         data: {
             'load': dir,
         },
-        success: function(response) {
-            var page_id = $(response).attr('id');
-            var pages = container.find('.entry-page');
-            var first_page = pages.first();
-            var last_page = pages.last();
-            if ((dir === 'next')||(dir === 'rest')) {
-                if ($(response).is('ul.entry-page.current-page')||$(response).has('ul.entry-page.current-page')) {
-                    $('ul.entry-page.current-page').removeClass('current-page');
-                }
-                container.append(response);
+        success: function(response, status, xhr) {
+            if (xhr.status === 204 || !response || $.trim(response) === '') {
+                MyelnNotebooks.loading = false;
+                return;
+            }
+            var newContent = $(response);
+            if (newContent.length === 0) {
+                MyelnNotebooks.loading = false;
+                return;
+            }
+
+            if ((dir === 'next') || (dir === 'rest')) {
+                // If appending, remove duplicate date separators already present above
+                newContent.find('.page-separator').each(function() {
+                    var d = $(this).data('date');
+                    if (d && container.find('.page-separator[data-date="' + d + '"]').length > 0) {
+                        $(this).remove();
+                    }
+                });
+                container.append(newContent);
             } else {
-                var page = $('ul.entry-page').first();
+                // Prepending: remove existing date separators that are now inside the date span
+                newContent.find('.page-separator').each(function() {
+                    var d = $(this).data('date');
+                    if (d) {
+                        var existingSep = container.find('.page-separator[data-date="' + d + '"]');
+                        if (existingSep.length > 0) {
+                            existingSep.remove();
+                        }
+                    }
+                });
+                var firstElem = container.children().first();
                 var height = 0;
-                container.prepend(response);
-                page.prevAll().each(function(){
+                container.prepend(newContent);
+                firstElem.prevAll().each(function(){
                     height += $(this).outerHeight();
                 });
-                $('main').scrollTop(height);
+                $('main').scrollTop($('main').scrollTop() + height);
             }
             if (scroll) {
-                $('.entry-page').last()[0].scrollIntoView({
+                $('.notebook-entry').last()[0].scrollIntoView({
                     alignToTop: false,
                     behavior: "smooth"
                 });
             }
             MyelnNotebooks.loading = false;
-            initEntries('#' + page_id + ' .notebook-entry');
+            initEntries(newContent.find('.notebook-entry').addBack('.notebook-entry'));
         },
         error: function() {
             MyelnNotebooks.loading = false;
@@ -1668,7 +1735,7 @@ var checkLoading = function(t) {
 function scrollIndex(pk) {
     var el = $('#entry-'+pk);
     if (!el.length) {
-        var entries = $('.entry-page');
+        var entries = $('.notebook-entry');
         var elem = entries.first();
         MyelnNotebooks.loading = true;
         loadPage(elem, 'prev', false);
@@ -1676,7 +1743,7 @@ function scrollIndex(pk) {
             scrollIndex(pk);
         });
     } else {
-        $('#entry-' + pk)[0].scrollIntoView({alignToTop: false, behavior: 'smooth'})
+        $('#entry-' + pk)[0].scrollIntoView({alignToTop: false, behavior: 'smooth'});
     }
 }
 
@@ -1719,7 +1786,7 @@ $('main').on('scroll', function(event) {
     }
 
     if (!MyelnNotebooks.loading) {
-        var entries = $('.entry-page');
+        var entries = $('.notebook-entry');
         if (entries.length == 0) {
             return;
         }

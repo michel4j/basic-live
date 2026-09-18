@@ -1,7 +1,7 @@
 {% load bl_notebooks %}
 
 <li class="list-item notebook-entry entry-{{ entry.kind.name }}" data-index-url="{% url 'notebooks:notebook-index' entry.pk %}"
-    data-page="{{ entry.page.pk }}" data-entry-pk="{{ entry.pk }}" id="entry-{{ entry.pk }}">
+    data-page-url="{% url 'notebooks:notebook-page' pk=entry.pk %}" data-entry-pk="{{ entry.pk }}" data-entry-date="{{ entry.created|date:'Y-m-d' }}" id="entry-{{ entry.pk }}">
     {% block entry_content %}{% endblock %}
     <div class="tag-cloud w-100 text-end">
         <ul class="list-unstyled mb-0">
@@ -14,12 +14,12 @@
         {% if entry.is_editable and user == entry.author %}
         <span class="entry-tools col-sm-4 px-0">
             <i class="mi mi-pencil mi-lg mi-fw edit-button" data-url="" title="Edit" onclick="edit_{{ entry.kind.name }}_entry({{ entry.pk }});"></i>
-            <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-url="{% url 'notebooks:tag-notebook' pk=entry.page.book.pk %}" title="Tags" onclick="editTags(this);" data-tags="{{ entry.tag_string }}"></i>
-            <i class="mi mi-trash mi-lg mi-fw delete-button" title="Delete" data-url="{% url 'notebooks:delete-entry' entry.page.book.pk %}" onclick="deleteEntry(this);"></i>
+            <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-url="{% url 'notebooks:tag-notebook' pk=entry.notebook.pk %}" title="Tags" onclick="editTags(this);" data-tags="{{ entry.tag_string }}"></i>
+            <i class="mi mi-trash mi-lg mi-fw delete-button" title="Delete" data-url="{% url 'notebooks:delete-entry' pk=entry.notebook.pk %}" onclick="deleteEntry(this);"></i>
         </span>
         {% else %}
         <span class="entry-tools col-sm-4 px-0">
-            <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-url="{% url 'notebooks:tag-notebook' pk=entry.page.book.pk %}" title="Tags" onclick="editTags(this);" data-tags="{{ entry.tag_string }}"></i>
+            <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-url="{% url 'notebooks:tag-notebook' pk=entry.notebook.pk %}" title="Tags" onclick="editTags(this);" data-tags="{{ entry.tag_string }}"></i>
         </span>
         {% endif %}
         <span class="col-sm-4 text-end px-0 small">

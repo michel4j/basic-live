@@ -20,7 +20,7 @@
         </li>
     {% endif %}
     <li class="results-links py-1">
-        <a href="{% url 'notebooks:notebook-detail' pk=entry.page.book.pk %}?date={{ entry.page.date.isoformat }}#entry-{{ entry.id }}"><strong>{{ entry.page }}</strong> &ndash;
+        <a href="{% url 'notebooks:notebook-detail' pk=entry.notebook.pk %}?date={{ entry.created|date:'Y-m-d' }}#entry-{{ entry.id }}"><strong>{{ entry.created|date:"M j, Y" }}</strong> &ndash;
         {{ entry.text|truncatechars:80 }}
         </a>
     </li>
