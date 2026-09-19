@@ -1,11 +1,93 @@
 // initialize name space for application global variables
-var MyelnNotebooks = MyelnNotebooks || {};
+const MyelnNotebooks = window.MyelnNotebooks || {};
+window.MyelnNotebooks = MyelnNotebooks;
+
+function getCsrfToken() {
+    if (window.jQuery && typeof jQuery.cookie === 'function') {
+        const token = jQuery.cookie('csrftoken');
+        if (token) return token;
+    }
+    const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
+function get_entry_data_url(pk) {
+    const btn = $(`#entry-${pk} .edit-button`);
+    return btn.data('url') || `/notebooks/entry/${pk}/`;
+}
+
+function doSearch(elem) {
+    const el = $(elem);
+    const prefix = el.data('search-prefix');
+    const val = el.text().trim();
+    const query = prefix ? `${prefix}:${val}` : val;
+    window.location.href = `/notebooks/search/?q=${encodeURIComponent(query)}`;
+}
+
+function getDomElement(element) {
+    if (!element) return null;
+    if (element instanceof jQuery || (element && element.jquery && element.length)) {
+        return element[0];
+    }
+    if (typeof element === 'string') {
+        return document.querySelector(element);
+    }
+    return element;
+}
+
+function showPopover(element, options) {
+    const el = getDomElement(element);
+    if (!el) return;
+    if (window.bootstrap && bootstrap.Popover) {
+        const instance = bootstrap.Popover.getOrCreateInstance(el, options);
+        instance.show();
+        return instance;
+    } else if ($.fn.popover) {
+        $(el).popover(options);
+        $(el).popover('show');
+    }
+}
+
+function hidePopover(element) {
+    const el = getDomElement(element);
+    if (!el) return;
+    if (window.bootstrap && bootstrap.Popover) {
+        const instance = bootstrap.Popover.getInstance(el);
+        if (instance) instance.hide();
+    } else if ($.fn.popover) {
+        $(el).popover('hide');
+    }
+}
+
+function disposePopover(element) {
+    const el = getDomElement(element);
+    if (!el) return;
+    if (window.bootstrap && bootstrap.Popover) {
+        const instance = bootstrap.Popover.getInstance(el);
+        if (instance) instance.dispose();
+    } else if ($.fn.popover) {
+        $(el).popover('dispose');
+    }
+}
+
+function disposeTooltips(container) {
+    const $c = $(container);
+    const elements = $c.find('[data-bs-original-title], [data-original-title], [title]').add($c.filter('[data-bs-original-title], [data-original-title], [title]')).get();
+    elements.forEach(function(el) {
+        if (window.bootstrap && bootstrap.Tooltip) {
+            const inst = bootstrap.Tooltip.getInstance(el);
+            if (inst) inst.dispose();
+        } else if ($.fn.tooltip) {
+            $(el).tooltip('dispose');
+        }
+    });
+}
 
 function create_text_entry(itext) {
-    var placeholder = $("#editor-body");
+    const placeholder = $("#editor-body");
     placeholder.html('<textarea id="textarea"></textarea>');
     placeholder.data('kind', 'text');
-    var simplemde = new SimpleMDE({
+    const simplemde = new SimpleMDE({
         autoDownloadFontAwesome: false,
         renderingConfig: {
             codeSyntaxHighlighting: true,
@@ -36,21 +118,20 @@ function create_text_entry(itext) {
             title: "Quote"
         }, "|", {
             name: "unordered-list",
-            action: SimpleMDE.toggleUnorderedList ,
+            action: SimpleMDE.toggleUnorderedList,
             className: "mi mi-list-ul mi-md",
             title: "Bullet List"
         }, {
             name: "ordered-list",
-            action: SimpleMDE.toggleOrderedList ,
+            action: SimpleMDE.toggleOrderedList,
             className: "mi mi-list-ol mi-md",
             title: "Numbered List"
         }, "|", {
             name: "link",
-            action: SimpleMDE.drawLink ,
+            action: SimpleMDE.drawLink,
             className: "mi mi-link mi-md",
             title: "Link"
-
-        },"|", {
+        }, "|", {
             name: "Equation (Latex Syntax)",
             action: wrapEquation,
             className: "mi mi-math mi-md",
@@ -59,7 +140,7 @@ function create_text_entry(itext) {
             name: "undo",
             action: SimpleMDE.undo,
             className: "mi mi-undo mi-md",
-            title: "Redo"
+            title: "Undo"
         }, {
             name: "redo",
             action: SimpleMDE.redo,
@@ -77,7 +158,7 @@ function create_text_entry(itext) {
 }
 
 function create_sketch_entry(itext, ifile) {
-    var placeholder = $("#editor-body");
+    const placeholder = $("#editor-body");
     placeholder.data('kind', 'sketch');
 
     addSketchZone(placeholder);
@@ -90,7 +171,7 @@ function create_sketch_entry(itext, ifile) {
 }
 
 function create_image_entry(itext, ifile) {
-    var placeholder = $("#editor-body");
+    const placeholder = $("#editor-body");
     placeholder.data('kind', 'image');
 
     if (ifile) {
@@ -104,7 +185,7 @@ function create_image_entry(itext, ifile) {
 }
 
 function create_file_entry(itext, ifile) {
-    var placeholder = $("#editor-body");
+    const placeholder = $("#editor-body");
     placeholder.data('kind', 'file');
 
     if (!ifile) {
@@ -115,12 +196,12 @@ function create_file_entry(itext, ifile) {
 }
 
 function create_video_entry(itext, ifile) {
-    var placeholder = $("#editor-body");
+    const placeholder = $("#editor-body");
     placeholder.data('kind', 'video');
 
     if (ifile) {
         placeholder.append('<video width="100%" controls><source src="' +
-            ifile.url + '" type="' + ifile.mime + '">Your browser does not support the video tag.</video>')
+            ifile.url + '" type="' + ifile.mime + '">Your browser does not support the video tag.</video>');
     } else {
         addDropzone(placeholder, 'video');
     }
@@ -129,12 +210,10 @@ function create_video_entry(itext, ifile) {
 }
 
 function create_data_entry(itext) {
-    var placeholder = $("#editor-body");
+    const placeholder = $("#editor-body");
     placeholder.data('kind', 'data');
 
-    var width = $('#entry-selector').width() - 2;
-    var height = width / 3;
-    var table_toolbar = (
+    const table_toolbar = (
         '<div class="editor-toolbar" id="table-toolbar">' +
         '<a title="Add Column" tabindex="-1" class="mi mi-add-col mi-md text-primary" id="table-add-col"></a>' +
         '<i class="separator">|</i>' +
@@ -147,16 +226,16 @@ function create_data_entry(itext) {
     );
 
     if (itext) {
-        var table = placeholder.append(table_toolbar + '<div class="table-editable"></div>');
+        placeholder.append(table_toolbar + '<div class="table-editable"></div>');
     } else {
-        var table = placeholder.append(table_toolbar + '<div id="dropzone" class="table-editable"></div>');
+        placeholder.append(table_toolbar + '<div id="dropzone" class="table-editable"></div>');
         $('#dropzone').dropzone({
             url: placeholder.data('url'),
             autoProcessQueue: false,
             uploadMultiple: false,
             acceptedFiles: null,
             accept: function (file, done) {
-                var read = new FileReader();
+                const read = new FileReader();
                 read.readAsBinaryString(file);
                 read.onloadend = function () {
                     if (file.type === 'text/csv') {
@@ -188,54 +267,56 @@ function set_sketch_mode(kind) {
 
 function load_sketch_bg(file) {
     // for sketching on top of an image
-    var canvas = $('canvas#sketcher')[0];
-    var ctx = canvas.getContext('2d');
-    var editor = $('#notebook-content');
-    var img = new Image();
+    const canvas = $('canvas#sketcher')[0];
+    const ctx = canvas.getContext('2d');
+    const editor = $('#notebook-content');
+    const img = new Image();
     img.onload = function() {
-        var x = editor.width() - 32;
-        var y = x * 4.5 / 9 - 2;
-        var sx = img.width;
-        var sy = img.height;
+        let x = editor.width() - 32;
+        let y = x * 4.5 / 9 - 2;
+        const sx = img.width;
+        const sy = img.height;
+        let scale;
         if ((x / y) <= (sx / sy)) {
-            var scale = x / sx;
+            scale = x / sx;
             y = Math.max(y - (sy * scale), 0) / 2;
-            x = 0
+            x = 0;
         } else {
-            var scale = y / sy;
+            scale = y / sy;
             x = Math.max(x - (sx * scale), 0) / 2;
-            y = 0
+            y = 0;
         }
         ctx.drawImage(img, x, y, scale * sx, scale * sy);
-    }
+    };
     img.src = file.url;
 }
 
-
 function showEditor() {
-    var editor = $('#entry-editor');
+    const editor = $('#entry-editor');
     $('#entry-selector').slideUp(200);
     editor.slideDown(200, function(){
-        this.scrollIntoView({
-            alignToTop: false,
-            behavior: "instant"
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
         });
     });
-
 }
 
 function closeEditor() {
-    var editor = $('#entry-editor');
-    var pk = editor.data('pk');
+    const editor = $('#entry-editor');
+    const pk = editor.data('pk');
     editor.removeData('pk');
-    var placeholder = $('#editor-body');
+    const placeholder = $('#editor-body');
 
     $('#entry-selector').slideDown(200, function(){
         if (pk) {
-            $('#entry-' + pk)[0].scrollIntoView({
-                alignToTop: false,
-                behavior: "smooth"
-            });
+            const target = $('#entry-' + pk);
+            if (target.length && target.offset()) {
+                window.scrollTo({
+                    top: target.offset().top,
+                    behavior: 'smooth'
+                });
+            }
         }
         editor.slideUp(200);
     });
@@ -245,11 +326,12 @@ function closeEditor() {
     MyelnNotebooks.myDropzone = null;
     MyelnNotebooks.sketcher = null;
     MyelnNotebooks.table = null;
+    MyelnNotebooks.simplemde = null;
 }
 
 function addDropzone(placeholder, kind) {
-    var width = $('#entry-selector').width() - 2;
-    var height = width / 3;
+    const width = $('#entry-selector').width() - 2;
+    const height = width / 3;
     placeholder.append('<div id="dropzone" class="border-bottom ' + kind + '" style="height: ' + height + 'px"></div>');
 
     $('#dropzone').dropzone({
@@ -259,7 +341,7 @@ function addDropzone(placeholder, kind) {
         acceptedFiles: kind && kind + '/*' || null,
         capture: 'camera',
         init: function () {
-            var myDropzone = this;
+            const myDropzone = this;
             MyelnNotebooks.myDropzone = myDropzone;
         },
         accept: function (file, done) {
@@ -272,22 +354,17 @@ function addDropzone(placeholder, kind) {
 }
 
 function addSketchZone(placeholder) {
-    placeholder.append('<canvas id="sketcher">');
-    const width = $('#notebook-content').width()-2;
+    placeholder.append('<canvas id="sketcher"></canvas>');
+    const width = placeholder.parent().width()-2;
     const height = width * 4.5 / 9 - 2;
-    const canvas = document.querySelector('#sketcher');
-    const sketcher = new Atrament(canvas, {
-        width: width,
-        height: height,
-    });
+    const sketcher = atrament('#sketcher', width, height);
     MyelnNotebooks.sketcher = sketcher;
 
     placeholder.prepend('<div class="editor-toolbar sketcher-toolbar"></div>');
     sketcher.adaptiveStroke = false;
 
-    var tb = $('.sketcher-toolbar');
-
-    var tbbtn = [
+    const tb = $('.sketcher-toolbar');
+    const tbbtn = [
         ['a', '', 'MyelnNotebooks.sketcher.clear();', 'Clear canvas', 'mi-trash'],
         ['|'],
         ['a', 'btn-mode-draw active', 'set_sketch_mode(`draw`);', "Draw", 'mi-pencil'],
@@ -306,15 +383,16 @@ function addSketchZone(placeholder) {
 
     //add buttons to toolbar
     $.each(tbbtn, function (i, data) {
+        let html = '';
         if (data[0] === '|') {
-            var html = "<i class='separator'></i>";
+            html = "<i class='separator'></i>";
         } else {
             if (data[0] === 'a') {
-                var html = "<a title='{3}' onclick='{2}' tabindex='" + i + "' class='mi {1} mi-md {4}'></a>";
+                html = "<a title='{3}' onclick='{2}' tabindex='" + i + "' class='mi {1} mi-md {4}'></a>";
             } else if (data[0] === 'color') {
-                var html = "<div id='colorPicker'><a class='color' title='{3}'><div class='colorInner'></div></a><div class='track'></div><input type='hidden' class='colorInput' value='#000000'/></div>";
+                html = "<div id='colorPicker'><a class='color' title='{3}'><div class='colorInner'></div></a><div class='track'></div><input type='hidden' class='colorInput' value='#000000'/></div>";
             } else {
-                var html = "<span class='mi {1} mi-md {4}' title='{3}'><input type='range' min='{5}' max='{6}' oninput='{2}' value='{8}' step='{7}'></span>";
+                html = "<span class='mi {1} mi-md {4}' title='{3}'><input type='range' min='{5}' max='{6}' oninput='{2}' value='{8}' step='{7}'></span>";
             }
             $.each(data, function (k, v) {
                 html = html.replace('{' + k + '}', v);
@@ -323,21 +401,19 @@ function addSketchZone(placeholder) {
         tb.append(html);
     });
 
-    var cp = $('#colorPicker');
-    cp.tinycolorpicker();
-    var picker = cp.data("plugin_tinycolorpicker");
-
-    picker.setColor("#000000");
-    cp.on('change', function(el, color) {
-        sketcher.color=color;
-    });
-
+    const picker = document.querySelector('#colorPicker');
+    const colorButton = $('#colorPicker .color');
+    const cp = new Picker(picker);
+    cp.onChange = function(color) {
+        colorButton.css('background-color', color.rgbaString);
+        sketcher.color=color.rgbaString;
+    };
 }
 
 function addCaption(placeholder, itext) {
     placeholder.addClass('caption');
     placeholder.append('<textarea id="caption"></textarea>');
-    var simplemde = new SimpleMDE({
+    const simplemde = new SimpleMDE({
         autoDownloadFontAwesome: false,
         element: document.getElementById("caption"),
         spellChecker: false,
@@ -369,7 +445,7 @@ function addCaption(placeholder, itext) {
             name: "undo",
             action: SimpleMDE.undo,
             className: "mi mi-undo mi-md",
-            title: "Redo"
+            title: "Undo"
         }, {
             name: "redo",
             action: SimpleMDE.redo,
@@ -394,72 +470,61 @@ function togglePreview(editor) {
 }
 
 function wrapSelection(editor, delimeter) {
+    const cm = editor.codemirror;
+    const output = '';
+    const selectedText = cm.getSelection();
+    const text = selectedText || output;
 
-    var cm = editor.codemirror;
-    var output = '';
-    var selectedText = cm.getSelection();
-    var text = selectedText || output;
+    const startPoint = cm.getCursor("start");
+    const newOutput = delimeter + text;
+    cm.replaceSelection(newOutput);
 
-    var startPoint = cm.getCursor("start");
-    output = delimeter + text;
-    cm.replaceSelection(output);
-
-    var endPoint = cm.getCursor("end");
+    const endPoint = cm.getCursor("end");
     cm.setSelection(startPoint, endPoint);
-    cm.replaceSelection(output + delimeter);
+    cm.replaceSelection(newOutput + delimeter);
 
     cm.setSelection(endPoint, endPoint);
     cm.focus();
-
 }
 
 function wrapEquation(editor) {
-    return wrapSelection(editor, "$$")
+    return wrapSelection(editor, "$$");
 }
 
 function base64toFile(b64) {
-    var base64 = b64.split(',')[1];
-
-    var byteChars = atob(base64);
-    var byteNums = new Array(byteChars.length);
-    for (var i = 0; i < byteChars.length; i++) {
-        byteNums[i] = byteChars.charCodeAt(i);
+    const base64 = b64.split(',')[1];
+    const byteChars = atob(base64);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+        byteArray[i] = byteChars.charCodeAt(i);
     }
-    var byteArray = new Uint8Array(byteNums);
-    var blob = new Blob([byteArray], {type: 'image/png'});
-    var file = new File([blob], "sketch.png");
-    return file;
+    const blob = new Blob([byteArray], {type: 'image/png'});
+    return new File([blob], "sketch.png", {type: 'image/png'});
 }
 
 function submitEntry() {
-    var editor = $('#entry-editor');
-    var placeholder = $("#editor-body");
-    var entry_pk = editor.data('pk');
-    var fd = new FormData();
+    const editor = $('#entry-editor');
+    const placeholder = $("#editor-body");
+    const entry_pk = editor.data('pk');
+    const fd = new FormData();
     fd.append('kind', placeholder.data('kind'));
     if (entry_pk) {
         fd.append('pk', entry_pk);
     }
 
-    var kind = placeholder.data('kind');
+    const kind = placeholder.data('kind');
     if (MyelnNotebooks.simplemde) {
         fd.append('text', MyelnNotebooks.simplemde.value());
     }
     if (MyelnNotebooks.myDropzone) {
         fd.append('file', MyelnNotebooks.myDropzone.files[0]);
     } else if (MyelnNotebooks.sketcher) {
-        var b64 = MyelnNotebooks.sketcher.toImage();
+        const b64 = MyelnNotebooks.sketcher.toImage();
         fd.append('file', base64toFile(b64));
     } else if (MyelnNotebooks.table) {
-        var table_json = MyelnNotebooks.table.exportJSON();
+        const table_json = MyelnNotebooks.table.exportJSON();
         fd.append('text', table_json);
     }
-
-    // var last = $('.notebook-entry').last();
-    // if (last) {
-    //     fd.apend('last_shown', last.data('entry-pk'));
-    // }
-
 
     $.ajax({
         type: "POST",
@@ -469,39 +534,39 @@ function submitEntry() {
         contentType: false,
         encType: 'multipart/form-data',
         beforeSend: function(xhr, settings) {
-            xhr.setRequestHeader("X-CSRFToken", $.cookie('csrftoken'));
+            xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
         },
         success: function (response) {
             if (entry_pk) {
-                $('#entry-'+entry_pk + ' [title]').tooltip('hide');
-                $('#entry-'+entry_pk).replaceWith(response);
-                initEntries('#entry-'+entry_pk);
+                disposeTooltips($('#entry-' + entry_pk));
+                $('#entry-' + entry_pk).replaceWith(response);
+                initEntries('#entry-' + entry_pk);
             } else {
-                var newEntry = $(response);
-                var entryDate = newEntry.data('entry-date');
-                var sep = $('#notebook-content .page-separator[data-date="' + entryDate + '"]');
+                const newEntry = $(response);
+                const entryDate = newEntry.data('entry-date');
+                const sep = $('#notebook-content .page-separator[data-date="' + entryDate + '"]');
 
                 if (sep.length === 0) {
-                    var months = ["JAN.", "FEB.", "MAR.", "APR.", "MAY", "JUN.", "JUL.", "AUG.", "SEP.", "OCT.", "NOV.", "DEC."];
-                    var parts = entryDate ? entryDate.split('-') : [];
-                    var dateStr = "";
+                    const months = ["JAN.", "FEB.", "MAR.", "APR.", "MAY", "JUN.", "JUL.", "AUG.", "SEP.", "OCT.", "NOV.", "DEC."];
+                    const parts = entryDate ? entryDate.split('-') : [];
+                    let dateStr = "";
                     if (parts.length === 3) {
-                        var mIdx = parseInt(parts[1], 10) - 1;
-                        var day = parseInt(parts[2], 10);
+                        const mIdx = parseInt(parts[1], 10) - 1;
+                        const day = parseInt(parts[2], 10);
                         dateStr = months[mIdx] + " " + day + ", " + parts[0];
                     } else {
-                        var now = new Date();
+                        const now = new Date();
                         dateStr = months[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear();
                     }
-                    var sepElem = $('<li class="page-separator" data-date="' + entryDate + '" id="separator-' + entryDate + '"><div class="date px-4 text-center">' + dateStr + '</div></li>');
-                    var targetList = $('#notebook-content ul.entry-page').last();
+                    const sepElem = $('<li class="page-separator" data-date="' + entryDate + '" id="separator-' + entryDate + '"><div class="date px-4 text-center">' + dateStr + '</div></li>');
+                    let targetList = $('#notebook-content ul.entry-page').last();
                     if (targetList.length === 0) {
                         targetList = $('<ul class="list-unstyled my-0 entry-page current-page"></ul>').appendTo('#notebook-content');
                     }
                     targetList.append(sepElem);
                     targetList.append(newEntry);
                 } else {
-                    var entriesForDate = $('#notebook-content .notebook-entry[data-entry-date="' + entryDate + '"]');
+                    const entriesForDate = $('#notebook-content .notebook-entry[data-entry-date="' + entryDate + '"]');
                     if (entriesForDate.length > 0) {
                         entriesForDate.last().after(newEntry);
                     } else {
@@ -516,96 +581,96 @@ function submitEntry() {
 }
 
 function deleteEntry(elem){
-    var button = $(elem);
-    var entry = button.closest('.notebook-entry');
-    var entry_id = entry.data('entry-pk');
+    const button = $(elem);
+    const entry = button.closest('.notebook-entry');
+    const entry_id = entry.data('entry-pk');
 
-    if (button.is('.text-danger')) {
-		$.ajax({
-			type: 'POST',
-			url: button.data('url'),
+    if (button.hasClass('text-danger')) {
+        $.ajax({
+            type: 'POST',
+            url: button.data('url'),
             data: {'pk': entry_id},
-			beforeSend: function(xhr, settings){
-			    button.popover('hide');
-				xhr.setRequestHeader("X-CSRFToken", $.cookie('csrftoken'));
-			},
-			success: function() {
-			    button.popover('hide');
-			    $('#entry-'+entry_id + ' [data-original-title]').tooltip('dispose');
-                var entryDate = entry.data('entry-date');
+            beforeSend: function(xhr, settings){
+                disposePopover(button);
+                xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+            },
+            success: function() {
+                disposePopover(button);
+                disposeTooltips(entry);
+                const entryDate = entry.data('entry-date');
                 entry.remove();
                 if (entryDate) {
-                    var remaining = $('#notebook-content .notebook-entry[data-entry-date="' + entryDate + '"]');
+                    const remaining = $('#notebook-content .notebook-entry[data-entry-date="' + entryDate + '"]');
                     if (remaining.length === 0) {
                         $('#notebook-content .page-separator[data-date="' + entryDate + '"]').remove();
                     }
                 }
-                var last_page = $('ul.entry-page').last();
+                const last_page = $('ul.entry-page').last();
                 if (last_page.find('.notebook-entry').length === 0) {
                     last_page.remove();
                 }
             },
             error: function() {
-			    button.shake();
+                if (typeof button.shake === 'function') {
+                    button.shake();
+                }
             }
-		});
+        });
     } else {
         button.addClass("text-danger");
-        button.popover({
+        showPopover(button, {
             placement: 'right',
             title: "Are you sure?",
             content: "Click again to confirm!"
         });
-        button.popover('show');
         setTimeout(function () {
             button.removeClass('text-danger');
-            button.popover('hide');
+            disposePopover(button);
         }, 2000);
     }
 }
 
 function prepare_editor(pk) {
-    var editor = $("#entry-editor");
+    const editor = $("#entry-editor");
     if (editor.is(':visible')) {
         closeEditor();
     }
     editor.data('pk', pk);
 }
 
-
 function edit_text_entry(pk) {
     prepare_editor(pk);
-    $.get('/entry/'+pk+'/', function(data, status) {
+    $.get(get_entry_data_url(pk), function(data, status) {
         create_text_entry(data.text);
     }, 'json');
 }
 function edit_sketch_entry(pk) {
     prepare_editor(pk);
-    $.get('/entry/'+pk+'/', function(data, status) {
+    $.get(get_entry_data_url(pk), function(data, status) {
         create_sketch_entry(data.text, data.file);
     }, 'json');
 }
 function edit_image_entry(pk) {
     prepare_editor(pk);
-    $.get('/entry/'+pk+'/', function(data, status) {
+    $.get(get_entry_data_url(pk), function(data, status) {
         create_image_entry(data.text, data.file);
     }, 'json');
 }
 function edit_file_entry(pk) {
-    prepare_placeholder(pk);
-    $.get('/entry/'+pk+'/', function(data, status) {
+    prepare_editor(pk);
+    $.get(get_entry_data_url(pk), function(data, status) {
         create_file_entry(data.text, data.file);
     }, 'json');
 }
 function edit_video_entry(pk) {
     prepare_editor(pk);
-    $.get('/entry/'+pk+'/', function(data, status) {
+    $.get(get_entry_data_url(pk), function(data, status) {
         create_video_entry(data.text, data.file);
     }, 'json');
 }
 function edit_data_entry(pk) {
     prepare_editor(pk);
-    $.get('/entry/'+pk+'/', function(data, status) {
+    $.get(get_entry_data_url(pk), function(data, status) {
         create_data_entry(data.text);
     }, 'json');
 }
@@ -1053,15 +1118,15 @@ function getSelectionText() {
 //comments
 (function($){
     $.fn.annotate = function(entry_selector, options) {
-        var settings = $.extend({
+        const settings = $.extend({
             url: $(this).data('annotate-url'),
         }, options );
 
-        var eventData = {};
-        var html = $('html');
+        let eventData = {};
+        const html = $('html');
         html.data('annotate-url', settings.url); // Keep for later
-        var selector = entry_selector + ' > *';
-        var highlight_mark = entry_selector + ' mark.highlight';
+        const selector = entry_selector + ' > *';
+        const highlight_mark = entry_selector + ' mark.highlight';
 
         // prepare and emit "myeln:annotate" event on notebook entry nodes
         $(this).on('mousedown touchstart', selector + ', ' + highlight_mark, function(e){
@@ -1071,7 +1136,6 @@ function getSelectionText() {
                 eventData.start_mark = this;
                 return true;
             }
-
         });
         $(this).on('mouseup touchend', selector + ', ' + highlight_mark, function(e){
             eventData.x1 = e.clientX;
@@ -1085,12 +1149,12 @@ function getSelectionText() {
             eventData.node = $(this);
 
             if (eventData.selection) {
-                var o = eventData.node.offset();
-                var w = eventData.node.width();
-                var h = eventData.node.height();
-                var xe = (eventData.x1 + eventData.x0)/2 + html.scrollLeft();
-                var ye = Math.max(eventData.y1, eventData.y0, h) + 20 + html.scrollTop();
-                var pos = {
+                const o = eventData.node.offset();
+                const w = eventData.node.width();
+                const h = eventData.node.height();
+                const xe = (eventData.x1 + eventData.x0)/2 + html.scrollLeft();
+                const ye = Math.max(eventData.y1, eventData.y0, h) + 20 + html.scrollTop();
+                const pos = {
                     x: Math.max(-w/2, Math.min(100*(xe - (o.left + w/2))/w, w/2)),
                     y: (ye - o.top)*100/h - 100
                 };
@@ -1107,9 +1171,9 @@ function getSelectionText() {
             }
         });
         $(document).on("myeln:annotate", selector, function(e) {
-            var node = $(this);
-            var hideHighlight = Boolean(e.highlighted);
-            node.popover({
+            const node = $(this);
+            const hideHighlight = Boolean(e.highlighted);
+            showPopover(node, {
                 trigger: "click",
                 html: true,
                 container: 'body',
@@ -1137,7 +1201,6 @@ function getSelectionText() {
                     '</div>'
                 )
             });
-            node.popover("show");
 
             // Save annotation parameters to window
             MyelnNotebooks.annotation = {
@@ -1151,15 +1214,14 @@ function getSelectionText() {
                 type: 'highlight',
                 url: settings.url
             };
-
         });
 
         $(document).on("myeln:unannotate", "mark", function() {
             if (MyelnNotebooks.annotation != null) {
-                return
+                return;
             }
-            var node = $(this);
-            var menu = "";
+            const node = $(this);
+            let menu = "";
             if ($(this).data('editable')){
                 menu = (
                     '<ul class="list-unstyled annotation-menu m-0">' +
@@ -1175,7 +1237,7 @@ function getSelectionText() {
                     '</ul>'
                 );
             }
-            node.popover({
+            showPopover(node, {
                 trigger: "click",
                 html: true,
                 container: 'body',
@@ -1191,7 +1253,6 @@ function getSelectionText() {
                     '</div>'
                 )
             });
-            node.popover("show");
 
             // Save annotation parameters to window
             MyelnNotebooks.annotation = {
@@ -1204,18 +1265,18 @@ function getSelectionText() {
                 type: 'highlight',
                 url: settings.url
             };
-
         });
 
         // close popup menu on next click outside
         $(document).on('mousedown touchstart', function (e) {
-            if (MyelnNotebooks.annotation) {
-                var nodeEl = MyelnNotebooks.annotation.node[0];
-                var popover = (window.bootstrap && bootstrap.Popover ? bootstrap.Popover.getInstance(nodeEl) : null) || MyelnNotebooks.annotation.node.data('bs.popover');
+            if (MyelnNotebooks.annotation && MyelnNotebooks.annotation.node) {
+                const nodeEl = getDomElement(MyelnNotebooks.annotation.node);
+                if (!nodeEl) return;
+                const popover = (window.bootstrap && bootstrap.Popover ? bootstrap.Popover.getInstance(nodeEl) : null) || (MyelnNotebooks.annotation.node.data ? MyelnNotebooks.annotation.node.data('bs.popover') : null);
                 if (popover) {
-                    var popoverTip = popover.tip || (popover.getTipElement ? popover.getTipElement() : null) || popover;
+                    const popoverTip = popover.tip || (popover.getTipElement ? popover.getTipElement() : null) || popover;
                     if (!$(popoverTip).is(e.target) && $(popoverTip).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-                        MyelnNotebooks.annotation.node.popover('dispose');
+                        disposePopover(MyelnNotebooks.annotation.node);
                         MyelnNotebooks.annotation = null;
                     }
                 }
@@ -1230,27 +1291,26 @@ function getSelectionText() {
 
 
 function addComment() {
-    var template = (
+    const template = (
         '<div class="comment-form" tabindex="-1">' +
         '    <textarea id="comment-input" rows="6" cols="30" name="text" ' +
         '       class="form-control input-md" placeholder="Add your comments ..."></textarea>' +
         '    <div class="w-100 comment-form-tools">' +
         '       <i class="mi mi-comments mi-fw"></i>' +
-        '       <button type="button" title="Cancel" onclick="cancelComment();" class="btn btn-sm btn-light ml-auto mr-2"><i class="mi mi-cross"></i>' +
+        '       <button type="button" title="Cancel" onclick="cancelComment();" class="btn btn-sm btn-light ms-auto me-2"><i class="mi mi-cross"></i>' +
         '       </button>' +
         '       <button type="button" title="Save" onclick="submitComment();" class="btn btn-sm btn-success"><i class="mi mi-save mi-fw"></i>' +
         '       </button>' +
         '   </div>' +
-        '</div>' +
-        ''
+        '</div>'
     );
     if (MyelnNotebooks.annotation) {
-        var annotation = MyelnNotebooks.annotation;
-        annotation.node.popover('dispose');
+        const annotation = MyelnNotebooks.annotation;
+        disposePopover(annotation.node);
 
         // show comment form
         annotation.type = 'comment';
-        annotation.node.popover({
+        showPopover(annotation.node, {
             trigger: "click",
             html: true,
             container: 'body',
@@ -1266,7 +1326,6 @@ function addComment() {
                 '</div>'
             )
         });
-        annotation.node.popover('show');
         annotation.node.mark(annotation.selection, {
             caseSensitive: true,
             ignoreJoiners: true,
@@ -1285,8 +1344,8 @@ function addComment() {
 
 function addHighlight() {
     if (MyelnNotebooks.annotation) {
-        var annotation = MyelnNotebooks.annotation;
-        annotation.node.popover('dispose');
+        const annotation = MyelnNotebooks.annotation;
+        disposePopover(annotation.node);
         annotation.node.mark(annotation.selection, {
             caseSensitive: true,
             ignoreJoiners: true,
@@ -1305,7 +1364,7 @@ function delHighlight() {
 }
 
 function delComment(pk) {
-    var item = JSON.parse($('#annotation-'+pk).text());
+    const item = JSON.parse($('#annotation-'+pk).text());
     MyelnNotebooks.annotation = {
         node: null,
         index: item.node,
@@ -1321,23 +1380,27 @@ function delComment(pk) {
 
 function cancelComment(){
     if (MyelnNotebooks.annotation) {
-        var annotation = MyelnNotebooks.annotation;
-        annotation.node.popover('dispose');
+        const annotation = MyelnNotebooks.annotation;
+        disposePopover(annotation.node);
         MyelnNotebooks.annotation = null;
-        annotation.node.unmark({className:'comment'});
+        if (annotation.node) {
+            annotation.node.unmark({className:'comment'});
+        }
     }
 }
 
 function submitComment() {
     if (MyelnNotebooks.annotation) {
-        var annotation = MyelnNotebooks.annotation;
+        const annotation = MyelnNotebooks.annotation;
         annotation.text = $('#comment-input').val();
 
         // exit if not text provided for comment types
-        annotation.node.popover('dispose');
+        disposePopover(annotation.node);
         if (annotation.type === 'comment' && !annotation.text ) {
             MyelnNotebooks.annotation = null;
-            annotation.node.unmark();
+            if (annotation.node) {
+                annotation.node.unmark();
+            }
         } else {
             submitAnnotation();
         }
@@ -1346,34 +1409,34 @@ function submitComment() {
 
 function submitAnnotation() {
     if (MyelnNotebooks.annotation) {
-        var annotation = MyelnNotebooks.annotation;
+        const annotation = MyelnNotebooks.annotation;
 
         $.ajax({
-			type: 'POST',
-			url: annotation.url,
+            type: 'POST',
+            url: annotation.url,
             data: {
-			    'pk': annotation.pk,
-			    'entry_id': annotation.entry_id,
+                'pk': annotation.pk,
+                'entry_id': annotation.entry_id,
                 'kind': annotation.type,
                 'selection': annotation.selection,
                 'index': annotation.index,
                 'text': annotation.text,
                 'method': annotation.method
             },
-			beforeSend: function(xhr, settings){
-			    if (annotation.node) {
-			        annotation.node.popover('dispose');
+            beforeSend: function(xhr, settings){
+                if (annotation.node) {
+                    disposePopover(annotation.node);
                 }
                 MyelnNotebooks.annotation = null;
-				xhr.setRequestHeader("X-CSRFToken", $.cookie('csrftoken'));
-			},
-			success: function(response) {
-			    var selector = '#entry-'+annotation.entry_id;
-			    $(selector + ' [data-original-title]').tooltip('dispose');
+                xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+            },
+            success: function(response) {
+                const selector = '#entry-'+annotation.entry_id;
+                disposeTooltips(selector);
                 $(selector).replaceWith(response);
                 initEntries(selector);
             }
-		});
+        });
     }
 }
 
@@ -1382,9 +1445,9 @@ function markAnnotations(selector){
     $(selector).each(function(){
         const entry = $(this);
         //highlights
-        let highlights = [];
+        const highlights = [];
         entry.find('.annotations > script.highlight-annotation').each( function() {
-            let item = JSON.parse($(this).text());
+            const item = JSON.parse($(this).text());
             item.isAuthor = $(this).data('isauthor');
             highlights.push(item);
         });
@@ -1433,9 +1496,9 @@ function markAnnotations(selector){
 
         entry.children().each(function (){
             const node = $(this);
-            let items = [];
+            const items = [];
             entry.find('.annotations > script.comment-'+node.index()).each(function(){
-                let item = JSON.parse($(this).text());
+                const item = JSON.parse($(this).text());
                 item.isAuthor = $(this).data('isauthor');
                 items.push(item);
             });
@@ -1458,8 +1521,8 @@ function markAnnotations(selector){
 }
 
 function markComment(element) {
-    var data = JSON.parse($('#annotation-'+$(element).data('pk')).text())
-    var node = $(element).closest('.notebook-entry').children().eq((data.node));
+    const data = JSON.parse($('#annotation-'+$(element).data('pk')).text());
+    const node = $(element).closest('.notebook-entry').children().eq((data.node));
     if (node) {
         node.mark(data.selections,{
             "caseSensitive": true,
@@ -1477,8 +1540,8 @@ function markComment(element) {
 }
 
 function unmarkComment(element) {
-    var data = JSON.parse($('#annotation-'+$(element).data('pk')).text())
-    var node = $(element).closest('.notebook-entry').children().eq((data.node));
+    const data = JSON.parse($('#annotation-'+$(element).data('pk')).text());
+    const node = $(element).closest('.notebook-entry').children().eq((data.node));
     if (node) {
         node.unmark({
             "className": 'comment',
@@ -1489,35 +1552,35 @@ function unmarkComment(element) {
 
 //tags
 function editTags(elem){
-    var content = $('#notebook-content');
-    var button = $(elem);
-    var entry = button.closest('.notebook-entry');
-    var initial = button.data('tags');
+    const content = $('#notebook-content');
+    const button = $(elem);
+    const entry = button.closest('.notebook-entry');
+    const initial = button.data('tags') || '';
 
     MyelnNotebooks.tags = {
         entry_id: entry.data('entry-pk'),
         url: button.data('url'),
     };
 
-    var width = Math.max($(content).width(), 300) * ( 0.8);
+    const width = Math.max($(content).width(), 300) * 0.8;
 
-    var template = (
+    const template = (
         '<div class="comment-form" tabindex="-1">' +
         '    <textarea id="tag-input" rows="3" cols="30" name="text" ' +
         '       class="form-control input-md" ' +
         '       placeholder="Enter comma-separated list of keywords ...">' + initial + '</textarea>' +
         '    <div class="w-100 comment-form-tools">' +
         '       <i class="mi mi-tags mi-fw"></i>' +
-        '       <button type="button" title="Cancel" onclick="cancelTags();" class="btn btn-sm btn-light ml-auto mr-3"><i class="mi mi-cross"></i>' +
+        '       <button type="button" title="Cancel" onclick="cancelTags();" class="btn btn-sm btn-light ms-auto me-3"><i class="mi mi-cross"></i>' +
         '       </button>' +
         '       <button type="button" title="Save" onclick="submitTags();" class="btn btn-sm btn-success"><i class="mi mi-save"></i>' +
         '       </button>' +
         '    </div>' +
-        '</div>' +
-        ''
+        '</div>'
     );
 
-    MyelnNotebooks.popover = button.popover({
+    MyelnNotebooks.popover = button;
+    showPopover(button, {
         trigger: "click",
         html: true,
         container: 'body',
@@ -1532,15 +1595,12 @@ function editTags(elem){
         )
     });
 
-    button.popover("show");
     $('#tag-input').focus();
-
 }
 
 function cancelTags() {
     if (MyelnNotebooks.popover) {
-        var button = MyelnNotebooks.popover;
-        button.popover('dispose');
+        disposePopover(MyelnNotebooks.popover);
         MyelnNotebooks.popover = null;
         MyelnNotebooks.tags = null;
     }
@@ -1548,50 +1608,50 @@ function cancelTags() {
 
 function submitTags() {
     if (MyelnNotebooks.tags) {
-        var tags = MyelnNotebooks.tags;
-        var text = $('#tag-input').val();
+        const tags = MyelnNotebooks.tags;
+        const text = $('#tag-input').val();
 
-        if (!text ) {
-            MyelnNotebooks.popover.popover('dispose');
+        if (!text) {
+            disposePopover(MyelnNotebooks.popover);
             MyelnNotebooks.popover = null;
             MyelnNotebooks.tags = null;
-            return
+            return;
         }
 
         $.ajax({
-			type: 'POST',
-			url: tags.url,
+            type: 'POST',
+            url: tags.url,
             data: {
-			    'pk': tags.entry_id,
+                'pk': tags.entry_id,
                 'tags': text,
             },
-			beforeSend: function(xhr, settings){
-                MyelnNotebooks.popover.popover('dispose');
+            beforeSend: function(xhr, settings){
+                disposePopover(MyelnNotebooks.popover);
                 MyelnNotebooks.popover = null;
                 MyelnNotebooks.tags = null;
-				xhr.setRequestHeader("X-CSRFToken", $.cookie('csrftoken'));
-			},
-			success: function(response) {
-			    var selector = '#entry-'+tags.entry_id;
-			    $(selector + ' [data-original-title]').tooltip('dispose');
+                xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+            },
+            success: function(response) {
+                const selector = '#entry-'+tags.entry_id;
+                disposeTooltips(selector);
                 $(selector).replaceWith(response);
                 initEntries(selector);
             }
-		});
+        });
     }
 }
 
 
 function loadPage(element, dir, scroll, pk) {
     scroll = scroll || false;
-    var container = $('#notebook-content');
-    var url = $(element).data('page-url');
+    const container = $('#notebook-content');
+    let url = $(element).data('page-url');
     if (!url) {
-        var anchor = (dir === 'prev') ? $(element).find('.notebook-entry').first() : $(element).find('.notebook-entry').last();
+        const anchor = (dir === 'prev') ? $(element).find('.notebook-entry').first() : $(element).find('.notebook-entry').last();
         url = anchor.data('page-url');
     }
     if (!url) {
-        var anchor = (dir === 'prev') ? $('.notebook-entry').first() : $('.notebook-entry').last();
+        const anchor = (dir === 'prev') ? $('.notebook-entry').first() : $('.notebook-entry').last();
         url = anchor.data('page-url');
     }
     if (!url) {
@@ -1610,7 +1670,7 @@ function loadPage(element, dir, scroll, pk) {
                 MyelnNotebooks.loading = false;
                 return;
             }
-            var newContent = $(response);
+            const newContent = $(response);
             if (newContent.length === 0) {
                 MyelnNotebooks.loading = false;
                 return;
@@ -1619,7 +1679,7 @@ function loadPage(element, dir, scroll, pk) {
             if ((dir === 'next') || (dir === 'rest')) {
                 // If appending, remove duplicate date separators already present above
                 newContent.find('.page-separator').each(function() {
-                    var d = $(this).data('date');
+                    const d = $(this).data('date');
                     if (d && container.find('.page-separator[data-date="' + d + '"]').length > 0) {
                         $(this).remove();
                     }
@@ -1628,27 +1688,31 @@ function loadPage(element, dir, scroll, pk) {
             } else {
                 // Prepending: remove existing date separators that are now inside the date span
                 newContent.find('.page-separator').each(function() {
-                    var d = $(this).data('date');
+                    const d = $(this).data('date');
                     if (d) {
-                        var existingSep = container.find('.page-separator[data-date="' + d + '"]');
+                        const existingSep = container.find('.page-separator[data-date="' + d + '"]');
                         if (existingSep.length > 0) {
                             existingSep.remove();
                         }
                     }
                 });
-                var firstElem = container.children().first();
-                var height = 0;
+                const firstElem = container.children().first();
+                let height = 0;
                 container.prepend(newContent);
                 firstElem.prevAll().each(function(){
                     height += $(this).outerHeight();
                 });
-                $('main').scrollTop($('main').scrollTop() + height);
+                const mainEl = $('main');
+                mainEl.scrollTop(mainEl.scrollTop() + height);
             }
             if (scroll) {
-                $('.notebook-entry').last()[0].scrollIntoView({
-                    alignToTop: false,
-                    behavior: "smooth"
-                });
+                const lastEntry = $('.notebook-entry').last()[0];
+                if (lastEntry) {
+                    lastEntry.scrollIntoView({
+                        alignToTop: false,
+                        behavior: "smooth"
+                    });
+                }
             }
             MyelnNotebooks.loading = false;
             initEntries(newContent.find('.notebook-entry').addBack('.notebook-entry'));
@@ -1661,15 +1725,16 @@ function loadPage(element, dir, scroll, pk) {
 
 
 function loadIndex(element, height) {
-    var active = $('#notebook-index #index-' + element.data("entry-pk"));
-    var index = $('#notebook-index .index');
+    const active = $('#notebook-index #index-' + element.data("entry-pk"));
+    const index = $('#notebook-index .index');
 
     $('#notebook-index .active').removeClass('active');
     active.addClass('active');
 
-    var num_visible = Math.round(height / 50);
+    const num_visible = Math.round(height / 50);
 
     if (!MyelnNotebooks.index_loading) {
+        MyelnNotebooks.index_loading = true;
         $.ajax({
             type: 'GET',
             url: element.data('index-url'),
@@ -1678,13 +1743,13 @@ function loadIndex(element, height) {
                 'active': element.data("entry-pk")
             },
             success: function(response) {
-                var source = $('' + response + '');
-                var index = $('#notebook-index .index');
+                const source = $('' + response + '');
+                const index = $('#notebook-index .index');
 
-                var end = false;
-                var first_entry = index.children().first();
+                let end = false;
+                const first_entry = index.children().first();
                 $(source).children().each(function() {
-                    var el = $(index).find('#index-' + $(this).data('entry-pk'));
+                    const el = $(index).find('#index-' + $(this).data('entry-pk'));
                     if (el.length) {
                         end = true;
                     } else {
@@ -1695,13 +1760,13 @@ function loadIndex(element, height) {
                         }
                     }
                 });
-                var i = index.find('.active').index();
+                const i = index.find('.active').index();
 
-                var vis_above = (num_visible - num_visible % 2) / 2;
-                var vis_below = (num_visible + num_visible % 2) / 2 - 1;
+                const vis_above = (num_visible - num_visible % 2) / 2;
+                const vis_below = (num_visible + num_visible % 2) / 2 - 1;
 
-                var loaded_below = index.children().length - (i + 1);
-                var offset = i - vis_above;
+                const loaded_below = index.children().length - (i + 1);
+                let offset = i - vis_above;
                 if (vis_below > loaded_below) {
                     offset = offset - (vis_below - loaded_below);
                 }
@@ -1709,10 +1774,7 @@ function loadIndex(element, height) {
                     marginTop: -1 * (offset * 50),
                 }, 250);
 
-                var end = false;
-
                 MyelnNotebooks.index_loading = false;
-
             },
             error: function() {
                 MyelnNotebooks.index_loading = false;
@@ -1721,13 +1783,9 @@ function loadIndex(element, height) {
     }
 }
 
-$(window).resize(function(event) {
-    $('main').trigger('scroll');
-});
-
-var checkLoading = function(t) {
+function checkLoading(t) {
     return new Promise(function(resolve) {
-        var interval = setInterval(function(){
+        const interval = setInterval(function(){
             if (!MyelnNotebooks.loading) {
                resolve();
                clearInterval(interval);
@@ -1737,105 +1795,154 @@ var checkLoading = function(t) {
 }
 
 function scrollIndex(pk) {
-    var el = $('#entry-'+pk);
+    const el = $('#entry-' + pk);
     if (!el.length) {
-        var entries = $('.notebook-entry');
-        var elem = entries.first();
-        MyelnNotebooks.loading = true;
-        loadPage(elem, 'prev', false);
-        checkLoading(100).then(function(){
-            scrollIndex(pk);
-        });
+        const entries = $('.notebook-entry');
+        const elem = entries.first();
+        if (elem.length) {
+            MyelnNotebooks.loading = true;
+            loadPage(elem, 'prev', false);
+            checkLoading(100).then(function(){
+                scrollIndex(pk);
+            });
+        }
     } else {
-        $('#entry-' + pk)[0].scrollIntoView({alignToTop: false, behavior: 'smooth'});
+        el[0].scrollIntoView({alignToTop: false, behavior: 'smooth'});
     }
 }
 
 function resizeIndex() {
-    var mainHeight = $('main').innerHeight();
-    var margins = mainHeight % 50;
+    const mainEl = $('main');
+    const mainHeight = mainEl.innerHeight() || 0;
+    let margins = mainHeight % 50;
     if (margins < 40) {
         margins = margins + 50;
     }
-    var index_height = mainHeight - margins;
-    $('#notebook-index').height(index_height + 1);
-    $('#notebook-index').css('margin-bottom', margins/2);
-    $('#notebook-index').css('margin-top', margins/2 -1);
+    const index_height = mainHeight - margins;
+    $('#notebook-index').height(index_height + 1)
+        .css({
+            'margin-bottom': margins / 2,
+            'margin-top': (margins / 2) - 1
+        });
+    MyelnNotebooks.indexHeight = index_height;
     return index_height;
 }
 
-MyelnNotebooks.lastViewTop =0;
-$('main').on('scroll', function(event) {
-    var viewTop = $('main').scrollTop();
+MyelnNotebooks.lastViewTop = 0;
+let scrollTick = false;
 
-    $('.notebook-entry').each(function() {
-       var elTop = $(this).offset().top;
-       var elBot = elTop + $(this).innerHeight();
-       var mainTop = $('main').offset().top;
-       var mainBot = mainTop + $('main').height();
-       if (elBot > mainTop && elTop < mainBot) {
-           $(this).addClass('inview');
-           $('#index-'+$(this).data('entry-pk')).addClass('inview');
-       } else {
-           $(this).removeClass('inview');
-           $('#index-'+$(this).data('entry-pk')).removeClass('inview');
-       }
+function onScrollTick() {
+    scrollTick = false;
+    const $main = $('main');
+    if (!$main.length) return;
+
+    const viewTop = $main.scrollTop();
+    const mainOffset = $main.offset();
+    if (!mainOffset) return;
+
+    const mainTop = mainOffset.top;
+    const mainHeight = $main.height();
+    const mainBot = mainTop + mainHeight;
+
+    const entries = $('.notebook-entry');
+    if (entries.length === 0) return;
+
+    entries.each(function() {
+        const $entry = $(this);
+        const offset = $entry.offset();
+        if (!offset) return;
+        const elTop = offset.top;
+        const elBot = elTop + $entry.innerHeight();
+        const pk = $entry.data('entry-pk');
+
+        if (elBot > mainTop && elTop < mainBot) {
+            $entry.addClass('inview');
+            $('#index-' + pk).addClass('inview');
+        } else {
+            $entry.removeClass('inview');
+            $('#index-' + pk).removeClass('inview');
+        }
     });
 
-    var index_height = resizeIndex();
-    var active = $('.notebook-entry.inview').first();
-    if (active.data('entry-pk') !== MyelnNotebooks.current_entry && !MyelnNotebooks.index_loading) {
-        MyelnNotebooks.current_entry = active.data('entry-pk');
-        loadIndex(active, index_height);
+    const indexHeight = MyelnNotebooks.indexHeight || resizeIndex();
+    const active = $('.notebook-entry.inview').first();
+    if (active.length) {
+        const activePk = active.data('entry-pk');
+        if (activePk !== MyelnNotebooks.current_entry && !MyelnNotebooks.index_loading) {
+            MyelnNotebooks.current_entry = activePk;
+            loadIndex(active, indexHeight);
+        }
     }
 
     if (!MyelnNotebooks.loading) {
-        var entries = $('.notebook-entry');
-        if (entries.length == 0) {
-            return;
-        }
-
-        if (viewTop > MyelnNotebooks.lastViewTop ) {
-           var elem = entries.last();
-           var hidden = elem.offset().top + elem.height()  - viewTop - $(window).height();
-           if ((hidden > 0)&&(hidden < 200)) {
-               MyelnNotebooks.loading = true;
-               loadPage(elem, 'next');
-           }
-
-        } else if (viewTop < MyelnNotebooks.lastViewTop ) {
-            var elem = entries.first();
-            var hidden = elem.offset().top - viewTop;
-           if ((hidden > 0)&&(hidden < 200)) {
-               MyelnNotebooks.loading = true;
-               loadPage(elem, 'prev');
-           }
+        if (viewTop > MyelnNotebooks.lastViewTop) {
+            const elem = entries.last();
+            const elemOffset = elem.offset();
+            if (elemOffset) {
+                const hidden = elemOffset.top + elem.height() - viewTop - $(window).height();
+                if (hidden > 0 && hidden < 200) {
+                    MyelnNotebooks.loading = true;
+                    loadPage(elem, 'next');
+                }
+            }
+        } else if (viewTop < MyelnNotebooks.lastViewTop) {
+            const elem = entries.first();
+            const elemOffset = elem.offset();
+            if (elemOffset) {
+                const hidden = elemOffset.top - viewTop;
+                if (hidden > 0 && hidden < 200) {
+                    MyelnNotebooks.loading = true;
+                    loadPage(elem, 'prev');
+                }
+            }
         }
     }
     MyelnNotebooks.lastViewTop = viewTop;
-});
+}
 
+function requestScrollTick() {
+    if (!scrollTick) {
+        scrollTick = true;
+        window.requestAnimationFrame(onScrollTick);
+    }
+}
+
+$('main').on('scroll', requestScrollTick);
+
+let resizeTimer = null;
+$(window).on('resize', function() {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+        resizeIndex();
+        requestScrollTick();
+    }, 100);
+});
 
 function initEntries(selector) {
     $(selector).each(function(){
         // Math Katex
-        renderMathInElement(this);
+        if (typeof renderMathInElement === 'function') {
+            renderMathInElement(this);
+        }
 
-        //tooltips
-        $(this).find('[title]').tooltip();
+        // tooltips - supports Bootstrap 5 and Bootstrap 4 fallback
+        $(this).find('[data-bs-toggle="tooltip"], [title]').each(function() {
+            if (window.bootstrap && bootstrap.Tooltip) {
+                bootstrap.Tooltip.getOrCreateInstance(this);
+            } else if ($.fn.tooltip) {
+                $(this).tooltip();
+            }
+        });
 
-        //syntax highlighting
-/*        $(this).find('pre code').each(function(i, block) {
-            hljs.highlightBlock(block);
-        });*/
-
-        //Annotations
+        // Annotations
         markAnnotations(this);
-        $(this).find('a.plot-tab[data-toggle="tab"]').on('shown.bs.tab', function(e){
+
+        // Data plotting tab - support both BS5 data-bs-toggle and BS4 data-toggle
+        $(this).find('a.plot-tab[data-bs-toggle="tab"], a.plot-tab[data-toggle="tab"]').on('shown.bs.tab', function(e){
             plotData(e.target);
         });
     });
-    $('main').trigger('scroll');
+    requestScrollTick();
 }
 
 function draw_xy_chart() {

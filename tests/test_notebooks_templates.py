@@ -41,12 +41,12 @@ class NotebookTemplatesTestCase(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.user = User.objects.create_user(username="testuser", password="password123", name="Test User")
-        self.text_type, _ = EntryType.objects.get_or_create(name="text", defaults={"description": "Text"})
-        self.data_type, _ = EntryType.objects.get_or_create(name="data", defaults={"description": "Data"})
-        self.file_type, _ = EntryType.objects.get_or_create(name="file", defaults={"description": "File"})
-        self.sketch_type, _ = EntryType.objects.get_or_create(name="sketch", defaults={"description": "Sketch"})
-        self.image_type, _ = EntryType.objects.get_or_create(name="image", defaults={"description": "Image"})
-        self.video_type, _ = EntryType.objects.get_or_create(name="video", defaults={"description": "Video"})
+        self.text_type, _ = EntryType.objects.get_or_create(name="text")
+        self.data_type, _ = EntryType.objects.get_or_create(name="data")
+        self.file_type, _ = EntryType.objects.get_or_create(name="file")
+        self.sketch_type, _ = EntryType.objects.get_or_create(name="sketch")
+        self.image_type, _ = EntryType.objects.get_or_create(name="image")
+        self.video_type, _ = EntryType.objects.get_or_create(name="video")
 
         self.notebook = Notebook.objects.create(
             name="test-nb",

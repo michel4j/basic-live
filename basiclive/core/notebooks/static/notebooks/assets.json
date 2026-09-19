@@ -50,11 +50,11 @@
     ]
   },
   "atrament": {
-    "url": "https://cdn.jsdelivr.net/npm/atrament@5.1.0/dist/cjs/",
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/atrament.js/0.3.1/",
     "js": [
       {
-        "path": "index.min.js",
-        "file": "atrament.min.js"
+        "sri": "sha512-9URTP1dLQ4Gl7Wydj9A3o9ibol246q2KuoaHlJTsd1pUBYBQWa5QvkpI6ly8QR3IK33MN/uII1ROl4MIIaPhmQ==",
+        "path": "atrament.min.js"
       }
     ]
   },
@@ -104,6 +104,20 @@
       {
         "path": "lib/jquery.tinycolorpicker.min.js",
         "sri": "sha512-rRF13lzuvaISLhnD7fDYpZ/UUu8wXKbKiOqYTvssfVSTJ+t7WjuWSDOPXEvZJjpbrAm5ZcOVZXV2vQPb4URoqA=="
+      }
+    ]
+  },
+  "misc": {
+    "url": "https://cdn.jsdelivr.net/npm/vanilla-picker@2.12.3/dist/",
+    "js": [
+      {
+        "path": "vanilla-picker.min.js",
+        "sri": "sha256-ASh7VW9d9TDlZCroC7h4LKmi2E6iB9jCKXQp7OnmHxc="
+      }
+    ],
+    "css": [
+      {
+        "path": "vanilla-picker.csp.min.css"
       }
     ]
   },

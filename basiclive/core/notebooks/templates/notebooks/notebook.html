@@ -7,10 +7,11 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'notebooks/icons/style.css' %}">
     <link rel="stylesheet" href="{% static 'notebooks/calendar.min.css' %}">
-    <link rel="stylesheet" href="{% static 'notebooks/notebooks.min.css' %}{% nocache_static %}">
+    <link rel="stylesheet" href="{% static 'notebooks/notebooks.min.css' %}">
     <link rel="stylesheet" href="{% static 'simplemde/css/simplemde.min.css' %}">
     <link rel="stylesheet" href="{% static 'katex/css/katex.min.css' %}">
     <link rel="stylesheet" href="{% static 'dropzone/css/dropzone.min.css' %}">
+    <link rel="stylesheet" href="{% static 'misc/css/vanilla-picker.csp.min.css' %}">
     {{ block.super }}
 {% endblock %}
 
@@ -91,7 +92,7 @@
     <script src="{% static 'atrament/js/atrament.min.js' %}"></script>
     <script src="{% static 'moment/js/moment.min.js' %}"></script>
     <script src="{% static 'clndr/js/clndr.min.js' %}"></script>
-    <script src="{% static 'tinycolorpicker/js/jquery.tinycolorpicker.min.js' %}"></script>
+    <script src="{% static 'misc/js/vanilla-picker.min.js' %}"></script>
     <script src="{% static 'papaparse/js/papaparse.min.js' %}"></script>
     <script src="{% static 'html5sortable/js/html5sortable.min.js' %}"></script>
     <script src="{% static 'd3/js/d3.min.js' %}"></script>

@@ -40,8 +40,8 @@ class NotebookViewsTestCase(TestCase):
         self.other = User.objects.create_user(username="other", password="password123", name="Other")
         self.admin = User.objects.create_superuser(username="admin", password="password123", name="Admin")
 
-        self.text_type, _ = EntryType.objects.get_or_create(name="text", defaults={"description": "Text"})
-        self.data_type, _ = EntryType.objects.get_or_create(name="data", defaults={"description": "Data"})
+        self.text_type, _ = EntryType.objects.get_or_create(name="text")
+        self.data_type, _ = EntryType.objects.get_or_create(name="data")
 
         # Notebooks with various access levels
         self.public_nb = Notebook.objects.create(

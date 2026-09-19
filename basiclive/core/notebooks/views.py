@@ -146,7 +146,6 @@ class NotebookDetail(AdminRequiredMixin, ItemListView):
 
         context['notebook'] = notebook
         context['can_edit'] = notebook.can_edit(self.request.user)
-        print(context)
         return context
 
 
@@ -233,7 +232,7 @@ class SaveEntry(View):
         try:
             kind = EntryType.objects.get(name=kind_name)
         except EntryType.DoesNotExist:
-            kind = EntryType.objects.create(name=kind_name, description=kind_name.capitalize())
+            kind = EntryType.objects.create(name=kind_name)
 
         if kind.name == 'data' and text:
             text = clean_json(text)
