@@ -679,21 +679,23 @@ function edit_data_entry(pk) {
 (function ( $ ) {
     $.fn.myelnTable = function (options) {
 
-        var table = $(this);
-        var selectedRow = null;
-        var selectedCol = null;
-        var toolbar = $('#table-toolbar');
+        const table = $(this);
+        let selectedRow = null;
+        let selectedCol = null;
+        const toolbar = $('#table-toolbar');
 
-        buildTable(options['initial']);
+        buildTable(options ? options['initial'] : null);
 
         function colName(num) {
-            for (var ret = '', a = 1, b = 26; (num -= a) >= 0; a = b, b *= 26) {
-                ret = String.fromCharCode(parseInt((num % b) / a) + 65) + ret;
+            let ret = '';
+            for (let a = 1, b = 26; (num -= a) >= 0; a = b, b *= 26) {
+                ret = String.fromCharCode(parseInt((num % b) / a, 10) + 65) + ret;
             }
             return ret;
         }
+
         function renumberRows() {
-            $('tbody tr').each(function(){
+            table.find('tbody tr').each(function(){
                 $(this).find('th.row-index').html($(this).index() + 1);
             });
         }
@@ -703,24 +705,27 @@ function edit_data_entry(pk) {
 
             });
         }
+
         function caret(event) {
-            var _range = document.getSelection().getRangeAt(0);
-            var range = _range.cloneRange();
+            const sel = document.getSelection();
+            if (!sel || sel.rangeCount === 0) return 0;
+            const _range = sel.getRangeAt(0);
+            const range = _range.cloneRange();
             range.selectNodeContents(event.target);
             range.setEnd(_range.endContainer, _range.endOffset);
             return range.toString().length;
         }
 
         function addRow () {
-            var rows = table.find('tbody tr');
-            var clone_index;
+            const rows = table.find('tbody tr');
+            let clone_index;
             if (selectedRow !== null) {
                 clone_index = selectedRow;
             } else {
-                clone_index = rows.length - 1
+                clone_index = rows.length - 1;
             }
-            var to_clone = rows.eq(clone_index);
-            var clone = to_clone.clone(true);
+            const to_clone = rows.eq(clone_index);
+            const clone = to_clone.clone(true);
             clone.find('td').html("");
             to_clone.after(clone);
             renumberRows();
@@ -729,17 +734,16 @@ function edit_data_entry(pk) {
         }
 
         function addCol () {
-            var clone_index = selectedCol || (table.find('thead tr th').length - 1);
-            var to_clone = table.find('thead tr th').eq(clone_index);
-            var new_col = to_clone.clone(true);
+            const clone_index = selectedCol || (table.find('thead tr th').length - 1);
+            const to_clone = table.find('thead tr th').eq(clone_index);
+            const new_col = to_clone.clone(true);
             new_col.html(colName(clone_index + 1));
             to_clone.after(new_col);
             table.find('tbody tr').each(function () {
-                var to_clone = $(this).find('td, th').eq(clone_index);
-                var new_col = to_clone.clone(true);
-                new_col.html("");
-                to_clone.after(new_col)
-
+                const to_clone_td = $(this).find('td, th').eq(clone_index);
+                const new_col_td = to_clone_td.clone(true);
+                new_col_td.html("");
+                to_clone_td.after(new_col_td);
             });
             table.find('colgroup').eq(clone_index).after($("<colgroup></colgroup>"));
             table.find('colgroup.selected').removeClass('selected');
@@ -747,10 +751,10 @@ function edit_data_entry(pk) {
         }
 
         function removeCol () {
-            var cols = table.find('colgroup');
-            if ((selectedCol !==  null) && (cols.length > 2)) {
+            const cols = table.find('colgroup');
+            if ((selectedCol !== null) && (cols.length > 2)) {
                 table.find('tr').each(function () {
-                    row = $(this);
+                    const row = $(this);
                     row.find('td, th').eq(selectedCol).remove();
                 });
                 cols.eq(selectedCol).remove();
@@ -758,8 +762,9 @@ function edit_data_entry(pk) {
             table.find('colgroup.selected').removeClass('selected');
             table.find('tr.selected').removeClass('selected');
         }
+
         function removeRow () {
-            var rows = table.find('tbody tr');
+            const rows = table.find('tbody tr');
             if ((selectedRow !== null) && (rows.length > 1)) {
                 rows.eq(selectedRow).remove();
             }
@@ -768,88 +773,84 @@ function edit_data_entry(pk) {
             table.find('tr.selected').removeClass('selected');
         }
 
-
         toolbar.on('click', '#table-add-row', addRow);
         toolbar.on('click', '#table-del-row', removeRow);
         toolbar.on('click', '#table-add-col', addCol);
         toolbar.on('click', '#table-del-col', removeCol);
 
-
         table.on('click', 'thead th.header', function(e){
-            var colIndex = $(e.target).index();
+            const colIndex = $(e.target).index();
             table.find('colgroup.selected').removeClass('selected');
             table.find('tr.selected').removeClass('selected');
             table.find('colgroup').eq(colIndex).addClass('selected');
             selectedCol = colIndex;
         });
 
-        table.on('click', 'tbody td', function(e){
+        table.on('click', 'tbody td', function(){
             table.find('colgroup.selected').removeClass('selected');
             table.find('tr.selected').removeClass('selected');
             selectedCol = null;
             selectedRow = null;
         });
 
-        table.on('click', 'tbody th.row-index', function(e){
-
+        table.on('click', 'tbody th.row-index', function(){
             table.find('colgroup.selected').removeClass('selected');
             table.find('tr.selected').removeClass('selected');
-            var row =  $(this).closest('tr');
+            const row = $(this).closest('tr');
             row.addClass('selected');
             selectedRow = row.index();
         });
 
         function setupRowNav () {
             table.on('keydown', 'tbody td', function (e) {
-                if (e.which == 13) {
+                const key = e.key || e.which;
+                if (key === 'Enter' || key === 13) {
                     e.preventDefault();
-                    var new_line = $(this).closest('tr').next().find('td');
+                    let new_line = $(this).closest('tr').next().find('td');
                     if (!new_line.length) {
                         addRow();
                         new_line = table.find('tr').last().find('td');
                     }
-                    new_line[0].focus();
-                } else if (e.which == 9) {
-                    var new_line = $(this).closest('tr').next().find('td');
-                    var num_cols = $(this).parent().children().length - 2;
+                    if (new_line.length) new_line[0].focus();
+                } else if (key === 'Tab' || key === 9) {
+                    const new_line = $(this).closest('tr').next().find('td');
+                    const num_cols = $(this).parent().children().length - 2;
                     if (!new_line.length && ($(this).index() === num_cols)) {
                         addRow();
-                        new_line = table.find('tr').last().find('td');
                     }
-                } else if (e.which == 40) {
-                    //down arrow
-                    var cur_row = $(this).closest('tr');
-                    var ccol_index = $(this).index();
-                    var next_row = cur_row.next();
+                } else if (key === 'ArrowDown' || key === 40) {
+                    // down arrow
+                    const cur_row = $(this).closest('tr');
+                    const ccol_index = $(this).index();
+                    const next_row = cur_row.next();
 
                     if (next_row.length > 0) {
                         e.preventDefault();
                         next_row.find('th, td').eq(ccol_index).focus();
                     }
-                } else if (e.which == 38) {
-                    //up arrow
-                    var cur_row = $(this).closest('tr');
-                    var ccol_index = $(this).index();
-                    var prev_row = cur_row.prev();
+                } else if (key === 'ArrowUp' || key === 38) {
+                    // up arrow
+                    const cur_row = $(this).closest('tr');
+                    const ccol_index = $(this).index();
+                    const prev_row = cur_row.prev();
 
                     if (prev_row.length > 0) {
                         e.preventDefault();
                         prev_row.find('th, td').eq(ccol_index).focus();
                     }
-                } else if (e.which == 39) {
-                    //right
+                } else if (key === 'ArrowRight' || key === 39) {
+                    // right
                     if (caret(e) === $(e.target).text().length) {
-                        var next_cell = $(this).next('td');
+                        const next_cell = $(this).next('td');
                         if (next_cell.length > 0) {
                             e.preventDefault();
                             next_cell.focus();
                         }
                     }
-
-                } else if (e.which == 37 ) {
-                    //left arrow
+                } else if (key === 'ArrowLeft' || key === 37) {
+                    // left arrow
                     if (caret(e) === 0) {
-                        var prev_cell = $(this).prev('td');
+                        const prev_cell = $(this).prev('td');
                         if (prev_cell.length > 0) {
                             e.preventDefault();
                             prev_cell.focus();
@@ -864,15 +865,12 @@ function edit_data_entry(pk) {
         jQuery.fn.shift = [].shift;
 
         this.exportJSON = function exportTable () {
-            var rows = table.find('thead .header');
-            var data = {'headers': []};
-            var info = {};
+            const data = {'headers': []};
+            const info = {};
 
-            // Get the headers (add special header logic here)
-            //$(rows.shift()).find('th:not(:empty)').each(function () {
             table.find('thead .header').each(function (i) {
-                var col_name = colName(i);
-                var h = $(this).text().trim() || col_name;
+                const col_name = colName(i);
+                const h = $(this).text().trim() || col_name;
                 data['headers'].push(h);
                 info[i] = [];
             });
@@ -881,7 +879,7 @@ function edit_data_entry(pk) {
                 if (i <= 1000) {  // Maximum 1000 rows
                     $(this).find('td').each(function(j) {
                         if (j <= 10) { // Maximum 10 columns
-                            var value = parseFloat($(this).text()) || $(this).text().trim();
+                            const value = parseFloat($(this).text()) || $(this).text().trim();
                             info[j].push(value);
                         }
                     });
@@ -889,80 +887,76 @@ function edit_data_entry(pk) {
             });
 
             data['data'] = info;
-
-            // Output the result
             return JSON.stringify(data);
-
         };
 
         this.csv2JSON = function csv2JSON (csv) {
-            //var csv is the CSV file with headers
-            var rawData = Papa.parse(csv);
-            var headers = rawData.data[0].slice(0, 10); // Maximum 10 columns
+            const rawData = Papa.parse(csv);
+            if (!rawData.data || !rawData.data.length) return;
+            const headers = rawData.data[0].slice(0, 10); // Maximum 10 columns
+            const result = {"headers": headers, "data": {}};
 
-            var result = {"headers": headers, "data": {}};
-
-            for(var i=1;i< Math.min(rawData.data.length, 1000);i++){
+            for (let i = 1; i < Math.min(rawData.data.length, 1000); i++) {
                 if (rawData.data[i].length >= headers.length) {
-                    for(var j=0;j<headers.length;j++){
+                    for (let j = 0; j < headers.length; j++) {
                         if (i === 1) {
                             result["data"][j] = [];
                         }
                         result["data"][j].push(rawData.data[i][j]);
                     }
                 }
-
             }
 
-            //JavaScript object
-            var details = JSON.stringify(result);
+            const details = JSON.stringify(result);
             buildTable(details);
         };
 
         this.xdi2JSON = function xdi2JSON (xdi) {
-            //var xdi is the XDI file with headers
-            var lines = xdi.split("\n");
-            var meta = [];
-            var data = {};
-            for (i = 0; i < Math.min(1000, lines.length); i++ ) { // Maximum 1000 lines processed
-                if (lines[i][0] === '#') {
+            const lines = xdi.split("\n");
+            const meta = [];
+            const data = {};
+            let i = 0;
+            for (i = 0; i < Math.min(1000, lines.length); i++) { // Maximum 1000 lines processed
+                if (lines[i] && lines[i][0] === '#') {
                     meta.push(lines[i]);
                 } else {
                     break;
                 }
             }
             lines.splice(0, i);
-            var headers_full = meta.pop().match(/\S+/g);
-            headers_full.shift();
-            var headers = headers_full.slice(0, 10);  //Maximum 10 columns
-            for (i = 0; i < lines.length; i++ ) {
-                var currentline = $.trim(lines[i]).match(/\S+/g);
-                for (var j = 0; j < headers.length; j++) {
-                    if (i === 0) {
+            const lastMeta = meta.pop();
+            const headers_full = lastMeta ? lastMeta.match(/\S+/g) : [];
+            if (headers_full && headers_full.length) {
+                headers_full.shift();
+            }
+            const headers = headers_full ? headers_full.slice(0, 10) : []; // Maximum 10 columns
+            for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+                const currentline = $.trim(lines[lineIdx]).match(/\S+/g);
+                if (!currentline) continue;
+                for (let j = 0; j < headers.length; j++) {
+                    if (lineIdx === 0) {
                         data[j] = [];
                     }
                     data[j].push(currentline[j]);
                 }
             }
-            var details = JSON.stringify({"headers": headers, "data": data});
+            const details = JSON.stringify({"headers": headers, "data": data});
             buildTable(details);
         };
 
         function buildTable (details) {
             table.empty();
+            let data;
             if (details) {
-                // define an existing table
-                var data = JSON.parse(details);
+                data = JSON.parse(details);
             } else {
-                // define a default table
-                var data = {
+                data = {
                     'headers': ['A', 'B', 'C', 'D'],
-                    'data': {0:[""], 1:[""], 2:[""], 3:[""]}
-                }
+                    'data': {0: [""], 1: [""], 2: [""], 3: [""]}
+                };
             }
-            var table_toolbar = ("");
 
-            var table_template = _.template(
+            const table_template = _.template(
                 '<table class="table table-sm">' +
                 '   <colgroup></colgroup>' +
                 '   <% _.each(headers, function(header, i){ %>' +
@@ -989,13 +983,15 @@ function edit_data_entry(pk) {
                 '   </tbody>' +
                 '</table>'
             );
-            table.prepend(table_toolbar);
             table.append(table_template(data));
-            sortable('.table-editable tbody', {
+            const sortableInstance = sortable('.table-editable tbody', {
                 forcePlaceholderSize: true,
                 handle: 'th:first-child',
                 items: 'tr'
-            })[0].addEventListener('sortupdate', renumberRows);
+            });
+            if (sortableInstance && sortableInstance[0]) {
+                sortableInstance[0].addEventListener('sortupdate', renumberRows);
+            }
             setupRowNav();
         }
 
@@ -1004,61 +1000,65 @@ function edit_data_entry(pk) {
 }(jQuery));
 
 (function ( $ ) {
-    $.fn.myelnCalendar = function (options ) {
+    $.fn.myelnCalendar = function (options) {
 
         // Default
-        var settings = $.extend({
+        const settings = $.extend({
             target: "#calendar-target",
             currentMonth: moment().format('YYYY-MM-DD'),
-        }, options );
+        }, options);
 
         // configure the target to receive content
-        var target = $(settings.target);
-        var contents = target.find('div.contents');
-        var calendar_template = (
-            '<div id="notebook-clndr">' +
-            '    <script id="notebook-clndr-template" type="text/template">' +
-            '        <div class="clndr-previous-button no-select"><i class="mi mi-chevron-left"></i></div>' +
-            '        <div class="control">' +
-            '            <div class="month"><%= month %></div>' +
-            '            <div class="year"><%= year %></div>' +
-            '        </div>' +
-            '        <div class="days-container">' +
-            '           <div class="days">' +
-            '               <div class="headers">' +
-            '                   <% _.each(daysOfTheWeek, function(day) { %>' +
-            '                   <div class="day-header"><%= day %></div>' +
-            '                   <% }); %>' +
-            '               </div>' +
-            '               <% _.each(days, function(day) { %>' +
-            '               <div class="<%= day.classes %>"><%= day.day %></div>' +
-            '               <% }); %>' +
-            '           </div>' +
-            '        </div>' +
-            '        <div class="control">' +
-            '            <div class="month"><a href="' + settings.selectTarget + '" id="clndr-default-link">' +
-            '               <i class="mi mi-arrow-right-circle"></i> <span class="pb-1">Latest</span></a>' +
-            '           </div>' +
-            '        </div>' +
-            '        <div class="clndr-next-button no-select"><i class="mi mi-chevron-right"></i></div>' +
-            '    </script>' +
-            '</div>'
-        );
+        const target = $(settings.target);
+        const contents = target.find('div.contents');
+        const calendar_template = `
+<div id="notebook-clndr">
+    <script id="notebook-clndr-template" type="text/template">
+        <div class="clndr-previous-button no-select"><i class="mi mi-chevron-left"></i></div>
+        <div class="control">
+            <div class="month"><%= month %></div>
+            <div class="year"><%= year %></div>
+        </div>
+        <div class="days-container">
+           <div class="days">
+               <div class="headers">
+                   <% _.each(daysOfTheWeek, function(day) { %>
+                   <div class="day-header"><%= day %></div>
+                   <% }); %>
+               </div>
+               <% _.each(days, function(day) { %>
+               <div class="<%= day.classes %>"><%= day.day %></div>
+               <% }); %>
+           </div>
+        </div>
+        <div class="control">
+            <div class="month"><a href="${settings.selectTarget}" id="clndr-default-link">
+               <i class="mi mi-arrow-right-circle"></i> <span class="pb-1">Latest</span></a>
+           </div>
+        </div>
+        <div class="clndr-next-button no-select"><i class="mi mi-chevron-right"></i></div>
+    </script>
+</div>`;
 
+        // Dismiss calendar dropdown on outside click
+        $(document).on('mousedown touchstart', function(e) {
+            if (target.is(':visible') && !target.is(e.target) && target.has(e.target).length === 0 && !$(e.target).closest('#calendar-button').length) {
+                target.slideUp(200);
+            }
+        });
 
         // setup events
         this.click(function () {
             contents.html(calendar_template);
-            var months_fetched = {};
+            const months_fetched = {};
 
             function fetchEvents(month) {
-
-                var months = [moment(month).subtract(1, 'month'), month, moment(month).add(1, 'month')];
-                var months_to_fetch = [];
+                const months = [moment(month).subtract(1, 'month'), month, moment(month).add(1, 'month')];
+                const months_to_fetch = [];
 
                 $.each(months, function(i, item){
-                    var key = item.format('YYYYMM');
-                    if (! months_fetched[key]) {
+                    const key = item.format('YYYYMM');
+                    if (!months_fetched[key]) {
                         months_to_fetch.push(key);
                     }
                 });
@@ -1069,20 +1069,19 @@ function edit_data_entry(pk) {
                         dataType: 'json',
                         url: settings.eventSource,
                         data: {
-                          months: months_to_fetch.join()
+                            months: months_to_fetch.join()
                         },
                         success: function(response) {
-                          clndr.addEvents(response);
-                          $.each(months_to_fetch, function(i, item){
-                              months_fetched[item] = true;
-                          });
+                            clndr.addEvents(response);
+                            $.each(months_to_fetch, function(i, item){
+                                months_fetched[item] = true;
+                            });
                         }
                     });
                 }
-
             }
 
-            var clndr = $('#notebook-clndr').clndr({
+            const clndr = $('#notebook-clndr').clndr({
                 template: $('#notebook-clndr-template').html(),
                 startWithMonth: settings.currentMonth,
                 weekOffset: 1,
@@ -1106,10 +1105,10 @@ function edit_data_entry(pk) {
 }(jQuery));
 
 function getSelectionText() {
-    var text = "";
+    let text = "";
     if (window.getSelection) {
         text = window.getSelection().toString();
-    } else if (document.selection && document.selection.type != "Control") {
+    } else if (document.selection && document.selection.type !== "Control") {
         text = document.selection.createRange().text;
     }
     return text;
@@ -1725,10 +1724,15 @@ function loadPage(element, dir, scroll, pk) {
 
 
 function loadIndex(element, height) {
-    const active = $('#notebook-index #index-' + element.data("entry-pk"));
-    const index = $('#notebook-index .index');
+    const $index = $('#notebook-index');
+    if (!$index.length) return;
+    const url = element.data('index-url');
+    if (!url) return;
 
-    $('#notebook-index .active').removeClass('active');
+    const active = $index.find('#index-' + element.data("entry-pk"));
+    const index = $index.find('.index');
+
+    $index.find('.active').removeClass('active');
     active.addClass('active');
 
     const num_visible = Math.round(height / 50);
@@ -1737,40 +1741,40 @@ function loadIndex(element, height) {
         MyelnNotebooks.index_loading = true;
         $.ajax({
             type: 'GET',
-            url: element.data('index-url'),
+            url: url,
             data: {
                 'load': num_visible,
                 'active': element.data("entry-pk")
             },
             success: function(response) {
                 const source = $('' + response + '');
-                const index = $('#notebook-index .index');
+                const indexContainer = $index.find('.index');
 
                 let end = false;
-                const first_entry = index.children().first();
+                const first_entry = indexContainer.children().first();
                 $(source).children().each(function() {
-                    const el = $(index).find('#index-' + $(this).data('entry-pk'));
+                    const el = indexContainer.find('#index-' + $(this).data('entry-pk'));
                     if (el.length) {
                         end = true;
                     } else {
                         if (!end) {
                             first_entry.before($(this));
                         } else {
-                            index.append($(this));
+                            indexContainer.append($(this));
                         }
                     }
                 });
-                const i = index.find('.active').index();
+                const i = indexContainer.find('.active').index();
 
                 const vis_above = (num_visible - num_visible % 2) / 2;
                 const vis_below = (num_visible + num_visible % 2) / 2 - 1;
 
-                const loaded_below = index.children().length - (i + 1);
+                const loaded_below = indexContainer.children().length - (i + 1);
                 let offset = i - vis_above;
                 if (vis_below > loaded_below) {
                     offset = offset - (vis_below - loaded_below);
                 }
-                index.animate({
+                indexContainer.animate({
                     marginTop: -1 * (offset * 50),
                 }, 250);
 
@@ -1812,6 +1816,8 @@ function scrollIndex(pk) {
 }
 
 function resizeIndex() {
+    const $index = $('#notebook-index');
+    if (!$index.length) return 0;
     const mainEl = $('main');
     const mainHeight = mainEl.innerHeight() || 0;
     let margins = mainHeight % 50;
@@ -1819,7 +1825,7 @@ function resizeIndex() {
         margins = margins + 50;
     }
     const index_height = mainHeight - margins;
-    $('#notebook-index').height(index_height + 1)
+    $index.height(index_height + 1)
         .css({
             'margin-bottom': margins / 2,
             'margin-top': (margins / 2) - 1
@@ -1847,6 +1853,8 @@ function onScrollTick() {
     const entries = $('.notebook-entry');
     if (entries.length === 0) return;
 
+    const hasIndex = $('#notebook-index').length > 0;
+
     entries.each(function() {
         const $entry = $(this);
         const offset = $entry.offset();
@@ -1857,20 +1865,22 @@ function onScrollTick() {
 
         if (elBot > mainTop && elTop < mainBot) {
             $entry.addClass('inview');
-            $('#index-' + pk).addClass('inview');
+            if (hasIndex) $('#index-' + pk).addClass('inview');
         } else {
             $entry.removeClass('inview');
-            $('#index-' + pk).removeClass('inview');
+            if (hasIndex) $('#index-' + pk).removeClass('inview');
         }
     });
 
-    const indexHeight = MyelnNotebooks.indexHeight || resizeIndex();
-    const active = $('.notebook-entry.inview').first();
-    if (active.length) {
-        const activePk = active.data('entry-pk');
-        if (activePk !== MyelnNotebooks.current_entry && !MyelnNotebooks.index_loading) {
-            MyelnNotebooks.current_entry = activePk;
-            loadIndex(active, indexHeight);
+    if (hasIndex) {
+        const indexHeight = MyelnNotebooks.indexHeight || resizeIndex();
+        const active = $('.notebook-entry.inview').first();
+        if (active.length) {
+            const activePk = active.data('entry-pk');
+            if (activePk !== MyelnNotebooks.current_entry && !MyelnNotebooks.index_loading) {
+                MyelnNotebooks.current_entry = activePk;
+                loadIndex(active, indexHeight);
+            }
         }
     }
 
@@ -1946,159 +1956,176 @@ function initEntries(selector) {
 }
 
 function draw_xy_chart() {
+    let width = 600;
+    let height = 300;
+    let xlabel = '';
+    let y1label = '';
+    let y2label = '';
+    let xscale = 'linear';
+    let scatter = 'scatter';
+    let interpolation = 'linear';
+    let binning = 50;
+    let timeformat = null;
 
     function chart(selection) {
         selection.each(function (datasets) {
-            var xoffset = 0;
-            if (xlabel) {
-                var bmargin = 50;
-            } else {
-                var bmargin = 20;
-            }
-            var margin = {top: 20, right: width * 0.1, bottom: bmargin, left: width * 0.1},
-                innerwidth = width - margin.left - margin.right,
-                innerheight = height - margin.top - margin.bottom;
+            const xoffset = 0;
+            const bmargin = xlabel ? 50 : 20;
+            const margin = {top: 20, right: width * 0.1, bottom: bmargin, left: width * 0.1};
+            const innerwidth = width - margin.left - margin.right;
+            const innerheight = height - margin.top - margin.bottom;
 
-            var svg = d3.select(this)
+            const svg = d3.select(this)
                 .attr("width", width)
                 .attr("height", height)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            var color_scale = d3.scaleOrdinal(d3.schemeCategory10);
-            var y1data = [], y2data = [];
-            var y1datasets = [], y2datasets = [];
+            const color_scale = d3.scaleOrdinal(d3.schemeCategory10);
+            let y1data = [];
+            let y2data = [];
+            const y1datasets = [];
+            const y2datasets = [];
+            let x_scale;
+            let y1_scale;
+            let y2_scale;
+            let bins;
+            let color;
+            let xmin;
+            let xmax;
 
             if (scatter === 'bar') {
-                var color = datasets['color'];
-                var xmin = d3.min(datasets.data);
-                var xmax = d3.max(datasets.data);
+                color = datasets['color'];
+                xmin = d3.min(datasets.data);
+                xmax = d3.max(datasets.data);
                 switch (xscale) {
                     case 'time':
-                        var x_scale = d3.scaleTime()
+                        x_scale = d3.scaleTime()
                             .range([0, innerwidth])
                             .domain([xmin, xmax]);
                         break;
                     case 'linear':
-                        var x_scale = d3.scaleLinear()
+                    default:
+                        x_scale = d3.scaleLinear()
                             .range([0, innerwidth])
                             .domain([xmin, xmax]);
                         break;
                 }
-                var bins = d3.histogram()
-                    .value(function (d) {
-                        return d;
-                    })
+                bins = d3.histogram()
+                    .value(function (d) { return d; })
                     .domain([d3.min(datasets.data), d3.max(datasets.data)])
                     .thresholds(x_scale.ticks(binning))(datasets['data']);
-                var y1_scale = d3.scaleLinear()
-                    .domain([0, d3.max(bins, function (d) {
-                        return d.length;
-                    })])
+                y1_scale = d3.scaleLinear()
+                    .domain([0, d3.max(bins, function (d) { return d.length; })])
                     .range([innerheight, 0]);
             } else {
-                var xmin = d3.min(datasets, function (d) { return d3.min(d.x);});
-                var xmax = d3.max(datasets, function (d) { return d3.max(d.x);});
+                xmin = d3.min(datasets, function (d) { return d3.min(d.x); });
+                xmax = d3.max(datasets, function (d) { return d3.max(d.x); });
                 switch (xscale) {
                     case 'inv-square':
-
-                        var x_scale = d3.scalePow().exponent(-2)
+                        x_scale = d3.scalePow().exponent(-2)
                             .range([0, innerwidth])
                             .domain([xmax, xmin]);
                         break;
                     case 'pow':
-                        var x_scale = d3.scalePow()
+                        x_scale = d3.scalePow()
                             .range([0, innerwidth])
                             .domain([xmin, xmax]);
                         break;
                     case 'log':
-                        var x_scale = d3.scaleLog()
+                        x_scale = d3.scaleLog()
                             .range([0, innerwidth])
                             .domain([xmin, xmax]);
                         break;
                     case 'identity':
-                        var x_scale = d3.scaleIdentity()
+                        x_scale = d3.scaleIdentity()
                             .range([0, innerwidth])
                             .domain([xmin, xmax]);
                         break;
                     case 'time':
-                        var x_scale = d3.scaleTime()
-                            .range([0, innerwidth])
-                            .domain([xmin, xmax]);
-                        break;
-                    case 'linear':
-                        var x_scale = d3.scaleLinear()
+                        x_scale = d3.scaleTime()
                             .range([0, innerwidth])
                             .domain([xmin, xmax]);
                         break;
                     case 'inverse':
-                        var x_scale = d3.scaleLinear()
+                        x_scale = d3.scaleLinear()
                             .range([0, innerwidth])
                             .domain([xmax, xmin]);
-                }
-
-                switch(interpolation) {
-                    case 'cardinal':
-                        var fit = d3.curveCardinal;
-                        break;
-                    case 'step':
-                        var fit = d3.curveStep;
-                        break;
-                    case 'step-after':
-                        var fit = d3.curveStepAfter;
-                        break;
-                    case 'step-before':
-                        var fit = d3.curveStepBefore;
-                        break;
-                    case 'basis':
-                        var fit = d3.curveBasis;
                         break;
                     case 'linear':
-                        var fit = d3.curveLinear;
+                    default:
+                        x_scale = d3.scaleLinear()
+                            .range([0, innerwidth])
+                            .domain([xmin, xmax]);
+                        break;
                 }
 
-                for (var p = 0; p < datasets.length; p++) {
+                let fit = d3.curveLinear;
+                switch(interpolation) {
+                    case 'cardinal':
+                        fit = d3.curveCardinal;
+                        break;
+                    case 'step':
+                        fit = d3.curveStep;
+                        break;
+                    case 'step-after':
+                        fit = d3.curveStepAfter;
+                        break;
+                    case 'step-before':
+                        fit = d3.curveStepBefore;
+                        break;
+                    case 'basis':
+                        fit = d3.curveBasis;
+                        break;
+                    case 'linear':
+                    default:
+                        fit = d3.curveLinear;
+                        break;
+                }
+
+                for (let p = 0; p < datasets.length; p++) {
                     datasets[p]['color'] = color_scale(p);
-                    if ((datasets[p]['y1'])) {
+                    if (datasets[p]['y1']) {
                         y1data = y1data.concat(datasets[p]['y1']);
                         y1datasets.push(datasets[p]);
                     }
-                    if ((datasets[p]['y2'])) {
+                    if (datasets[p]['y2']) {
                         y2data = y2data.concat(datasets[p]['y2']);
                         y2datasets.push(datasets[p]);
                     }
                 }
 
-                var y1_scale = d3.scaleLinear()
+                y1_scale = d3.scaleLinear()
                     .range([innerheight - xoffset, 0])
                     .domain([d3.min(y1data), d3.max(y1data)]);
 
-                var y2_scale = d3.scaleLinear()
+                y2_scale = d3.scaleLinear()
                     .range([innerheight - xoffset, 0])
                     .domain([d3.min(y2data), d3.max(y2data)]);
             }
 
-            var x_axis = d3.axisBottom()
+            const x_axis = d3.axisBottom()
                 .scale(x_scale)
                 .tickSize(-innerheight);
             if (xscale === 'inv-square') {
-                var ticks = inv_sqrt(Array.cleanspace(Math.pow(xmax, -2), Math.pow(xmin, -2), 8));
-                x_axis.tickValues(ticks).tickFormat(d3.format(".3"));
+                if (typeof inv_sqrt === 'function' && Array.cleanspace) {
+                    const ticks = inv_sqrt(Array.cleanspace(Math.pow(xmax, -2), Math.pow(xmin, -2), 8));
+                    x_axis.tickValues(ticks).tickFormat(d3.format(".3"));
+                }
             } else if (xscale === 'time' && timeformat) {
                 x_axis.ticks(7).tickFormat(d3.timeFormat(timeformat));
             }
 
-            var y1_axis = d3.axisLeft()
+            const y1_axis = d3.axisLeft()
                 .scale(y1_scale)
                 .tickSize(-innerwidth);
 
-            var y2_axis = d3.axisRight()
+            const y2_axis = d3.axisRight()
                 .scale(y2_scale);
-
 
             svg.append("g")
                 .attr("class", "x axis")
-                .attr("transform", "translate(0," + (innerheight) + ")")
+                .attr("transform", "translate(0," + innerheight + ")")
                 .call(x_axis);
             svg.append("text")
                 .attr("transform", "translate(" + (innerwidth / 2) + "," + (height - margin.bottom / 2) + ")")
@@ -2113,16 +2140,16 @@ function draw_xy_chart() {
                 .attr("y", 6)
                 .attr("dy", "-3.5em")
                 .style("text-anchor", "middle")
-                .attr("fill", function (_, i) {
-                    if (y1datasets.length > 1 || !(y1datasets.length)) {
+                .attr("fill", function () {
+                    if (y1datasets.length > 1 || !y1datasets.length) {
                         return "#000000";
                     }
-                    return y1datasets.length && y1datasets[0]['color'];
+                    return y1datasets[0]['color'];
                 })
                 .text(y1label);
 
             if (scatter === 'bar') {
-                var bar = svg.selectAll(".bar")
+                const bar = svg.selectAll(".bar")
                     .data(bins)
                     .enter().append("g")
                     .attr("class", "bar")
@@ -2131,37 +2158,31 @@ function draw_xy_chart() {
 
                 bar.append("rect")
                     .attr("x", 1)
-                    .attr("title", function(d) { if (xscale === 'time' && timeformat) {
-                        return d3.timeFormat(timeformat)(d.x0) + '-' + d3.timeFormat(timeformat)(d.x1) + ': ' + d.length + 'entries';
-                    } else {
-                        return d.x0 + '-' + d.x1 + ': ' + d.length + ' entries';
-                    } })
+                    .attr("title", function(d) {
+                        if (xscale === 'time' && timeformat) {
+                            return d3.timeFormat(timeformat)(d.x0) + '-' + d3.timeFormat(timeformat)(d.x1) + ': ' + d.length + ' entries';
+                        } else {
+                            return d.x0 + '-' + d.x1 + ': ' + d.length + ' entries';
+                        }
+                    })
                     .attr("width", x_scale(bins[0].x1) - (Math.max(0, x_scale(bins[0].x0) - 1)))
                     .attr("height", function(d) { return innerheight - y1_scale(d.length); });
 
             } else {
+                const y1_draw_line = [];
+                const y2_draw_line = [];
 
-                var y1_draw_line = [], y2_draw_line = [];
-
-                for (var p = 0; p < datasets.length; p++) {
+                for (let p = 0; p < datasets.length; p++) {
                     if (datasets[p]['y1']) {
                         y1_draw_line.push(d3.line()
                             .curve(fit)
-                            .x(function (d) {
-                                return x_scale(d[0]);
-                            })
-                            .y(function (d) {
-                                return y1_scale(d[1]);
-                            }));
+                            .x(function (d) { return x_scale(d[0]); })
+                            .y(function (d) { return y1_scale(d[1]); }));
                     } else if (datasets[p]['y2']) {
                         y2_draw_line.push(d3.line()
                             .curve(fit)
-                            .x(function (d) {
-                                return x_scale(d[0]);
-                            })
-                            .y(function (d) {
-                                return y2_scale(d[1]);
-                            }));
+                            .x(function (d) { return x_scale(d[0]); })
+                            .y(function (d) { return y2_scale(d[1]); }));
                     }
                 }
 
@@ -2175,7 +2196,7 @@ function draw_xy_chart() {
                         .attr("y", 55)
                         .attr("dy", 0)
                         .style("text-anchor", "middle")
-                        .attr("fill", function (_, i) {
+                        .attr("fill", function () {
                             if (y2datasets.length > 1) {
                                 return "#000000";
                             }
@@ -2184,126 +2205,96 @@ function draw_xy_chart() {
                         .text(y2label);
                 }
 
-                var y1_data_lines = svg.selectAll(".d3_xy1_chart_line")
-                    .data(y1datasets.map(function (d) {
-                        return d3.zip(d.x, d.y1);
-                    }))
+                const y1_data_lines = svg.selectAll(".d3_xy1_chart_line")
+                    .data(y1datasets.map(function (d) { return d3.zip(d.x, d.y1); }))
                     .enter().append("g")
                     .attr("class", "d3_xy1_chart_line");
-                var y2_data_lines = svg.selectAll(".d3_xy2_chart_line")
-                    .data(y2datasets.map(function (d) {
-                        return d3.zip(d.x, d.y2);
-                    }))
+                const y2_data_lines = svg.selectAll(".d3_xy2_chart_line")
+                    .data(y2datasets.map(function (d) { return d3.zip(d.x, d.y2); }))
                     .enter().append("g")
                     .attr("class", "d3_xy2_chart_line");
 
-                for (var p = 0; p < y1_draw_line.length; p++) {
+                for (let p = 0; p < y1_draw_line.length; p++) {
                     if (scatter === 'line') {
                         y1_data_lines.append("path")
                             .attr("class", "line")
-                            .attr("d", function (d) {
-                                return y1_draw_line[p](d);
-                            })
-                            .attr("data-legend", function (_, l) {
-                                return y1datasets[l]['label'] || null;
-                            })
-                            .attr("stroke", function (_, l) {
-                                return y1datasets[l]['color'];
-                            })
+                            .attr("d", function (d) { return y1_draw_line[p](d); })
+                            .attr("data-legend", function (_, l) { return y1datasets[l]['label'] || null; })
+                            .attr("stroke", function (_, l) { return y1datasets[l]['color']; })
                             .attr("fill", "none");
                     } else {
-                        for (k = 0; k < y1datasets.length; k++) {
-                            var newdata = y1datasets[k]['x'].map(function (e, j) {
+                        for (let k = 0; k < y1datasets.length; k++) {
+                            const newdata = y1datasets[k]['x'].map(function (e, j) {
                                 return [e, y1datasets[k]['y1'][j]];
                             });
-                            var data_points = svg.selectAll("dot")
+                            svg.selectAll("dot")
                                 .data(newdata)
                                 .enter().append("circle")
                                 .attr("r", 2)
-                                .attr("cx", function (d) {
-                                    return x_scale(d[0]);
-                                })
-                                .attr("cy", function (d) {
-                                    return y1_scale(d[1]);
-                                })
-                                .attr("fill", function (_, l) {
-                                    return y1datasets[k]['color'];
-                                });
+                                .attr("cx", function (d) { return x_scale(d[0]); })
+                                .attr("cy", function (d) { return y1_scale(d[1]); })
+                                .attr("fill", function () { return y1datasets[k]['color']; });
                         }
                     }
                 }
 
-                for (var p = 0; p < y2_draw_line.length; p++) {
+                for (let p = 0; p < y2_draw_line.length; p++) {
                     if (scatter === 'line') {
                         y2_data_lines.append("path")
                             .attr("class", "line")
-                            .attr("d", function (d) {
-                                return y2_draw_line[p](d);
-                            })
-                            .attr("data-legend", function (_, l) {
-                                return y2datasets[l]['label'] || null;
-                            })
-                            .attr("stroke", function (_, l) {
-                                return y2datasets[l]['color'];
-                            })
+                            .attr("d", function (d) { return y2_draw_line[p](d); })
+                            .attr("data-legend", function (_, l) { return y2datasets[l]['label'] || null; })
+                            .attr("stroke", function (_, l) { return y2datasets[l]['color']; })
                             .attr("fill", "none");
                     } else {
-                        for (k = 0; k < y2datasets.length; k++) {
-                            var newdata = y2datasets[k]['x'].map(function (e, j) {
+                        for (let k = 0; k < y2datasets.length; k++) {
+                            const newdata = y2datasets[k]['x'].map(function (e, j) {
                                 return [e, y2datasets[k]['y2'][j]];
                             });
-                            var data_points = svg.selectAll("dot")
+                            svg.selectAll("dot")
                                 .data(newdata)
                                 .enter().append("circle")
                                 .attr("r", 2)
-                                .attr("cx", function (d) {
-                                    return x_scale(d[0]);
-                                })
-                                .attr("cy", function (d) {
-                                    return y2_scale(d[1]);
-                                })
-                                .attr("fill", function (_, l) {
-                                    return y2datasets[k]['color'];
-                                });
+                                .attr("cx", function (d) { return x_scale(d[0]); })
+                                .attr("cy", function (d) { return y2_scale(d[1]); })
+                                .attr("fill", function () { return y2datasets[k]['color']; });
                         }
                     }
                 }
 
-
-
-                legend = svg.append("g")
+                const legend = svg.append("g")
                     .attr("class", "legend")
-                    .attr("transform", "translate(50,30)")
-                    .call(d3.legend);
-
+                    .attr("transform", "translate(50,30)");
+                if (d3.legend) {
+                    legend.call(d3.legend);
+                }
 
                 /* Interactive stuff */
-                var mouseG = svg.append("g")
+                const mouseG = svg.append("g")
                     .attr("class", "mouse-over-effects");
 
-                mouseG.append("path") // this is the black vertical line to follow mouse
+                mouseG.append("path")
                     .attr("class", "mouse-line")
                     .style("stroke", "#333")
                     .style("stroke-width", "0.5px")
                     .style("opacity", "0");
 
-                var lines = $(this).find('.line');
-
-                if (y2datasets) {
-                    var dualdatasets = [];
-                    for (var p = 0; p < y1datasets.length; p++) {
+                let mousePerLine;
+                if (y2datasets.length) {
+                    const dualdatasets = [];
+                    for (let p = 0; p < y1datasets.length; p++) {
                         dualdatasets.push({'x': y1datasets[p]['x'], 'y1': y1datasets[p]['y1']});
                     }
-                    for (var p = 0; p < y2datasets.length; p++) {
+                    for (let p = 0; p < y2datasets.length; p++) {
                         dualdatasets.push({'x': y2datasets[p]['x'], 'y1': y2datasets[p]['y2'], 'scale': y2_scale});
                     }
-                    var mousePerLine = mouseG.selectAll('.mouse-per-line')
+                    mousePerLine = mouseG.selectAll('.mouse-per-line')
                         .data(dualdatasets)
                         .enter()
                         .append("g")
                         .attr("class", "mouse-per-line");
                 } else {
-                    var mousePerLine = mouseG.selectAll('.mouse-per-line')
+                    mousePerLine = mouseG.selectAll('.mouse-per-line')
                         .data(datasets)
                         .enter()
                         .append("g")
@@ -2319,7 +2310,7 @@ function draw_xy_chart() {
                 mousePerLine.append("text")
                     .attr("transform", "translate(10,3)");
 
-                var mouseX = svg.append("text")
+                const mouseX = svg.append("text")
                     .attr("transform", "translate(" + (innerwidth - 3) + ", " + (innerheight - 3) + ")")
                     .style("text-anchor", "end")
                     .style("opacity", "0");
@@ -2335,35 +2326,32 @@ function draw_xy_chart() {
                         svg.selectAll(".mouse-per-line text").style("opacity", "0");
                         mouseX.style("opacity", "1");
                     })
-                    .on('mouseover', function (e) {
+                    .on('mouseover', function () {
                         svg.select(".mouse-line").style("opacity", "1");
                         svg.selectAll(".mouse-per-line circle").style("opacity", "1");
                         svg.selectAll(".mouse-per-line text").style("opacity", "1");
                         mouseX.style("opacity", "1");
-
                     })
                     .on('mousemove', function () {
-                        var mouse = d3.mouse(this);
+                        const mouse = d3.mouse(this);
                         svg.select(".mouse-line")
                             .attr("d", function () {
-                                var d = "M" + mouse[0] + "," + innerheight;
-                                d += " " + mouse[0] + "," + 0;
-                                return d;
+                                return "M" + mouse[0] + "," + innerheight + " " + mouse[0] + ",0";
                             });
                         svg.selectAll(".mouse-per-line")
                             .style("stroke", function (d, n) {
                                 return color_scale(n);
                             })
-                            .attr("transform", function (d, n) {
-                                var xPos = x_scale.invert(mouse[0]);
+                            .attr("transform", function (d) {
+                                const xPos = x_scale.invert(mouse[0]);
                                 mouseX.text("X = " + xPos.toFixed(2));
-                                var closest = d['x'].reduce(function (prev, curr) {
+                                const closest = d['x'].reduce(function (prev, curr) {
                                     return (Math.abs(curr - xPos) < Math.abs(prev - xPos) ? curr : prev);
                                 });
-                                var i = d['x'].indexOf(closest);
+                                const i = d['x'].indexOf(closest);
 
-                                var scale = d['scale'] || y1_scale;
-                                var pos = scale(d['y1'][i]);
+                                const scale = d['scale'] || y1_scale;
+                                const pos = scale(d['y1'][i]);
                                 d3.select(this).select('text')
                                     .style("stroke", "none")
                                     .text(scale.invert(pos).toFixed(2));
@@ -2373,7 +2361,6 @@ function draw_xy_chart() {
                 /* End of interactive stuff */
             }
         });
-
     }
 
     chart.width = function (value) {
@@ -2440,8 +2427,16 @@ function drawStackChart(data, label, canvasStackChart, colorStackChart, xStackCh
     colorStackChart.domain(d3.keys(data[0]).filter(function (key) { return key !== label && key !== 'color'; }));
 
     data.forEach(function (d) {
-        var y0 = 0;
-        d.ages = colorStackChart.domain().map(function (name) { return { name: name, y0: y0, y1: y0 += +d[name], color: d['color'] || null, label: d[label] }; });
+        let y0 = 0;
+        d.ages = colorStackChart.domain().map(function (name) {
+            return {
+                name: name,
+                y0: y0,
+                y1: y0 += +d[name],
+                color: d['color'] || null,
+                label: d[label]
+            };
+        });
         d.total = d.ages[d.ages.length - 1].y1;
     });
 
@@ -2459,64 +2454,70 @@ function drawStackChart(data, label, canvasStackChart, colorStackChart, xStackCh
         .attr("transform", "rotate(-45)")
         .style("text-anchor", "end");
 
-    var state = canvasStackChart.selectAll("."+label+"")
+    const state = canvasStackChart.selectAll("." + label)
         .data(data)
         .enter().append("g")
         .attr("class", "g")
         .attr("transform", function (d) { return "translate(" + xStackChart(d[label]) + ",0)"; });
 
-    var yaxis = canvasStackChart.append("g")
+    let yaxis = canvasStackChart.append("g")
         .attr("class", "y axis")
         .call(d3.axisLeft(yStackChart));
 
-    var active_link = "0";
-    var legendClassArray = [];
-    var legend = canvasStackChart.selectAll(".legend")
+    let active_link = "0";
+    let legendClassArray = [];
+    const legend = canvasStackChart.selectAll(".legend")
         .data(colorStackChart.domain().slice().reverse())
         .enter().append("g")
         .attr("class", function (d) {
-            legendClassArray.push(d.replace(/\s/g, '')); //remove spaces
+            legendClassArray.push(d.replace(/\s/g, ''));
             return "legend";
         })
-        .attr("transform", function(d, i) { return "translate(20," + i * 20 + ")"; });
+        .attr("transform", function(d, i) { return "translate(20," + (i * 20) + ")"; });
 
-    //reverse order to match order in which bars are stacked
+    // reverse order to match order in which bars are stacked
     legendClassArray = legendClassArray.reverse();
 
     state.selectAll("rect")
         .data(function (d) { return d.ages; })
         .enter().append("rect")
         .attr("width", xStackChart.bandwidth())
-        .attr("class", function(i, d) { return 'class' + legendClassArray[d]; })
-        .attr("title", function(d, i) { return legendClassArray[i] + ' (' + d.label + '): ' + (d.y1 - d.y0);})
+        .attr("class", function(d, i) { return 'class' + legendClassArray[i]; })
+        .attr("title", function(d, i) { return legendClassArray[i] + ' (' + d.label + '): ' + (d.y1 - d.y0); })
         .attr("y", function (d) { return yStackChart(d.y1); })
         .attr("height", function (d) { return yStackChart(d.y0) - yStackChart(d.y1); })
-        .style("fill", function (d) { return d.color && d.color || colorStackChart(d.name); })
-        .style("opacity", function (d, i) { return d.color && 1 - ((0.75/legendClassArray.length) * i) || 1});
+        .style("fill", function (d) { return d.color || colorStackChart(d.name); })
+        .style("opacity", function (d, i) { return d.color ? 1 - ((0.75 / legendClassArray.length) * i) : 1; });
 
+    let y_orig = [];
+    let h_orig = [];
+    let ySingleChart;
 
     if (legendClassArray.length > 1) {
         legend.append("circle")
             .attr("cy", 9)
             .attr("r", 9)
             .style("fill", colorStackChart)
-            .attr("id", function (d, i) {
+            .attr("id", function (d) {
                 return "id" + d.replace(/\s/g, '');
             })
             .on("mouseover", function () {
-                if (active_link === "0") d3.select(this).style("cursor", "pointer");
-                else {
+                if (active_link === "0") {
+                    d3.select(this).style("cursor", "pointer");
+                } else {
                     if (active_link.split("class").pop() === this.id.split("id").pop()) {
                         d3.select(this).style("cursor", "pointer");
-                    } else d3.select(this).style("cursor", "auto");
+                    } else {
+                        d3.select(this).style("cursor", "auto");
+                    }
                 }
             })
-            .on("click", function (d) {
-                var active_id = '#id' + active_link;
+            .on("click", function () {
+                const active_id = '#id' + active_link;
                 d3.select(active_id).style("stroke", "none");
                 if (active_link !== this.id.split("id").pop()) {
                     if (active_link !== "0") {
-                        restorePlot($(active_id)[0], duration = 1, delay = 1);
+                        restorePlot($(active_id)[0], 1, 1);
                     }
                     d3.select(this)
                         .style("stroke", "black")
@@ -2525,7 +2526,7 @@ function drawStackChart(data, label, canvasStackChart, colorStackChart, xStackCh
                     active_link = this.id.split("id").pop();
                     plotSingle(this);
                 } else {
-                    restorePlot($(active_id)[0], duration=500, delay=100);
+                    restorePlot($(active_id)[0], 500, 100);
                     active_link = "0";
                 }
             });
@@ -2535,19 +2536,17 @@ function drawStackChart(data, label, canvasStackChart, colorStackChart, xStackCh
             .attr("y", 9)
             .attr("dy", ".35em")
             .style("text-anchor", "start")
-            .text(function (d) {
-                return d;
-            });
+            .text(function (d) { return d; });
     }
 
     function restorePlot(d, duration, delay) {
         duration = duration || 500;
         delay = delay || 100;
-        class_keep = d.id.split("id").pop();
-        idx = legendClassArray.indexOf(class_keep);
+        if (!d) return;
+        const class_keep = d.id.split("id").pop();
+        const idx = legendClassArray.indexOf(class_keep);
 
         $.each(state.selectAll("rect"), function (i, e) {
-            //get height and y posn of base bar and selected bar
             $.each(e, function(j, r) {
                 if (r[idx]) {
                     d3.select(r[idx])
@@ -2561,42 +2560,41 @@ function drawStackChart(data, label, canvasStackChart, colorStackChart, xStackCh
             });
         });
 
-        //restore opacity of erased bars
-        for (i = 0; i < legendClassArray.length; i++) {
-          if (legendClassArray[i] != class_keep) {
-            state.selectAll(".class" + legendClassArray[i])
-              .transition()
-              .duration(duration)
-              .delay(delay)
-              .style('display', 'block');
-          }
+        // restore opacity of erased bars
+        for (let i = 0; i < legendClassArray.length; i++) {
+            if (legendClassArray[i] !== class_keep) {
+                state.selectAll(".class" + legendClassArray[i])
+                    .transition()
+                    .duration(duration)
+                    .delay(delay)
+                    .style('display', 'block');
+            }
         }
         yaxis.remove();
         yaxis = canvasStackChart.append("g")
             .attr("class", "y axis")
             .call(d3.axisLeft(yStackChart));
-
     }
 
     function plotSingle(d) {
-        class_keep = d.id.split("id").pop();
-        idx = legendClassArray.indexOf(class_keep);
-        key_keep = class_keep;
+        const class_keep = d.id.split("id").pop();
+        const idx = legendClassArray.indexOf(class_keep);
+        let key_keep = class_keep;
         $.each(data[0], function(k) {
             if (k.replace(/\s/g, '') === class_keep) {
                 key_keep = k;
                 return false;
             }
         });
-        ySingleChart = d3.scaleLinear().range([heightStackChart, 0]).domain([0, d3.max(data, function (d) { return d[key_keep]; })]);
+        ySingleChart = d3.scaleLinear().range([heightStackChart, 0]).domain([0, d3.max(data, function (item) { return item[key_keep]; })]);
 
         yaxis.remove();
         yaxis = canvasStackChart.append("g")
             .attr("class", "y axis")
             .call(d3.axisLeft(ySingleChart));
 
-        for (i = 0; i < legendClassArray.length; i++) {
-            if (legendClassArray[i] != class_keep) {
+        for (let i = 0; i < legendClassArray.length; i++) {
+            if (legendClassArray[i] !== class_keep) {
                 state.selectAll(".class" + legendClassArray[i])
                     .transition()
                     .duration(500)
@@ -2604,107 +2602,109 @@ function drawStackChart(data, label, canvasStackChart, colorStackChart, xStackCh
             }
         }
 
-        y_orig = [], h_orig = [];
-        $.each(state.selectAll("rect"), function (i, d) {
-            //get height and y posn of base bar and selected bar
-
-            $.each(d, function(j, r) {
+        y_orig = [];
+        h_orig = [];
+        $.each(state.selectAll("rect"), function (i, rectGroup) {
+            $.each(rectGroup, function(j, r) {
                 if (r[idx]) {
-                    h_keep = d3.select(r[idx]).attr("height");
-                    y_keep = d3.select(r[idx]).attr("y");
+                    const h_keep = d3.select(r[idx]).attr("height");
+                    const y_keep = d3.select(r[idx]).attr("y");
                     y_orig.push(y_keep);
                     h_orig.push(h_keep);
 
-                    h_base = d3.select(r[0]).attr("height");
-                    y_base = d3.select(r[0]).attr("y");
+                    const h_base = d3.select(r[0]).attr("height");
+                    const y_base = d3.select(r[0]).attr("y");
 
-                    h_shift = h_keep - h_base;
-                    y_new = y_base - h_shift;
+                    const h_shift = h_keep - h_base;
+                    const y_new = y_base - h_shift;
 
                     d3.select(r[idx])
                         .transition()
                         .ease(d3.easeBounce)
                         .duration(500)
                         .delay(100)
-                        .attr("y", function (d) { return heightStackChart - (ySingleChart(d.y0) - ySingleChart(d.y1)); })
-                        .attr("height", function (d) { return ySingleChart(d.y0) - ySingleChart(d.y1);})
+                        .attr("y", function (item) { return heightStackChart - (ySingleChart(item.y0) - ySingleChart(item.y1)); })
+                        .attr("height", function (item) { return ySingleChart(item.y0) - ySingleChart(item.y1); })
                         .call(yStackChart);
                 }
             });
-
         });
-
     }
 }
 
-
 function plotData(element) {
-    var entry = $(element).closest('.notebook-entry');
-    var pk = entry.data('entry-pk');
+    const entry = $(element).closest('.notebook-entry');
+    const pk = entry.data('entry-pk');
 
-    var info = JSON.parse(entry.find('script#plot-data-' + pk).text());
+    const dataScript = entry.find('script#plot-data-' + pk);
+    if (!dataScript.length) return;
+    const info = JSON.parse(dataScript.text());
 
-    //remove the existing figure, if there is one
-    var fig = $("#plot-" + pk + ' figure');
-    if (fig.length) {
-        fig.remove();
-    }
-    $("#plot-" + pk).append("<figure id='figure-" + pk + "'></figure>");
-    var width = $('#figure-' + pk).width();
-    var data = [];
-    var xlabel = entry.find('.x-axis').val() || null;
-    var y1label = entry.find('.y1-axis').val();
-    var y2label = entry.find('.y2-axis').val();
-    var xindex = info['headers'].indexOf(xlabel);
-    var y1index = info['headers'].indexOf(y1label);
-    var y2index = y2label && info['headers'].indexOf(y2label) || false;
-    var xscale = 'linear';
-    var interpolation = 'linear';
-    var binning = 50;
-    var timeformat =  null;
+    // remove the existing figure, if there is one
+    const plotContainer = $("#plot-" + pk);
+    plotContainer.find('figure').remove();
+    plotContainer.append('<figure id="figure-' + pk + '"></figure>');
 
-    //check if this should be a scatter plot or a bar graph
-    var barchart = true;
-    $.each(info['data'][xindex], function (i, val) {
-        if (parseFloat(val)) {
-            barchart = false;
-        }
-    });
+    const figureEl = $('#figure-' + pk);
+    const width = figureEl.width() || 600;
+    const data = [];
+    const xlabel = entry.find('.x-axis').val() || null;
+    const y1label = entry.find('.y1-axis').val();
+    const y2label = entry.find('.y2-axis').val();
+    const xindex = info['headers'].indexOf(xlabel);
+    const y1index = info['headers'].indexOf(y1label);
+    const y2index = y2label ? info['headers'].indexOf(y2label) : false;
+    const xscale = 'linear';
+    const interpolation = 'linear';
+    const binning = 50;
+    const timeformat = null;
 
-    if (barchart) {
+    // check if this should be a scatter plot or a bar graph
+    let barchart = true;
+    if (info['data'] && info['data'][xindex]) {
         $.each(info['data'][xindex], function (i, val) {
-            var point = {};
-            var addPoint = false;
-            if (parseFloat(info['data'][y1index][i])) {
-                point[xlabel] = val;
-                point[y1label] = parseFloat(info['data'][y1index][i]);
-                addPoint = true;
-            }
-            if (y2label && parseFloat(info['data'][y2index][i])) {
-                point[y2label] = parseFloat(info['data'][y2index][i]);
-            }
-            if (addPoint) {
-                data.push(point);
+            if (parseFloat(val)) {
+                barchart = false;
             }
         });
+    }
 
-        //Draw Stack Chart
-        var margin = { top: 20, right: 20, bottom: 50, left: 40 };
+    if (barchart) {
+        if (info['data'] && info['data'][xindex]) {
+            $.each(info['data'][xindex], function (i, val) {
+                const point = {};
+                let addPoint = false;
+                if (parseFloat(info['data'][y1index][i])) {
+                    point[xlabel] = val;
+                    point[y1label] = parseFloat(info['data'][y1index][i]);
+                    addPoint = true;
+                }
+                if (y2label && y2index !== false && parseFloat(info['data'][y2index][i])) {
+                    point[y2label] = parseFloat(info['data'][y2index][i]);
+                }
+                if (addPoint) {
+                    data.push(point);
+                }
+            });
+        }
 
-        var x = d3.scaleBand().range([0, width]).padding(0.1);
-        var y = d3.scaleLinear().range([width/2, 0]);
-        var colors = d3.scaleOrdinal(["#883A6A", "#C27844", "#551863", "#CBEFB6", "#5BC0DE"]);
+        // Draw Stack Chart
+        const margin = { top: 20, right: 20, bottom: 50, left: 40 };
+        const x = d3.scaleBand().range([0, width]).padding(0.1);
+        const y = d3.scaleLinear().range([width / 2, 0]);
+        const colors = d3.scaleOrdinal(["#883A6A", "#C27844", "#551863", "#CBEFB6", "#5BC0DE"]);
 
-        var canvas = d3.select('#figure-' + pk).append("svg").attr('id', 'plot-' + pk)
+        const canvas = d3.select('#figure-' + pk).append("svg").attr('id', 'plot-' + pk)
             .attr("width", width + margin.left + margin.right)
-            .attr("height", width/2 + margin.top + margin.bottom)
+            .attr("height", width / 2 + margin.top + margin.bottom)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        drawStackChart(data, xlabel, canvas, colors, x, y, width/2);
+        drawStackChart(data, xlabel, canvas, colors, x, y, width / 2);
     } else {
-        if (y1label) {
-            var x = [], y = [];
+        if (y1label && info['data'] && info['data'][xindex] && info['data'][y1index]) {
+            const x = [];
+            const y = [];
             $.each(info['data'][xindex], function (i, val) {
                 if (parseFloat(val) && parseFloat(info['data'][y1index][i])) {
                     x.push(parseFloat(val));
@@ -2713,18 +2713,19 @@ function plotData(element) {
             });
             data.push({'label': y1label, 'x': x, 'y1': y});
         }
-        if (y2label) {
-            var x = [], y = [];
+        if (y2label && y2index !== false && info['data'] && info['data'][xindex] && info['data'][y2index]) {
+            const x = [];
+            const y = [];
             $.each(info['data'][xindex], function (i, val) {
                 if (parseFloat(val) && parseFloat(info['data'][y2index][i])) {
                     x.push(parseFloat(val));
                     y.push(parseFloat(info['data'][y2index][i]));
                 }
             });
-            data.push({'label': y1label, 'x': x, 'y2': y});
+            data.push({'label': y2label, 'x': x, 'y2': y});
         }
 
-        var xy_chart = draw_xy_chart()
+        const xy_chart = draw_xy_chart()
             .width(width)
             .height(width / 2)
             .xlabel(xlabel)
@@ -2735,8 +2736,62 @@ function plotData(element) {
             .timeformat(timeformat)
             .interpolation(interpolation)
             .scatter('scatter');
-        var svg = d3.select('#figure-' + pk).append("svg").attr('id', 'plot-' + pk)
+        d3.select('#figure-' + pk).append("svg").attr('id', 'plot-' + pk)
             .datum(data)
             .call(xy_chart);
     }
 }
+
+// Window-level exports for template and global access
+window.doSearch = doSearch;
+window.showEditor = showEditor;
+window.closeEditor = closeEditor;
+window.submitEntry = submitEntry;
+window.deleteEntry = deleteEntry;
+window.prepare_editor = prepare_editor;
+window.addComment = addComment;
+window.addHighlight = addHighlight;
+window.delHighlight = delHighlight;
+window.delComment = delComment;
+window.cancelComment = cancelComment;
+window.submitComment = submitComment;
+window.editTags = editTags;
+window.cancelTags = cancelTags;
+window.submitTags = submitTags;
+window.markComment = markComment;
+window.unmarkComment = unmarkComment;
+window.loadPage = loadPage;
+window.scrollIndex = scrollIndex;
+window.resizeIndex = resizeIndex;
+window.initEntries = initEntries;
+window.plotData = plotData;
+window.set_sketch_mode = set_sketch_mode;
+window.draw_xy_chart = draw_xy_chart;
+window.drawStackChart = drawStackChart;
+
+// Entry creator and editor aliases (both lowercase and capitalized)
+const entryCreators = {
+    text: create_text_entry,
+    sketch: create_sketch_entry,
+    image: create_image_entry,
+    file: create_file_entry,
+    video: create_video_entry,
+    data: create_data_entry
+};
+
+const entryEditors = {
+    text: edit_text_entry,
+    sketch: edit_sketch_entry,
+    image: edit_image_entry,
+    file: edit_file_entry,
+    video: edit_video_entry,
+    data: edit_data_entry
+};
+
+Object.keys(entryCreators).forEach(function(kind) {
+    const capitalized = kind.charAt(0).toUpperCase() + kind.slice(1);
+    window['create_' + kind + '_entry'] = entryCreators[kind];
+    window['create_' + capitalized + '_entry'] = entryCreators[kind];
+    window['edit_' + kind + '_entry'] = entryEditors[kind];
+    window['edit_' + capitalized + '_entry'] = entryEditors[kind];
+});

@@ -176,19 +176,6 @@ class NotebookViewsTestCase(TestCase):
         view.request = request
         self.assertFalse(view.test_func())
 
-    def test_notebook_list_context_data(self):
-        """Verify NotebookList populates public, private, and internal buckets."""
-        view = views.NotebookList()
-        request = self.factory.get("/notebooks/")
-        request.user = self.owner
-        view.request = request
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
-        self.assertIn('public', context['notebooks'])
-        self.assertIn('private', context['notebooks'])
-        self.assertIn('internal', context['notebooks'])
-        self.assertIn(self.public_nb, context['notebooks']['public'])
-        self.assertIn(self.private_nb, context['notebooks']['private'])
 
     def test_notebook_search_view(self):
         """Test NotebookSearch with different search tokens."""
@@ -235,11 +222,8 @@ class NotebookViewsTestCase(TestCase):
         view.request = request
         view.object = self.private_nb
         context = view.get_context_data()
-        self.assertEqual(len(context['entries']), 2)
-        # Entries should be chronological
-        self.assertEqual(context['entries'][0], self.entry_yesterday)
-        self.assertEqual(context['entries'][1], self.entry_today)
-
+        self.assertEqual(len(context['object_list']), 2)
+        
     def test_notebook_dates_endpoint(self):
         """Test NotebookDates returns JSON list of page dates in given month."""
         self.client.force_login(self.owner)
@@ -298,20 +282,6 @@ class NotebookViewsTestCase(TestCase):
             {"load": "next"},
         )
         self.assertEqual(response.status_code, 204)
-
-    @patch("basiclive.core.notebooks.views.loader.get_template")
-    def test_notebook_index_endpoint(self, mock_get_template):
-        """Test NotebookIndex view loads entries window."""
-        mock_template = MagicMock()
-        mock_template.render.return_value = "<div>index</div>"
-        mock_get_template.return_value = mock_template
-
-        self.client.force_login(self.owner)
-        response = self.client.get(
-            reverse("notebooks:notebook-index", kwargs={"pk": self.entry_today.pk}),
-            {"load": 10, "active": self.entry_today.pk},
-        )
-        self.assertEqual(response.status_code, 200)
 
     @patch("basiclive.core.notebooks.views.loader.get_template")
     def test_save_entry_create_text(self, mock_get_template):

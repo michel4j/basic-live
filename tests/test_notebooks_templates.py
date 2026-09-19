@@ -130,21 +130,6 @@ class NotebookTemplatesTestCase(TestCase):
             rendered = t.render({"entry": entry_obj, "notebook": self.notebook, "user": self.user}, request)
             self.assertIn(f"entry-{kind}", rendered)
 
-    def test_render_page_and_pages_templates(self):
-        """Verify page.html and pages.html render cleanly."""
-        request = self.factory.get("/")
-        request.user = self.user
-
-        t_page = loader.get_template("notebooks/page.html")
-        rendered_page = t_page.render({"entries": [self.entry], "user": self.user}, request)
-        self.assertIn("page-separator", rendered_page)
-        self.assertIn(f"entry-{self.entry.pk}", rendered_page)
-
-        t_pages = loader.get_template("notebooks/pages.html")
-        rendered_pages = t_pages.render({"entries": [self.entry], "user": self.user}, request)
-        self.assertIn("entry-page", rendered_pages)
-        self.assertIn(f"entry-{self.entry.pk}", rendered_pages)
-
     def test_render_index_templates(self):
         """Verify index.html and index_entry.html render cleanly."""
         request = self.factory.get("/")

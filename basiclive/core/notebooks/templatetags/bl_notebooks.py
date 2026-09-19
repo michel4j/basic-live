@@ -18,7 +18,7 @@ def get_entry_types(context):
 
 @register.simple_tag(takes_context=True)
 def show_entry(context, entry):
-    print(entry)
+    # print(entry)
     entry_template = template.loader.get_template(f'notebooks/entries/{entry.kind.name.lower()}.html')
     ctx = {}
     ctx.update(context.flatten())
