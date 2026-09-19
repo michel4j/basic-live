@@ -12,12 +12,12 @@
 {% endblock %}
 
 {% block page-title %}
-    <h3>
-        <span class="text-thin">Container |</span>
-        <span class="text-condensed">
-            <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
-        </span>
-    </h3>
+    <span class="text-thin">Container |</span>
+    <span class="text-condensed">
+        <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
+    </span>
+{% endblock %}
+{% block page-subtitle %}
     <span class="text-muted">
         {% if not object.is_editable %}<i class="text-muted ti ti-lock"></i>{% endif %}
         {{ object.identity }} |
@@ -32,7 +32,6 @@
         {% endif %}
     </span>
 {% endblock %}
-
 {% block page-tools %}
     {% if object.is_editable %}
     <a href="#!" data-modal-url="{% url 'edit-container-samples' object.pk %}"

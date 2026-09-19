@@ -1,16 +1,5 @@
 {% load bl_notebooks %}
+
 {% for entry in entries %}
-    {% ifchanged entry.created|date:"Y-m-d" %}
-    <li class="page-separator" data-date="{{ entry.created|date:'Y-m-d' }}" id="separator-{{ entry.created|date:'Y-m-d' }}">
-        <div class="date px-4 text-center">{{ entry.created|date:"M j, Y"|upper }}</div>
-    </li>
-    {% endifchanged %}
     {% show_entry entry %}
-{% empty %}
-    {% if entry %}
-    <li class="page-separator" data-date="{{ entry.created|date:'Y-m-d' }}" id="separator-{{ entry.created|date:'Y-m-d' }}">
-        <div class="date px-4 text-center">{{ entry.created|date:"M j, Y"|upper }}</div>
-    </li>
-    {% show_entry entry %}
-    {% endif %}
 {% endfor %}

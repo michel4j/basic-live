@@ -7,13 +7,12 @@ import django.utils.timezone
 from django.conf import settings
 from django.db import migrations, models
 
-import basiclive.core.notebooks.fields
 import basiclive.core.notebooks.models
 
 
 def seed_default_data(apps, schema_editor):
     EntryType = apps.get_model('notebooks', 'EntryType')
-    for name in ['text', 'image', 'video', 'sketch', 'data', 'file']:
+    for name in ['Text', 'Image', 'Video', 'Sketch', 'Data', 'File']:
         EntryType.objects.get_or_create(name=name)
 
 
@@ -57,7 +56,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(db_index=True, default=django.utils.timezone.now, verbose_name='created')),
                 ('modified', models.DateTimeField(auto_now=True, verbose_name='modified')),
-                ('tags', basiclive.core.notebooks.fields.StringListField(blank=True, verbose_name='tags')),
+                ('tags',  models.JSONField(default=list, verbose_name='Tags')),
                 ('text', models.TextField(blank=True, null=True)),
                 ('file', models.FileField(blank=True, null=True, upload_to=basiclive.core.notebooks.models.entry_storage)),
                 ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='entries', to=settings.AUTH_USER_MODEL)),
@@ -76,7 +75,7 @@ class Migration(migrations.Migration):
                 ('kind', models.CharField(choices=[('comment', 'Comment'), ('highlight', 'Highlight')], default='highlight', max_length=15)),
                 ('created', models.DateTimeField(default=django.utils.timezone.now, verbose_name='created')),
                 ('node_index', models.IntegerField(default=0)),
-                ('selections', basiclive.core.notebooks.fields.StringListField(blank=True)),
+                ('selections', models.JSONField(default=list, verbose_name='Selections')),
                 ('text', models.TextField(blank=True)),
                 ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='annotations', to=settings.AUTH_USER_MODEL)),
                 ('entry', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='annotations', to='notebooks.entry')),

@@ -1,7 +1,11 @@
 {% load bl_notebooks %}
 
-<li class="list-item notebook-entry entry-{{ entry.kind.name }}" data-index-url="{% url 'notebooks:notebook-index' entry.pk %}"
-    data-page-url="{% url 'notebooks:notebook-page' pk=entry.pk %}" data-entry-pk="{{ entry.pk }}" data-entry-date="{{ entry.created|date:'Y-m-d' }}" id="entry-{{ entry.pk }}">
+<li class="list-item notebook-entry entry-{{ entry.kind.name }}"
+    data-page-url="{% url 'notebooks:notebook-page' pk=entry.pk %}"
+    data-entry-pk="{{ entry.pk }}"
+    data-entry-date="{{ entry.created|date:'Y-m-d' }}"
+    id="entry-{{ entry.pk }}"
+>
     {% block entry_content %}{% endblock %}
     <div class="tag-cloud w-100 text-end">
         <ul class="list-unstyled mb-0">

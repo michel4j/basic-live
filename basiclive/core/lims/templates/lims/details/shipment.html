@@ -15,12 +15,12 @@
 {% endblock %}
 
 {% block page-title %}
-    <h3>
-        <span class="text-thin">Shipment |</span>
-        <span class="text-condensed">
-            <span class="text-muted">{% if user.is_superuser %}{{ shipment.project }} | {% endif %}</span><strong>{{ shipment.name }}</strong>
-        </span>
-    </h3>
+    <span class="text-thin">Shipment |</span>
+    <span class="text-condensed">
+        <span class="text-muted">{% if user.is_superuser %}{{ shipment.project }} | {% endif %}</span><strong>{{ shipment.name }}</strong>
+    </span>
+{% endblock %}
+{% block page-subtitle %}
     <span class="text-muted">
         {% if not shipment.is_editable %}<i class="text-muted ti ti-lock"></i>{% endif %}
         {{ shipment.identity }} |

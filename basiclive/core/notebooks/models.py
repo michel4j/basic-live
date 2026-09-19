@@ -8,7 +8,6 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
-from .fields import StringListField
 from .utils import timeish
 
 
@@ -104,7 +103,7 @@ class Entry(models.Model):
     modified = models.DateTimeField(_('modified'), auto_now=True)
     notebook = models.ForeignKey(Notebook, related_name='entries', on_delete=models.CASCADE)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='entries')
-    tags = StringListField(_('tags'), blank=True)
+    tags = models.JSONField(_('Tags'), default=list)
     kind = models.ForeignKey(EntryType, on_delete=models.CASCADE)
     text = models.TextField(blank=True, null=True)
     file = models.FileField(upload_to=entry_storage, blank=True, null=True)
@@ -158,7 +157,7 @@ class Annotation(models.Model):
     created = models.DateTimeField(_('created'), default=timezone.now)
     entry = models.ForeignKey(Entry, related_name='annotations', on_delete=models.CASCADE)
     node_index = models.IntegerField(default=0)
-    selections = StringListField(blank=True)
+    selections = models.JSONField(_('Selections'), default=list)
     text = models.TextField(blank=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='annotations')
 

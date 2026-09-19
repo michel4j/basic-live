@@ -1,4 +1,5 @@
 from django.urls import path
+
 from . import views
 
 app_name = "notebooks"
@@ -16,5 +17,4 @@ urlpatterns = [
     path('<uuid:pk>/tag/', views.TagEntry.as_view(), name='tag-notebook'),
     path('page/<int:pk>/', views.NotebookPage.as_view(), name='notebook-page'),
     path('entry/<int:pk>/', views.EntryData.as_view(), name='entry-data'),
-    path('index/<int:pk>/', views.NotebookIndex.as_view(), name='notebook-index'),
 ]

@@ -1,19 +1,13 @@
 import abc
 import calendar
 import datetime
-from datetime import date, timedelta
-from enum import IntEnum
+from datetime import timedelta
 from typing import Literal
+
 from django.contrib import admin
-from django.db.models import Min, ExpressionWrapper, F, fields
+from django.db.models import Min, ExpressionWrapper, F, fields, Func
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
-
-class DateLimit(IntEnum):
-    LEFT = -1
-    RIGHT = 1
-    BOTH = 0
 
 
 class FilterFactory(abc.ABC):
@@ -218,6 +212,34 @@ class NewEntryFilterFactory(FilterFactory):
                 return queryset.filter(**flt)
 
         return NewEntryFilter
+
+
+class TagFilterFactory(FilterFactory):
+    @classmethod
+    def new(cls, field_name='tags'):
+        class TagFilter(admin.SimpleListFilter):
+            parameter_name = f'{field_name}'
+            title = parameter_name.replace('_', ' ').title()
+
+            def __init__(self, request, new_params, model, *args, **kwargs):
+                self.model = model
+                super().__init__(request, new_params, model, *args, **kwargs)
+
+            def lookups(self, request, model_admin):
+                tag_list = self.model.objects.annotate(
+                    unpacked_tags=Func('tags', function='jsonb_array_elements_text')
+                ).values_list('unpacked_tags', flat=True).order_by('unpacked_tags').distinct()
+                return ((tag, tag) for tag in tag_list if tag)
+
+            def queryset(self, request, queryset):
+                flt = {} if not self.value() else {f'{field_name}__contains': [self.value()]}
+                return queryset.filter(**flt)
+
+        return TagFilter
+
+
+def TagFilter(*args, **kwargs):
+    return TagFilterFactory.new(*args, **kwargs)
 
 
 def DateLimitFilter(*args, **kwargs):

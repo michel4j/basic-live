@@ -1,8 +1,8 @@
 import functools
-import math
 import operator
 import re
 
+from crisp_modals.views import ModalCreateView, ModalUpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
@@ -19,11 +19,13 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, ListView, View
-from crisp_modals.views import ModalCreateView, ModalUpdateView
+from itemlist.views import ItemListView
 
 from .forms import NotebookForm
-from .models import Annotation, Entry, EntryType, Notebook
+from .models import Entry, EntryType, Notebook
 from .utils import clean_json, fuzzy_time
+from ...utils.filters import TagFilter
+from ...utils.mixins import AdminRequiredMixin
 
 
 class NotebookAccessMixin:
@@ -71,11 +73,7 @@ class NotebookList(NotebookAccessMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['notebooks'] = {
-            'public': self.object_list.filter(access=self.model.ACCESS.public),
-            'private': self.object_list.filter(access=self.model.ACCESS.private),
-            'internal': self.object_list.filter(access=self.model.ACCESS.internal),
-        }
+        context['notebooks'] = self.object_list
         return context
 
 
@@ -117,23 +115,38 @@ class NotebookSearch(NotebookAccessMixin, ListView):
         return context
 
 
-class NotebookDetail(NotebookAccessMixin, DetailView):
-    model = Notebook
+class NotebookDetail(AdminRequiredMixin, ItemListView):
+    model = Entry
+    paginate_by = 5
+    list_filters = ['kind', 'author', TagFilter('tags')]
+    search_fields = ['author__username', 'tags', 'text', 'annotations__text', 'annotations__author__username']
+    list_ordering = ['-created']
     template_name = "notebooks/notebook.html"
+
+    def get_queryset(self, **kwargs):
+        qs = super().get_queryset(**kwargs)
+        flt = (
+            Q(notebook__pk=self.kwargs.get('pk')) &
+            (Q(notebook__members=self.request.user.pk) | Q(notebook__owner=self.request.user))
+        )
+        if self.kwargs.get('date'):
+            flt &= Q(created__date=self.kwargs.get('date'))
+
+        return qs.filter(flt).distinct()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        date = self.request.GET.get('date')
-        entries_qs = self.object.entries.all()
-        if entries_qs.exists():
-            if date:
-                entries = list(entries_qs.filter(created__date__gte=date).order_by('created')[:20])
-            else:
-                entries = list(entries_qs.order_by('-created')[:20])
-                entries.reverse()
-            context['entries'] = entries
-        else:
-            context['entries'] = []
+        try:
+            notebook = Notebook.objects.get(pk=self.kwargs.get('pk'))
+        except Notebook.DoesNotExist:
+            raise Http404("Notebook does not exist")
+
+        if not notebook.can_view(self.request.user):
+            raise Http404("Notebook does not exist")
+
+        context['notebook'] = notebook
+        context['can_edit'] = notebook.can_edit(self.request.user)
+        print(context)
         return context
 
 
@@ -198,49 +211,6 @@ class NotebookPage(View):
 
             t = loader.get_template(self.template_name)
             return HttpResponse(t.render({"entries": entries, "notebook": book}, request))
-        else:
-            return HttpResponse(status=204)
-
-
-class NotebookIndex(View):
-    model = Entry
-    template_name = "notebooks/index.html"
-
-    def get(self, request, *args, **kwargs):
-        num_load_val = self.request.GET.get('load')
-        try:
-            num_load = int(num_load_val) if num_load_val else 10
-        except (ValueError, TypeError):
-            num_load = 10
-        active = self.request.GET.get('active')
-        try:
-            obj = Entry.objects.get(pk=self.kwargs.get('pk'))
-        except Entry.DoesNotExist:
-            return HttpResponseNotFound("Entry does not exist")
-
-        if obj.notebook.can_view(self.request.user):
-            entries = list(Entry.objects.filter(notebook=obj.notebook))
-            load = math.ceil(num_load / 2)
-            try:
-                index = entries.index(obj)
-            except ValueError:
-                index = 0
-            start_idx = max(0, index - load)
-            end_idx = index + load
-            loaded = entries[start_idx:end_idx]
-            if len(loaded) < num_load:
-                if index < load:
-                    loaded = entries[:num_load]
-                else:
-                    loaded = entries[-num_load:] if len(entries) >= num_load else entries
-            t = loader.get_template(self.template_name)
-            ctx = {"entries": loaded}
-            if active:
-                try:
-                    ctx["active"] = int(active)
-                except (ValueError, TypeError):
-                    pass
-            return HttpResponse(t.render(ctx, request))
         else:
             return HttpResponse(status=204)
 

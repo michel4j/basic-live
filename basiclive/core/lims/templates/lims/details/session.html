@@ -6,12 +6,12 @@
 {% load bl_tags %}
 
 {% block page-title %}
-    <h3>
-        <span class="text-thin">Session |</span>
-        <span class="text-condensed">
-            <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
-        </span>
-    </h3>
+    <span class="text-thin">Session |</span>
+    <span class="text-condensed">
+        <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
+    </span>
+{% endblock %}
+{% block page-subtitle %}
     <span class="text-muted">
        {{ object.identity }} |
        Started {{ object.created|naturalday }}

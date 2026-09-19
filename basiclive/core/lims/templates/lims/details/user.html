@@ -11,9 +11,9 @@
 {% endblock %}
 
 {% block page-title %}
-    <h3 class="text-condensed">
-        <span class="text-muted">{{ object.name|upper }}</span> | <strong>{{ object.first_name }} {{ object.last_name }}</strong>
-    </h3>
+    <span class="text-thin">User |</span> <span class="text-muted">{{ object.name|upper }}</span> | <strong>{{ object.first_name }} {{ object.last_name }}</strong>
+{% endblock %}
+{% block page-subtitle %}
     <span class="text-muted">
         Beamline User since {{ object.created|naturalday }}
     </span>

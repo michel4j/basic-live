@@ -50,11 +50,10 @@
     ]
   },
   "atrament": {
-    "url": "https://cdn.jsdelivr.net/npm/atrament@0.2.3/",
+    "url": "https://cdn.jsdelivr.net/npm/atrament@5.1.0/dist/cjs/",
     "js": [
       {
-        "path": "lib/atrament.js",
-        "sri": "sha512-hPeLsC/F2ynwG+2UBpQBOTFXs3mYTT9u+ykcdUVYkQcIijQY0yFDw1Q93LHNSS5tnvweDWChMPgdhYuzR0oGvg==",
+        "path": "index.min.js",
         "file": "atrament.min.js"
       }
     ]

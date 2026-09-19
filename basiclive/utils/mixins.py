@@ -1,9 +1,10 @@
+import warnings
 from urllib import parse
 
+from crisp_modals.views import AjaxFormMixin
 from django import http
-from django.contrib import admin
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import JsonResponse, HttpRequest
+from django.http import HttpRequest
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
@@ -45,10 +46,6 @@ class AuthenticationRequiredMixin(object):
             return super().dispatch(request, *args, **kwargs)
         else:
             return http.HttpResponseForbidden()
-
-
-import warnings
-from crisp_modals.views import AjaxFormMixin
 
 
 class AsyncFormMixin(AjaxFormMixin):

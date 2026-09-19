@@ -7,12 +7,12 @@
 {% load static %}
 
 {% block page-title %}
-    <h3>
-        <span class="text-thin">Request |</span>
-        <span class="text-condensed">
-            <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
-        </span>
-    </h3>
+    <span class="text-thin">Request |</span>
+    <span class="text-condensed">
+        <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
+    </span>
+{% endblock %}
+{% block page-subtitle %}
     <span class="text-muted">
         {% if not object.is_editable %}<i class="text-muted ti ti-lock"></i>{% endif %}
         {{ object.identity }} | {{ object.kind.name }}

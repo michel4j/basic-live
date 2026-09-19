@@ -1,51 +1,43 @@
 {% extends "lims/base.html" %}
 {% load static %}
 {% load bl_notebooks %}
+{% load bl_icons %}
+
 
 {% block extra_css %}
     <link href="{% static 'notebooks/notebooks.min.css' %}" rel="stylesheet">
 {% endblock %}
 
+{% block page-pre-title %}List of{% endblock %}
 {% block page-title %}Notebooks{% endblock %}
 
 {% block page-tools %}
 {% if user.is_authenticated %}
-    <a class="btn btn-sm btn-primary" href="#!" data-modal-url="{% url 'notebooks:create-notebook' %}" title="Create Notebook">
-        <i class="ti ti-plus"></i> New Notebook
+    <a href="#!" data-modal-url="{% url 'notebooks:create-notebook' %}" title="Create Notebook">
+        {% show_icon icon="ti ti-plus ti-md" label="Notebook" %}
     </a>
 {% endif %}
 {% endblock %}
 
 {% block page-content %}
-    <div class="row">
-        <div class="col-12 py-3">
-        {% for notebook in notebooks.private %}
-            {% if forloop.first %}<h4 class="border-bottom pb-2">Private Notebooks</h4><ul class="list-unstyled mb-4">{% endif %}
-            <li class="py-1">
-                <i class="ti ti-book text-muted"></i>&nbsp;
-                <a href="{% url 'notebooks:notebook-detail' pk=notebook.pk %}"><strong>{{ notebook.title }}</strong></a> &ndash;
-                {{ notebook.description }}
-            </li>
-            {% if forloop.last %}</ul>{% endif %}
-        {% endfor %}
-        {% for notebook in notebooks.internal %}
-            {% if forloop.first %}<h4 class="border-bottom pb-2">Internal Notebooks</h4><ul class="list-unstyled mb-4">{% endif %}
-            <li class="py-1">
-                <i class="ti ti-book text-muted"></i>&nbsp;
-                <a href="{% url 'notebooks:notebook-detail' pk=notebook.pk %}"><strong>{{ notebook.title }}</strong></a> &ndash;
-                {{ notebook.description }}
-            </li>
-            {% if forloop.last %}</ul>{% endif %}
-        {% endfor %}
-        {% for notebook in notebooks.public %}
-            {% if forloop.first %}<h4 class="border-bottom pb-2">Public Notebooks</h4><ul class="list-unstyled mb-4">{% endif %}
-            <li class="py-1">
-                <i class="ti ti-book text-muted"></i>&nbsp;
-                <a href="{% url 'notebooks:notebook-detail' pk=notebook.pk %}"><strong>{{ notebook.title }}</strong></a> &ndash;
-                {{ notebook.description }}
-            </li>
-            {% if forloop.last %}</ul>{% endif %}
-        {% endfor %}
+    <div class="row my-4 row-cols-1 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-4">
+        {% for notebook in notebooks %}
+        <div class="col">
+            <a class="card notebook-card bg-cat-{{ forloop.counter0 }} h-100" href="{% url 'notebooks:notebook-detail' pk=notebook.pk %}">
+              <img src="{% static 'notebooks/notebook.jpeg' %}" class="card-img-top" alt="{{ notebook.title }}">
+              <div class="card-body">
+               <h5 class="card-title">{{ notebook.title }}</h5>
+                <p class="card-text">{{ notebook.description }}</p>
+
+
+              </div>
+              <div class="card-footer">
+                <strong>{{ notebook.entries.count }}</strong> Entries
+                <hr/>
+                <small class="text-body-secondary">Created,  {{ notebook.created | timeish }}</small>
+              </div>
+            </a>
         </div>
+        {% endfor %}
     </div>
 {% endblock %}

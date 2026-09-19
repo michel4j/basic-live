@@ -11,14 +11,13 @@
 {% endblock %}
 
 {% block page-title %}
-    <h3 class="text-condensed">
-        <strong class="text-muted">{{ object.username|upper }}</strong> | Project Profile
-    </h3>
+    <strong class="text-muted">{{ object.username|upper }}</strong> | Project Profile
+{% endblock %}
+{% block page-subtitle %}
     <span class="text-muted">
         Your contact information
     </span>
 {% endblock %}
-
 
 {% block page-tools %}
     <a  href="{% url 'project-statistics' username=object.username %}">

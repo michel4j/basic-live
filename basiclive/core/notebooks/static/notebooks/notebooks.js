@@ -273,9 +273,13 @@ function addDropzone(placeholder, kind) {
 
 function addSketchZone(placeholder) {
     placeholder.append('<canvas id="sketcher">');
-    var width = $('#notebook-content').width()-2;
-    var height = width * 4.5 / 9 - 2;
-    var sketcher = atrament('#sketcher', width, height);
+    const width = $('#notebook-content').width()-2;
+    const height = width * 4.5 / 9 - 2;
+    const canvas = document.querySelector('#sketcher');
+    const sketcher = new Atrament(canvas, {
+        width: width,
+        height: height,
+    });
     MyelnNotebooks.sketcher = sketcher;
 
     placeholder.prepend('<div class="editor-toolbar sketcher-toolbar"></div>');
