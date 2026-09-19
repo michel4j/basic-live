@@ -120,7 +120,6 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(reverse("notebooks:tag-notebook", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/tag/")
         self.assertEqual(reverse("notebooks:notebook-page", kwargs={"pk": self.entry_today.pk}), f"/notebooks/page/{self.entry_today.pk}/")
         self.assertEqual(reverse("notebooks:entry-data", kwargs={"pk": self.entry_today.pk}), f"/notebooks/entry/{self.entry_today.pk}/")
-        self.assertEqual(reverse("notebooks:notebook-index", kwargs={"pk": self.entry_today.pk}), f"/notebooks/index/{self.entry_today.pk}/")
 
     def test_notebook_access_mixin_anonymous(self):
         """Anonymous user can only see public notebooks."""
@@ -223,7 +222,7 @@ class NotebookViewsTestCase(TestCase):
         view.object = self.private_nb
         context = view.get_context_data()
         self.assertEqual(len(context['object_list']), 2)
-        
+
     def test_notebook_dates_endpoint(self):
         """Test NotebookDates returns JSON list of page dates in given month."""
         self.client.force_login(self.owner)

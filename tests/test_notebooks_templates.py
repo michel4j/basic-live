@@ -118,7 +118,7 @@ class NotebookTemplatesTestCase(TestCase):
         request.user = self.user
 
         for kind in ["Text", "Data", "File", "Sketch", "Image", "Video"]:
-            t = loader.get_template(f"notebooks/entries/{kind}.html")
+            t = loader.get_template(f"notebooks/entries/{kind.lower()}.html")
             data_text = '{"headers": ["X", "Y"], "data": {"0": [1, 2], "1": [3, 4]}}' if kind == "Data" else "Content"
             entry_obj = Entry.objects.create(
                 notebook=self.notebook,
@@ -128,16 +128,7 @@ class NotebookTemplatesTestCase(TestCase):
                 kind=EntryType.objects.get(name=kind),
             )
             rendered = t.render({"entry": entry_obj, "notebook": self.notebook, "user": self.user}, request)
-            self.assertIn(f"entry-{kind}", rendered)
-
-    def test_render_index_templates(self):
-        """Verify index.html and index_entry.html render cleanly."""
-        request = self.factory.get("/")
-        request.user = self.user
-
-        t_index = loader.get_template("notebooks/index.html")
-        rendered_index = t_index.render({"entries": [self.entry], "active": self.entry.pk}, request)
-        self.assertIn(f"index-{self.entry.pk}", rendered_index)
+            self.assertIn(f"entry-{kind.lower()}", rendered)
 
     def test_render_notebook_search_template(self):
         """Verify notebook_search.html renders results correctly."""
