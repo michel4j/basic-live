@@ -41,12 +41,12 @@ class NotebookTemplatesTestCase(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.user = User.objects.create_user(username="testuser", password="password123", name="Test User")
-        self.text_type, _ = EntryType.objects.get_or_create(name="text")
-        self.data_type, _ = EntryType.objects.get_or_create(name="data")
-        self.file_type, _ = EntryType.objects.get_or_create(name="file")
-        self.sketch_type, _ = EntryType.objects.get_or_create(name="sketch")
-        self.image_type, _ = EntryType.objects.get_or_create(name="image")
-        self.video_type, _ = EntryType.objects.get_or_create(name="video")
+        self.text_type, _ = EntryType.objects.get_or_create(name="Text")
+        self.data_type, _ = EntryType.objects.get_or_create(name="Data")
+        self.file_type, _ = EntryType.objects.get_or_create(name="File")
+        self.sketch_type, _ = EntryType.objects.get_or_create(name="Sketch")
+        self.image_type, _ = EntryType.objects.get_or_create(name="Image")
+        self.video_type, _ = EntryType.objects.get_or_create(name="Video")
 
         self.notebook = Notebook.objects.create(
             name="test-nb",
@@ -117,9 +117,9 @@ class NotebookTemplatesTestCase(TestCase):
         request = self.factory.get("/")
         request.user = self.user
 
-        for kind in ["text", "data", "file", "sketch", "image", "video"]:
+        for kind in ["Text", "Data", "File", "Sketch", "Image", "Video"]:
             t = loader.get_template(f"notebooks/entries/{kind}.html")
-            data_text = '{"headers": ["X", "Y"], "data": {"0": [1, 2], "1": [3, 4]}}' if kind == "data" else "Content"
+            data_text = '{"headers": ["X", "Y"], "data": {"0": [1, 2], "1": [3, 4]}}' if kind == "Data" else "Content"
             entry_obj = Entry.objects.create(
                 notebook=self.notebook,
                 created=timezone.now(),

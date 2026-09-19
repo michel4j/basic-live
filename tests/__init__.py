@@ -16,6 +16,7 @@ def setup_django():
                 "crispy_forms",
                 "crispy_bootstrap5",
                 "crisp_modals",
+                "itemlist",
                 "basiclive.core.lims",
                 "basiclive.core.schedule",
                 "basiclive.core.acl",
