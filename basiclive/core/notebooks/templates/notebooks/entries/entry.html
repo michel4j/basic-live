@@ -17,7 +17,7 @@
     <div class="navbar p-0 text-muted d-flex justify-content-between">
         {% if entry.is_editable and user == entry.author %}
         <span class="entry-tools col-sm-4 px-0">
-            <i class="mi mi-pencil mi-lg mi-fw edit-button" data-modal-url="{% url 'notebooks:entry-data' pk=entry.pk %}" title="Edit" onclick="edit_{{ entry.kind.name }}_entry({{ entry.pk }});"></i>
+            <i class="mi mi-pencil mi-lg mi-fw edit-button" data-modal-url="{% url 'notebooks:edit-entry' book=entry.notebook.pk pk=entry.pk %}" title="Edit"></i>
             <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-url="{% url 'notebooks:tag-notebook' pk=entry.notebook.pk %}" title="Tags" onclick="editTags(this);" data-tags="{{ entry.tag_string }}"></i>
             <i class="mi mi-trash mi-lg mi-fw delete-button"
                title="Delete" data-modal-url="{% url 'notebooks:delete-entry' book=entry.notebook.pk pk=entry.pk %}">

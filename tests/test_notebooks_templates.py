@@ -129,6 +129,8 @@ class NotebookTemplatesTestCase(TestCase):
             )
             rendered = t.render({"entry": entry_obj, "notebook": self.notebook, "user": self.user}, request)
             self.assertIn(f"entry-{kind}", rendered)
+            self.assertIn(f"/notebooks/{self.notebook.pk}/entry/{entry_obj.pk}/edit/", rendered)
+            self.assertNotIn("onclick=\"edit_", rendered)
 
     def test_render_notebook_list_template(self):
         """Verify notebook_list.html renders cleanly."""
@@ -157,6 +159,10 @@ class NotebookTemplatesTestCase(TestCase):
         self.assertIn(self.notebook.title, rendered)
         self.assertIn("notebook-content", rendered)
         self.assertIn("entry-selector", rendered)
+        self.assertIn(f"/notebooks/{self.notebook.pk}/entry/new/text/", rendered)
+        self.assertNotIn('id="entry-editor"', rendered)
+        self.assertNotIn('id="editor-body"', rendered)
+        self.assertNotIn("submitEntry", rendered)
         self.assertIn("col-lg-9", rendered)
         self.assertIn("col-lg-3", rendered)
         self.assertIn("notebook-sidebar", rendered)

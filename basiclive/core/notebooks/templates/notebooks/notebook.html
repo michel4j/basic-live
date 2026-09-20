@@ -33,6 +33,7 @@
             <a href="#!"
                title="Add {{ entry_type.name|title }} Entry"
                class="entry-selector-btn"
+               data-modal-url="{% url 'notebooks:create-entry' book=notebook.pk kind=entry_type.name.lower %}"
                data-entry-kind="{{ entry_type.name.lower }}"
             >
                 {% show_icon icon=entry_type.icon label=entry_type.name|title %}
@@ -49,19 +50,6 @@
     </div>
     <div class="row position-relative">
         <div class="col-12 col-lg-9">
-            {% if notebook|is_editable_by:user %}
-            <div class="col-12 mb-3" style="display: none; position: relative;" id="entry-editor">
-                <div class="border rounded" id="editor-body" data-url="{% url 'notebooks:create-entry' pk=notebook.pk %}" data-notebook="{{ notebook.pk }}"></div>
-                <div class="submit-tools">
-                    <button type="button" title="Cancel" onclick="closeEditor();" class="btn btn-sm btn-light">
-                        <i class="mi mi-cross mi-fw"></i>
-                    </button>
-                    <button id="save-btn" type="button" title="Save" onclick="submitEntry();" class="btn btn-sm btn-success">
-                        <i class="mi mi-save mi-fw"></i>
-                    </button>
-                </div>
-            </div>
-            {% endif %}
             <div class="notebook-content" id="notebook-content" data-annotate-url="{% url 'notebooks:annotate-notebook' pk=notebook.id %}">
                 {% for entry in object_list %}
                     {% show_entry entry %}
@@ -127,13 +115,6 @@
 
     <script>
         $(document).ready(function(){
-            $('.entry-selector-btn').click(function(e){
-                e.preventDefault();
-                let kind = $(this).data('entry-kind');
-                if (kind) {
-                    createEntry(kind);
-                }
-            });
             $('.calendar-container').myelnCalendar({
                 'eventSource': "{% url 'notebooks:notebook-dates' pk=notebook.id %}",
                 'selectTarget': "{% url 'notebooks:notebook-detail' pk=notebook.id %}",
