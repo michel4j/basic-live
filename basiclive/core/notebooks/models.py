@@ -76,6 +76,10 @@ class EntryType(models.Model):
     def natural_key(self):
         return (self.name,)
 
+    def icon(self):
+        # Return the icon associated with this entry type
+        return f'ti-md entry-selector-{self.name.lower()}'
+
     def __str__(self):
         return self.name
 

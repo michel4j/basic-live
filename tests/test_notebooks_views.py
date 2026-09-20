@@ -117,7 +117,6 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(reverse("notebooks:notebook-dates", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/dates/")
         self.assertEqual(reverse("notebooks:annotate-notebook", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/annotate/")
         self.assertEqual(reverse("notebooks:tag-notebook", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/tag/")
-        self.assertEqual(reverse("notebooks:notebook-page", kwargs={"pk": self.entry_today.pk}), f"/notebooks/page/{self.entry_today.pk}/")
         self.assertEqual(reverse("notebooks:entry-data", kwargs={"pk": self.entry_today.pk}), f"/notebooks/entry/{self.entry_today.pk}/")
 
     def test_notebook_access_mixin_anonymous(self):
@@ -407,34 +406,6 @@ class NotebookViewsTestCase(TestCase):
             reverse("notebooks:entry-data", kwargs={"pk": self.entry_today.pk})
         )
         self.assertEqual(response.status_code, 403)
-
-    @patch("basiclive.core.notebooks.views.loader.get_template")
-    def test_notebook_page_endpoint(self, mock_get_template):
-        """Test NotebookPage pagination view."""
-        mock_template = MagicMock()
-        mock_template.render.return_value = "<div>page</div>"
-        mock_get_template.return_value = mock_template
-
-        self.client.force_login(self.owner)
-        # Load single entry anchor
-        response = self.client.get(
-            reverse("notebooks:notebook-page", kwargs={"pk": self.entry_today.pk})
-        )
-        self.assertEqual(response.status_code, 200)
-
-        # Load prev entries
-        response = self.client.get(
-            reverse("notebooks:notebook-page", kwargs={"pk": self.entry_today.pk}),
-            {"load": "prev"},
-        )
-        self.assertEqual(response.status_code, 200)
-
-        # Load non-existent next page should return 204
-        response = self.client.get(
-            reverse("notebooks:notebook-page", kwargs={"pk": self.entry_today.pk}),
-            {"load": "next"},
-        )
-        self.assertEqual(response.status_code, 204)
 
     @patch("basiclive.core.notebooks.views.loader.get_template")
     def test_save_entry_create_text(self, mock_get_template):

@@ -3,7 +3,7 @@ import functools
 import operator
 import re
 
-from crisp_modals.views import ModalCreateView, ModalUpdateView
+from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
@@ -13,7 +13,7 @@ from django.http import (
     HttpResponse,
     HttpResponseForbidden,
     HttpResponseNotFound,
-    JsonResponse,
+    JsonResponse, HttpResponseRedirect,
 )
 from django.template import loader
 from django.urls import reverse
@@ -75,44 +75,6 @@ class NotebookList(NotebookAccessMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['notebooks'] = self.object_list
-        return context
-
-
-class NotebookSearch(NotebookAccessMixin, ListView):
-    model = Notebook
-    template_name = "notebooks/notebook_search.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        search_string = self.request.GET.get('q', '').strip()
-        keywords = filter(None, [kw.strip() for kw in search_string.split(';')])
-        query = Q()
-
-        for keyword in keywords:
-            if keyword.startswith('tag:'):
-                query &= Q(tags__icontains=keyword[4:])
-            elif keyword.startswith('author:'):
-                query &= (Q(author__username=keyword[7:]) | Q(annotations__author__username=keyword[7:]))
-            elif keyword.startswith('created:'):
-                query &= fuzzy_time(keyword[8:], field='created')
-            else:
-                query &= (
-                    Q(text__icontains=keyword)
-                    | Q(annotations__text__icontains=keyword)
-                )
-
-        if search_string:
-            context['notebooks'] = self.object_list.filter(
-                Q(name__icontains=search_string)
-                | Q(title__icontains=search_string)
-                | Q(description__icontains=search_string)
-            )[:10]
-            context['entries'] = Entry.objects.filter(
-                Q(notebook__in=self.object_list) & query
-            ).distinct().order_by('-created')[:10]
-        else:
-            context['notebooks'] = self.model.objects.none()
-            context['entries'] = Entry.objects.none()
         return context
 
 
@@ -200,43 +162,6 @@ class UpdateNotebook(NotebookEditMixin, SuccessMessageMixin, ModalUpdateView):
         return reverse('notebooks:notebook-detail', kwargs={'pk': self.object.pk})
 
 
-class NotebookPage(View):
-    model = Entry
-    template_name = "notebooks/pages.html"
-
-    def get(self, request, *args, **kwargs):
-        load = self.request.GET.get('load')
-        count_val = self.request.GET.get('count', 20)
-        try:
-            count = int(count_val)
-        except (ValueError, TypeError):
-            count = 20
-        try:
-            obj = Entry.objects.get(pk=self.kwargs.get('pk'))
-        except Entry.DoesNotExist:
-            return HttpResponseNotFound("Entry does not exist")
-
-        if obj.notebook.can_view(self.request.user):
-            book = obj.notebook
-            if load == 'next':
-                entries = list(book.entries.filter(created__gt=obj.created).order_by('created')[:count])
-            elif load == 'prev':
-                entries = list(book.entries.filter(created__lt=obj.created).order_by('-created')[:count])
-                entries.reverse()
-            elif load == 'rest':
-                entries = list(book.entries.filter(created__gt=obj.created).order_by('created'))
-            else:
-                entries = [obj]
-
-            if not entries:
-                return HttpResponse(status=204)
-
-            t = loader.get_template(self.template_name)
-            return HttpResponse(t.render({"entries": entries, "notebook": book}, request))
-        else:
-            return HttpResponse(status=204)
-
-
 class SaveEntry(View):
 
     @transaction.atomic
@@ -251,13 +176,13 @@ class SaveEntry(View):
             return HttpResponseForbidden("Not allowed to edit notebook")
 
         text = data.get('text', '')
-        kind_name = data.get('kind', 'text')
+        kind_name = data.get('kind', 'Text')
         try:
             kind = EntryType.objects.get(name=kind_name)
         except EntryType.DoesNotExist:
             kind = EntryType.objects.create(name=kind_name)
 
-        if kind.name == 'data' and text:
+        if kind.name == 'Data' and text:
             text = clean_json(text)
         author = request.user
 
@@ -278,26 +203,44 @@ class SaveEntry(View):
             entry.file.save(file_upload.name, file_upload)
             entry.save()
 
-        t = loader.get_template(f"notebooks/entries/{kind.name}.html")
-        return HttpResponse(t.render({"entry": entry, "notebook": book}, request))
+        success_url = reverse('notebooks:notebook-detail', kwargs={'pk': book.pk})
+        return HttpResponseRedirect(success_url)
 
 
-class DeleteEntry(View):
+class DeleteEntry(LoginRequiredMixin, UserPassesTestMixin, ModalDeleteView):
+    model = Entry
 
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        data = request.POST
+    def get_success_url(self):
+        book = self.object.notebook
+        return reverse('notebooks:notebook-detail', kwargs={'pk': book.pk})
+
+    def test_func(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
         try:
-            book = Notebook.objects.get(id=self.kwargs.get('pk'))
-            entry = Entry.objects.get(notebook=book, id=data.get('pk', 0))
-        except (Notebook.DoesNotExist, Entry.DoesNotExist):
-            return HttpResponseNotFound("Notebook entry not found!")
+            entry = self.get_object()
+        except (Http404, self.model.DoesNotExist):
+            return False
+        return entry.notebook.can_edit(user) and entry.can_edit(user) and entry.notebook.id == self.kwargs.get('book')
 
-        if not (book.can_edit(request.user) and entry.can_edit(request.user)):
-            return HttpResponseForbidden("Not allowed to delete entry!")
 
-        entry.delete()
-        return HttpResponse("", status=200)
+class CreateEntry(LoginRequiredMixin, UserPassesTestMixin, ModalCreateView):
+    model = Entry
+    fields = ['text', 'kind', 'file']
+    success_message = _("Entry has been created.")
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['kind'] = self.kwargs.get('kind', 'Text').title()
+        initial['notebook'] = self.kwargs.get('book')
+        return initial
+
+    def get_success_url(self):
+        book_id = self.kwargs.get('book')
+        return reverse('notebooks:notebook-detail', kwargs={'pk': book_id})
 
 
 class AnnotateEntry(View):

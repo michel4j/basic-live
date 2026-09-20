@@ -1,5 +1,0 @@
-{% load bl_notebooks %}
-<ul class="list-unstyled my-0 entry-page current-page"
-    {% if entries %}data-page-url="{% url 'notebooks:notebook-page' pk=entries.0.pk %}"{% endif %}>
-    {% include 'notebooks/page.html' %}
-</ul>

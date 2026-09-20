@@ -16,14 +16,6 @@ function get_entry_data_url(pk) {
     return btn.data('url') || `/notebooks/entry/${pk}/`;
 }
 
-function doSearch(elem) {
-    const el = $(elem);
-    const prefix = el.data('search-prefix');
-    const val = el.text().trim();
-    const query = prefix ? `${prefix}:${val}` : val;
-    window.location.href = `/notebooks/search/?q=${encodeURIComponent(query)}`;
-}
-
 function getDomElement(element) {
     if (!element) return null;
     if (element instanceof jQuery || (element && element.jquery && element.length)) {
@@ -86,7 +78,7 @@ function disposeTooltips(container) {
 function create_text_entry(itext) {
     const placeholder = $("#editor-body");
     placeholder.html('<textarea id="textarea"></textarea>');
-    placeholder.data('kind', 'text');
+    placeholder.data('kind', 'Text');
     const simplemde = new SimpleMDE({
         autoDownloadFontAwesome: false,
         renderingConfig: {
@@ -159,7 +151,7 @@ function create_text_entry(itext) {
 
 function create_sketch_entry(itext, ifile) {
     const placeholder = $("#editor-body");
-    placeholder.data('kind', 'sketch');
+    placeholder.data('kind', 'Sketch');
 
     addSketchZone(placeholder);
     if (ifile) {
@@ -172,13 +164,13 @@ function create_sketch_entry(itext, ifile) {
 
 function create_image_entry(itext, ifile) {
     const placeholder = $("#editor-body");
-    placeholder.data('kind', 'image');
+    placeholder.data('kind', 'Image');
 
     if (ifile) {
         addSketchZone(placeholder);
         load_sketch_bg(ifile);
     } else {
-        addDropzone(placeholder, 'image');
+        addDropzone(placeholder, 'Image');
     }
     addCaption(placeholder, itext);
     showEditor();
@@ -186,7 +178,7 @@ function create_image_entry(itext, ifile) {
 
 function create_file_entry(itext, ifile) {
     const placeholder = $("#editor-body");
-    placeholder.data('kind', 'file');
+    placeholder.data('kind', 'File');
 
     if (!ifile) {
         addDropzone(placeholder);
@@ -197,13 +189,13 @@ function create_file_entry(itext, ifile) {
 
 function create_video_entry(itext, ifile) {
     const placeholder = $("#editor-body");
-    placeholder.data('kind', 'video');
+    placeholder.data('kind', 'Video');
 
     if (ifile) {
         placeholder.append('<video width="100%" controls><source src="' +
             ifile.url + '" type="' + ifile.mime + '">Your browser does not support the video tag.</video>');
     } else {
-        addDropzone(placeholder, 'video');
+        addDropzone(placeholder, 'Video');
     }
     addCaption(placeholder, itext);
     showEditor();
@@ -211,7 +203,7 @@ function create_video_entry(itext, ifile) {
 
 function create_data_entry(itext) {
     const placeholder = $("#editor-body");
-    placeholder.data('kind', 'data');
+    placeholder.data('kind', 'Data');
 
     const table_toolbar = (
         '<div class="editor-toolbar" id="table-toolbar">' +
@@ -1779,88 +1771,6 @@ function submitTags() {
 }
 
 
-function loadPage(element, dir, scroll, pk) {
-    scroll = scroll || false;
-    const container = $('#notebook-content');
-    let url = $(element).data('page-url');
-    if (!url) {
-        const anchor = (dir === 'prev') ? $(element).find('.notebook-entry').first() : $(element).find('.notebook-entry').last();
-        url = anchor.data('page-url');
-    }
-    if (!url) {
-        const anchor = (dir === 'prev') ? $('.notebook-entry').first() : $('.notebook-entry').last();
-        url = anchor.data('page-url');
-    }
-    if (!url) {
-        MyelnNotebooks.loading = false;
-        return;
-    }
-
-    $.ajax({
-        type: 'GET',
-        url: url,
-        data: {
-            'load': dir,
-        },
-        success: function(response, status, xhr) {
-            if (xhr.status === 204 || !response || $.trim(response) === '') {
-                MyelnNotebooks.loading = false;
-                return;
-            }
-            const newContent = $(response);
-            if (newContent.length === 0) {
-                MyelnNotebooks.loading = false;
-                return;
-            }
-
-            if ((dir === 'next') || (dir === 'rest')) {
-                // If appending, remove duplicate date separators already present above
-                newContent.find('.page-separator').each(function() {
-                    const d = $(this).data('date');
-                    if (d && container.find('.page-separator[data-date="' + d + '"]').length > 0) {
-                        $(this).remove();
-                    }
-                });
-                container.append(newContent);
-            } else {
-                // Prepending: remove existing date separators that are now inside the date span
-                newContent.find('.page-separator').each(function() {
-                    const d = $(this).data('date');
-                    if (d) {
-                        const existingSep = container.find('.page-separator[data-date="' + d + '"]');
-                        if (existingSep.length > 0) {
-                            existingSep.remove();
-                        }
-                    }
-                });
-                const firstElem = container.children().first();
-                let height = 0;
-                container.prepend(newContent);
-                firstElem.prevAll().each(function(){
-                    height += $(this).outerHeight();
-                });
-                const mainEl = $('main');
-                mainEl.scrollTop(mainEl.scrollTop() + height);
-            }
-            if (scroll) {
-                const lastEntry = $('.notebook-entry').last()[0];
-                if (lastEntry) {
-                    lastEntry.scrollIntoView({
-                        alignToTop: false,
-                        behavior: "smooth"
-                    });
-                }
-            }
-            MyelnNotebooks.loading = false;
-            initEntries(newContent.find('.notebook-entry').addBack('.notebook-entry'));
-        },
-        error: function() {
-            MyelnNotebooks.loading = false;
-        }
-    });
-}
-
-
 function loadIndex(element, height) {
     const $index = $('#notebook-index');
     if (!$index.length) return;
@@ -1936,135 +1846,7 @@ function checkLoading(t) {
     });
 }
 
-function scrollIndex(pk) {
-    const el = $('#entry-' + pk);
-    if (!el.length) {
-        const entries = $('.notebook-entry');
-        const elem = entries.first();
-        if (elem.length) {
-            MyelnNotebooks.loading = true;
-            loadPage(elem, 'prev', false);
-            checkLoading(100).then(function(){
-                scrollIndex(pk);
-            });
-        }
-    } else {
-        el[0].scrollIntoView({alignToTop: false, behavior: 'smooth'});
-    }
-}
-
-function resizeIndex() {
-    const $index = $('#notebook-index');
-    if (!$index.length) return 0;
-    const mainEl = $('main');
-    const mainHeight = mainEl.innerHeight() || 0;
-    let margins = mainHeight % 50;
-    if (margins < 40) {
-        margins = margins + 50;
-    }
-    const index_height = mainHeight - margins;
-    $index.height(index_height + 1)
-        .css({
-            'margin-bottom': margins / 2,
-            'margin-top': (margins / 2) - 1
-        });
-    MyelnNotebooks.indexHeight = index_height;
-    return index_height;
-}
-
 MyelnNotebooks.lastViewTop = 0;
-let scrollTick = false;
-
-function onScrollTick() {
-    scrollTick = false;
-    const $main = $('main');
-    if (!$main.length) return;
-
-    const viewTop = $main.scrollTop();
-    const mainOffset = $main.offset();
-    if (!mainOffset) return;
-
-    const mainTop = mainOffset.top;
-    const mainHeight = $main.height();
-    const mainBot = mainTop + mainHeight;
-
-    const entries = $('.notebook-entry');
-    if (entries.length === 0) return;
-
-    const hasIndex = $('#notebook-index').length > 0;
-
-    entries.each(function() {
-        const $entry = $(this);
-        const offset = $entry.offset();
-        if (!offset) return;
-        const elTop = offset.top;
-        const elBot = elTop + $entry.innerHeight();
-        const pk = $entry.data('entry-pk');
-
-        if (elBot > mainTop && elTop < mainBot) {
-            $entry.addClass('inview');
-            if (hasIndex) $('#index-' + pk).addClass('inview');
-        } else {
-            $entry.removeClass('inview');
-            if (hasIndex) $('#index-' + pk).removeClass('inview');
-        }
-    });
-
-    if (hasIndex) {
-        const indexHeight = MyelnNotebooks.indexHeight || resizeIndex();
-        const active = $('.notebook-entry.inview').first();
-        if (active.length) {
-            const activePk = active.data('entry-pk');
-            if (activePk !== MyelnNotebooks.current_entry && !MyelnNotebooks.index_loading) {
-                MyelnNotebooks.current_entry = activePk;
-                loadIndex(active, indexHeight);
-            }
-        }
-    }
-
-    if (!MyelnNotebooks.loading) {
-        if (viewTop > MyelnNotebooks.lastViewTop) {
-            const elem = entries.last();
-            const elemOffset = elem.offset();
-            if (elemOffset) {
-                const hidden = elemOffset.top + elem.height() - viewTop - $(window).height();
-                if (hidden > 0 && hidden < 200) {
-                    MyelnNotebooks.loading = true;
-                    loadPage(elem, 'next');
-                }
-            }
-        } else if (viewTop < MyelnNotebooks.lastViewTop) {
-            const elem = entries.first();
-            const elemOffset = elem.offset();
-            if (elemOffset) {
-                const hidden = elemOffset.top - viewTop;
-                if (hidden > 0 && hidden < 200) {
-                    MyelnNotebooks.loading = true;
-                    loadPage(elem, 'prev');
-                }
-            }
-        }
-    }
-    MyelnNotebooks.lastViewTop = viewTop;
-}
-
-function requestScrollTick() {
-    if (!scrollTick) {
-        scrollTick = true;
-        window.requestAnimationFrame(onScrollTick);
-    }
-}
-
-$('main').on('scroll', requestScrollTick);
-
-let resizeTimer = null;
-$(window).on('resize', function() {
-    if (resizeTimer) clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function() {
-        resizeIndex();
-        requestScrollTick();
-    }, 100);
-});
 
 function initEntries(selector) {
     $(selector).each(function(){
@@ -2090,7 +1872,6 @@ function initEntries(selector) {
             plotData(e.target);
         });
     });
-    requestScrollTick();
 }
 
 function draw_xy_chart() {
@@ -2881,7 +2662,6 @@ function plotData(element) {
 }
 
 // Window-level exports for template and global access
-window.doSearch = doSearch;
 window.showEditor = showEditor;
 window.closeEditor = closeEditor;
 window.submitEntry = submitEntry;
@@ -2898,9 +2678,6 @@ window.cancelTags = cancelTags;
 window.submitTags = submitTags;
 window.markComment = markComment;
 window.unmarkComment = unmarkComment;
-window.loadPage = loadPage;
-window.scrollIndex = scrollIndex;
-window.resizeIndex = resizeIndex;
 window.initEntries = initEntries;
 window.plotData = plotData;
 window.set_sketch_mode = set_sketch_mode;
@@ -2926,10 +2703,8 @@ const entryEditors = {
     data: edit_data_entry
 };
 
-Object.keys(entryCreators).forEach(function(kind) {
-    const capitalized = kind.charAt(0).toUpperCase() + kind.slice(1);
-    window['create_' + kind + '_entry'] = entryCreators[kind];
-    window['create_' + capitalized + '_entry'] = entryCreators[kind];
-    window['edit_' + kind + '_entry'] = entryEditors[kind];
-    window['edit_' + capitalized + '_entry'] = entryEditors[kind];
-});
+function createEntry(kind) {
+    return entryCreators[kind]();
+}
+
+window.createEntry = createEntry;

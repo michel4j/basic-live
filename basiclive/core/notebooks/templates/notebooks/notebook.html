@@ -27,6 +27,18 @@
         {% show_icon icon="ti ti-settings ti-md" label="Edit Notebook" %}
     </a>
     {% endif %}
+{% if notebook|is_editable_by:user %}
+    {% get_entry_types as entry_types %}
+    {% for entry_type in entry_types %}
+            <a href="#!"
+               title="Add {{ entry_type.name|title }} Entry"
+               class="entry-selector-btn"
+               data-entry-kind="{{ entry_type.name.lower }}"
+            >
+                {% show_icon icon=entry_type.icon label=entry_type.name|title %}
+            </a>
+    {% endfor %}
+{% endif %}
 {% endblock %}
 
 {% block page-content %}
@@ -77,22 +89,6 @@
         </div>
     </div>
 
-{% if notebook|is_editable_by:user %}
-<div id="entry-selector" class="bg-secondary-subtle border border-end-0 rounded-start-4">
-    <ul class="list-unstyled px-0 my-0 d-flex flex-column gap-3 align-items-center">
-        {% get_entry_types as entry_types %}
-        {% for entry_type in entry_types %}
-            <li class="list-item entry-selector-icon">
-                <a href="#!" title="Add {{ entry_type.name|title }} Entry"
-                   data-kind="{{ entry_type.name }}" onclick="create_{{ entry_type.name.lower }}_entry();" class="text-decoration-none text-body">
-                    <i class="mi entry-selector-{{ entry_type.name.lower }}"></i> {{ entry_type.name|title }}
-                </a>
-            </li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
-
 <div class="offcanvas offcanvas-end d-lg-none" tabindex="-1" id="calendar-offcanvas" aria-labelledby="calendarOffcanvasLabel">
     <div class="offcanvas-header border-bottom">
         <h5 class="offcanvas-title" id="calendarOffcanvasLabel">Calendar</h5>
@@ -131,11 +127,13 @@
 
     <script>
         $(document).ready(function(){
-            $("#to-bottom").click(function () {
-                loadPage($(".notebook-entry").last(), 'rest', true);
-                return false;
+            $('.entry-selector-btn').click(function(e){
+                e.preventDefault();
+                let kind = $(this).data('entry-kind');
+                if (kind) {
+                    createEntry(kind);
+                }
             });
-
             $('.calendar-container').myelnCalendar({
                 'eventSource': "{% url 'notebooks:notebook-dates' pk=notebook.id %}",
                 'selectTarget': "{% url 'notebooks:notebook-detail' pk=notebook.id %}",

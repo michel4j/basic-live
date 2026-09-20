@@ -24,8 +24,6 @@ class NotebookForm(ModalModelForm):
             'access',
             'editor',
             'members',
-            'session',
-            'project',
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
@@ -65,9 +63,7 @@ class NotebookForm(ModalModelForm):
                 ThirdWidth(Field('owner', css_class='select')),
                 ThirdWidth(Field('access', css_class='select')),
                 ThirdWidth(Field('editor', css_class='select')),
-                HalfWidth(Field('members', css_class='select')),
-                HalfWidth(Field('session', css_class='select')),
-                HalfWidth(Field('project', css_class='select')),
+                FullWidth(Field('members', css_class='select')),
                 style="g-2",
             )
         )

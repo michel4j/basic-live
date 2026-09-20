@@ -112,22 +112,9 @@ blockquote {
   overflow-x: hidden;
 }
 
-.entry-selector-icon {
-  display: inline-block;
-  text-align: center;
-  font-size: 0.9rem;
-  padding: 1rem;
-
-  a {
-    color: var(--bs-body-color);
-    text-decoration: none;
-    background-color: transparent;
-  }
-
+.entry-selector-btn {
   i {
-    display: block;
-    font-size: $selector-icon-size !important;
-
+    font-family: Myeln-Icons;
     &:before {
       color: var(--bs-body-color);
       content: "\e810";
@@ -160,38 +147,6 @@ blockquote {
       color: $file-color;
       content: "\e819";
     }
-  }
-  &.index-img {
-    background-size: cover;
-    background-position: center;
-    height: 25px;
-    width: 25px;
-    margin-right: 0.75rem;
-  }
-}
-.index-entry {
-  .tag-cloud ul li {
-      font-size: 0.6rem;
-      height: 1rem;
-      line-height: 1rem;
-      margin-top: -0.25rem;
-      margin-bottom: 0px;
-      background-color: $secondary;
-      border: 1px solid $secondary;
-      color: #fff;
-  }
-  .tag-cloud ul li:after {
-      background-color: #fff;
-      border: solid 1px $secondary;
-  }
-  .tag-cloud ul li:hover {
-      background-color: $secondary;
-      border: 1px solid $secondary;
-      color: #fff;
-  }
-  .tag-cloud ul li:hover:after {
-      background-color: #fff;
-      border: solid 1px $secondary;
   }
 }
 
