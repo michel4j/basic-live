@@ -583,7 +583,66 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIsNotNone(finders.find("notebooks/notebooks.js"))
         self.assertIsNotNone(finders.find("notebooks/icons/style.css"))
 
+    def test_entry_modal_forms_and_templates_integrity(self):
+        """Verify EntryForm hierarchy, Crisp layout structure, and template data-modal-url integration."""
+        from unittest.mock import MagicMock
+        from crisp_modals.forms import ModalModelForm, Row
+        from crispy_forms.layout import Layout
+        from basiclive.core.notebooks.forms import (
+            EntryForm,
+            TextEntryForm,
+            ImageEntryForm,
+            VideoEntryForm,
+            SketchEntryForm,
+            DataEntryForm,
+            FileEntryForm,
+            get_entry_form_class,
+            ENTRY_FORMS,
+        )
+
+        form_classes = [
+            TextEntryForm,
+            ImageEntryForm,
+            VideoEntryForm,
+            SketchEntryForm,
+            DataEntryForm,
+            FileEntryForm,
+        ]
+
+        # 1. Verify inheritance from ModalModelForm and EntryForm
+        for form_cls in form_classes:
+            self.assertTrue(issubclass(form_cls, EntryForm), f"{form_cls.__name__} must inherit from EntryForm")
+            self.assertTrue(issubclass(form_cls, ModalModelForm), f"{form_cls.__name__} must inherit from ModalModelForm")
+            inst = form_cls()
+            self.assertIsInstance(inst.body.layout, Layout)
+            has_row = any(isinstance(f, Row) for f in inst.body.layout.fields)
+            self.assertTrue(has_row, f"{form_cls.__name__} layout should contain Row")
+
+        # 2. Verify get_entry_form_class resolver
+        for kind_str, form_cls in ENTRY_FORMS.items():
+            self.assertEqual(get_entry_form_class(kind_str), form_cls)
+            self.assertEqual(get_entry_form_class(kind_str.upper()), form_cls)
+            self.assertEqual(get_entry_form_class(kind_str.title()), form_cls)
+            entry_type_mock = MagicMock()
+            entry_type_mock.name = kind_str
+            self.assertEqual(get_entry_form_class(entry_type_mock), form_cls)
+
+        self.assertIsNone(get_entry_form_class("nonexistent"))
+        self.assertIsNone(get_entry_form_class(12345))
+
+        # 3. Verify template files have valid data-modal-url and no #entry-editor
+        notebook_tmpl = get_template("notebooks/notebook.html")
+        self.assertNotIn('id="entry-editor"', notebook_tmpl.template.source)
+        self.assertNotIn('id="editor-body"', notebook_tmpl.template.source)
+        self.assertNotIn("submitEntry", notebook_tmpl.template.source)
+        self.assertIn("data-modal-url", notebook_tmpl.template.source)
+
+        entry_tmpl = get_template("notebooks/entries/entry.html")
+        self.assertIn("data-modal-url", entry_tmpl.template.source)
+        self.assertNotIn('onclick="edit_', entry_tmpl.template.source)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 

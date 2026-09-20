@@ -1,8 +1,10 @@
 import json
+import shutil
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import include, path, reverse
@@ -33,6 +35,11 @@ class NotebookViewsTestCase(TestCase):
         call_command('migrate', verbosity=0)
         super().setUpClass()
 
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree('notebooks', ignore_errors=True)
+
     def setUp(self):
         self.factory = RequestFactory()
         self.owner = User.objects.create_user(username="owner", password="password123", name="Owner")
@@ -40,8 +47,16 @@ class NotebookViewsTestCase(TestCase):
         self.other = User.objects.create_user(username="other", password="password123", name="Other")
         self.admin = User.objects.create_superuser(username="admin", password="password123", name="Admin")
 
-        self.text_type = EntryType.objects.filter(name__iexact="text").first() or EntryType.objects.create(name="text")
-        self.data_type = EntryType.objects.filter(name__iexact="data").first() or EntryType.objects.create(name="data")
+        for k in ["text", "image", "video", "sketch", "data", "file"]:
+            if not EntryType.objects.filter(name__iexact=k).exists():
+                EntryType.objects.create(name=k)
+
+        self.text_type = EntryType.objects.filter(name__iexact="text").first()
+        self.data_type = EntryType.objects.filter(name__iexact="data").first()
+        self.image_type = EntryType.objects.filter(name__iexact="image").first()
+        self.video_type = EntryType.objects.filter(name__iexact="video").first()
+        self.sketch_type = EntryType.objects.filter(name__iexact="sketch").first()
+        self.file_type = EntryType.objects.filter(name__iexact="file").first()
 
         # Notebooks with various access levels
         self.public_nb = Notebook.objects.create(
@@ -416,6 +431,127 @@ class NotebookViewsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Create Text Entry")
+
+    def test_create_entry_modal_all_kinds_get(self):
+        """GET request to CreateEntry renders modal form for all six entry kinds."""
+        self.client.force_login(self.owner)
+        kinds = ["text", "image", "video", "sketch", "data", "file"]
+        for kind in kinds:
+            response = self.client.get(
+                reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": kind})
+            )
+            self.assertEqual(response.status_code, 200, f"Failed for kind {kind}")
+            self.assertContains(response, f"Create {kind.title()} Entry")
+
+    def test_create_entry_modal_post_file_and_sketch(self):
+        """POST request to CreateEntry supports image, video, file uploads, and sketch drawings."""
+        self.client.force_login(self.owner)
+
+        # 1. Image upload
+        img_file = SimpleUploadedFile("test.png", b"fake image bytes", content_type="image/png")
+        response = self.client.post(
+            reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "image"}),
+            {"file": img_file, "text": "Microscope capture", "tags": "microscope, sample"},
+        )
+        self.assertEqual(response.status_code, 200)
+        img_entry = Entry.objects.filter(notebook=self.public_nb, text="Microscope capture").first()
+        self.assertIsNotNone(img_entry)
+        self.assertEqual(img_entry.kind, self.image_type)
+        self.assertTrue(bool(img_entry.file))
+        self.assertEqual(img_entry.tags, ["microscope", "sample"])
+
+        # 2. File upload
+        doc_file = SimpleUploadedFile("data.pdf", b"fake pdf bytes", content_type="application/pdf")
+        response = self.client.post(
+            reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "file"}),
+            {"file": doc_file, "text": "Spec sheet"},
+        )
+        self.assertEqual(response.status_code, 200)
+        file_entry = Entry.objects.filter(notebook=self.public_nb, text="Spec sheet").first()
+        self.assertIsNotNone(file_entry)
+        self.assertEqual(file_entry.kind, self.file_type)
+
+        # 3. Video upload
+        vid_file = SimpleUploadedFile("run.mp4", b"fake video bytes", content_type="video/mp4")
+        response = self.client.post(
+            reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "video"}),
+            {"file": vid_file, "text": "Reaction video"},
+        )
+        self.assertEqual(response.status_code, 200)
+        vid_entry = Entry.objects.filter(notebook=self.public_nb, text="Reaction video").first()
+        self.assertIsNotNone(vid_entry)
+        self.assertEqual(vid_entry.kind, self.video_type)
+
+        # 4. Sketch base64 payload
+        b64_png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        response = self.client.post(
+            reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "sketch"}),
+            {"sketch_data": b64_png, "text": "Reaction scheme", "tags": "scheme; chemistry"},
+        )
+        self.assertEqual(response.status_code, 200)
+        sketch_entry = Entry.objects.filter(notebook=self.public_nb, text="Reaction scheme").first()
+        self.assertIsNotNone(sketch_entry)
+        self.assertEqual(sketch_entry.kind, self.sketch_type)
+        self.assertTrue(bool(sketch_entry.file))
+        self.assertEqual(sketch_entry.tags, ["scheme", "chemistry"])
+
+    def test_entry_views_superuser_and_member_permissions(self):
+        """Verify superuser can create/edit in private notebooks and non-members are rejected."""
+        # Non-member cannot GET create-entry or edit-entry in private notebook
+        self.client.force_login(self.other)
+        get_res = self.client.get(
+            reverse("notebooks:create-entry", kwargs={"book": self.private_nb.pk, "kind": "text"})
+        )
+        self.assertEqual(get_res.status_code, 403)
+
+        get_edit_res = self.client.get(
+            reverse("notebooks:edit-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk})
+        )
+        self.assertEqual(get_edit_res.status_code, 403)
+
+        # Superuser can create entry in private notebook
+        self.client.force_login(self.admin)
+        admin_post = self.client.post(
+            reverse("notebooks:create-entry", kwargs={"book": self.private_nb.pk, "kind": "text"}),
+            {"text": "Superuser note", "tags": "admin"},
+        )
+        self.assertEqual(admin_post.status_code, 200)
+        admin_entry = Entry.objects.filter(notebook=self.private_nb, text="Superuser note").first()
+        self.assertIsNotNone(admin_entry)
+        self.assertEqual(admin_entry.author, self.admin)
+
+        # Superuser can edit entry created by someone else in private notebook
+        admin_edit = self.client.post(
+            reverse("notebooks:edit-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
+            {"text": "Superuser edited note", "tags": "admin-edited"},
+        )
+        self.assertEqual(admin_edit.status_code, 200)
+        self.entry_today.refresh_from_db()
+        self.assertEqual(self.entry_today.text, "Superuser edited note")
+
+    def test_tag_normalization_on_entry_creation_and_update(self):
+        """Verify tags are normalized from comma/semicolon separated strings into lists."""
+        self.client.force_login(self.owner)
+
+        # Creation with mixed delimiters and spaces
+        response = self.client.post(
+            reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "text"}),
+            {"text": "Tag test note", "tags": "  alpha ,  beta; gamma  ; ; delta  "},
+        )
+        self.assertEqual(response.status_code, 200)
+        entry = Entry.objects.filter(notebook=self.public_nb, text="Tag test note").first()
+        self.assertIsNotNone(entry)
+        self.assertEqual(entry.tags, ["alpha", "beta", "gamma", "delta"])
+
+        # Update tags
+        response = self.client.post(
+            reverse("notebooks:edit-entry", kwargs={"book": self.public_nb.pk, "pk": entry.pk}),
+            {"text": "Tag test note", "tags": "omega; psi, chi"},
+        )
+        self.assertEqual(response.status_code, 200)
+        entry.refresh_from_db()
+        self.assertEqual(entry.tags, ["omega", "psi", "chi"])
+
 
     def test_create_entry_modal_post_success(self):
         """POST request to CreateEntry creates new entry and returns JSON with redirect url."""
