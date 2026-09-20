@@ -240,3 +240,50 @@ class NotebookTemplatesTestCase(TestCase):
                     content,
                     f"Found legacy pattern '{pattern}' in {path.relative_to(templates_dir)}"
                 )
+
+    def test_notebooks_js_modal_lifecycle_and_legacy_cleanup(self):
+        """Verify notebooks.js and notebooks.min.js implement modal lifecycle and purge legacy functions."""
+        static_dir = Path(notebooks_pkg.__file__).parent / "static" / "notebooks"
+        js_path = static_dir / "notebooks.js"
+        min_js_path = static_dir / "notebooks.min.js"
+
+        self.assertTrue(js_path.exists(), "notebooks.js must exist")
+        self.assertTrue(min_js_path.exists(), "notebooks.min.js must exist")
+
+        js_content = js_path.read_text(encoding="utf-8")
+        min_js_content = min_js_path.read_text(encoding="utf-8")
+
+        # Required modal lifecycle elements
+        required_patterns = [
+            "initModalEntryEditors",
+            "shown.bs.modal",
+            "hidden.bs.modal",
+            "initTextModal",
+            "initSketchModal",
+            "initDataModal",
+            "initFileDropzoneModal",
+        ]
+        for pat in required_patterns:
+            self.assertIn(pat, js_content, f"Expected {pat} in notebooks.js")
+
+        self.assertIn("initModalEntryEditors", min_js_content)
+        self.assertIn("shown.bs.modal", min_js_content)
+
+        # Legacy functions that MUST be purged
+        purged_patterns = [
+            "function showEditor(",
+            "function closeEditor(",
+            "function submitEntry(",
+            "function prepare_editor(",
+            "function createEntry(",
+            "entryCreators",
+            "entryEditors",
+            "window.showEditor",
+            "window.closeEditor",
+            "window.submitEntry",
+            "window.createEntry",
+        ]
+        for pat in purged_patterns:
+            self.assertNotIn(pat, js_content, f"Obsolete pattern '{pat}' found in notebooks.js")
+            self.assertNotIn(pat, min_js_content, f"Obsolete pattern '{pat}' found in notebooks.min.js")
+

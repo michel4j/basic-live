@@ -75,19 +75,63 @@ function disposeTooltips(container) {
     });
 }
 
-function create_text_entry(itext) {
-    const placeholder = $("#editor-body");
-    placeholder.html('<textarea id="textarea"></textarea>');
-    placeholder.data('kind', 'Text');
+// Helper functions to implement sketcher toolbar
+function set_sketch_mode(kind) {
+    if (MyelnNotebooks.sketcher) {
+        MyelnNotebooks.sketcher.mode = kind;
+    }
+    $("[class*='btn-mode-']").removeClass("active");
+    $(".btn-mode-" + kind).addClass("active");
+}
+
+// SimpleMDE custom button functions
+function togglePreview(editor) {
+    SimpleMDE.togglePreview(editor);
+    $(".editor-preview").each(function() {
+        if (typeof renderMathInElement === "function") {
+            renderMathInElement(this);
+        }
+    });
+}
+
+function wrapSelection(editor, delimeter) {
+    const cm = editor.codemirror;
+    const output = "";
+    const selectedText = cm.getSelection();
+    const text = selectedText || output;
+
+    const startPoint = cm.getCursor("start");
+    const newOutput = delimeter + text;
+    cm.replaceSelection(newOutput);
+
+    const endPoint = cm.getCursor("end");
+    cm.setSelection(startPoint, endPoint);
+    cm.replaceSelection(newOutput + delimeter);
+
+    cm.setSelection(endPoint, endPoint);
+    cm.focus();
+}
+
+function wrapEquation(editor) {
+    return wrapSelection(editor, "$$");
+}
+
+// Modal Lifecycle & Rich Editor Initializations for Entry Forms
+
+function initTextModal($modal) {
+    const $textarea = $modal.find("#entry-text-editor");
+    if (!$textarea.length || $textarea.data("simplemde-initialized")) return;
+    $textarea.data("simplemde-initialized", true);
+
+    const textareaEl = $textarea[0];
     const simplemde = new SimpleMDE({
         autoDownloadFontAwesome: false,
         renderingConfig: {
             codeSyntaxHighlighting: true,
         },
-        element: document.getElementById("textarea"),
+        element: textareaEl,
         spellChecker: false,
         status: false,
-        initialValue: itext,
         toolbar: [{
             name: "heading",
             action: SimpleMDE.toggleHeadingSmaller,
@@ -146,67 +190,132 @@ function create_text_entry(itext) {
         }]
     });
     MyelnNotebooks.simplemde = simplemde;
-    showEditor();
+
+    setTimeout(function() {
+        simplemde.codemirror.refresh();
+    }, 100);
+
+    simplemde.codemirror.on("change", function() {
+        textareaEl.value = simplemde.value();
+    });
+
+    const $form = $textarea.closest("form");
+    function syncMarkdown() {
+        if (MyelnNotebooks.simplemde) {
+            textareaEl.value = MyelnNotebooks.simplemde.value();
+        }
+    }
+    $form.on("submit", syncMarkdown);
+    $form.find(":submit").on("click", syncMarkdown);
 }
 
-function create_sketch_entry(itext, ifile) {
-    const placeholder = $("#editor-body");
-    placeholder.data('kind', 'Sketch');
+function initSketchModal($modal) {
+    const $sketchInput = $modal.find("#sketch-data-input, input[name='sketch_data']");
+    if (!$sketchInput.length || $sketchInput.data("atrament-initialized")) return;
+    $sketchInput.data("atrament-initialized", true);
 
-    addSketchZone(placeholder);
-    if (ifile) {
-        load_sketch_bg(ifile);
+    const $container = $('<div id="modal-sketch-container" class="mb-3"></div>');
+    const $fileDiv = $modal.find("#div_id_file").length ? $modal.find("#div_id_file") : $sketchInput.parent();
+    $fileDiv.before($container);
+
+    const width = Math.min($container.width() || $modal.find(".modal-body").width() || 480, 560);
+    const height = Math.round(width * 4.5 / 9);
+
+    $container.append('<div class="editor-toolbar sketcher-toolbar"></div>');
+    $container.append('<div class="sketch-canvas-wrapper border rounded" style="background:#fff; text-align:center; overflow:hidden;"><canvas id="sketcher"></canvas></div>');
+
+    if (typeof atrament === "function") {
+        const sketcher = atrament("#sketcher", width, height);
+        MyelnNotebooks.sketcher = sketcher;
+        sketcher.adaptiveStroke = false;
+
+        const tb = $container.find(".sketcher-toolbar");
+        const tbbtn = [
+            ["a", "", "MyelnNotebooks.sketcher.clear();", "Clear canvas", "mi-trash"],
+            ["|"],
+            ["a", "btn-mode-draw active", "set_sketch_mode(`draw`);", "Draw", "mi-pencil"],
+            ["a", "btn-mode-fill", "set_sketch_mode(`fill`);", "Fill", "mi-fill"],
+            ["a", "btn-mode-erase", "set_sketch_mode(`erase`);", "Erase", "mi-erase"],
+            ["|"],
+            ["a", "active", "MyelnNotebooks.sketcher.smoothing=!MyelnNotebooks.sketcher.smoothing; $(this).toggleClass(`active`);", "Auto-smoothing", "mi-activity"],
+            ["a", "", "MyelnNotebooks.sketcher.adaptiveStroke=!MyelnNotebooks.sketcher.adaptiveStroke; $(this).toggleClass(`active`);", "Adaptive Stroke", "mi-stroke"],
+            ["|"],
+            ["color", "btn btn-link", "MyelnNotebooks.sketcher.color=event.target.value;", "Color", ""],
+            ["|"],
+            ["span", "active", "MyelnNotebooks.sketcher.weight=parseFloat(event.target.value);", "Line width", "mi-edit-line", "0.5", "40", "0.5", "0.5"],
+            ["|"],
+            ["span", "", "MyelnNotebooks.sketcher.opacity=parseFloat(event.target.value);", "Opacity", "mi-star-half", "0", "1", "0.05", "1"]
+        ];
+
+        $.each(tbbtn, function (i, data) {
+            let html = "";
+            if (data[0] === "|") {
+                html = "<i class='separator'></i>";
+            } else {
+                if (data[0] === "a") {
+                    html = "<a title='{3}' onclick='{2}' tabindex='" + i + "' class='mi {1} mi-md {4}'></a>";
+                } else if (data[0] === "color") {
+                    html = "<div id='colorPicker'><a class='color' title='{3}'><div class='colorInner'></div></a><div class='track'></div><input type='hidden' class='colorInput' value='#000000'/></div>";
+                } else {
+                    html = "<span class='mi {1} mi-md {4}' title='{3}'><input type='range' min='{5}' max='{6}' oninput='{2}' value='{8}' step='{7}'></span>";
+                }
+                $.each(data, function (k, v) {
+                    html = html.replace("{" + k + "}", v);
+                });
+            }
+            tb.append(html);
+        });
+
+        const picker = document.querySelector("#colorPicker");
+        if (picker && typeof Picker !== "undefined") {
+            const colorButton = $("#colorPicker .color");
+            const cp = new Picker(picker);
+            cp.onChange = function(color) {
+                colorButton.css("background-color", color.rgbaString);
+                sketcher.color = color.rgbaString;
+            };
+        }
+
+        const existingFileUrl = $modal.find("#div_id_file a[href]").attr("href");
+        if (existingFileUrl) {
+            const canvas = document.getElementById("sketcher");
+            if (canvas) {
+                const ctx = canvas.getContext("2d");
+                const img = new Image();
+                img.onload = function() {
+                    let sx = img.width;
+                    let sy = img.height;
+                    let scale = Math.min(width / sx, height / sy);
+                    let x = (width - sx * scale) / 2;
+                    let y = (height - sy * scale) / 2;
+                    ctx.drawImage(img, x, y, sx * scale, sy * scale);
+                };
+                img.src = existingFileUrl;
+            }
+        }
     }
 
-    addCaption(placeholder, itext);
-    showEditor();
-}
-
-function create_image_entry(itext, ifile) {
-    const placeholder = $("#editor-body");
-    placeholder.data('kind', 'Image');
-
-    if (ifile) {
-        addSketchZone(placeholder);
-        load_sketch_bg(ifile);
-    } else {
-        addDropzone(placeholder, 'Image');
+    const $form = $sketchInput.closest("form");
+    function syncSketch() {
+        if (MyelnNotebooks.sketcher) {
+            const b64 = MyelnNotebooks.sketcher.toImage();
+            $sketchInput.val(b64);
+        }
     }
-    addCaption(placeholder, itext);
-    showEditor();
+    $form.on("submit", syncSketch);
+    $form.find(":submit").on("click", syncSketch);
 }
 
-function create_file_entry(itext, ifile) {
-    const placeholder = $("#editor-body");
-    placeholder.data('kind', 'File');
+function initDataModal($modal) {
+    const $dataEditor = $modal.find("#entry-data-editor");
+    if (!$dataEditor.length || $dataEditor.data("table-initialized")) return;
+    $dataEditor.data("table-initialized", true);
 
-    if (!ifile) {
-        addDropzone(placeholder);
-    }
-    addCaption(placeholder, itext);
-    showEditor();
-}
-
-function create_video_entry(itext, ifile) {
-    const placeholder = $("#editor-body");
-    placeholder.data('kind', 'Video');
-
-    if (ifile) {
-        placeholder.append('<video width="100%" controls><source src="' +
-            ifile.url + '" type="' + ifile.mime + '">Your browser does not support the video tag.</video>');
-    } else {
-        addDropzone(placeholder, 'Video');
-    }
-    addCaption(placeholder, itext);
-    showEditor();
-}
-
-function create_data_entry(itext) {
-    const placeholder = $("#editor-body");
-    placeholder.data('kind', 'Data');
+    const itext = $dataEditor.val();
+    $dataEditor.hide();
 
     const table_toolbar = (
-        '<div class="editor-toolbar" id="table-toolbar">' +
+        '<div class="editor-toolbar mb-2" id="table-toolbar">' +
         '<a title="Add Column" tabindex="-1" class="mi mi-add-col mi-md text-primary" id="table-add-col"></a>' +
         '<i class="separator">|</i>' +
         '<a title="Remove Column" tabindex="-1" class="mi mi-del-col mi-md text-danger" id="table-del-col"></a>' +
@@ -217,454 +326,145 @@ function create_data_entry(itext) {
         '</div>'
     );
 
-    if (itext) {
-        placeholder.append(table_toolbar + '<div class="table-editable"></div>');
-    } else {
-        placeholder.append(table_toolbar + '<div id="dropzone" class="table-editable"></div>');
-        $('#dropzone').dropzone({
-            url: placeholder.data('url'),
+    const $container = $('<div id="modal-table-container" class="mb-3"></div>');
+    $container.html(table_toolbar + '<div class="table-editable table-responsive border rounded p-2" style="max-height: 400px; overflow: auto;"></div><div class="drop-csv text-muted small mt-1">Drag and drop a .csv or .xdi file onto the table to import data.</div>');
+    $dataEditor.before($container);
+
+    if ($.fn.myelnTable) {
+        MyelnNotebooks.table = $container.find(".table-editable").myelnTable({
+            "initial": itext
+        });
+    }
+
+    $container.find(".table-editable").on("dragover", function(e) {
+        e.preventDefault();
+    }).on("drop", function(e) {
+        e.preventDefault();
+        const dt = e.originalEvent.dataTransfer;
+        if (dt && dt.files && dt.files.length && MyelnNotebooks.table) {
+            const file = dt.files[0];
+            const reader = new FileReader();
+            reader.readAsText(file);
+            reader.onloadend = function() {
+                if (file.type === "text/csv" || file.name.endsWith(".csv")) {
+                    MyelnNotebooks.table.csv2JSON(reader.result);
+                } else if (file.name.split(".").pop() === "xdi") {
+                    MyelnNotebooks.table.xdi2JSON(reader.result);
+                }
+            };
+        }
+    });
+
+    const $form = $dataEditor.closest("form");
+    function syncTable() {
+        if (MyelnNotebooks.table) {
+            const table_json = MyelnNotebooks.table.exportJSON();
+            $dataEditor.val(table_json);
+        }
+    }
+    $form.on("submit", syncTable);
+    $form.find(":submit").on("click", syncTable);
+}
+
+function initFileDropzoneModal($modal) {
+    const $fileInput = $modal.find("input[type='file'][name='file']");
+    if (!$fileInput.length || $modal.find("#sketch-data-input").length || $fileInput.data("dropzone-initialized")) return;
+    $fileInput.data("dropzone-initialized", true);
+
+    if (typeof Dropzone === "undefined") return;
+
+    Dropzone.autoDiscover = false;
+    const acceptedFiles = $fileInput.attr("accept") || null;
+    const dropzoneHtml = (
+        '<div id="modal-file-dropzone" class="dropzone mb-2 rounded border border-2 border-dashed p-3 text-center text-muted" style="cursor: pointer; min-height: 110px;">' +
+        '  <div class="dz-message needsclick my-2">' +
+        '    <i class="mi mi-upload mi-2x mb-1 d-block text-secondary"></i>' +
+        '    <span class="small">Drop file here or click to browse</span>' +
+        '  </div>' +
+        '</div>'
+    );
+    $fileInput.before(dropzoneHtml);
+
+    try {
+        const myDropzone = new Dropzone("#modal-file-dropzone", {
+            url: "#",
             autoProcessQueue: false,
             uploadMultiple: false,
-            acceptedFiles: null,
-            accept: function (file, done) {
-                const read = new FileReader();
-                read.readAsBinaryString(file);
-                read.onloadend = function () {
-                    if (file.type === 'text/csv') {
-                        MyelnNotebooks.table.csv2JSON(read.result);
-                    } else if (file.name.split('.').pop() === 'xdi') {
-                        MyelnNotebooks.table.xdi2JSON(read.result);
-                    }
-                };
+            acceptedFiles: acceptedFiles,
+            maxFiles: 1,
+            init: function() {
+                MyelnNotebooks.myDropzone = this;
+            },
+            accept: function(file, done) {
                 if (this.files.length > 1) {
                     this.removeFile(this.files[0]);
-                    done();
                 }
-            }
-        });
-    }
-
-    MyelnNotebooks.table = $('.table-editable').myelnTable({
-        'initial': itext
-    });
-    showEditor();
-}
-
-// Helper functions to implement sketcher toolbar
-function set_sketch_mode(kind) {
-    MyelnNotebooks.sketcher.mode = kind;
-    $("[class*='btn-mode-']").removeClass('active');
-    $('.btn-mode-' + kind).addClass('active');
-}
-
-function load_sketch_bg(file) {
-    // for sketching on top of an image
-    const canvas = $('canvas#sketcher')[0];
-    const ctx = canvas.getContext('2d');
-    const editor = $('#notebook-content');
-    const img = new Image();
-    img.onload = function() {
-        let x = editor.width() - 32;
-        let y = x * 4.5 / 9 - 2;
-        const sx = img.width;
-        const sy = img.height;
-        let scale;
-        if ((x / y) <= (sx / sy)) {
-            scale = x / sx;
-            y = Math.max(y - (sy * scale), 0) / 2;
-            x = 0;
-        } else {
-            scale = y / sy;
-            x = Math.max(x - (sx * scale), 0) / 2;
-            y = 0;
-        }
-        ctx.drawImage(img, x, y, scale * sx, scale * sy);
-    };
-    img.src = file.url;
-}
-
-function showEditor() {
-    const editor = $('#entry-editor');
-    $('#entry-selector').slideUp(200);
-    editor.slideDown(200, function(){
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-}
-
-function closeEditor() {
-    const editor = $('#entry-editor');
-    const pk = editor.data('pk');
-    editor.removeData('pk');
-    const placeholder = $('#editor-body');
-
-    $('#entry-selector').slideDown(200, function(){
-        if (pk) {
-            const target = $('#entry-' + pk);
-            if (target.length && target.offset()) {
-                window.scrollTo({
-                    top: target.offset().top,
-                    behavior: 'smooth'
-                });
-            }
-        }
-        editor.slideUp(200);
-    });
-
-    placeholder.empty();
-    placeholder.removeClass('caption');
-    MyelnNotebooks.myDropzone = null;
-    MyelnNotebooks.sketcher = null;
-    MyelnNotebooks.table = null;
-    MyelnNotebooks.simplemde = null;
-}
-
-function addDropzone(placeholder, kind) {
-    const width = $('#entry-selector').width() - 2;
-    const height = width / 3;
-    placeholder.append('<div id="dropzone" class="border-bottom ' + kind + '" style="height: ' + height + 'px"></div>');
-
-    $('#dropzone').dropzone({
-        url: placeholder.data('url'),
-        autoProcessQueue: false,
-        uploadMultiple: false,
-        acceptedFiles: kind && kind + '/*' || null,
-        capture: 'camera',
-        init: function () {
-            const myDropzone = this;
-            MyelnNotebooks.myDropzone = myDropzone;
-        },
-        accept: function (file, done) {
-            if (this.files.length > 1) {
-                this.removeFile(this.files[0]);
+                try {
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    $fileInput[0].files = dataTransfer.files;
+                    $fileInput.trigger("change");
+                } catch (err) {
+                    console.warn("DataTransfer file sync not supported:", err);
+                }
                 done();
             }
-        }
-    });
-}
-
-function addSketchZone(placeholder) {
-    placeholder.append('<canvas id="sketcher"></canvas>');
-    const width = placeholder.parent().width()-2;
-    const height = width * 4.5 / 9 - 2;
-    const sketcher = atrament('#sketcher', width, height);
-    MyelnNotebooks.sketcher = sketcher;
-
-    placeholder.prepend('<div class="editor-toolbar sketcher-toolbar"></div>');
-    sketcher.adaptiveStroke = false;
-
-    const tb = $('.sketcher-toolbar');
-    const tbbtn = [
-        ['a', '', 'MyelnNotebooks.sketcher.clear();', 'Clear canvas', 'mi-trash'],
-        ['|'],
-        ['a', 'btn-mode-draw active', 'set_sketch_mode(`draw`);', "Draw", 'mi-pencil'],
-        ['a', 'btn-mode-fill', 'set_sketch_mode(`fill`);', "Fill", 'mi-fill'],
-        ['a', 'btn-mode-erase', 'set_sketch_mode(`erase`);', "Erase", 'mi-erase'],
-        ['|'],
-        ['a', 'active', 'MyelnNotebooks.sketcher.smoothing=!MyelnNotebooks.sketcher.smoothing; $(this).toggleClass(`active`);', 'Auto-smoothing', 'mi-activity'],
-        ['a', '', 'MyelnNotebooks.sketcher.adaptiveStroke=!MyelnNotebooks.sketcher.adaptiveStroke; $(this).toggleClass(`active`);', 'Adaptive Stroke', 'mi-stroke'],
-        ['|'],
-        ['color', 'btn btn-link', 'MyelnNotebooks.sketcher.color=event.target.value;', 'Color', ''],
-        ['|'],
-        ['span', 'active', 'MyelnNotebooks.sketcher.weight=parseFloat(event.target.value);', 'Line width', 'mi-edit-line', '0.5', '40', '0.5', '0.5'],
-        ['|'],
-        ['span', '', 'MyelnNotebooks.sketcher.opacity=parseFloat(event.target.value);', 'Opacity', 'mi-star-half', '0', '1', '0.05', '1']
-    ];
-
-    //add buttons to toolbar
-    $.each(tbbtn, function (i, data) {
-        let html = '';
-        if (data[0] === '|') {
-            html = "<i class='separator'></i>";
-        } else {
-            if (data[0] === 'a') {
-                html = "<a title='{3}' onclick='{2}' tabindex='" + i + "' class='mi {1} mi-md {4}'></a>";
-            } else if (data[0] === 'color') {
-                html = "<div id='colorPicker'><a class='color' title='{3}'><div class='colorInner'></div></a><div class='track'></div><input type='hidden' class='colorInput' value='#000000'/></div>";
-            } else {
-                html = "<span class='mi {1} mi-md {4}' title='{3}'><input type='range' min='{5}' max='{6}' oninput='{2}' value='{8}' step='{7}'></span>";
-            }
-            $.each(data, function (k, v) {
-                html = html.replace('{' + k + '}', v);
-            });
-        }
-        tb.append(html);
-    });
-
-    const picker = document.querySelector('#colorPicker');
-    const colorButton = $('#colorPicker .color');
-    const cp = new Picker(picker);
-    cp.onChange = function(color) {
-        colorButton.css('background-color', color.rgbaString);
-        sketcher.color=color.rgbaString;
-    };
-}
-
-function addCaption(placeholder, itext) {
-    placeholder.addClass('caption');
-    placeholder.append('<textarea id="caption"></textarea>');
-    const simplemde = new SimpleMDE({
-        autoDownloadFontAwesome: false,
-        element: document.getElementById("caption"),
-        spellChecker: false,
-        status: false,
-        placeholder: "Add caption here...",
-        initialValue: itext,
-        toolbar: [{
-            name: "bold",
-            action: SimpleMDE.toggleBold,
-            className: "mi mi-bold mi-md",
-            title: "Bold"
-        }, {
-            name: "italic",
-            action: SimpleMDE.toggleItalic,
-            className: "mi mi-italic mi-md",
-            title: "Italics"
-        }, "|",{
-            name: "link",
-            action: SimpleMDE.drawLink ,
-            className: "mi mi-link mi-md",
-            title: "Link"
-
-        },"|", {
-            name: "Equation (Latex Syntax)",
-            action: wrapEquation,
-            className: "mi mi-math mi-md",
-            title: "Equation (latex syntax)",
-        }, "|", {
-            name: "undo",
-            action: SimpleMDE.undo,
-            className: "mi mi-undo mi-md",
-            title: "Undo"
-        }, {
-            name: "redo",
-            action: SimpleMDE.redo,
-            className: "mi mi-redo mi-md",
-            title: "Redo"
-        }, "|", {
-            name: "preview",
-            action: togglePreview,
-            className: "mi mi-eye mi-md no-disable",
-            title: "Preview"
-        }]
-    });
-    MyelnNotebooks.simplemde = simplemde;
-}
-
-// SimpleMDE custom button functions
-function togglePreview(editor) {
-    SimpleMDE.togglePreview(editor);
-    $('.editor-preview').each(function() {
-        renderMathInElement(this);
-    });
-}
-
-function wrapSelection(editor, delimeter) {
-    const cm = editor.codemirror;
-    const output = '';
-    const selectedText = cm.getSelection();
-    const text = selectedText || output;
-
-    const startPoint = cm.getCursor("start");
-    const newOutput = delimeter + text;
-    cm.replaceSelection(newOutput);
-
-    const endPoint = cm.getCursor("end");
-    cm.setSelection(startPoint, endPoint);
-    cm.replaceSelection(newOutput + delimeter);
-
-    cm.setSelection(endPoint, endPoint);
-    cm.focus();
-}
-
-function wrapEquation(editor) {
-    return wrapSelection(editor, "$$");
-}
-
-function base64toFile(b64) {
-    const base64 = b64.split(',')[1];
-    const byteChars = atob(base64);
-    const byteArray = new Uint8Array(byteChars.length);
-    for (let i = 0; i < byteChars.length; i++) {
-        byteArray[i] = byteChars.charCodeAt(i);
-    }
-    const blob = new Blob([byteArray], {type: 'image/png'});
-    return new File([blob], "sketch.png", {type: 'image/png'});
-}
-
-function submitEntry() {
-    const editor = $('#entry-editor');
-    const placeholder = $("#editor-body");
-    const entry_pk = editor.data('pk');
-    const fd = new FormData();
-    fd.append('kind', placeholder.data('kind'));
-    if (entry_pk) {
-        fd.append('pk', entry_pk);
-    }
-
-    const kind = placeholder.data('kind');
-    if (MyelnNotebooks.simplemde) {
-        fd.append('text', MyelnNotebooks.simplemde.value());
-    }
-    if (MyelnNotebooks.myDropzone) {
-        fd.append('file', MyelnNotebooks.myDropzone.files[0]);
-    } else if (MyelnNotebooks.sketcher) {
-        const b64 = MyelnNotebooks.sketcher.toImage();
-        fd.append('file', base64toFile(b64));
-    } else if (MyelnNotebooks.table) {
-        const table_json = MyelnNotebooks.table.exportJSON();
-        fd.append('text', table_json);
-    }
-
-    $.ajax({
-        type: "POST",
-        url: placeholder.data("url"),
-        data: fd,
-        processData: false,
-        contentType: false,
-        encType: 'multipart/form-data',
-        beforeSend: function(xhr, settings) {
-            xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
-        },
-        success: function (response) {
-            if (entry_pk) {
-                disposeTooltips($('#entry-' + entry_pk));
-                $('#entry-' + entry_pk).replaceWith(response);
-                initEntries('#entry-' + entry_pk);
-            } else {
-                const newEntry = $(response);
-                const entryDate = newEntry.data('entry-date');
-                const sep = $('#notebook-content .page-separator[data-date="' + entryDate + '"]');
-
-                if (sep.length === 0) {
-                    const months = ["JAN.", "FEB.", "MAR.", "APR.", "MAY", "JUN.", "JUL.", "AUG.", "SEP.", "OCT.", "NOV.", "DEC."];
-                    const parts = entryDate ? entryDate.split('-') : [];
-                    let dateStr = "";
-                    if (parts.length === 3) {
-                        const mIdx = parseInt(parts[1], 10) - 1;
-                        const day = parseInt(parts[2], 10);
-                        dateStr = months[mIdx] + " " + day + ", " + parts[0];
-                    } else {
-                        const now = new Date();
-                        dateStr = months[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear();
-                    }
-                    const sepElem = $('<li class="page-separator" data-date="' + entryDate + '" id="separator-' + entryDate + '"><div class="date px-4 text-center">' + dateStr + '</div></li>');
-                    let targetList = $('#notebook-content ul.entry-page').last();
-                    if (targetList.length === 0) {
-                        targetList = $('<ul class="list-unstyled my-0 entry-page current-page"></ul>').appendTo('#notebook-content');
-                    }
-                    targetList.append(sepElem);
-                    targetList.append(newEntry);
-                } else {
-                    const entriesForDate = $('#notebook-content .notebook-entry[data-entry-date="' + entryDate + '"]');
-                    if (entriesForDate.length > 0) {
-                        entriesForDate.last().after(newEntry);
-                    } else {
-                        sep.after(newEntry);
-                    }
-                }
-                initEntries(newEntry);
-            }
-            closeEditor();
-        }
-    });
-}
-
-function deleteEntry(elem){
-    const button = $(elem);
-    const entry = button.closest('.notebook-entry');
-    const entry_id = entry.data('entry-pk');
-
-    if (button.hasClass('text-danger')) {
-        $.ajax({
-            type: 'POST',
-            url: button.data('url'),
-            data: {'pk': entry_id},
-            beforeSend: function(xhr, settings){
-                disposePopover(button);
-                xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
-            },
-            success: function() {
-                disposePopover(button);
-                disposeTooltips(entry);
-                const entryDate = entry.data('entry-date');
-                entry.remove();
-                if (entryDate) {
-                    const remaining = $('#notebook-content .notebook-entry[data-entry-date="' + entryDate + '"]');
-                    if (remaining.length === 0) {
-                        $('#notebook-content .page-separator[data-date="' + entryDate + '"]').remove();
-                    }
-                }
-                const last_page = $('ul.entry-page').last();
-                if (last_page.find('.notebook-entry').length === 0) {
-                    last_page.remove();
-                }
-            },
-            error: function() {
-                if (typeof button.shake === 'function') {
-                    button.shake();
-                }
-            }
         });
-    } else {
-        button.addClass("text-danger");
-        showPopover(button, {
-            placement: 'right',
-            title: "Are you sure?",
-            content: "Click again to confirm!"
-        });
-        setTimeout(function () {
-            button.removeClass('text-danger');
-            disposePopover(button);
-        }, 2000);
+    } catch (err) {
+        console.warn("Dropzone initialization failed:", err);
     }
 }
 
-function prepare_editor(pk) {
-    const editor = $("#entry-editor");
-    if (editor.is(':visible')) {
-        closeEditor();
-    }
-    editor.data('pk', pk);
+function initModalEntryEditors(modalElement) {
+    const $modal = $(modalElement || "#modal-target");
+    initTextModal($modal);
+    initSketchModal($modal);
+    initDataModal($modal);
+    initFileDropzoneModal($modal);
 }
 
-function edit_text_entry(pk) {
-    prepare_editor(pk);
-    $.get(get_entry_data_url(pk), function(data, status) {
-        create_text_entry(data.text);
-    }, 'json');
-}
-function edit_sketch_entry(pk) {
-    prepare_editor(pk);
-    $.get(get_entry_data_url(pk), function(data, status) {
-        create_sketch_entry(data.text, data.file);
-    }, 'json');
-}
-function edit_image_entry(pk) {
-    prepare_editor(pk);
-    $.get(get_entry_data_url(pk), function(data, status) {
-        create_image_entry(data.text, data.file);
-    }, 'json');
-}
-function edit_file_entry(pk) {
-    prepare_editor(pk);
-    $.get(get_entry_data_url(pk), function(data, status) {
-        create_file_entry(data.text, data.file);
-    }, 'json');
-}
-function edit_video_entry(pk) {
-    prepare_editor(pk);
-    $.get(get_entry_data_url(pk), function(data, status) {
-        create_video_entry(data.text, data.file);
-    }, 'json');
-}
-function edit_data_entry(pk) {
-    prepare_editor(pk);
-    $.get(get_entry_data_url(pk), function(data, status) {
-        create_data_entry(data.text);
-    }, 'json');
+// Modal lifecycle bindings for Entry forms
+$(document).on("shown.bs.modal", function(e) {
+    const modalEl = e.target;
+    if ($(modalEl).closest("#modal-target").length || modalEl.id === "modal") {
+        initModalEntryEditors(modalEl);
+    }
+});
+
+$(document).on("hidden.bs.modal", function(e) {
+    const modalEl = e.target;
+    if ($(modalEl).closest("#modal-target").length || modalEl.id === "modal") {
+        if (MyelnNotebooks.simplemde) {
+            try { MyelnNotebooks.simplemde.toTextArea(); } catch(_) {}
+            MyelnNotebooks.simplemde = null;
+        }
+        if (MyelnNotebooks.sketcher) {
+            MyelnNotebooks.sketcher = null;
+        }
+        if (MyelnNotebooks.table) {
+            MyelnNotebooks.table = null;
+        }
+        if (MyelnNotebooks.myDropzone) {
+            try { MyelnNotebooks.myDropzone.destroy(); } catch(_) {}
+            MyelnNotebooks.myDropzone = null;
+        }
+    }
+});
+
+// Observe dynamic DOM updates inside #modal-target (e.g. form re-render after validation errors)
+if (typeof MutationObserver !== "undefined") {
+    const modalTargetObserver = new MutationObserver(function() {
+        const $modalTarget = $("#modal-target");
+        if ($modalTarget.find(".modal.show, #modal.show").length) {
+            initModalEntryEditors($modalTarget);
+        }
+    });
+    $(document).ready(function() {
+        const targetNode = document.getElementById("modal-target");
+        if (targetNode) {
+            modalTargetObserver.observe(targetNode, { childList: true, subtree: true });
+        }
+    });
 }
 
 //tables
@@ -2662,11 +2462,7 @@ function plotData(element) {
 }
 
 // Window-level exports for template and global access
-window.showEditor = showEditor;
-window.closeEditor = closeEditor;
-window.submitEntry = submitEntry;
-window.deleteEntry = deleteEntry;
-window.prepare_editor = prepare_editor;
+window.initModalEntryEditors = initModalEntryEditors;
 window.addComment = addComment;
 window.addHighlight = addHighlight;
 window.delHighlight = delHighlight;
@@ -2683,28 +2479,3 @@ window.plotData = plotData;
 window.set_sketch_mode = set_sketch_mode;
 window.draw_xy_chart = draw_xy_chart;
 window.drawStackChart = drawStackChart;
-
-// Entry creator and editor aliases (both lowercase and capitalized)
-const entryCreators = {
-    text: create_text_entry,
-    sketch: create_sketch_entry,
-    image: create_image_entry,
-    file: create_file_entry,
-    video: create_video_entry,
-    data: create_data_entry
-};
-
-const entryEditors = {
-    text: edit_text_entry,
-    sketch: edit_sketch_entry,
-    image: edit_image_entry,
-    file: edit_file_entry,
-    video: edit_video_entry,
-    data: edit_data_entry
-};
-
-function createEntry(kind) {
-    return entryCreators[kind]();
-}
-
-window.createEntry = createEntry;
