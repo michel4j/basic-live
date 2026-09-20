@@ -5,7 +5,6 @@ import uuid
 from crisp_modals.forms import (
     Button,
     FullWidth,
-    HalfWidth,
     ModalModelForm,
     Row,
     ThirdWidth,
@@ -16,7 +15,7 @@ from django.core.files.base import ContentFile
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
-from .models import Entry, EntryType, Notebook
+from .models import Entry, Notebook
 from .utils import clean_json
 
 
@@ -159,7 +158,7 @@ class ImageEntryForm(EntryForm):
     file = forms.FileField(
         label=_('Image File'),
         required=False,
-        widget=forms.FileInput(attrs={'accept': 'image/*', 'class': 'd-none dropzone-target'}),
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*', 'class': 'd-none dropzone-target'}),
     )
 
     class Meta(EntryForm.Meta):
@@ -197,7 +196,7 @@ class VideoEntryForm(EntryForm):
     file = forms.FileField(
         label=_('Video File'),
         required=False,
-        widget=forms.FileInput(attrs={'accept': 'video/*', 'class': 'd-none dropzone-target'}),
+        widget=forms.ClearableFileInput(attrs={'accept': 'video/*', 'class': 'd-none dropzone-target'}),
     )
 
     class Meta(EntryForm.Meta):
@@ -239,7 +238,7 @@ class SketchEntryForm(EntryForm):
     file = forms.FileField(
         label=_('Sketch Image'),
         required=False,
-        widget=forms.FileInput(attrs={'accept': 'image/*', 'class': 'd-none'}),
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*', 'class': 'd-none'}),
     )
 
     class Meta(EntryForm.Meta):
@@ -289,7 +288,11 @@ class DataEntryForm(EntryForm):
     class Meta(EntryForm.Meta):
         fields = ['text', 'tags']
         widgets = {
-            'text': forms.Textarea(attrs={'rows': 10, 'id': 'entry-data-editor', 'placeholder': _('JSON data or tabular payload...')}),
+            'text': forms.Textarea(attrs={
+                'rows': 10,
+                'id': 'entry-data-editor',
+                'placeholder': _('JSON data or tabular payload...')
+            }),
         }
         labels = {
             'text': _('Data (JSON)'),
@@ -321,7 +324,7 @@ class FileEntryForm(EntryForm):
     file = forms.FileField(
         label=_('Attachment File'),
         required=False,
-        widget=forms.FileInput(attrs={'class': 'd-none dropzone-target'}),
+        widget=forms.ClearableFileInput(attrs={'class': 'dropzone-target'}),
     )
 
     class Meta(EntryForm.Meta):
