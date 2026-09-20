@@ -1001,105 +1001,243 @@ function edit_data_entry(pk) {
 
 (function ( $ ) {
     $.fn.myelnCalendar = function (options) {
-
-        // Default
+        // Defaults
         const settings = $.extend({
-            target: "#calendar-target",
+            eventSource: null,
+            selectTarget: null,
             currentMonth: moment().format('YYYY-MM-DD'),
+            selectedDate: null,
+            target: null, // If provided, selector for calendar container
         }, options);
 
-        // configure the target to receive content
-        const target = $(settings.target);
-        const contents = target.find('div.contents');
-        const calendar_template = `
-<div id="notebook-clndr">
-    <script id="notebook-clndr-template" type="text/template">
-        <div class="clndr-previous-button no-select"><i class="mi mi-chevron-left"></i></div>
-        <div class="control">
-            <div class="month"><%= month %></div>
-            <div class="year"><%= year %></div>
-        </div>
-        <div class="days-container">
-           <div class="days">
-               <div class="headers">
-                   <% _.each(daysOfTheWeek, function(day) { %>
-                   <div class="day-header"><%= day %></div>
-                   <% }); %>
-               </div>
-               <% _.each(days, function(day) { %>
-               <div class="<%= day.classes %>"><%= day.day %></div>
-               <% }); %>
-           </div>
-        </div>
-        <div class="control">
-            <div class="month"><a href="${settings.selectTarget}" id="clndr-default-link">
-               <i class="mi mi-arrow-right-circle"></i> <span class="pb-1">Latest</span></a>
-           </div>
-        </div>
-        <div class="clndr-next-button no-select"><i class="mi mi-chevron-right"></i></div>
-    </script>
-</div>`;
-
-        // Dismiss calendar dropdown on outside click
-        $(document).on('mousedown touchstart', function(e) {
-            if (target.is(':visible') && !target.is(e.target) && target.has(e.target).length === 0 && !$(e.target).closest('#calendar-button').length) {
-                target.slideUp(200);
+        // Determine containers to initialize
+        // If this element has .calendar-container or is a container, use it.
+        // Otherwise use settings.target or elements matching selector.
+        let containers = this.filter('.calendar-container');
+        if (containers.length === 0) {
+            if (settings.target) {
+                containers = $(settings.target);
+            } else {
+                containers = this.find('.calendar-container');
             }
-        });
+        }
+        if (containers.length === 0 && this.is('div')) {
+            containers = this;
+        }
 
-        // setup events
-        this.click(function () {
-            contents.html(calendar_template);
-            const months_fetched = {};
+        const initialReferenceMonth = moment(settings.currentMonth || moment(), 'YYYY-MM-DD');
+        let currentReferenceMonth = initialReferenceMonth.clone();
+        const selectedDateStr = settings.selectedDate || '';
+        const monthsFetched = {};
+        const eventsByDate = {};
 
-            function fetchEvents(month) {
-                const months = [moment(month).subtract(1, 'month'), month, moment(month).add(1, 'month')];
-                const months_to_fetch = [];
+        function getActiveQueryParams(excludeDate) {
+            const params = new URLSearchParams(window.location.search);
+            if (excludeDate) {
+                params.delete('date');
+            }
+            return params;
+        }
 
-                $.each(months, function(i, item){
-                    const key = item.format('YYYYMM');
-                    if (!months_fetched[key]) {
-                        months_to_fetch.push(key);
-                    }
-                });
+        function buildFilterDateUrl(dateStr) {
+            const params = getActiveQueryParams(false);
+            params.set('date', dateStr);
+            const target = settings.selectTarget || window.location.pathname;
+            const query = params.toString();
+            return target + (query ? '?' + query : '');
+        }
 
-                if (months_to_fetch.length) {
-                    $.ajax({
-                        type: 'GET',
-                        dataType: 'json',
-                        url: settings.eventSource,
-                        data: {
-                            months: months_to_fetch.join()
-                        },
-                        success: function(response) {
-                            clndr.addEvents(response);
-                            $.each(months_to_fetch, function(i, item){
-                                months_fetched[item] = true;
-                            });
-                        }
-                    });
+        function buildClearDateUrl() {
+            const params = getActiveQueryParams(true);
+            const target = settings.selectTarget || window.location.pathname;
+            const query = params.toString();
+            return target + (query ? '?' + query : '');
+        }
+
+        function fetchMonthEvents(monthMoments, callback) {
+            if (!settings.eventSource) {
+                if (typeof callback === 'function') callback();
+                return;
+            }
+            const monthsToFetch = [];
+            $.each(monthMoments, function(i, m) {
+                const key = m.format('YYYYMM');
+                if (!monthsFetched[key]) {
+                    monthsToFetch.push(key);
                 }
+            });
+
+            if (monthsToFetch.length === 0) {
+                if (typeof callback === 'function') callback();
+                return;
             }
 
-            const clndr = $('#notebook-clndr').clndr({
-                template: $('#notebook-clndr-template').html(),
-                startWithMonth: settings.currentMonth,
-                weekOffset: 1,
-                clickEvents: {
-                    click: function(e) {
-                        if (e.events.length) {
-                            window.location.search = 'date=' + e.date.format('YYYY-MM-DD');
-                        }
-                    },
-                    onMonthChange: fetchEvents
+            const queryParams = getActiveQueryParams(true);
+            queryParams.set('months', monthsToFetch.join(','));
+
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: settings.eventSource,
+                data: queryParams.toString(),
+                success: function(response) {
+                    if (Array.isArray(response)) {
+                        $.each(response, function(idx, item) {
+                            if (item.date) {
+                                eventsByDate[item.date] = true;
+                            }
+                        });
+                    }
+                    $.each(monthsToFetch, function(i, key) {
+                        monthsFetched[key] = true;
+                    });
+                    if (typeof callback === 'function') callback();
                 },
-                adjacentDaysChangeMonth: true,
-                forceSixRows: true
+                error: function() {
+                    if (typeof callback === 'function') callback();
+                }
             });
-            fetchEvents(moment(settings.currentMonth, "YYYY-MM-DD"));
-            target.slideDown(200);
-            target.focus();
-        });
+        }
+
+        function renderCalendarStack(container) {
+            const m3 = currentReferenceMonth.clone();
+            const m2 = m3.clone().subtract(1, 'month');
+            const m1 = m3.clone().subtract(2, 'month');
+            const months = [m1, m2, m3];
+
+            // Check if we are at or past the initial/latest month
+            const isAtLatest = currentReferenceMonth.isSameOrAfter(initialReferenceMonth, 'month');
+
+            const navHtml = `
+                <div class="clndr-nav">
+                    <button type="button" class="clndr-nav-btn clndr-prev-btn" title="Previous 3 months">
+                        <i class="mi mi-chevron-left"></i>
+                    </button>
+                    <div class="clndr-nav-label">
+                        ${m1.format('MMM YYYY')} – ${m3.format('MMM YYYY')}
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        ${!isAtLatest ? `<a href="#!" class="clndr-latest-btn" title="Jump to latest month">Latest</a>` : ''}
+                        <button type="button" class="clndr-nav-btn clndr-next-btn ${isAtLatest ? 'disabled' : ''}"
+                                ${isAtLatest ? 'disabled' : ''} title="Next 3 months">
+                            <i class="mi mi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            let stackHtml = '<div class="clndr-months-stack">';
+            const daysOfWeek = ['M', 'T', 'W', 'T', 'F', 'S', 'S']; // Monday first (weekOffset: 1)
+            const todayStr = moment().format('YYYY-MM-DD');
+
+            $.each(months, function(mIdx, monthMoment) {
+                const monthTitle = monthMoment.format('MMMM YYYY');
+                const startOfMonth = monthMoment.clone().startOf('month');
+                const endOfMonth = monthMoment.clone().endOf('month');
+                const totalDays = endOfMonth.date();
+
+                // Monday is 1, Sunday is 7 in isoWeekday
+                const startDay = startOfMonth.isoWeekday(); // 1 (Mon) to 7 (Sun)
+                const leadingBlanks = startDay - 1;
+
+                let monthBlockHtml = `
+                    <div class="clndr-month-block" data-month="${monthMoment.format('YYYYMM')}">
+                        <div class="month-header">${monthTitle}</div>
+                        <div class="days-header">
+                            ${daysOfWeek.map(d => `<div class="day-header">${d}</div>`).join('')}
+                        </div>
+                        <div class="days-grid">
+                `;
+
+                // Leading empty cells
+                for (let b = 0; b < leadingBlanks; b++) {
+                    monthBlockHtml += '<div class="day adjacent-month"></div>';
+                }
+
+                // Month days
+                for (let d = 1; d <= totalDays; d++) {
+                    const currentDayMoment = monthMoment.clone().date(d);
+                    const dayIso = currentDayMoment.format('YYYY-MM-DD');
+                    const isToday = (dayIso === todayStr);
+                    const isSelected = (dayIso === selectedDateStr);
+                    const hasEvent = !!eventsByDate[dayIso];
+
+                    const classes = ['day'];
+                    if (isToday) classes.push('today');
+                    if (isSelected) classes.push('selected');
+                    if (hasEvent) classes.push('has-event');
+
+                    monthBlockHtml += `<div class="${classes.join(' ')}" data-date="${dayIso}" title="${currentDayMoment.format('MMM D, YYYY')}${hasEvent ? ' (Entries)' : ''}">${d}</div>`;
+                }
+
+                // Trailing empty cells to fill the row
+                const trailingBlanks = (7 - ((leadingBlanks + totalDays) % 7)) % 7;
+                for (let a = 0; a < trailingBlanks; a++) {
+                    monthBlockHtml += '<div class="day adjacent-month"></div>';
+                }
+
+                monthBlockHtml += `
+                        </div>
+                    </div>
+                `;
+                stackHtml += monthBlockHtml;
+            });
+            stackHtml += '</div>';
+
+            const contents = container.find('.contents').length ? container.find('.contents') : container;
+            contents.html(navHtml + stackHtml);
+
+            // Bind click handlers
+            contents.find('.clndr-prev-btn').off('click').on('click', function(e) {
+                e.preventDefault();
+                currentReferenceMonth.subtract(3, 'months');
+                updateAll();
+            });
+
+            contents.find('.clndr-next-btn').off('click').on('click', function(e) {
+                e.preventDefault();
+                if (currentReferenceMonth.isBefore(initialReferenceMonth, 'month')) {
+                    currentReferenceMonth.add(3, 'months');
+                    if (currentReferenceMonth.isAfter(initialReferenceMonth, 'month')) {
+                        currentReferenceMonth = initialReferenceMonth.clone();
+                    }
+                    updateAll();
+                }
+            });
+
+            contents.find('.clndr-latest-btn').off('click').on('click', function(e) {
+                e.preventDefault();
+                currentReferenceMonth = initialReferenceMonth.clone();
+                updateAll();
+            });
+
+            contents.find('.day.has-event').off('click').on('click', function(e) {
+                e.preventDefault();
+                const clickedDate = $(this).data('date');
+                if (clickedDate === selectedDateStr) {
+                    // Clicking currently selected date toggles/clears the filter
+                    window.location.href = buildClearDateUrl();
+                } else {
+                    window.location.href = buildFilterDateUrl(clickedDate);
+                }
+            });
+        }
+
+        function updateAll() {
+            const m3 = currentReferenceMonth.clone();
+            const m2 = m3.clone().subtract(1, 'month');
+            const m1 = m3.clone().subtract(2, 'month');
+            fetchMonthEvents([m1, m2, m3], function() {
+                containers.each(function() {
+                    renderCalendarStack($(this));
+                });
+            });
+        }
+
+        // Initial render
+        updateAll();
+
+        return this;
     };
 
 }(jQuery));

@@ -103,6 +103,13 @@ blockquote {
   top: 50%;
   transform: translateY(-50%);
   right: 0;
+  z-index: 1040;
+}
+
+.notebook-sidebar {
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .entry-selector-icon {

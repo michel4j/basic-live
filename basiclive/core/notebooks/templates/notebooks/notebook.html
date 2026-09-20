@@ -19,7 +19,7 @@
 {% block page-title %}{{ notebook.title }}{% endblock %}
 
 {% block page-tools %}
-    <a href="#!" id="calendar-button">
+    <a href="#!" id="calendar-button" class="d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#calendar-offcanvas" role="button" aria-controls="calendar-offcanvas">
         {% show_icon icon="ti ti-calendar ti-md" label="Calendar" %}
     </a>
     {% if user.is_superuser or notebook.owner == user %}
@@ -36,30 +36,43 @@
         </div>
     </div>
     <div class="row position-relative">
-        {% if notebook|is_editable_by:user %}
-        <div class="col-10" style="display: none; position: relative;" id="entry-editor">
-            <div class="border rounded" id="editor-body" data-url="{% url 'notebooks:create-entry' pk=notebook.pk %}" data-notebook="{{ notebook.pk }}"></div>
-            <div class="submit-tools">
-                <button type="button" title="Cancel" onclick="closeEditor();" class="btn btn-sm btn-light">
-                    <i class="mi mi-cross mi-fw"></i>
-                </button>
-                <button id="save-btn" type="button" title="Save" onclick="submitEntry();" class="btn btn-sm btn-success">
-                    <i class="mi mi-save mi-fw"></i>
-                </button>
+        <div class="col-12 col-lg-9">
+            {% if notebook|is_editable_by:user %}
+            <div class="col-12 mb-3" style="display: none; position: relative;" id="entry-editor">
+                <div class="border rounded" id="editor-body" data-url="{% url 'notebooks:create-entry' pk=notebook.pk %}" data-notebook="{{ notebook.pk }}"></div>
+                <div class="submit-tools">
+                    <button type="button" title="Cancel" onclick="closeEditor();" class="btn btn-sm btn-light">
+                        <i class="mi mi-cross mi-fw"></i>
+                    </button>
+                    <button id="save-btn" type="button" title="Save" onclick="submitEntry();" class="btn btn-sm btn-success">
+                        <i class="mi mi-save mi-fw"></i>
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+            <div class="notebook-content" id="notebook-content" data-annotate-url="{% url 'notebooks:annotate-notebook' pk=notebook.id %}">
+                {% for entry in object_list %}
+                    {% show_entry entry %}
+                {% endfor %}
             </div>
         </div>
-        {% endif %}
-        <div class="notebook-content col-9" id="notebook-content" data-annotate-url="{% url 'notebooks:annotate-notebook' pk=notebook.id %}">
-            {% for entry in object_list %}
-                {% show_entry entry %}
-            {% endfor %}
+
+        <div class="col-12 col-lg-3 d-none d-lg-block">
+            <div class="notebook-sidebar sticky-top" style="top: 1rem;">
+                <div id="notebook-sidebar-calendar" class="calendar-container"
+                     data-dates-url="{% url 'notebooks:notebook-dates' pk=notebook.id %}"
+                     data-select-target="{% url 'notebooks:notebook-detail' pk=notebook.id %}">
+                    <div class="contents"></div>
+                </div>
+            </div>
         </div>
+
         <div id="nav-tools">
             <a href="#!" id="to-bottom" title="End of Page"><i class="mi mi-arrow-down-circle"></i></a>
         </div>
     </div>
     <div class="row">
-        <div class="col">
+        <div class="col-12 col-lg-9">
             {% include "itemlist/pagination.html" %}
         </div>
     </div>
@@ -79,6 +92,21 @@
     </ul>
 </div>
 {% endif %}
+
+<div class="offcanvas offcanvas-end d-lg-none" tabindex="-1" id="calendar-offcanvas" aria-labelledby="calendarOffcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="calendarOffcanvasLabel">Calendar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+        <div id="notebook-offcanvas-calendar" class="calendar-container"
+             data-dates-url="{% url 'notebooks:notebook-dates' pk=notebook.id %}"
+             data-select-target="{% url 'notebooks:notebook-detail' pk=notebook.id %}">
+            <div class="contents"></div>
+        </div>
+    </div>
+</div>
+
 <div class="dropdown-menu rounded-0" style="display: none;" id="finder" tabindex="-1">
     <div class="container contents"></div>
 </div>
@@ -108,11 +136,11 @@
                 return false;
             });
 
-            $('#calendar-button').myelnCalendar({
+            $('.calendar-container').myelnCalendar({
                 'eventSource': "{% url 'notebooks:notebook-dates' pk=notebook.id %}",
                 'selectTarget': "{% url 'notebooks:notebook-detail' pk=notebook.id %}",
-                'currentMonth': "{{ entries.0.created|date:'Y-m-d' }}",
-                'target': '#finder'
+                'currentMonth': "{% if selected_date %}{{ selected_date }}{% elif latest_date %}{{ latest_date }}{% endif %}",
+                'selectedDate': "{{ selected_date }}"
             });
             $('#notebook-content').annotate('.notebook-entry');
 

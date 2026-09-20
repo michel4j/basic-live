@@ -238,6 +238,7 @@ class NotebookViewsTestCase(TestCase):
         self.assertIn(self.entry_today, entries)
         self.assertNotIn(self.entry_yesterday, entries)
         self.assertEqual(context["selected_date"], self.today.isoformat())
+        self.assertEqual(context["latest_date"], self.today.isoformat())
         self.assertTrue(context["has_filters"])
 
         # Filter by yesterday's date

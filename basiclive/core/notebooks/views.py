@@ -158,6 +158,11 @@ class NotebookDetail(LoginRequiredMixin, ItemListView):
         context['notebook'] = notebook
         context['can_edit'] = notebook.can_edit(self.request.user)
         context['selected_date'] = self.request.GET.get('date', '').strip()
+        latest_entry = notebook.entries.order_by('-created').first()
+        if latest_entry:
+            context['latest_date'] = timezone.localdate(latest_entry.created).isoformat()
+        else:
+            context['latest_date'] = timezone.localdate(timezone.now()).isoformat()
         context['has_filters'] = self.has_filters
         return context
 

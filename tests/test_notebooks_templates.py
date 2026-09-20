@@ -157,6 +157,14 @@ class NotebookTemplatesTestCase(TestCase):
         self.assertIn(self.notebook.title, rendered)
         self.assertIn("notebook-content", rendered)
         self.assertIn("entry-selector", rendered)
+        self.assertIn("col-lg-9", rendered)
+        self.assertIn("col-lg-3", rendered)
+        self.assertIn("notebook-sidebar", rendered)
+        self.assertIn("notebook-sidebar-calendar", rendered)
+        self.assertIn("calendar-offcanvas", rendered)
+        self.assertIn("notebook-offcanvas-calendar", rendered)
+        self.assertIn('data-bs-toggle="offcanvas"', rendered)
+        self.assertIn("$('.calendar-container').myelnCalendar", rendered)
 
     def test_bootstrap_5_compliance_in_templates(self):
         """Ensure no legacy Bootstrap 4 classes or obsolete tags exist in templates."""
