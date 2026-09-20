@@ -367,7 +367,7 @@ function initDataModal($modal) {
 }
 
 function initFileDropzoneModal($modal) {
-    const $fileInput = $modal.find("input[type='file'][name='file']");
+    const $fileInput = $modal.find("input[type='file'][name='file'].dropzone-target");
     if (!$fileInput.length || $modal.find("#sketch-data-input").length || $fileInput.data("dropzone-initialized")) return;
     $fileInput.data("dropzone-initialized", true);
 

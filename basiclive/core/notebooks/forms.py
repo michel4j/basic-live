@@ -159,7 +159,7 @@ class ImageEntryForm(EntryForm):
     file = forms.FileField(
         label=_('Image File'),
         required=False,
-        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+        widget=forms.FileInput(attrs={'accept': 'image/*', 'class': 'd-none dropzone-target'}),
     )
 
     class Meta(EntryForm.Meta):
@@ -197,7 +197,7 @@ class VideoEntryForm(EntryForm):
     file = forms.FileField(
         label=_('Video File'),
         required=False,
-        widget=forms.ClearableFileInput(attrs={'accept': 'video/*'}),
+        widget=forms.FileInput(attrs={'accept': 'video/*', 'class': 'd-none dropzone-target'}),
     )
 
     class Meta(EntryForm.Meta):
@@ -239,7 +239,7 @@ class SketchEntryForm(EntryForm):
     file = forms.FileField(
         label=_('Sketch Image'),
         required=False,
-        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+        widget=forms.FileInput(attrs={'accept': 'image/*', 'class': 'd-none'}),
     )
 
     class Meta(EntryForm.Meta):
@@ -321,7 +321,7 @@ class FileEntryForm(EntryForm):
     file = forms.FileField(
         label=_('Attachment File'),
         required=False,
-        widget=forms.ClearableFileInput(),
+        widget=forms.FileInput(attrs={'class': 'd-none dropzone-target'}),
     )
 
     class Meta(EntryForm.Meta):
