@@ -40,8 +40,8 @@ class NotebookViewsTestCase(TestCase):
         self.other = User.objects.create_user(username="other", password="password123", name="Other")
         self.admin = User.objects.create_superuser(username="admin", password="password123", name="Admin")
 
-        self.text_type, _ = EntryType.objects.get_or_create(name="text")
-        self.data_type, _ = EntryType.objects.get_or_create(name="data")
+        self.text_type = EntryType.objects.filter(name__iexact="text").first() or EntryType.objects.create(name="text")
+        self.data_type = EntryType.objects.filter(name__iexact="data").first() or EntryType.objects.create(name="data")
 
         # Notebooks with various access levels
         self.public_nb = Notebook.objects.create(
@@ -112,8 +112,9 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(reverse("notebooks:create-notebook"), "/notebooks/new/")
         self.assertEqual(reverse("notebooks:notebook-detail", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/")
         self.assertEqual(reverse("notebooks:notebook-edit", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/edit/")
-        self.assertEqual(reverse("notebooks:create-entry", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/entry/")
-        self.assertEqual(reverse("notebooks:delete-entry", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/remove/")
+        self.assertEqual(reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "text"}), f"/notebooks/{self.public_nb.pk}/entry/new/text/")
+        self.assertEqual(reverse("notebooks:edit-entry", kwargs={"book": self.public_nb.pk, "pk": self.entry_today.pk}), f"/notebooks/{self.public_nb.pk}/entry/{self.entry_today.pk}/edit/")
+        self.assertEqual(reverse("notebooks:delete-entry", kwargs={"book": self.public_nb.pk, "pk": self.entry_today.pk}), f"/notebooks/{self.public_nb.pk}/entry/{self.entry_today.pk}/delete/")
         self.assertEqual(reverse("notebooks:notebook-dates", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/dates/")
         self.assertEqual(reverse("notebooks:annotate-notebook", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/annotate/")
         self.assertEqual(reverse("notebooks:tag-notebook", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/tag/")
@@ -407,30 +408,34 @@ class NotebookViewsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 403)
 
-    @patch("basiclive.core.notebooks.views.loader.get_template")
-    def test_save_entry_create_text(self, mock_get_template):
-        """Test SaveEntry creates a new entry on current day."""
-        mock_template = MagicMock()
-        mock_template.render.return_value = "<div>new entry</div>"
-        mock_get_template.return_value = mock_template
-
+    def test_create_entry_modal_get(self):
+        """GET request to CreateEntry renders modal form."""
         self.client.force_login(self.owner)
-        response = self.client.post(
-            reverse("notebooks:create-entry", kwargs={"pk": self.public_nb.pk}),
-            {"text": "Brand new note", "kind": "text"},
+        response = self.client.get(
+            reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "text"})
         )
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Create Text Entry")
+
+    def test_create_entry_modal_post_success(self):
+        """POST request to CreateEntry creates new entry and returns JSON with redirect url."""
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "text"}),
+            {"text": "Brand new note", "tags": "log, run-1"},
+        )
+        self.assertEqual(response.status_code, 200)
+        json_data = response.json()
+        self.assertIn("url", json_data)
         self.assertTrue(
             Entry.objects.filter(notebook=self.public_nb, text="Brand new note").exists()
         )
+        entry = Entry.objects.get(notebook=self.public_nb, text="Brand new note")
+        self.assertEqual(entry.author, self.owner)
+        self.assertEqual(entry.tags, ["log", "run-1"])
 
-    @patch("basiclive.core.notebooks.views.loader.get_template")
-    def test_save_entry_create_data_cleans_json(self, mock_get_template):
-        """Test SaveEntry cleans JSON when kind is 'data'."""
-        mock_template = MagicMock()
-        mock_template.render.return_value = "<div>new data entry</div>"
-        mock_get_template.return_value = mock_template
-
+    def test_create_entry_data_cleans_json(self):
+        """POST request to CreateEntry with data kind cleans JSON payload."""
         raw_json = json.dumps({
             "headers": ["x", "y"],
             "data": {"0": [1.0, 2.0], "1": [3.14159265, 4.14159265]}
@@ -438,8 +443,8 @@ class NotebookViewsTestCase(TestCase):
 
         self.client.force_login(self.owner)
         response = self.client.post(
-            reverse("notebooks:create-entry", kwargs={"pk": self.public_nb.pk}),
-            {"text": raw_json, "kind": "data"},
+            reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "data"}),
+            {"text": raw_json, "tags": "data"},
         )
         self.assertEqual(response.status_code, 200)
         entry = Entry.objects.filter(notebook=self.public_nb, kind=self.data_type).first()
@@ -447,35 +452,56 @@ class NotebookViewsTestCase(TestCase):
         parsed = json.loads(entry.text)
         self.assertIn("headers", parsed)
 
-    @patch("basiclive.core.notebooks.views.loader.get_template")
-    def test_save_entry_update_existing(self, mock_get_template):
-        """Test SaveEntry updates text of existing entry."""
-        mock_template = MagicMock()
-        mock_template.render.return_value = "<div>updated entry</div>"
-        mock_get_template.return_value = mock_template
+    def test_create_entry_permission_denied(self):
+        """Non-editor cannot create entry."""
+        self.client.force_login(self.other)
+        response = self.client.post(
+            reverse("notebooks:create-entry", kwargs={"book": self.private_nb.pk, "kind": "text"}),
+            {"text": "Unauthorized note", "tags": ""},
+        )
+        self.assertEqual(response.status_code, 403)
 
+    def test_update_entry_modal_get(self):
+        """GET request to UpdateEntry renders modal form."""
+        self.client.force_login(self.owner)
+        response = self.client.get(
+            reverse("notebooks:edit-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Edit Text Entry")
+
+    def test_update_entry_modal_post_success(self):
+        """POST request to UpdateEntry updates entry content and returns JSON response."""
         self.client.force_login(self.owner)
         response = self.client.post(
-            reverse("notebooks:create-entry", kwargs={"pk": self.private_nb.pk}),
-            {"pk": self.entry_today.pk, "text": "Updated entry content", "kind": "text"},
+            reverse("notebooks:edit-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
+            {"text": "Updated entry content", "tags": "updated, tag2"},
         )
         self.assertEqual(response.status_code, 200)
         self.entry_today.refresh_from_db()
         self.assertEqual(self.entry_today.text, "Updated entry content")
+        self.assertEqual(self.entry_today.tags, ["updated", "tag2"])
 
-    @patch("basiclive.core.notebooks.views.loader.get_template")
-    def test_save_entry_permission_denied(self, mock_get_template):
-        """Non-editor cannot save entry."""
+    def test_update_entry_permission_denied(self):
+        """Non-author cannot edit entry."""
         self.client.force_login(self.other)
         response = self.client.post(
-            reverse("notebooks:create-entry", kwargs={"pk": self.private_nb.pk}),
-            {"text": "Unauthorized note", "kind": "text"},
+            reverse("notebooks:edit-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
+            {"text": "Hijacked content", "tags": ""},
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_update_historical_entry_forbidden(self):
+        """Historical entry from a previous day is immutable and cannot be updated."""
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse("notebooks:edit-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_yesterday.pk}),
+            {"text": "Trying to edit history", "tags": ""},
         )
         self.assertEqual(response.status_code, 403)
 
     def test_delete_entry_success(self):
         """Authorized user can delete today's entry."""
-        # Create a dedicated notebook with a single entry for today
         del_nb = Notebook.objects.create(
             name="del-nb",
             title="Delete Notebook",
@@ -493,8 +519,7 @@ class NotebookViewsTestCase(TestCase):
 
         self.client.force_login(self.owner)
         response = self.client.post(
-            reverse("notebooks:delete-entry", kwargs={"pk": del_nb.pk}),
-            {"pk": temp_entry.pk},
+            reverse("notebooks:delete-entry", kwargs={"book": del_nb.pk, "pk": temp_entry.pk}),
         )
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Entry.objects.filter(pk=temp_entry.pk).exists())
@@ -503,8 +528,7 @@ class NotebookViewsTestCase(TestCase):
         """Historical entry from a previous day is immutable and cannot be deleted."""
         self.client.force_login(self.owner)
         response = self.client.post(
-            reverse("notebooks:delete-entry", kwargs={"pk": self.private_nb.pk}),
-            {"pk": self.entry_yesterday.pk},
+            reverse("notebooks:delete-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_yesterday.pk}),
         )
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Entry.objects.filter(pk=self.entry_yesterday.pk).exists())
@@ -513,8 +537,7 @@ class NotebookViewsTestCase(TestCase):
         """Non-editor cannot delete entry."""
         self.client.force_login(self.other)
         response = self.client.post(
-            reverse("notebooks:delete-entry", kwargs={"pk": self.private_nb.pk}),
-            {"pk": self.entry_today.pk},
+            reverse("notebooks:delete-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
         )
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Entry.objects.filter(pk=self.entry_today.pk).exists())

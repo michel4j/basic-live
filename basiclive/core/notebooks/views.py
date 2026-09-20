@@ -22,7 +22,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, ListView, View
 from itemlist.views import ItemListView, SEARCH_VAR
 
-from .forms import NotebookForm
+from .forms import NotebookForm, get_entry_form_class
 from .models import Entry, EntryType, Notebook
 from .utils import clean_json, fuzzy_time
 from ...utils.filters import TagFilter
@@ -162,49 +162,93 @@ class UpdateNotebook(NotebookEditMixin, SuccessMessageMixin, ModalUpdateView):
         return reverse('notebooks:notebook-detail', kwargs={'pk': self.object.pk})
 
 
-class SaveEntry(View):
+class CreateEntry(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
+    model = Entry
+    success_message = _("Entry has been created.")
 
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        data = request.POST
+    def get_notebook(self):
+        if not hasattr(self, '_notebook'):
+            book_id = self.kwargs.get('book') or self.kwargs.get('pk')
+            self._notebook = Notebook.objects.get(pk=book_id)
+        return self._notebook
+
+    def get_entry_type(self):
+        if not hasattr(self, '_entry_type'):
+            kind_str = self.kwargs.get('kind', 'text')
+            entry_type = EntryType.objects.filter(name__iexact=kind_str).first()
+            if not entry_type:
+                entry_type = EntryType.objects.create(name=kind_str.title())
+            self._entry_type = entry_type
+        return self._entry_type
+
+    def get_form_class(self):
+        entry_type = self.get_entry_type()
+        form_class = get_entry_form_class(entry_type)
+        if not form_class:
+            raise Http404(f"Unknown entry kind: {entry_type.name}")
+        return form_class
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        kwargs['notebook'] = self.get_notebook()
+        kwargs['kind'] = self.get_entry_type()
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.notebook = self.get_notebook()
+        form.instance.author = self.request.user
+        form.instance.kind = self.get_entry_type()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('notebooks:notebook-detail', kwargs={'pk': self.get_notebook().pk})
+
+    def test_func(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
         try:
-            book = Notebook.objects.get(id=self.kwargs.get('pk'))
-        except Notebook.DoesNotExist:
-            return HttpResponseNotFound("No notebook to write in")
+            notebook = self.get_notebook()
+        except (Notebook.DoesNotExist, ValueError):
+            return False
+        return notebook.can_edit(user)
 
-        if not book.can_edit(request.user):
-            return HttpResponseForbidden("Not allowed to edit notebook")
 
-        text = data.get('text', '')
-        kind_name = data.get('kind', 'Text')
+class UpdateEntry(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
+    model = Entry
+    success_message = _("Entry has been updated.")
+
+    def get_form_class(self):
+        form_class = get_entry_form_class(self.object.kind)
+        if not form_class:
+            raise Http404(f"Unknown entry kind: {self.object.kind.name}")
+        return form_class
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        kwargs['notebook'] = self.object.notebook
+        kwargs['kind'] = self.object.kind
+        return kwargs
+
+    def get_success_url(self):
+        return reverse('notebooks:notebook-detail', kwargs={'pk': self.object.notebook.pk})
+
+    def test_func(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
         try:
-            kind = EntryType.objects.get(name=kind_name)
-        except EntryType.DoesNotExist:
-            kind = EntryType.objects.create(name=kind_name)
-
-        if kind.name == 'Data' and text:
-            text = clean_json(text)
-        author = request.user
-
-        if data.get('pk'):
-            try:
-                entry = Entry.objects.get(pk=data.get('pk'), notebook=book)
-            except Entry.DoesNotExist:
-                return HttpResponseNotFound("Entry not found")
-            if not entry.can_edit(request.user):
-                return HttpResponseForbidden("Not allowed to edit entry")
-            entry.text = text
-            entry.save()
-        else:
-            entry = Entry.objects.create(notebook=book, author=author, text=text, kind=kind)
-
-        file_upload = request.FILES.get('file')
-        if file_upload:
-            entry.file.save(file_upload.name, file_upload)
-            entry.save()
-
-        success_url = reverse('notebooks:notebook-detail', kwargs={'pk': book.pk})
-        return HttpResponseRedirect(success_url)
+            entry = self.get_object()
+        except (Http404, self.model.DoesNotExist):
+            return False
+        book_id = self.kwargs.get('book')
+        if book_id and str(entry.notebook.pk) != str(book_id):
+            return False
+        return entry.can_edit(user)
 
 
 class DeleteEntry(LoginRequiredMixin, UserPassesTestMixin, ModalDeleteView):
@@ -218,29 +262,14 @@ class DeleteEntry(LoginRequiredMixin, UserPassesTestMixin, ModalDeleteView):
         user = self.request.user
         if not user.is_authenticated:
             return False
-        if user.is_superuser:
-            return True
         try:
             entry = self.get_object()
         except (Http404, self.model.DoesNotExist):
             return False
-        return entry.notebook.can_edit(user) and entry.can_edit(user) and entry.notebook.id == self.kwargs.get('book')
-
-
-class CreateEntry(LoginRequiredMixin, UserPassesTestMixin, ModalCreateView):
-    model = Entry
-    fields = ['text', 'kind', 'file']
-    success_message = _("Entry has been created.")
-
-    def get_initial(self):
-        initial = super().get_initial()
-        initial['kind'] = self.kwargs.get('kind', 'Text').title()
-        initial['notebook'] = self.kwargs.get('book')
-        return initial
-
-    def get_success_url(self):
         book_id = self.kwargs.get('book')
-        return reverse('notebooks:notebook-detail', kwargs={'pk': book_id})
+        if book_id and str(entry.notebook.pk) != str(book_id):
+            return False
+        return entry.notebook.can_edit(user) and entry.can_edit(user)
 
 
 class AnnotateEntry(View):
