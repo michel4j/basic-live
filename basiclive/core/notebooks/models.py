@@ -4,6 +4,8 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
@@ -138,6 +140,14 @@ class Entry(models.Model):
 
     def tag_string(self):
         return ','.join(self.tags)
+
+
+# This receiver handles the file deletion after the entry instance is deleted
+@receiver(post_delete, sender=Entry)
+def delete_file_on_model_delete(sender, instance, **kwargs):
+    if instance.file:
+        # save=False prevents Django from attempting to re-save the object to the database
+        instance.file.delete(save=False)
 
 
 class AnnotationQueryset(models.QuerySet):

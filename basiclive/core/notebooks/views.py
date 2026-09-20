@@ -2,6 +2,7 @@ import datetime
 import functools
 import operator
 import re
+from typing import Any
 
 from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -233,6 +234,11 @@ class UpdateEntry(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, 
         kwargs['notebook'] = self.object.notebook
         kwargs['kind'] = self.object.kind
         return kwargs
+
+    def get_initial(self) -> dict[str, Any]:
+        initial = super().get_initial()
+        initial['tags'] = ';'.join(self.object.tags or [])
+        return initial
 
     def get_success_url(self):
         return reverse('notebooks:notebook-detail', kwargs={'pk': self.object.notebook.pk})
