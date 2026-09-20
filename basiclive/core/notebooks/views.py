@@ -143,6 +143,11 @@ class NotebookDetail(LoginRequiredMixin, ItemListView):
             except (ValueError, TypeError):
                 pass
 
+        q_search = self.request.GET.get('q', '').strip()
+        if q_search and SEARCH_VAR not in self.request.GET:
+            qs, _ = self.get_search_results(qs, q_search)
+            self.has_filters = True
+
         return qs.filter(flt).distinct()
 
     def get_context_data(self, **kwargs):

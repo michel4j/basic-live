@@ -166,6 +166,52 @@ class NotebookTemplatesTestCase(TestCase):
         self.assertIn('data-bs-toggle="offcanvas"', rendered)
         self.assertIn("$('.calendar-container').myelnCalendar", rendered)
 
+    def test_notebook_detail_template_calendar_context(self):
+        """Verify calendar initialization parameters and responsive offcanvas elements."""
+        request = self.factory.get(f"/notebooks/{self.notebook.pk}/")
+        request.user = self.user
+        t_detail = loader.get_template("notebooks/notebook.html")
+
+        # 1. With selected_date and latest_date
+        rendered_selected = t_detail.render({
+            "notebook": self.notebook,
+            "object": self.notebook,
+            "entries": [self.entry],
+            "user": self.user,
+            "selected_date": "2026-09-15",
+            "latest_date": "2026-09-19",
+        }, request)
+        self.assertIn("'currentMonth': \"2026-09-15\"", rendered_selected)
+        self.assertIn("'selectedDate': \"2026-09-15\"", rendered_selected)
+        self.assertIn('data-bs-target="#calendar-offcanvas"', rendered_selected)
+        self.assertIn('aria-controls="calendar-offcanvas"', rendered_selected)
+        self.assertIn('class="offcanvas offcanvas-end d-lg-none"', rendered_selected)
+        self.assertIn('id="calendar-offcanvas"', rendered_selected)
+        self.assertIn('id="notebook-sidebar-calendar"', rendered_selected)
+        self.assertIn('id="notebook-offcanvas-calendar"', rendered_selected)
+
+        # 2. With only latest_date (no selected_date)
+        rendered_latest = t_detail.render({
+            "notebook": self.notebook,
+            "object": self.notebook,
+            "entries": [self.entry],
+            "user": self.user,
+            "selected_date": "",
+            "latest_date": "2026-09-19",
+        }, request)
+        self.assertIn("'currentMonth': \"2026-09-19\"", rendered_latest)
+        self.assertIn("'selectedDate': \"\"", rendered_latest)
+
+        # 3. Without selected_date or latest_date (empty context fallback)
+        rendered_empty = t_detail.render({
+            "notebook": self.notebook,
+            "object": self.notebook,
+            "entries": [self.entry],
+            "user": self.user,
+        }, request)
+        self.assertIn("'currentMonth': \"\"", rendered_empty)
+        self.assertIn("'selectedDate': \"\"", rendered_empty)
+
     def test_bootstrap_5_compliance_in_templates(self):
         """Ensure no legacy Bootstrap 4 classes or obsolete tags exist in templates."""
         templates_dir = Path(notebooks_pkg.__file__).parent / "templates" / "notebooks"

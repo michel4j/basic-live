@@ -213,7 +213,7 @@ class NotebookViewsTestCase(TestCase):
         self.assertIn(self.today.isoformat(), dates)
         self.assertNotIn(self.yesterday.isoformat(), dates)
 
-        # Search for text in today's entry
+        # Search for text in today's entry using SEARCH_VAR ("search")
         response = self.client.get(
             reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
             {"months": month_str, "search": "Today"},
@@ -222,6 +222,51 @@ class NotebookViewsTestCase(TestCase):
         dates = [d["date"] for d in response.json()]
         self.assertIn(self.today.isoformat(), dates)
         self.assertNotIn(self.yesterday.isoformat(), dates)
+
+        # Search for text using 'q' query parameter
+        response = self.client.get(
+            reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
+            {"months": month_str, "q": "Yesterday"},
+        )
+        self.assertEqual(response.status_code, 200)
+        dates = [d["date"] for d in response.json()]
+        self.assertIn(self.yesterday.isoformat(), dates)
+        self.assertNotIn(self.today.isoformat(), dates)
+
+        # Filter by kind (text)
+        response = self.client.get(
+            reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
+            {"months": month_str, "kind__id__exact": self.text_type.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        dates = [d["date"] for d in response.json()]
+        self.assertIn(self.today.isoformat(), dates)
+        self.assertIn(self.yesterday.isoformat(), dates)
+
+        # Filter by kind with no entries (data)
+        response = self.client.get(
+            reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
+            {"months": month_str, "kind__id__exact": self.data_type.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [])
+
+        # Filter by author (owner)
+        response = self.client.get(
+            reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
+            {"months": month_str, "author__id__exact": self.owner.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        dates = [d["date"] for d in response.json()]
+        self.assertIn(self.today.isoformat(), dates)
+
+        # Filter by author with no entries (member)
+        response = self.client.get(
+            reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
+            {"months": month_str, "author__id__exact": self.member.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [])
 
     def test_notebook_detail_date_filtering(self):
         """Test NotebookDetail date query parameter filtering and context."""
@@ -251,6 +296,87 @@ class NotebookViewsTestCase(TestCase):
         entries = list(context["object_list"])
         self.assertNotIn(self.entry_today, entries)
         self.assertIn(self.entry_yesterday, entries)
+
+    def test_notebook_detail_combined_filters(self):
+        """Test NotebookDetail date filtering combined with kind, author, tags, and search."""
+        # Create an entry on yesterday by member with data_type and distinct tag
+        data_entry = Entry.objects.create(
+            notebook=self.private_nb,
+            created=self.yesterday_dt,
+            author=self.member,
+            text=json.dumps({"headers": ["Energy", "Counts"], "data": {"0": [100, 200], "1": [50, 75]}}),
+            kind=self.data_type,
+            tags=["spectrum"],
+        )
+
+        self.client.force_login(self.owner)
+
+        # Filter date + kind (data)
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": self.yesterday.isoformat(), "kind__id__exact": self.data_type.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        entries = list(response.context_data["object_list"])
+        self.assertEqual(entries, [data_entry])
+
+        # Filter date + kind (text) on same date
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": self.yesterday.isoformat(), "kind__id__exact": self.text_type.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        entries = list(response.context_data["object_list"])
+        self.assertEqual(entries, [self.entry_yesterday])
+
+        # Filter date + author (member)
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": self.yesterday.isoformat(), "author__id__exact": self.member.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        entries = list(response.context_data["object_list"])
+        self.assertEqual(entries, [data_entry])
+
+        # Filter date + tag
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": self.yesterday.isoformat(), "tags": "spectrum"},
+        )
+        self.assertEqual(response.status_code, 200)
+        entries = list(response.context_data["object_list"])
+        self.assertEqual(entries, [data_entry])
+
+        # Filter date + search (via SEARCH_VAR 'search')
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": self.yesterday.isoformat(), "search": "Energy"},
+        )
+        self.assertEqual(response.status_code, 200)
+        entries = list(response.context_data["object_list"])
+        self.assertEqual(entries, [data_entry])
+
+        # Filter date + search (via 'q' parameter)
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": self.yesterday.isoformat(), "q": "Energy"},
+        )
+        self.assertEqual(response.status_code, 200)
+        entries = list(response.context_data["object_list"])
+        self.assertEqual(entries, [data_entry])
+
+    def test_notebook_detail_date_no_matches(self):
+        """Test NotebookDetail with a date having no entries returns empty queryset."""
+        self.client.force_login(self.owner)
+        empty_date = "2000-01-01"
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": empty_date},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context_data["object_list"]), [])
+        self.assertEqual(response.context_data["selected_date"], empty_date)
+        self.assertTrue(response.context_data["has_filters"])
 
     def test_notebook_detail_invalid_date(self):
         """Test NotebookDetail ignores invalid date query parameter gracefully."""
