@@ -6,7 +6,6 @@ app_name = "notebooks"
 
 urlpatterns = [
     path('', views.NotebookList.as_view(), name='notebook-list'),
-    path('search/', views.NotebookSearch.as_view(), name='notebook-search'),
     path('new/', views.CreateNotebook.as_view(), name='create-notebook'),
     path('<uuid:pk>/', views.NotebookDetail.as_view(), name='notebook-detail'),
     path('<uuid:pk>/edit/', views.UpdateNotebook.as_view(), name='notebook-edit'),

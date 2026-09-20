@@ -106,10 +106,9 @@ class NotebookViewsTestCase(TestCase):
             tags=["buffer"],
         )
 
-    def test_all_13_urls_reverse(self):
-        """Verify all 13 URL endpoints reverse correctly."""
+    def test_all_urls_reverse(self):
+        """Verify all URL endpoints reverse correctly."""
         self.assertEqual(reverse("notebooks:notebook-list"), "/notebooks/")
-        self.assertEqual(reverse("notebooks:notebook-search"), "/notebooks/search/")
         self.assertEqual(reverse("notebooks:create-notebook"), "/notebooks/new/")
         self.assertEqual(reverse("notebooks:notebook-detail", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/")
         self.assertEqual(reverse("notebooks:notebook-edit", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/edit/")
@@ -175,43 +174,6 @@ class NotebookViewsTestCase(TestCase):
         view.request = request
         self.assertFalse(view.test_func())
 
-    def test_notebook_search_view(self):
-        """Test NotebookSearch with different search tokens."""
-        view = views.NotebookSearch()
-
-        # Keyword in description/title
-        request = self.factory.get("/notebooks/search/?q=Public")
-        request.user = self.owner
-        view.request = request
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
-        self.assertIn(self.public_nb, context['notebooks'])
-
-        # Search by tag
-        request = self.factory.get("/notebooks/search/?q=tag:protein")
-        request.user = self.owner
-        view.request = request
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
-        self.assertIn(self.entry_yesterday, context['entries'])
-
-        # Search by author
-        request = self.factory.get("/notebooks/search/?q=author:owner")
-        request.user = self.owner
-        view.request = request
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
-        self.assertIn(self.entry_today, context['entries'])
-
-        # Search with empty query
-        request = self.factory.get("/notebooks/search/?q=")
-        request.user = self.owner
-        view.request = request
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
-        self.assertEqual(len(context['notebooks']), 0)
-        self.assertEqual(len(context['entries']), 0)
-
     def test_notebook_dates_endpoint(self):
         """Test NotebookDates returns JSON list of page dates in given month."""
         self.client.force_login(self.owner)
@@ -225,6 +187,82 @@ class NotebookViewsTestCase(TestCase):
         self.assertTrue(isinstance(data, list))
         dates = [d["date"] for d in data]
         self.assertIn(self.today.isoformat(), dates)
+
+    def test_notebook_dates_with_active_filters(self):
+        """Test NotebookDates applies active list filters (tags, search, kind)."""
+        self.client.force_login(self.owner)
+        month_str = self.today.strftime("%Y%m")
+
+        # Filter by tag 'protein' (only yesterday's entry has it)
+        response = self.client.get(
+            reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
+            {"months": month_str, "tags": "protein"},
+        )
+        self.assertEqual(response.status_code, 200)
+        dates = [d["date"] for d in response.json()]
+        self.assertIn(self.yesterday.isoformat(), dates)
+        self.assertNotIn(self.today.isoformat(), dates)
+
+        # Filter by tag 'buffer' (only today's entry has it)
+        response = self.client.get(
+            reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
+            {"months": month_str, "tags": "buffer"},
+        )
+        self.assertEqual(response.status_code, 200)
+        dates = [d["date"] for d in response.json()]
+        self.assertIn(self.today.isoformat(), dates)
+        self.assertNotIn(self.yesterday.isoformat(), dates)
+
+        # Search for text in today's entry
+        response = self.client.get(
+            reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
+            {"months": month_str, "search": "Today"},
+        )
+        self.assertEqual(response.status_code, 200)
+        dates = [d["date"] for d in response.json()]
+        self.assertIn(self.today.isoformat(), dates)
+        self.assertNotIn(self.yesterday.isoformat(), dates)
+
+    def test_notebook_detail_date_filtering(self):
+        """Test NotebookDetail date query parameter filtering and context."""
+        self.client.force_login(self.owner)
+
+        # Filter by today's date
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": self.today.isoformat()},
+        )
+        self.assertEqual(response.status_code, 200)
+        context = response.context_data
+        entries = list(context["object_list"])
+        self.assertIn(self.entry_today, entries)
+        self.assertNotIn(self.entry_yesterday, entries)
+        self.assertEqual(context["selected_date"], self.today.isoformat())
+        self.assertTrue(context["has_filters"])
+
+        # Filter by yesterday's date
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": self.yesterday.isoformat()},
+        )
+        self.assertEqual(response.status_code, 200)
+        context = response.context_data
+        entries = list(context["object_list"])
+        self.assertNotIn(self.entry_today, entries)
+        self.assertIn(self.entry_yesterday, entries)
+
+    def test_notebook_detail_invalid_date(self):
+        """Test NotebookDetail ignores invalid date query parameter gracefully."""
+        self.client.force_login(self.owner)
+        response = self.client.get(
+            reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
+            {"date": "not-a-valid-date"},
+        )
+        self.assertEqual(response.status_code, 200)
+        context = response.context_data
+        entries = list(context["object_list"])
+        self.assertIn(self.entry_today, entries)
+        self.assertIn(self.entry_yesterday, entries)
 
     def test_entry_data_endpoint(self):
         """Test EntryData JSON endpoint."""

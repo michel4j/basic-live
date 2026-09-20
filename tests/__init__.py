@@ -8,6 +8,7 @@ def setup_django():
             SECRET_KEY="test-secret-key",
             ALLOWED_HOSTS=["*"],
             INSTALLED_APPS=[
+                "django.contrib.admin",
                 "django.contrib.auth",
                 "django.contrib.contenttypes",
                 "django.contrib.sessions",

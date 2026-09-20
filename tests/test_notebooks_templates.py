@@ -130,16 +130,6 @@ class NotebookTemplatesTestCase(TestCase):
             rendered = t.render({"entry": entry_obj, "notebook": self.notebook, "user": self.user}, request)
             self.assertIn(f"entry-{kind}", rendered)
 
-    def test_render_notebook_search_template(self):
-        """Verify notebook_search.html renders results correctly."""
-        request = self.factory.get("/notebooks/search/?q=test")
-        request.user = self.user
-
-        t_search = loader.get_template("notebooks/notebook_search.html")
-        rendered = t_search.render({"notebooks": [self.notebook], "entries": [self.entry]}, request)
-        self.assertIn(self.notebook.title, rendered)
-        self.assertIn("NOTEBOOKS", rendered)
-
     def test_render_notebook_list_template(self):
         """Verify notebook_list.html renders cleanly."""
         request = self.factory.get("/notebooks/")

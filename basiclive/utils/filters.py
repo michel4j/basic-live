@@ -226,14 +226,26 @@ class TagFilterFactory(FilterFactory):
                 super().__init__(request, new_params, model, *args, **kwargs)
 
             def lookups(self, request, model_admin):
-                tag_list = self.model.objects.annotate(
-                    unpacked_tags=Func('tags', function='jsonb_array_elements_text')
-                ).values_list('unpacked_tags', flat=True).order_by('unpacked_tags').distinct()
-                return ((tag, tag) for tag in tag_list if tag)
+                try:
+                    tag_list = self.model.objects.annotate(
+                        unpacked_tags=Func('tags', function='jsonb_array_elements_text')
+                    ).values_list('unpacked_tags', flat=True).order_by('unpacked_tags').distinct()
+                    return ((tag, tag) for tag in tag_list if tag)
+                except Exception:
+                    tags = set()
+                    for t_list in self.model.objects.values_list(field_name, flat=True):
+                        if isinstance(t_list, list):
+                            tags.update(t_list)
+                    return ((tag, tag) for tag in sorted(tags) if tag)
 
             def queryset(self, request, queryset):
-                flt = {} if not self.value() else {f'{field_name}__contains': [self.value()]}
-                return queryset.filter(**flt)
+                if not self.value():
+                    return queryset
+                from django.db import connection
+                if connection.vendor == 'postgresql':
+                    return queryset.filter(**{f'{field_name}__contains': [self.value()]})
+                else:
+                    return queryset.filter(**{f'{field_name}__icontains': self.value()})
 
         return TagFilter
 

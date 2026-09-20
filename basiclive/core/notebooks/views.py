@@ -1,3 +1,4 @@
+import datetime
 import functools
 import operator
 import re
@@ -19,7 +20,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, ListView, View
-from itemlist.views import ItemListView
+from itemlist.views import ItemListView, SEARCH_VAR
 
 from .forms import NotebookForm
 from .models import Entry, EntryType, Notebook
@@ -115,22 +116,32 @@ class NotebookSearch(NotebookAccessMixin, ListView):
         return context
 
 
-class NotebookDetail(AdminRequiredMixin, ItemListView):
+class NotebookDetail(LoginRequiredMixin, ItemListView):
     model = Entry
     paginate_by = 5
     list_filters = ['kind', 'author', TagFilter('tags')]
-    search_fields = ['author__username', 'tags', 'text', 'annotations__text', 'annotations__author__username']
+    list_search = ['author__username', 'tags', 'text', 'annotations__text', 'annotations__author__username']
     list_ordering = ['-created']
     template_name = "notebooks/notebook.html"
 
     def get_queryset(self, **kwargs):
         qs = super().get_queryset(**kwargs)
-        flt = (
-            Q(notebook__pk=self.kwargs.get('pk')) &
-            (Q(notebook__members=self.request.user.pk) | Q(notebook__owner=self.request.user))
-        )
-        if self.kwargs.get('date'):
-            flt &= Q(created__date=self.kwargs.get('date'))
+        user = self.request.user
+        flt = Q(notebook__pk=self.kwargs.get('pk'))
+        if not (user.is_authenticated and user.is_superuser):
+            flt &= (
+                Q(notebook__owner=user)
+                | Q(notebook__access__gte=Notebook.ACCESS.internal)
+                | Q(notebook__access=Notebook.ACCESS.private, notebook__members=user)
+            )
+        date_str = self.request.GET.get('date', '').strip() or self.kwargs.get('date')
+        if date_str:
+            try:
+                date_obj = datetime.date.fromisoformat(date_str)
+                flt &= Q(created__date=date_obj)
+                self.has_filters = True
+            except (ValueError, TypeError):
+                pass
 
         return qs.filter(flt).distinct()
 
@@ -146,6 +157,8 @@ class NotebookDetail(AdminRequiredMixin, ItemListView):
 
         context['notebook'] = notebook
         context['can_edit'] = notebook.can_edit(self.request.user)
+        context['selected_date'] = self.request.GET.get('date', '').strip()
+        context['has_filters'] = self.has_filters
         return context
 
 
@@ -366,14 +379,30 @@ class NotebookDates(NotebookAccessMixin, DetailView):
         date = timezone.localdate(timezone.now())
         months = request.GET.get('months', date.strftime('%Y%m'))
         month_list = [m.strip() for m in months.split(',') if len(m.strip()) == 6]
-        if month_list:
-            query = functools.reduce(operator.or_, [
-                Q(created__year=int(m[:4]), created__month=int(m[-2:])) for m in month_list
-            ])
-            dates_qs = notebook.entries.filter(query).dates('created', 'day')
-        else:
-            dates_qs = []
+        if not month_list:
+            return JsonResponse([], safe=False)
 
+        query = functools.reduce(operator.or_, [
+            Q(created__year=int(m[:4]), created__month=int(m[-2:])) for m in month_list
+        ])
+        entries = notebook.entries.filter(query)
+
+        # Apply active list filters from NotebookDetail (kind, author, tags, search)
+        detail_view = NotebookDetail()
+        detail_view.request = request
+        detail_view.kwargs = {'pk': notebook.pk}
+        detail_view.model = Entry
+
+        filter_specs, _, _ = detail_view.get_filters()
+        for filter_spec in filter_specs:
+            new_entries = filter_spec.queryset(request, entries)
+            entries = new_entries if new_entries is not None else entries
+
+        search_text = request.GET.get(SEARCH_VAR, '') or request.GET.get('q', '')
+        if search_text:
+            entries, _ = detail_view.get_search_results(entries, search_text)
+
+        dates_qs = entries.dates('created', 'day')
         data = [
             {'date': d.isoformat(), 'title': '', 'location': ''}
             for d in dates_qs
