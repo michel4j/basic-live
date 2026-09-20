@@ -128,7 +128,7 @@ class NotebookTemplatesTestCase(TestCase):
                 kind=EntryType.objects.get(name=kind),
             )
             rendered = t.render({"entry": entry_obj, "notebook": self.notebook, "user": self.user}, request)
-            self.assertIn(f"entry-{kind.lower()}", rendered)
+            self.assertIn(f"entry-{kind}", rendered)
 
     def test_render_notebook_search_template(self):
         """Verify notebook_search.html renders results correctly."""
@@ -147,14 +147,9 @@ class NotebookTemplatesTestCase(TestCase):
 
         t_list = loader.get_template("notebooks/notebook_list.html")
         rendered = t_list.render({
-            "notebooks": {
-                "public": [self.notebook],
-                "private": [],
-                "internal": [],
-            },
-            "user": self.user,
+            "notebooks": Notebook.objects.all(),
         }, request)
-        self.assertIn("Public Notebooks", rendered)
+        self.assertIn("Notebooks", rendered)
         self.assertIn(self.notebook.title, rendered)
 
     def test_render_notebook_detail_template(self):

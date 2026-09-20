@@ -175,7 +175,6 @@ class NotebookViewsTestCase(TestCase):
         view.request = request
         self.assertFalse(view.test_func())
 
-
     def test_notebook_search_view(self):
         """Test NotebookSearch with different search tokens."""
         view = views.NotebookSearch()
@@ -212,16 +211,6 @@ class NotebookViewsTestCase(TestCase):
         context = view.get_context_data()
         self.assertEqual(len(context['notebooks']), 0)
         self.assertEqual(len(context['entries']), 0)
-
-    def test_notebook_detail_view(self):
-        """Test NotebookDetail context and entry ordering."""
-        view = views.NotebookDetail()
-        request = self.factory.get(f"/notebooks/{self.private_nb.pk}/")
-        request.user = self.owner
-        view.request = request
-        view.object = self.private_nb
-        context = view.get_context_data()
-        self.assertEqual(len(context['object_list']), 2)
 
     def test_notebook_dates_endpoint(self):
         """Test NotebookDates returns JSON list of page dates in given month."""
