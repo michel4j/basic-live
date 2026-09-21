@@ -1037,436 +1037,418 @@ if (typeof MutationObserver !== "undefined") {
 
 }(jQuery));
 
-function getSelectionText() {
-    let text = "";
-    if (window.getSelection) {
-        text = window.getSelection().toString();
-    } else if (document.selection && document.selection.type !== "Control") {
-        text = document.selection.createRange().text;
-    }
-    return text;
-}
+// Notebook Annotations Controller
+const NotebookAnnotations = {
+    activePopover: null,
+    activeEntry: null,
+    activeQuote: null,
 
-//comments
-(function($){
-    $.fn.annotate = function(entry_selector, options) {
-        const settings = $.extend({
-            url: $(this).data('annotate-url'),
-        }, options );
+    getCsrfToken: function() {
+        return getCsrfToken();
+    },
 
-        let eventData = {};
-        const html = $('html');
-        const selector = entry_selector + ' > *';
-        const highlight_mark = entry_selector + ' mark.highlight';
+    escapeHtml: function(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    },
 
-        // prepare and emit "myeln:annotate" event on notebook entry nodes
-        $(this).on('mousedown touchstart', selector + ', ' + highlight_mark, function(e){
-            eventData.x0 = e.clientX;
-            eventData.y0 = e.clientY;
-            if ($(this).is('mark.highlight')) {
-                eventData.start_mark = this;
-                return true;
-            }
-        });
-        $(this).on('mouseup touchend', selector + ', ' + highlight_mark, function(e){
-            eventData.x1 = e.clientX;
-            eventData.y1 = e.clientY;
-            eventData.selection = getSelectionText().trim();
-            if ($(this).is('mark.highlight')) {
-                eventData.end_mark = this;
-                eventData.within_mark = (eventData.start_mark === eventData.end_mark) && (eventData.start_mark !== null);
-                return true;
-            }
-            eventData.node = $(this);
+    formatTime: function(isoString) {
+        if (!isoString) return '';
+        if (window.moment) {
+            return moment(isoString).fromNow();
+        }
+        return isoString;
+    },
 
-            if (eventData.selection) {
-                const o = eventData.node.offset();
-                const w = eventData.node.width();
-                const h = eventData.node.height();
-                const xe = (eventData.x1 + eventData.x0)/2 + html.scrollLeft();
-                const ye = Math.max(eventData.y1, eventData.y0, h) + 20 + html.scrollTop();
-                const pos = {
-                    x: Math.max(-w/2, Math.min(100*(xe - (o.left + w/2))/w, w/2)),
-                    y: (ye - o.top)*100/h - 100
-                };
+    init: function(containerSelector) {
+        const self = this;
+        const root = $(containerSelector || '#notebook-content');
 
-                $(this).trigger({
-                    type: "myeln:annotate",
-                    offset: pos.x + '%, ' + pos.y + '%',
-                    x: pos.x,
-                    y: pos.y,
-                    url: $(this).data('annotate-url'),
-                    selection: eventData.selection,
-                    highlighted: eventData.within_mark,
-                });
-                eventData = {};
-            }
-        });
-        $(document).on("myeln:annotate", selector, function(e) {
-            const node = $(this);
-            const entry = $(node.closest(entry_selector));
-            const hideHighlight = Boolean(e.highlighted);
-            const popover = new bootstrap.Popover(this, {
-                trigger: "click",
-                target: node[0],
-                container: 'body',
-                placement: "bottom",
-                customClass: "annotation-popover",
-                fallbackPlacement: ['top'],
-                boundary: 'window',
-                html: true,
-                content:  `
-                    <div class="d-flex flex-row annotation-menu m-0" data-bs-theme="dark">   
-                        <a href="#!" class="entry-add-comment pe-3" title="Comment">       
-                            <i class="ti ti-comment-alt ti-md ti-fw"></i>   
-                        </a>
-                        <a href="#!" class="entry-add-highlight ps-3" title="Highlight">       
-                            <i class="ti ti-marker-alt ti-md ti-fw"></i>   
-                        </a>
-                    </div>`
-            });
-
-            // Save annotation parameters to window
-            MyelnNotebooks.annotation = {
-                pk: null,
-                node: node,
-                method: 'create',
-                index: node.index(),
-                entry_id: entry.data('entry-pk'),
-                offset: e.offset,
-                selection: e.selection,
-                type: 'highlight',
-                url: entry.data('annotate-url')
-            };
-        });
-
-        $(document).on("myeln:unannotate", "mark", function() {
-            if (MyelnNotebooks.annotation != null) {
+        // Text selection handling to open comment popover
+        root.on('mouseup touchend', '.notebook-entry', function(e) {
+            // Ignore mouseups on interactive controls or inside active popovers
+            if ($(e.target).closest('.entry-tools, .entry-comment-badge, .tag-cloud, .popover, .btn, a, input, textarea').length) {
                 return;
             }
-            const node = $(this);
-            const entry = $(node.closest(entry_selector));
-            let menu = "";
-            if ($(this).data('editable')){
-                menu = (
-                    '<ul class="list-unstyled annotation-menu m-0">' +
-                    '   <li class="undo" onclick="delHighlight();" title="unhighlight">' +
-                    '       <i class="mi mi-highlighter mi-fw"></i>' +
-                    '   </li>' +
-                    '</ul>'
-                );
-            } else {
-                menu = (
-                    '<ul class="list-unstyled annotation-menu m-0">' +
-                    '   <li>' + $(this).data('author') + '   </li>' +
-                    '</ul>'
-                );
+
+            const selection = (window.getSelection ? window.getSelection().toString() : '').trim();
+            if (!selection) {
+                return;
             }
-            const popover = new bootstrap.Popover(this, {
-                customClass: "annotation-popover",
-                trigger: "click",
-                html: true,
-                container: 'body',
-                placement: "bottom",
-                fallbackPlacement: ['top'],
-                boundary: 'window',
-                content: menu,
+
+            const entry = $(this);
+            self.showCreatePopover(entry, selection, e);
+        });
+
+        // Comment badge button toggle
+        root.on('click', '.entry-comment-badge', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const badgeBtn = $(this);
+            self.toggleCommentsPopover(badgeBtn);
+        });
+
+        // Close active popover when clicking outside
+        $(document).on('mousedown touchstart', function(e) {
+            if (self.activePopover) {
+                const popoverEl = document.querySelector('.annotation-popover.show, .entry-comments-popover.show');
+                if (popoverEl && (popoverEl.contains(e.target) || $(e.target).closest('.entry-comment-badge').length)) {
+                    return;
+                }
+                self.disposeActivePopover();
+            }
+        });
+    },
+
+    disposeActivePopover: function() {
+        if (this.activePopover) {
+            try {
+                this.activePopover.dispose();
+            } catch (err) {
+                // Ignore already disposed popover errors
+            }
+            this.activePopover = null;
+        }
+        this.activeEntry = null;
+        this.activeQuote = null;
+    },
+
+    showCreatePopover: function(entry, quote, event) {
+        const self = this;
+        self.disposeActivePopover();
+
+        const annotateUrl = entry.data('annotate-url');
+        if (!annotateUrl) return;
+
+        self.activeEntry = entry;
+        self.activeQuote = quote;
+
+        // Position helper element or anchor to target
+        const targetEl = event.target || entry[0];
+
+        const formHtml = `
+            <div class="annotation-create-card p-2" style="min-width: 240px; max-width: 320px;">
+                <div class="mb-2 text-muted small fst-italic text-truncate" title="${self.escapeHtml(quote)}">
+                    "${self.escapeHtml(quote)}"
+                </div>
+                <div class="mb-2">
+                    <textarea class="form-control form-control-sm annotation-text-input" rows="3" placeholder="Add a comment..."></textarea>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-cancel-annotation">Cancel</button>
+                    <button type="button" class="btn btn-sm btn-primary btn-submit-annotation">Save</button>
+                </div>
+            </div>
+        `;
+
+        const popover = new bootstrap.Popover(targetEl, {
+            trigger: 'manual',
+            html: true,
+            placement: 'bottom',
+            fallbackPlacement: ['top'],
+            customClass: 'annotation-popover shadow-sm',
+            container: 'body',
+            content: formHtml,
+            sanitize: false
+        });
+
+        popover.show();
+        self.activePopover = popover;
+
+        const popoverTip = popover.getTipElement ? popover.getTipElement() : document.querySelector('.annotation-popover.show');
+        if (popoverTip) {
+            const input = popoverTip.querySelector('.annotation-text-input');
+            if (input) input.focus();
+
+            $(popoverTip).find('.btn-cancel-annotation').on('click', function() {
+                self.disposeActivePopover();
             });
 
-            // Save annotation parameters to window
-            MyelnNotebooks.annotation = {
-                node: node,
-                index: null,
-                method: 'remove',
-                pk: node.data('pk'),
-                entry_id: entry.data('entry-pk'),
-                selections: node.text(),
-                type: 'highlight',
-                url: entry.data('annotate-url')
-            };
-        });
+            $(popoverTip).find('.btn-submit-annotation').on('click', function() {
+                const text = $(input).val();
+                self.submitAnnotation(entry, text, quote);
+            });
 
-        // close popup menu on next click outside
-        $(document).on('mousedown touchstart', function (e) {
-            if (MyelnNotebooks.annotation && MyelnNotebooks.annotation.node) {
-                const nodeEl = getDomElement(MyelnNotebooks.annotation.node);
-                if (!nodeEl) return;
-                const popover = (window.bootstrap && bootstrap.Popover ? bootstrap.Popover.getInstance(nodeEl) : null) || (MyelnNotebooks.annotation.node.data ? MyelnNotebooks.annotation.node.data('bs.popover') : null);
-                if (popover) {
-                    const popoverTip = popover.tip || (popover.getTipElement ? popover.getTipElement() : null) || popover;
-                    if (!$(popoverTip).is(e.target) && $(popoverTip).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-                        disposePopover(MyelnNotebooks.annotation.node);
-                        MyelnNotebooks.annotation = null;
-                    }
+            $(input).on('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    self.submitAnnotation(entry, $(input).val(), quote);
                 }
-            }
-        });
-
-        $(document).on('click', 'mark.highlight', function(){
-            $(this).trigger('myeln:unannotate');
-        });
-    };
-})(jQuery);
-
-
-function addComment() {
-    const template = (
-        '<div class="comment-form" tabindex="-1">' +
-        '    <textarea id="comment-input" rows="6" cols="30" name="text" ' +
-        '       class="form-control input-md" placeholder="Add your comments ..."></textarea>' +
-        '    <div class="w-100 comment-form-tools">' +
-        '       <i class="mi mi-comments mi-fw"></i>' +
-        '       <button type="button" title="Cancel" onclick="cancelComment();" class="btn btn-sm btn-light ms-auto me-2"><i class="mi mi-cross"></i>' +
-        '       </button>' +
-        '       <button type="button" title="Save" onclick="submitComment();" class="btn btn-sm btn-success"><i class="mi mi-save mi-fw"></i>' +
-        '       </button>' +
-        '   </div>' +
-        '</div>'
-    );
-    if (MyelnNotebooks.annotation) {
-        const annotation = MyelnNotebooks.annotation;
-        disposePopover(annotation.node);
-
-        // show comment form
-        annotation.type = 'comment';
-        showPopover(annotation.node, {
-            trigger: "click",
-            html: true,
-            container: 'body',
-            placement: "bottom",
-            fallbackPlacement: ['top'],
-            offset: annotation.offset,
-            content: template,
-            template: (
-                '<div class="popover form menu" role="tooltip">' +
-                '   <div class="popover-arrow arrow"></div>' +
-                '   <h3 class="popover-header"></h3>' +
-                '   <div class="popover-body"></div>' +
-                '</div>'
-            )
-        });
-        annotation.node.mark(annotation.selection, {
-            caseSensitive: true,
-            ignoreJoiners: true,
-            className: annotation.type,
-            acrossElements: true,
-            separateWordSearch: false,
-            "each": function(mark) {
-                if (!($(mark).text().replace(/\s/g, '').length)) {
-                    $(mark).css('display', 'none');
-                }
-            }
-        });
-    }
-    $('#comment-input').focus();
-}
-
-function addHighlight() {
-    if (MyelnNotebooks.annotation) {
-        const annotation = MyelnNotebooks.annotation;
-        disposePopover(annotation.node);
-        annotation.node.mark(annotation.selection, {
-            caseSensitive: true,
-            ignoreJoiners: true,
-            className: 'highlight',
-            acrossElements: true,
-            separateWordSearch: false
-        });
-        submitAnnotation();
-    }
-}
-
-function delHighlight() {
-    if (MyelnNotebooks.annotation) {
-        submitAnnotation();
-    }
-}
-
-function delComment(pk) {
-    const item = JSON.parse($('#annotation-'+pk).text());
-    MyelnNotebooks.annotation = {
-        node: null,
-        index: item.node,
-        method: 'remove',
-        pk: item.id,
-        entry_id: item.entry_id,
-        selections: "",
-        type: 'comment',
-        url: $('html').data('annotate-url'),
-    };
-    submitAnnotation();
-}
-
-function cancelComment(){
-    if (MyelnNotebooks.annotation) {
-        const annotation = MyelnNotebooks.annotation;
-        disposePopover(annotation.node);
-        MyelnNotebooks.annotation = null;
-        if (annotation.node) {
-            annotation.node.unmark({className:'comment'});
+            });
         }
-    }
-}
+    },
 
-function submitComment() {
-    if (MyelnNotebooks.annotation) {
-        const annotation = MyelnNotebooks.annotation;
-        annotation.text = $('#comment-input').val();
-
-        // exit if not text provided for comment types
-        disposePopover(annotation.node);
-        if (annotation.type === 'comment' && !annotation.text ) {
-            MyelnNotebooks.annotation = null;
-            if (annotation.node) {
-                annotation.node.unmark();
-            }
-        } else {
-            submitAnnotation();
+    submitAnnotation: function(entry, text, quote) {
+        const self = this;
+        const trimmedText = (text || '').trim();
+        if (!trimmedText) {
+            return;
         }
-    }
-}
 
-function submitAnnotation() {
-    if (MyelnNotebooks.annotation) {
-        const annotation = MyelnNotebooks.annotation;
+        const annotateUrl = entry.data('annotate-url');
+        if (!annotateUrl) return;
 
         $.ajax({
             type: 'POST',
-            url: annotation.url,
-            data: {
-                'pk': annotation.pk,
-                'entry_id': annotation.entry_id,
-                'kind': annotation.type,
-                'selection': annotation.selection,
-                'index': annotation.index,
-                'text': annotation.text,
-                'method': annotation.method
-            },
-            beforeSend: function(xhr, settings){
-                if (annotation.node) {
-                    disposePopover(annotation.node);
-                }
-                MyelnNotebooks.annotation = null;
-                xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
+            url: annotateUrl,
+            contentType: 'application/json',
+            data: JSON.stringify({
+                text: trimmedText,
+                quote: quote || ''
+            }),
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('X-CSRFToken', self.getCsrfToken());
             },
             success: function(response) {
-                // const selector = '#entry-'+annotation.entry_id;
-                // disposeTooltips(selector);
-                // $(selector).replaceWith(response);
-                // initEntries(selector);
+                self.disposeActivePopover();
+                self.appendAnnotationData(entry, response, true);
+                if (response.quote) {
+                    self.markQuote(entry, response.quote, response.id);
+                }
+                self.updateCommentBadge(entry, 1);
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Failed to save annotation.');
             }
         });
-    }
-}
+    },
 
+    deleteAnnotation: function(entry, annId, popoverInstance) {
+        const self = this;
+        const annotateUrl = entry.data('annotate-url');
+        if (!annotateUrl) return;
 
-function markAnnotations(selector){
-    $(selector).each(function(){
-        const entry = $(this);
-        //highlights
-        const highlights = [];
-        entry.find('.annotations > script.highlight-annotation').each( function() {
-            const item = JSON.parse($(this).text());
-            item.isAuthor = $(this).data('isauthor');
-            highlights.push(item);
-        });
+        const deleteUrl = annotateUrl.endsWith('/') ? `${annotateUrl}${annId}/` : `${annotateUrl}/${annId}/`;
 
-        //mark each one
-        $.each(highlights, function(i, item){
-            const node = entry.children().eq((item.node));
-            if (node) {
-                node.mark(item.selections,{
-                    caseSensitive: true,
-                    ignoreJoiners: true,
-                    className: 'highlight',
-                    acrossElements: true,
-                    separateWordSearch: false,
-                    each: function(mark) {
-                        $(mark).attr('data-pk', item.id);
-                        $(mark).attr('data-editable', item.isAuthor);
-                        $(mark).attr('data-author', item.author);
-                        if (!($(mark).text().replace(/\s/g, '').length)) {
-                            $(mark).css('display', 'none');
-                        }
-                    }
-                });
+        $.ajax({
+            type: 'DELETE',
+            url: deleteUrl,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('X-CSRFToken', self.getCsrfToken());
+            },
+            success: function() {
+                // Remove script tag
+                entry.find(`#annotation-${annId}`).remove();
+
+                // Re-mark entry to update highlights
+                self.markEntry(entry);
+
+                // Decrement count
+                self.updateCommentBadge(entry, -1);
+
+                // Refresh comments popover if open
+                if (popoverInstance) {
+                    self.refreshCommentsPopover(entry, popoverInstance);
+                }
+            },
+            error: function() {
+                alert('Failed to delete annotation.');
             }
         });
+    },
 
-        //comments
-        const comments_template = _.template(
-            '<div class="node-comments dropdown-menu">' +
-            '    <% _.each(comments, function(comment) { %>' +
-            '    <div class="comments-content" data-pk="<%= comment.id %>" onmouseenter="markComment(this);" onmouseleave="unmarkComment(this);">' +
-            '       <div class="comment-header w-100">' +
-            '           <strong><%= comment.author %></strong>' +
-            '           <span><%= comment.time %></span>' +
-            '       </div>' +
-            '       <div class="comment-body"><%= comment.text %></div>' +
-            '       <% if (comment.isAuthor) { %> ' +
-            '       <div href="#!" class="comment-delete w-100">' +
-            '           <i class="mi mi-cross" onclick="delComment(<%= comment.id %>);"></i>' +
-            '       </div>' +
-            '       <% } %>' +
-            '    </div>' +
-            '    <% }); %>' +
-            '</div>'
-        );
+    appendAnnotationData: function(entry, data, isAuthor) {
+        let container = entry.find('.annotations-data');
+        if (!container.length) {
+            entry.append('<div class="annotations-data" hidden></div>');
+            container = entry.find('.annotations-data');
+        }
+        const scriptEl = $(document.createElement('script'))
+            .attr('id', `annotation-${data.id}`)
+            .attr('type', 'application/json')
+            .attr('data-pk', data.id)
+            .attr('data-isauthor', isAuthor ? 'true' : 'false')
+            .text(JSON.stringify(data));
+        container.append(scriptEl);
+    },
 
-        entry.children().each(function (){
-            const node = $(this);
-            const items = [];
-            entry.find('.annotations > script.comment-'+node.index()).each(function(){
+    getEntryAnnotations: function(entry) {
+        const annotations = [];
+        entry.find('.annotations-data script[type="application/json"]').each(function() {
+            try {
                 const item = JSON.parse($(this).text());
-                item.isAuthor = $(this).data('isauthor');
-                items.push(item);
-            });
-
-            if (items.length) {
-                node.append($(
-                    '<div class="comment-mark ignore-selects">' +
-                    '   <span class="mi-stack mi-2x">' +
-                    '       <i class="mi mi-comment-alt mi-stack-2x bubble"></i>' +
-                    '       <strong class="mi-stack-1x mi-inverse">'+items.length+'</strong>' +
-                    '   </span>' +
-                    comments_template({
-                        comments: items
-                    }) +
-                    '</div>'
-                ));
+                item.isAuthor = $(this).attr('data-isauthor') === 'true';
+                annotations.push(item);
+            } catch (e) {
+                // ignore parsing errors
             }
         });
-    });
-}
+        return annotations;
+    },
 
-function markComment(element) {
-    const data = JSON.parse($('#annotation-'+$(element).data('pk')).text());
-    const node = $(element).closest('.notebook-entry').children().eq((data.node));
-    if (node) {
-        node.mark(data.selections,{
-            "caseSensitive": true,
-            "ignoreJoiners": true,
-            "className": 'comment',
-            "acrossElements": true,
-            "separateWordSearch": false,
-            "each": function(mark) {
-                if (!($(mark).text().replace(/\s/g, '').length)) {
-                    $(mark).css('display', 'none');
+    updateCommentBadge: function(entry, delta) {
+        const badge = entry.find('.entry-comment-badge .comment-count');
+        if (!badge.length) return;
+
+        let current = parseInt(badge.text(), 10) || 0;
+        let next = Math.max(0, current + delta);
+        badge.text(next);
+
+        if (next > 0) {
+            badge.removeClass('bg-transparent text-muted').addClass('bg-secondary text-white');
+        } else {
+            badge.removeClass('bg-secondary text-white').addClass('bg-transparent text-muted');
+        }
+    },
+
+    toggleCommentsPopover: function(badgeBtn) {
+        const self = this;
+        const entry = badgeBtn.closest('.notebook-entry');
+
+        if (self.activePopover) {
+            const isSame = self.activeEntry && self.activeEntry[0] === entry[0];
+            self.disposeActivePopover();
+            if (isSame) {
+                return;
+            }
+        }
+
+        const annotations = self.getEntryAnnotations(entry);
+        let contentHtml = '';
+
+        if (!annotations.length) {
+            contentHtml = '<div class="p-3 text-muted text-center small">No comments yet.</div>';
+        } else {
+            let itemsHtml = '';
+            annotations.forEach(function(ann) {
+                const quoteBlock = ann.quote ? `<div class="comment-quote">"${self.escapeHtml(ann.quote)}"</div>` : '';
+                const deleteBtn = ann.isAuthor ? `
+                    <button type="button" class="btn btn-link btn-sm p-0 comment-delete-btn" data-pk="${ann.id}" title="Delete comment">
+                        <i class="mi mi-trash"></i>
+                    </button>` : '';
+
+                itemsHtml += `
+                    <div class="comment-item" data-pk="${ann.id}">
+                        ${quoteBlock}
+                        <div class="comment-meta">
+                            <span class="fw-bold">${self.escapeHtml(ann.author)}</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <span>${self.formatTime(ann.created)}</span>
+                                ${deleteBtn}
+                            </div>
+                        </div>
+                        <div class="comment-text">${self.escapeHtml(ann.text)}</div>
+                    </div>
+                `;
+            });
+            contentHtml = `<div class="entry-comments-card">${itemsHtml}</div>`;
+        }
+
+        const popover = new bootstrap.Popover(badgeBtn[0], {
+            trigger: 'manual',
+            html: true,
+            placement: 'bottom',
+            fallbackPlacement: ['top'],
+            customClass: 'entry-comments-popover shadow-sm',
+            container: 'body',
+            content: contentHtml,
+            sanitize: false
+        });
+
+        popover.show();
+        self.activePopover = popover;
+        self.activeEntry = entry;
+
+        self.bindCommentsPopoverEvents(entry, popover);
+    },
+
+    refreshCommentsPopover: function(entry, popoverInstance) {
+        const self = this;
+        const annotations = self.getEntryAnnotations(entry);
+        if (!annotations.length) {
+            self.disposeActivePopover();
+            return;
+        }
+
+        let itemsHtml = '';
+        annotations.forEach(function(ann) {
+            const quoteBlock = ann.quote ? `<div class="comment-quote">"${self.escapeHtml(ann.quote)}"</div>` : '';
+            const deleteBtn = ann.isAuthor ? `
+                <button type="button" class="btn btn-link btn-sm p-0 comment-delete-btn" data-pk="${ann.id}" title="Delete comment">
+                    <i class="mi mi-trash"></i>
+                </button>` : '';
+
+            itemsHtml += `
+                <div class="comment-item" data-pk="${ann.id}">
+                    ${quoteBlock}
+                    <div class="comment-meta">
+                        <span class="fw-bold">${self.escapeHtml(ann.author)}</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span>${self.formatTime(ann.created)}</span>
+                            ${deleteBtn}
+                        </div>
+                    </div>
+                    <div class="comment-text">${self.escapeHtml(ann.text)}</div>
+                </div>
+            `;
+        });
+
+        const popoverTip = popoverInstance.getTipElement ? popoverInstance.getTipElement() : document.querySelector('.entry-comments-popover.show');
+        if (popoverTip) {
+            const body = popoverTip.querySelector('.popover-body');
+            if (body) {
+                body.innerHTML = `<div class="entry-comments-card">${itemsHtml}</div>`;
+                self.bindCommentsPopoverEvents(entry, popoverInstance);
+            }
+        }
+    },
+
+    bindCommentsPopoverEvents: function(entry, popoverInstance) {
+        const self = this;
+        const popoverTip = popoverInstance.getTipElement ? popoverInstance.getTipElement() : document.querySelector('.entry-comments-popover.show');
+        if (!popoverTip) return;
+
+        $(popoverTip).find('.comment-delete-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const annId = $(this).data('pk');
+            if (confirm('Are you sure you want to delete this comment?')) {
+                self.deleteAnnotation(entry, annId, popoverInstance);
+            }
+        });
+    },
+
+    markQuote: function(entry, quote, annId) {
+        if (!quote || !entry.mark) return;
+        entry.mark(quote, {
+            caseSensitive: true,
+            ignoreJoiners: true,
+            className: 'annotation-quote',
+            acrossElements: true,
+            separateWordSearch: false,
+            each: function(mark) {
+                if (annId) {
+                    $(mark).attr('data-ann-pk', annId);
                 }
             }
         });
-    }
-}
+    },
 
-function unmarkComment(element) {
-    const data = JSON.parse($('#annotation-'+$(element).data('pk')).text());
-    const node = $(element).closest('.notebook-entry').children().eq((data.node));
-    if (node) {
-        node.unmark({
-            "className": 'comment',
+    markEntry: function(entry) {
+        const self = this;
+        const $entry = $(entry);
+        if ($entry.unmark) {
+            $entry.unmark({ className: 'annotation-quote' });
+        }
+
+        const annotations = self.getEntryAnnotations($entry);
+        annotations.forEach(function(ann) {
+            if (ann.quote) {
+                self.markQuote($entry, ann.quote, ann.id);
+            }
         });
     }
-}
+};
+
+(function($) {
+    $.fn.annotate = function(entry_selector) {
+        NotebookAnnotations.init(this);
+        return this;
+    };
+})(jQuery);
+
 
 
 //tags
@@ -1655,7 +1637,7 @@ function initEntries(selector) {
         });
 
         // Annotations
-        markAnnotations(this);
+        NotebookAnnotations.markEntry(this);
 
         // Data plotting tab - support both BS5 data-bs-toggle and BS4 data-toggle
         $(this).find('a.plot-tab[data-bs-toggle="tab"], a.plot-tab[data-toggle="tab"]').on('shown.bs.tab', function(e){
@@ -2453,17 +2435,10 @@ function plotData(element) {
 
 // Window-level exports for template and global access
 window.initModalEntryEditors = initModalEntryEditors;
-window.addComment = addComment;
-window.addHighlight = addHighlight;
-window.delHighlight = delHighlight;
-window.delComment = delComment;
-window.cancelComment = cancelComment;
-window.submitComment = submitComment;
+window.NotebookAnnotations = NotebookAnnotations;
 window.editTags = editTags;
 window.cancelTags = cancelTags;
 window.submitTags = submitTags;
-window.markComment = markComment;
-window.unmarkComment = unmarkComment;
 window.initEntries = initEntries;
 window.plotData = plotData;
 window.set_sketch_mode = set_sketch_mode;

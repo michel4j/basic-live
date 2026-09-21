@@ -122,14 +122,7 @@
                 'selectedDate': "{{ selected_date }}"
             });
             $('#notebook-content').annotate('.notebook-entry');
-
             initEntries('.notebook-entry');
-            $(document).on('click', '.entry-add-comment', function(e) {
-                addComment()
-            });
-            $(document).on('click', '.entry-add-highlight', function(e) {
-                addHighlight();
-            });
         });
     </script>
 {% endblock %}

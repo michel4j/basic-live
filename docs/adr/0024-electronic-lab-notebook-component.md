@@ -25,7 +25,11 @@ We decided to integrate the electronic lab notebook application directly into Ba
   - Native ORM Partitioning: Date partitioning and calendar indexing are handled natively via the Django ORM using indexed timestamp queries (`created__date`, `dates('created', 'day')`, `TruncDate`). The obsolete `Page` intermediary model has been eliminated.
   - Windowed Pagination: Entries are loaded in count-based batches (`PAGE_SIZE`), rendering dynamic date separators (`page-separator`) when the calendar day changes across consecutive entries.
   - Immutability rule: `Entry.is_editable()` permits modification and deletion only on the calendar day of creation, provided no `Annotation` records have been attached. Historical entries are permanent audit records.
-  - `Annotation` enables collaborative text highlighting and comments anchored to entry node indices.
+  - `Annotation` Architecture:
+    - Unified Comment Model: All annotations are comments containing a required message (`text`) and optional text selection (`quote`). Standalone highlights without comments, DOM `node_index` positioning, and multi-line selection arrays were eliminated.
+    - Quote-Based Anchoring: Matching occurs at the entry level via `mark.js` (`mark.annotation-quote`), gracefully degrading to general entry comments if the quoted text cannot be anchored.
+    - RESTful Endpoints & Access Control: `EntryAnnotations` (`GET` list, `POST` create returning 201 Created + JSON) and `EntryAnnotationDetail` (`DELETE` returning 204 No Content). Viewers (`can_view`) may comment; deletions are restricted to the author or superusers. Attaching an annotation permanently locks the entry against author edits (`Entry.is_editable() == False`).
+    - Dedicated Frontend Controller: `NotebookAnnotations` encapsulates popover creation, comment submission, badge toggling, quote highlighting, and deletion without global mutable state or inline event handlers.
 
 ### 3. Vendor Asset Management via `assets.json`
 - **Zero Committed Vendor Binaries**: In accordance with project conventions, third-party vendor libraries are excluded from version control.

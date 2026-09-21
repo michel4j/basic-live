@@ -147,6 +147,6 @@ A specification defining the content format, metadata structure, and rendering t
 _Avoid_: Note Type, Kind, Block Type.
 
 **Annotation**:
-A reviewer comment or text highlight attached to a specific Entry or node within an Entry.
-_Avoid_: Feedback, Note on Note, Markup.
+A reviewer comment attached to a specific Entry, with an optional text selection quote (`quote`) anchored within the entry content. Attaching an annotation permanently locks the entry against author editing.
+_Avoid_: Feedback, Note on Note, Markup, Highlight.
 

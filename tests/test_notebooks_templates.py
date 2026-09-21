@@ -263,12 +263,14 @@ class NotebookTemplatesTestCase(TestCase):
             "initSketchModal",
             "initDataModal",
             "initFileDropzoneModal",
+            "NotebookAnnotations",
         ]
         for pat in required_patterns:
             self.assertIn(pat, js_content, f"Expected {pat} in notebooks.js")
 
         self.assertIn("initModalEntryEditors", min_js_content)
         self.assertIn("shown.bs.modal", min_js_content)
+        self.assertIn("NotebookAnnotations", min_js_content)
 
         # Legacy functions that MUST be purged
         purged_patterns = [
@@ -283,6 +285,24 @@ class NotebookTemplatesTestCase(TestCase):
             "window.closeEditor",
             "window.submitEntry",
             "window.createEntry",
+            "function addComment(",
+            "function addHighlight(",
+            "function delHighlight(",
+            "function delComment(",
+            "function cancelComment(",
+            "function submitComment(",
+            "function submitAnnotation(",
+            "function markAnnotations(",
+            "function markComment(",
+            "function unmarkComment(",
+            "window.addComment",
+            "window.addHighlight",
+            "window.delHighlight",
+            "window.delComment",
+            "window.cancelComment",
+            "window.submitComment",
+            "window.markComment",
+            "window.unmarkComment",
         ]
         for pat in purged_patterns:
             self.assertNotIn(pat, js_content, f"Obsolete pattern '{pat}' found in notebooks.js")
