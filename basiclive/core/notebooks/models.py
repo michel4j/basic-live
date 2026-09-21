@@ -151,11 +151,8 @@ def delete_file_on_model_delete(sender, instance, **kwargs):
 
 
 class AnnotationQueryset(models.QuerySet):
-    def highlights(self):
-        return self.filter(kind=Annotation.ANNOTATION_TYPE.highlight)
-
-    def comments(self):
-        return self.filter(kind=Annotation.ANNOTATION_TYPE.comment)
+    def with_quotes(self):
+        return self.exclude(quote='')
 
 
 class AnnotationManager(models.Manager.from_queryset(AnnotationQueryset)):
@@ -163,28 +160,23 @@ class AnnotationManager(models.Manager.from_queryset(AnnotationQueryset)):
 
 
 class Annotation(models.Model):
-    ANNOTATION_TYPE = Choices(
-        ('comment', _('Comment')),
-        ('highlight', _('Highlight')),
-    )
-    kind = models.CharField(max_length=15, choices=ANNOTATION_TYPE, default=ANNOTATION_TYPE.highlight)
     created = models.DateTimeField(_('created'), default=timezone.now)
     entry = models.ForeignKey(Entry, related_name='annotations', on_delete=models.CASCADE)
-    node_index = models.IntegerField(default=0)
-    selections = models.JSONField(_('Selections'), default=list)
-    text = models.TextField(blank=True)
+    quote = models.TextField(_('Quote'), blank=True, default='')
+    text = models.TextField(_('Comment text'))
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='annotations')
 
     objects = AnnotationManager()
 
+    def __str__(self):
+        return f'Annotation by @{self.author.username} on {self.entry}'
+
     def json(self):
         return {
+            'id': self.pk,
+            'entry_id': self.entry_id,
             'author': f'@{self.author.username}',
             'time': timeish(timezone.localtime(self.created)),
-            'node': self.node_index,
-            'selections': self.selections,
             'text': self.text,
-            'entry_id': self.entry_id,
-            'type': self.kind,
-            'id': self.pk,
+            'quote': self.quote,
         }

@@ -167,28 +167,28 @@ class NotebookModelsTestCase(TestCase):
             kind=self.entry_type_text,
             text="Sample collected with 12 keV",
         )
-        highlight = Annotation.objects.create(
-            kind=Annotation.ANNOTATION_TYPE.highlight,
+        quote_comment = Annotation.objects.create(
             entry=entry,
-            node_index=1,
-            selections=["12 keV"],
+            quote="12 keV",
+            text="Verify beam energy calibration",
             author=self.member,
         )
-        comment = Annotation.objects.create(
-            kind=Annotation.ANNOTATION_TYPE.comment,
+        general_comment = Annotation.objects.create(
             entry=entry,
-            node_index=1,
-            text="Verify beam energy calibration",
+            text="Overall run looks good",
             author=self.owner,
         )
 
-        self.assertEqual(entry.annotations.highlights().count(), 1)
-        self.assertEqual(entry.annotations.comments().count(), 1)
+        self.assertEqual(entry.annotations.count(), 2)
+        self.assertEqual(entry.annotations.with_quotes().count(), 1)
+        self.assertEqual(entry.annotations.with_quotes().first(), quote_comment)
 
-        payload = highlight.json()
+        payload = quote_comment.json()
         self.assertEqual(payload["author"], "@member")
-        self.assertEqual(payload["type"], "highlight")
-        self.assertEqual(payload["selections"], ["12 keV"])
+        self.assertEqual(payload["text"], "Verify beam energy calibration")
+        self.assertEqual(payload["quote"], "12 keV")
+        self.assertEqual(payload["entry_id"], entry.pk)
+        self.assertEqual(payload["id"], quote_comment.pk)
 
         # Entry with annotations is no longer editable by author
         self.assertFalse(entry.is_editable())

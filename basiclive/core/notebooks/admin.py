@@ -25,6 +25,6 @@ class EntryAdmin(admin.ModelAdmin):
 
 @admin.register(models.Annotation)
 class AnnotationAdmin(admin.ModelAdmin):
-    list_display = ('entry', 'author', 'kind', 'created')
-    list_filter = ('kind', 'created')
-    search_fields = ('text', 'author__username')
+    list_display = ('entry', 'author', 'created')
+    list_filter = ('created',)
+    search_fields = ('text', 'quote', 'author__username')
