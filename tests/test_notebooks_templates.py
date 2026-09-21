@@ -14,6 +14,7 @@ setup_django()
 
 import basiclive.core.notebooks as notebooks_pkg
 from basiclive.core.notebooks.models import (
+    Annotation,
     Entry,
     EntryType,
     Notebook,
@@ -286,4 +287,38 @@ class NotebookTemplatesTestCase(TestCase):
         for pat in purged_patterns:
             self.assertNotIn(pat, js_content, f"Obsolete pattern '{pat}' found in notebooks.js")
             self.assertNotIn(pat, min_js_content, f"Obsolete pattern '{pat}' found in notebooks.min.js")
+
+    def test_entry_template_annotation_rendering(self):
+        """Verify modern entry template renders annotations-data and comment badges."""
+        Annotation.objects.create(
+            entry=self.entry,
+            author=self.user,
+            text="Test observation",
+            quote="Hello",
+        )
+        request = self.factory.get(f"/notebooks/{self.notebook.pk}/")
+        request.user = self.user
+
+        t_entry = loader.get_template("notebooks/entries/entry.html")
+        rendered = t_entry.render({
+            "entry": self.entry,
+            "notebook": self.notebook,
+            "user": self.user,
+        }, request)
+
+        # Comment badge with count
+        self.assertIn("entry-comment-badge", rendered)
+        self.assertIn("comment-count", rendered)
+        self.assertIn("1", rendered)
+
+        # Modern annotations-data script tag
+        self.assertIn('class="annotations-data"', rendered)
+        self.assertIn('type="application/json"', rendered)
+        self.assertIn("Test observation", rendered)
+        self.assertIn("Hello", rendered)
+
+        # Ensure legacy patterns are absent
+        self.assertNotIn("highlight-annotation", rendered)
+        self.assertNotIn("comment-annotation", rendered)
+        self.assertNotIn('type="text/json"', rendered)
 
