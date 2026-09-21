@@ -15,6 +15,8 @@ urlpatterns = [
     path('<uuid:book>/entry/<int:pk>/delete/', views.DeleteEntry.as_view(), name='delete-entry'),
     path('<uuid:book>/delete/<int:pk>/', views.DeleteEntry.as_view()),
     path('<uuid:pk>/dates/', views.NotebookDates.as_view(), name='notebook-dates'),
+    path('<uuid:book>/entry/<int:pk>/annotations/', views.EntryAnnotations.as_view(), name='entry-annotations'),
+    path('<uuid:book>/entry/<int:pk>/annotations/<int:ann_pk>/', views.EntryAnnotationDetail.as_view(), name='entry-annotation-detail'),
     path('<uuid:book>/annotate/<int:pk>/', views.AnnotateEntry.as_view(), name='annotate-notebook'),
     path('<uuid:pk>/tag/', views.TagEntry.as_view(), name='tag-notebook'),
     path('entry/<int:pk>/', views.EntryData.as_view(), name='entry-data'),

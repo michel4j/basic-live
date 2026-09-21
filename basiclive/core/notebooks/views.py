@@ -1,5 +1,6 @@
 import datetime
 import functools
+import json
 import operator
 import re
 from typing import Any
@@ -23,7 +24,7 @@ from django.views.generic import DetailView, ListView, View
 from itemlist.views import ItemListView, SEARCH_VAR
 
 from .forms import NotebookForm, get_entry_form_class, TagsForm
-from .models import Entry, EntryType, Notebook
+from .models import Annotation, Entry, EntryType, Notebook
 from ...utils.filters import TagFilter
 
 
@@ -282,45 +283,106 @@ class DeleteEntry(LoginRequiredMixin, UserPassesTestMixin, ModalDeleteView):
         return entry.notebook.can_edit(user) and entry.can_edit(user)
 
 
-class AnnotateEntry(LoginRequiredMixin, UserPassesTestMixin, View):
+class EntryAnnotations(LoginRequiredMixin, UserPassesTestMixin, View):
+
+    def get_entry(self):
+        try:
+            book = Notebook.objects.get(id=self.kwargs.get('book'))
+            return Entry.objects.get(notebook=book, pk=self.kwargs.get('pk'))
+        except (Notebook.DoesNotExist, Entry.DoesNotExist, ValueError):
+            return None
 
     def test_func(self):
         user = self.request.user
         if not user.is_authenticated:
             return False
+        entry = self.get_entry()
+        if not entry:
+            return False
+        return entry.notebook.can_view(user)
+
+    def get(self, request, *args, **kwargs):
+        entry = self.get_entry()
+        if not entry:
+            return HttpResponseNotFound("Notebook entry not found!")
+        annotations = [a.json() for a in entry.annotations.all().order_by('created')]
+        return JsonResponse(annotations, safe=False)
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        entry = self.get_entry()
+        if not entry:
+            return HttpResponseNotFound("Notebook entry not found!")
+
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return JsonResponse({"error": "Invalid JSON"}, status=400)
+        else:
+            data = request.POST
+
+        # Legacy backward-compatibility support for method == 'remove'
+        method = data.get('method')
+        if method == 'remove' and data.get('pk'):
+            entry.annotations.filter(pk=data['pk'], author=request.user).delete()
+            return JsonResponse({"status": "ok"})
+
+        text = (data.get('text') or '').strip()
+        quote = (data.get('quote') or data.get('selection') or '').strip()
+
+        if not text:
+            return JsonResponse({"error": "Comment text is required"}, status=400)
+
+        annotation = entry.annotations.create(
+            text=text,
+            quote=quote,
+            author=request.user,
+        )
+        return JsonResponse(annotation.json(), status=201)
+
+
+class EntryAnnotationDetail(LoginRequiredMixin, UserPassesTestMixin, View):
+
+    def get_entry(self):
         try:
             book = Notebook.objects.get(id=self.kwargs.get('book'))
-            entry = Entry.objects.get(notebook=book, pk=self.kwargs.get('pk'))
-        except (Http404, Notebook.DoesNotExist, Entry.DoesNotExist):
+            return Entry.objects.get(notebook=book, pk=self.kwargs.get('pk'))
+        except (Notebook.DoesNotExist, Entry.DoesNotExist, ValueError):
+            return None
+
+    def test_func(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        entry = self.get_entry()
+        if not entry:
             return False
         return entry.notebook.can_view(user)
 
     @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        data = request.POST
-        try:
-            book = Notebook.objects.get(id=self.kwargs.get('book'))
-            entry = Entry.objects.get(notebook=book, pk=self.kwargs.get('pk'))
-        except (Notebook.DoesNotExist, Entry.DoesNotExist):
+    def delete(self, request, *args, **kwargs):
+        entry = self.get_entry()
+        if not entry:
             return HttpResponseNotFound("Notebook entry not found!")
+        try:
+            annotation = entry.annotations.get(pk=self.kwargs.get('ann_pk'))
+        except (Annotation.DoesNotExist, ValueError):
+            return HttpResponseNotFound("Annotation not found!")
 
-        if not book.can_edit(request.user):
-            return HttpResponseForbidden("Operation not allowed!")
+        if request.user != annotation.author and not request.user.is_superuser:
+            return HttpResponseForbidden("Permission denied")
 
-        method = data.get('method')
-        if method == 'create':
-            selection_raw = data.get('selection', '')
-            selections = selection_raw.split('\n') if selection_raw else []
-            entry.annotations.create(
-                kind=data.get('kind', 'note'),
-                selections=selections,
-                node_index=data.get('index', 0),
-                text=data.get('text', ''),
-                author=request.user,
-            )
-        elif method == 'remove' and data.get('pk'):
-            entry.annotations.filter(pk=data['pk'], author=request.user).delete()
-        return JsonResponse({"status": "ok"})
+        annotation.delete()
+        return HttpResponse(status=204)
+
+    def post(self, request, *args, **kwargs):
+        if request.POST.get('_method') == 'DELETE':
+            return self.delete(request, *args, **kwargs)
+        return HttpResponse(status=405)
+
+
+AnnotateEntry = EntryAnnotations
 
 
 class TagEntry(View):

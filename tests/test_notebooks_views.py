@@ -131,7 +131,18 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(reverse("notebooks:edit-entry", kwargs={"book": self.public_nb.pk, "pk": self.entry_today.pk}), f"/notebooks/{self.public_nb.pk}/entry/{self.entry_today.pk}/edit/")
         self.assertEqual(reverse("notebooks:delete-entry", kwargs={"book": self.public_nb.pk, "pk": self.entry_today.pk}), f"/notebooks/{self.public_nb.pk}/entry/{self.entry_today.pk}/delete/")
         self.assertEqual(reverse("notebooks:notebook-dates", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/dates/")
-        self.assertEqual(reverse("notebooks:annotate-notebook", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/annotate/")
+        self.assertEqual(
+            reverse("notebooks:entry-annotations", kwargs={"book": self.public_nb.pk, "pk": self.entry_today.pk}),
+            f"/notebooks/{self.public_nb.pk}/entry/{self.entry_today.pk}/annotations/"
+        )
+        self.assertEqual(
+            reverse("notebooks:entry-annotation-detail", kwargs={"book": self.public_nb.pk, "pk": self.entry_today.pk, "ann_pk": 1}),
+            f"/notebooks/{self.public_nb.pk}/entry/{self.entry_today.pk}/annotations/1/"
+        )
+        self.assertEqual(
+            reverse("notebooks:annotate-notebook", kwargs={"book": self.public_nb.pk, "pk": self.entry_today.pk}),
+            f"/notebooks/{self.public_nb.pk}/annotate/{self.entry_today.pk}/"
+        )
         self.assertEqual(reverse("notebooks:tag-notebook", kwargs={"pk": self.public_nb.pk}), f"/notebooks/{self.public_nb.pk}/tag/")
         self.assertEqual(reverse("notebooks:entry-data", kwargs={"pk": self.entry_today.pk}), f"/notebooks/entry/{self.entry_today.pk}/")
 
@@ -678,42 +689,135 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Entry.objects.filter(pk=self.entry_today.pk).exists())
 
-    @patch("basiclive.core.notebooks.views.loader.get_template")
-    def test_annotate_entry_create_and_remove(self, mock_get_template):
-        """Test AnnotateEntry create and remove methods."""
-        mock_template = MagicMock()
-        mock_template.render.return_value = "<div>annotated</div>"
-        mock_get_template.return_value = mock_template
-
+    def test_create_annotation_success(self):
+        """Test POST to entry-annotations creates an annotation and returns 201."""
         self.client.force_login(self.owner)
-        # Create annotation
         response = self.client.post(
-            reverse("notebooks:annotate-notebook", kwargs={"pk": self.private_nb.pk}),
-            {
-                "entry_id": self.entry_today.pk,
-                "method": "create",
-                "kind": "highlight",
-                "selection": "sel line 1\nsel line 2",
-                "index": 1,
+            reverse("notebooks:entry-annotations", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
+            json.dumps({
                 "text": "Check this result",
-            },
+                "quote": "sel line 1",
+            }),
+            content_type="application/json",
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data["text"], "Check this result")
+        self.assertEqual(data["quote"], "sel line 1")
+        self.assertEqual(data["author"], f"@{self.owner.username}")
+        self.assertEqual(data["entry_id"], self.entry_today.pk)
+
         annotation = self.entry_today.annotations.first()
         self.assertIsNotNone(annotation)
         self.assertEqual(annotation.text, "Check this result")
-        self.assertEqual(annotation.selections, ["sel line 1", "sel line 2"])
+        self.assertEqual(annotation.quote, "sel line 1")
+        self.assertEqual(annotation.author, self.owner)
 
-        # Remove annotation
+    def test_create_annotation_empty_text(self):
+        """Test creating an annotation with empty text returns 400 Bad Request."""
+        self.client.force_login(self.owner)
         response = self.client.post(
-            reverse("notebooks:annotate-notebook", kwargs={"pk": self.private_nb.pk}),
+            reverse("notebooks:entry-annotations", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
+            {"text": "", "quote": "some text"},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {"error": "Comment text is required"})
+        self.assertEqual(self.entry_today.annotations.count(), 0)
+
+    def test_create_annotation_as_viewer(self):
+        """Test that a non-owner with view access can create an annotation."""
+        self.client.force_login(self.member)
+        response = self.client.post(
+            reverse("notebooks:entry-annotations", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
+            {"text": "Reviewer comment from member", "quote": "important data"},
+        )
+        self.assertEqual(response.status_code, 201)
+        annotation = self.entry_today.annotations.first()
+        self.assertEqual(annotation.author, self.member)
+        self.assertEqual(annotation.text, "Reviewer comment from member")
+
+    def test_create_annotation_forbidden_for_non_viewer(self):
+        """Test that a user without view access cannot annotate a private notebook entry."""
+        self.client.force_login(self.other)
+        response = self.client.post(
+            reverse("notebooks:entry-annotations", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
+            {"text": "Unauthorized comment"},
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.entry_today.annotations.count(), 0)
+
+    def test_get_annotations_list(self):
+        """Test GET request returns list of annotations in JSON format."""
+        self.entry_today.annotations.create(
+            text="First note",
+            quote="part 1",
+            author=self.owner,
+        )
+        self.client.force_login(self.member)
+        response = self.client.get(
+            reverse("notebooks:entry-annotations", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["text"], "First note")
+
+    def test_delete_annotation_author(self):
+        """Test that the author of an annotation can delete it."""
+        annotation = self.entry_today.annotations.create(
+            text="Temporary note",
+            author=self.member,
+        )
+        self.client.force_login(self.member)
+        response = self.client.delete(
+            reverse(
+                "notebooks:entry-annotation-detail",
+                kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk, "ann_pk": annotation.pk},
+            )
+        )
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(self.entry_today.annotations.count(), 0)
+
+    def test_delete_annotation_forbidden_non_author(self):
+        """Test that a user cannot delete another user's annotation."""
+        annotation = self.entry_today.annotations.create(
+            text="Member note",
+            author=self.member,
+        )
+        self.client.force_login(self.owner)
+        response = self.client.delete(
+            reverse(
+                "notebooks:entry-annotation-detail",
+                kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk, "ann_pk": annotation.pk},
+            )
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(self.entry_today.annotations.filter(pk=annotation.pk).exists())
+
+    def test_legacy_annotate_notebook_endpoint(self):
+        """Test backwards compatibility for annotate-notebook alias with POST method=remove."""
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse("notebooks:annotate-notebook", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
             {
-                "entry_id": self.entry_today.pk,
+                "text": "Legacy comment",
+                "selection": "legacy quote",
+            },
+        )
+        self.assertEqual(response.status_code, 201)
+        annotation = self.entry_today.annotations.first()
+        self.assertEqual(annotation.text, "Legacy comment")
+        self.assertEqual(annotation.quote, "legacy quote")
+
+        # Remove via legacy method parameter
+        remove_response = self.client.post(
+            reverse("notebooks:annotate-notebook", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
+            {
                 "method": "remove",
                 "pk": annotation.pk,
             },
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(remove_response.status_code, 200)
         self.assertEqual(self.entry_today.annotations.count(), 0)
 
     @patch("basiclive.core.notebooks.views.loader.get_template")
