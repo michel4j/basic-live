@@ -88,7 +88,7 @@ class EntryForm(ModalModelForm):
 
     class Meta:
         model = Entry
-        fields = ['text', 'tags']
+        fields = ['tags']
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
@@ -356,6 +356,22 @@ class FileEntryForm(EntryForm):
             if not has_file and not self.instance.pk:
                 self.add_error('file', _('A file upload is required.'))
         return cleaned_data
+
+
+class TagsForm(EntryForm):
+    class Meta(EntryForm.Meta):
+        model = Entry
+        fields = ['tags']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.body.title = _("Edit Tags")
+        self.body.layout = Layout(
+            Row(
+                FullWidth('tags'),
+                style="g-2",
+            )
+        )
 
 
 ENTRY_FORMS = {

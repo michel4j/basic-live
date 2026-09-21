@@ -7,11 +7,11 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'notebooks/icons/style.css' %}">
     <link rel="stylesheet" href="{% static 'notebooks/calendar.min.css' %}">
-    <link rel="stylesheet" href="{% static 'notebooks/notebooks.min.css' %}">
     <link rel="stylesheet" href="{% static 'simplemde/css/simplemde.min.css' %}">
     <link rel="stylesheet" href="{% static 'katex/css/katex.min.css' %}">
     <link rel="stylesheet" href="{% static 'dropzone/css/dropzone.min.css' %}">
     <link rel="stylesheet" href="{% static 'misc/css/vanilla-picker.csp.min.css' %}">
+    <link rel="stylesheet" href="{% static 'notebooks/notebooks.min.css' %}">
     {{ block.super }}
 {% endblock %}
 
@@ -50,7 +50,7 @@
     </div>
     <div class="row position-relative">
         <div class="col-12 col-lg-9">
-            <div class="notebook-content" id="notebook-content" data-annotate-url="{% url 'notebooks:annotate-notebook' pk=notebook.id %}">
+            <div class="notebook-content" id="notebook-content">
                 {% for entry in object_list %}
                     {% show_entry entry %}
                 {% endfor %}
@@ -124,6 +124,12 @@
             $('#notebook-content').annotate('.notebook-entry');
 
             initEntries('.notebook-entry');
+            $(document).on('click', '.entry-add-comment', function(e) {
+                addComment()
+            });
+            $(document).on('click', '.entry-add-highlight', function(e) {
+                addHighlight();
+            });
         });
     </script>
 {% endblock %}

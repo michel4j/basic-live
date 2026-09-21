@@ -31,7 +31,6 @@ $sketch-color: #ff00ff !default;
 $data-color: #ffc002 !default;
 $file-color: $default-color !default;
 $info: #4bc2c7 !default;
-$border-color: rgba(187, 187, 187, 0.6) !default;
 $barely-gray: rgba(0, 0, 0, 0.05) !default;
 $table-highlight: rgba(210, 249, 248, 0.51) !default;
 $barely-white: rgba(255, 255, 255, 0.3) !default;
@@ -80,7 +79,7 @@ pre {
 }
 
 blockquote {
-  border-left: 5px solid $border-color;
+  border-left: 5px solid var(--bs-border-color-translucent);
   padding-left: 10px;
 }
 
@@ -157,6 +156,7 @@ blockquote {
   flex-direction: column;
   min-height: 25rem;
   cursor: pointer;
+  background: transparent;
 
   &:before {
     display: block;
@@ -206,7 +206,7 @@ blockquote {
       align-items: center;
       justify-content: center;
       flex-direction: row;
-      border: 1px solid $border-color;
+      border: 1px solid var(--bs-border-color-translucent);
       width: 200px;
       min-height: 150px;
     }
@@ -227,8 +227,7 @@ blockquote {
 }
 
 canvas#sketcher {
-  background-color: #fff;
-  border-bottom: 1px solid $border-color;
+  background-color: transparent;
   margin-bottom: -0.5rem;
 }
 
@@ -236,6 +235,11 @@ canvas#sketcher {
   a {
     margin-right: 3px !important;
     vertical-align: middle;
+    color: var(--bs-body-color) !important;
+    &:hover {
+      border-color: var(--bs-border-color-translucent) !important;
+      background: var(--bs-tertiary-bg);
+    }
   }
 }
 
@@ -248,7 +252,7 @@ canvas#sketcher {
     padding: 2px 10px;
     border: 0 transparent;
     border-radius: 0;
-    border-bottom: 1px solid $border-color;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
 
     &:before {
       margin: 0px;
@@ -289,7 +293,7 @@ canvas#sketcher {
   }
   i.separator {
     display: inline-block;
-    border-left: 1px solid $border-color;
+    border-left: 1px solid var(--bs-border-color-translucent);
     height: 28px;
     vertical-align: middle;
     margin: 0 0.5rem;
@@ -335,7 +339,7 @@ canvas#sketcher {
   .color {
     width: 26px;
     height: 26px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--bs-border-color-translucent);
     display: block;
     position: relative;
     z-index: 11;
@@ -363,7 +367,7 @@ canvas#sketcher {
 }
 
 .notebook-entry + .notebook-entry:hover {
-  border-top: 1px dotted $border-color;
+  border-top: 1px dotted var(--bs-border-color-translucent);
 }
 
 .notebook-entry {
@@ -377,9 +381,9 @@ canvas#sketcher {
   }
 
   &:hover {
-    border-left: 1px dotted $border-color;
-    border-right: 1px dotted $border-color;
-    border-bottom: 1px dotted $border-color;
+    border-left: 1px dotted var(--bs-border-color-translucent);
+    border-right: 1px dotted var(--bs-border-color-translucent);
+    border-bottom: 1px dotted var(--bs-border-color-translucent);
     .entry-tools i {
       visibility: visible;
     }
@@ -461,7 +465,7 @@ g.axis > text {
 	height: 1.5rem;
 	line-height: 1.5rem;
 	padding: 0 0.5rem 0 1.0rem;
-	background-color: #fff;
+	background-color: var(--bs-body-bg);
 	border: 1px solid #aaa;
     border-radius: 0.5rem 0.1rem 0.1rem 0.5rem;
   white-space: nowrap;
@@ -478,7 +482,7 @@ g.axis > text {
 	color: #fff;
 }
 .tag-cloud ul li:hover:after {
-      background-color: #fff;
+      background-color: var(--bs-body-bg);
       border: solid 1px $primary;
 }
 
@@ -492,7 +496,7 @@ g.axis > text {
 	width: 0.5rem;
 	height: 0.5rem;
 	margin-top: -0.25rem;
-    border: solid 1px $border-color;
+    border: solid 1px var(--bs-border-color-translucent);
 	border-radius: 100%;
 }
 
@@ -550,30 +554,34 @@ g.axis > text {
   vertical-align: middle;
 }
 
+.annotation-popover {
+  --bs-popover-body-padding-x: 2px;
+  --bs-popover-body-padding-y: 2px;
+}
 .annotation-menu {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   padding: 0;
+  margin: 0;
 
-  li {
+  a {
     display: inline-block;
     line-height: 1.2rem;
-    font-size: 1rem;
     cursor: pointer;
-    padding: 0.2rem 0.625rem;
-    color: $light;
+    padding: 0.75rem;
+    text-decoration: none;
 
     &.undo {
-        color: $highlight-hover-color;
+        color: var(--bs-tertiary-color);
     }
 
     i {
       vertical-align: middle;
     }
-    + li {
-      border-left: 1px solid $barely-white;
+    + a {
+      border-left: 1px solid var(--bs-border-color-translucent);
     }
   }
 }
@@ -726,7 +734,7 @@ g.axis > text {
       content: '';
     }
     .comment-header {
-      color: $default-color;
+      color: var(--bs-body-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -746,7 +754,7 @@ g.axis > text {
         padding: 2px;
         font-size: 1rem;
         border-radius: 100%;
-        border: 1px solid $border-color;
+        border: 1px solid var(--bs-border-color-translucent);
         cursor: pointer;
 
         &:hover {
@@ -770,7 +778,7 @@ g.axis > text {
     min-width: 100%;
     margin-bottom: 0;
     background: white;
-    border-bottom: 1px solid $border-color;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
     line-height: 1.8rem;
     font-size: 0.9rem;
   }
@@ -778,7 +786,7 @@ g.axis > text {
   tr th:first-child {
     width: 2.5rem;
     text-align: center;
-    color: $default-color;
+    color: var(--bs-body-color);
   }
 
   th {
@@ -806,8 +814,8 @@ g.axis > text {
   tbody {
     th {
       text-align: center;
-      border-bottom: 1px solid $border-color;
-      color: $default-color;
+      border-bottom: 1px solid var(--bs-border-color-translucent);
+      color: var(--bs-body-color);
     }
 
   }
@@ -816,7 +824,7 @@ g.axis > text {
     white-space: nowrap;
     line-height: 1.8rem;
     & + th, & + td {
-      border-left: 1px solid $border-color;
+      border-left: 1px solid var(--bs-border-color-translucent);
     }
   }
   colgroup.selected, tr.selected {
@@ -831,7 +839,7 @@ g.axis > text {
 
 figure {
   margin-top: 1rem;
-  border: 1px solid $barely-gray;
+  border: 1px solid var(--bs-border-color-translucent);
 }
 
 .ellipsis {
@@ -842,32 +850,5 @@ figure {
     overflow: hidden;
     display: block;
     padding-bottom: 0.15em;
-}
-
-.page-separator {
-  $separator-height: 2rem;
-  position: relative;
-  width: 100%;
-  margin: 1rem 0;
-  padding: 0.5em;
-
-  .date {
-    background: $info;
-    color: #ffffff;
-    padding: 0.75em;
-    font-size: 0.75*$separator-height;
-    line-height: $separator-height;
-    font-weight: 800;
-    text-transform: uppercase;
-  }
-}
-
-header {
-  background: $light;
-  nav.navbar {
-    a {
-      color: inherit;
-    }
-  }
 }
 

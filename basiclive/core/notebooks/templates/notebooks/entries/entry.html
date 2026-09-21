@@ -4,6 +4,7 @@
     data-page-url=""
     data-entry-pk="{{ entry.pk }}"
     data-entry-date="{{ entry.created|date:'Y-m-d' }}"
+    data-annotate-url="{% url 'notebooks:annotate-notebook' book=notebook.id pk=entry.id %}"
     id="entry-{{ entry.pk }}"
 >
     {% block entry_content %}{% endblock %}
@@ -18,14 +19,14 @@
         {% if entry.is_editable and user == entry.author %}
         <span class="entry-tools col-sm-4 px-0">
             <i class="mi mi-pencil mi-lg mi-fw edit-button" data-modal-url="{% url 'notebooks:edit-entry' book=entry.notebook.pk pk=entry.pk %}" title="Edit"></i>
-            <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-url="{% url 'notebooks:tag-notebook' pk=entry.notebook.pk %}" title="Tags" onclick="editTags(this);" data-tags="{{ entry.tag_string }}"></i>
+            <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-modal-url="{% url 'notebooks:edit-tags' book=entry.notebook.pk pk=entry.pk %}" title="Tags"></i>
             <i class="mi mi-trash mi-lg mi-fw delete-button"
                title="Delete" data-modal-url="{% url 'notebooks:delete-entry' book=entry.notebook.pk pk=entry.pk %}">
             </i>
         </span>
         {% else %}
         <span class="entry-tools col-sm-4 px-0">
-            <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-url="{% url 'notebooks:tag-notebook' pk=entry.notebook.pk %}" title="Tags" onclick="editTags(this);" data-tags="{{ entry.tag_string }}"></i>
+            <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-modal-url="{% url 'notebooks:edit-tags' book=entry.notebook.pk pk=entry.pk %}" title="Tags"></i>
         </span>
         {% endif %}
         <span class="col-sm-4 text-end px-0 small">

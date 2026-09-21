@@ -222,7 +222,7 @@ function initSketchModal($modal) {
     const height = Math.round(width * 4.5 / 9);
 
     $container.append('<div class="editor-toolbar sketcher-toolbar"></div>');
-    $container.append('<div class="sketch-canvas-wrapper border rounded" style="background:#fff; text-align:center; overflow:hidden;"><canvas id="sketcher"></canvas></div>');
+    $container.append('<div class="sketch-canvas-wrapper border rounded-bottom"><canvas id="sketcher"></canvas></div>');
 
     if (typeof atrament === "function") {
         const sketcher = atrament("#sketcher", width, height);
@@ -376,12 +376,15 @@ function initFileDropzoneModal($modal) {
     Dropzone.autoDiscover = false;
     const acceptedFiles = $fileInput.attr("accept") || null;
     const dropzoneHtml = (
-        '<div id="modal-file-dropzone" class="dropzone mb-2 rounded border border-2 border-dashed p-3 text-center text-muted" style="cursor: pointer; min-height: 110px;">' +
-        '  <div class="dz-message needsclick my-2">' +
-        '    <i class="mi mi-upload mi-2x mb-1 d-block text-secondary"></i>' +
-        '    <span class="small">Drop file here or click to browse</span>' +
-        '  </div>' +
-        '</div>'
+        `<div id="modal-file-dropzone" 
+            class="dropzone mb-2 rounded border p-3 text-center text-muted" 
+            style="cursor: pointer; min-height: 110px;"
+        >  
+            <div class="dz-message needsclick my-2">    
+                <i class="mi mi-upload mi-2x mb-1 d-block text-secondary"></i>    
+                <span class="small">Drop file here or click to browse</span>  
+            </div>
+        </div>`
     );
     $fileInput.before(dropzoneHtml);
 
@@ -1053,7 +1056,6 @@ function getSelectionText() {
 
         let eventData = {};
         const html = $('html');
-        html.data('annotate-url', settings.url); // Keep for later
         const selector = entry_selector + ' > *';
         const highlight_mark = entry_selector + ' mark.highlight';
 
@@ -1093,6 +1095,7 @@ function getSelectionText() {
                     offset: pos.x + '%, ' + pos.y + '%',
                     x: pos.x,
                     y: pos.y,
+                    url: $(this).data('annotate-url'),
                     selection: eventData.selection,
                     highlighted: eventData.within_mark,
                 });
@@ -1101,34 +1104,26 @@ function getSelectionText() {
         });
         $(document).on("myeln:annotate", selector, function(e) {
             const node = $(this);
+            const entry = $(node.closest(entry_selector));
             const hideHighlight = Boolean(e.highlighted);
-            showPopover(node, {
+            const popover = new bootstrap.Popover(this, {
                 trigger: "click",
-                html: true,
+                target: node[0],
                 container: 'body',
                 placement: "bottom",
-                offset: e.offset,
+                customClass: "annotation-popover",
                 fallbackPlacement: ['top'],
                 boundary: 'window',
-                content: _.template(
-                    '<ul class="list-unstyled annotation-menu m-0">' +
-                    '   <li onclick="addComment();" title="Comment">' +
-                    '       <i class="mi mi-comment mi-fw"></i>' +
-                    '   </li>' +
-                    '<% if (showHighlight) { %>' +
-                    '   <li onclick="addHighlight();" title="Highlight">' +
-                    '       <i class="mi mi-highlighter mi-fw"></i>' +
-                    '   </li>' +
-                    '<% } %>' +
-                    '</ul>'
-                )({showHighlight: !hideHighlight}),
-                template: (
-                    '<div class="popover menu" role="tooltip">' +
-                    '   <div class="popover-arrow arrow"></div>' +
-                    '   <h3 class="popover-header"></h3>' +
-                    '   <div class="popover-body"></div>' +
-                    '</div>'
-                )
+                html: true,
+                content:  `
+                    <div class="d-flex flex-row annotation-menu m-0" data-bs-theme="dark">   
+                        <a href="#!" class="entry-add-comment pe-3" title="Comment">       
+                            <i class="ti ti-comment-alt ti-md ti-fw"></i>   
+                        </a>
+                        <a href="#!" class="entry-add-highlight ps-3" title="Highlight">       
+                            <i class="ti ti-marker-alt ti-md ti-fw"></i>   
+                        </a>
+                    </div>`
             });
 
             // Save annotation parameters to window
@@ -1137,11 +1132,11 @@ function getSelectionText() {
                 node: node,
                 method: 'create',
                 index: node.index(),
-                entry_id: node.parent().data('entry-pk'),
+                entry_id: entry.data('entry-pk'),
                 offset: e.offset,
                 selection: e.selection,
                 type: 'highlight',
-                url: settings.url
+                url: entry.data('annotate-url')
             };
         });
 
@@ -1150,6 +1145,7 @@ function getSelectionText() {
                 return;
             }
             const node = $(this);
+            const entry = $(node.closest(entry_selector));
             let menu = "";
             if ($(this).data('editable')){
                 menu = (
@@ -1166,7 +1162,8 @@ function getSelectionText() {
                     '</ul>'
                 );
             }
-            showPopover(node, {
+            const popover = new bootstrap.Popover(this, {
+                customClass: "annotation-popover",
                 trigger: "click",
                 html: true,
                 container: 'body',
@@ -1174,13 +1171,6 @@ function getSelectionText() {
                 fallbackPlacement: ['top'],
                 boundary: 'window',
                 content: menu,
-                template: (
-                    '<div class="popover menu" role="tooltip">' +
-                    '   <div class="popover-arrow arrow"></div>' +
-                    '   <h3 class="popover-header"></h3>' +
-                    '   <div class="popover-body"></div>' +
-                    '</div>'
-                )
             });
 
             // Save annotation parameters to window
@@ -1189,10 +1179,10 @@ function getSelectionText() {
                 index: null,
                 method: 'remove',
                 pk: node.data('pk'),
-                entry_id: node.closest(entry_selector).data('entry-pk'),
+                entry_id: entry.data('entry-pk'),
                 selections: node.text(),
                 type: 'highlight',
-                url: settings.url
+                url: entry.data('annotate-url')
             };
         });
 
@@ -1360,10 +1350,10 @@ function submitAnnotation() {
                 xhr.setRequestHeader("X-CSRFToken", getCsrfToken());
             },
             success: function(response) {
-                const selector = '#entry-'+annotation.entry_id;
-                disposeTooltips(selector);
-                $(selector).replaceWith(response);
-                initEntries(selector);
+                // const selector = '#entry-'+annotation.entry_id;
+                // disposeTooltips(selector);
+                // $(selector).replaceWith(response);
+                // initEntries(selector);
             }
         });
     }

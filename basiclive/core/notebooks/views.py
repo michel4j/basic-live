@@ -14,8 +14,7 @@ from django.http import (
     HttpResponse,
     HttpResponseForbidden,
     HttpResponseNotFound,
-    JsonResponse, HttpResponseRedirect,
-)
+    JsonResponse, )
 from django.template import loader
 from django.urls import reverse
 from django.utils import timezone
@@ -23,11 +22,9 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, ListView, View
 from itemlist.views import ItemListView, SEARCH_VAR
 
-from .forms import NotebookForm, get_entry_form_class
+from .forms import NotebookForm, get_entry_form_class, TagsForm
 from .models import Entry, EntryType, Notebook
-from .utils import clean_json, fuzzy_time
 from ...utils.filters import TagFilter
-from ...utils.mixins import AdminRequiredMixin
 
 
 class NotebookAccessMixin:
@@ -166,6 +163,7 @@ class UpdateNotebook(NotebookEditMixin, SuccessMessageMixin, ModalUpdateView):
 class CreateEntry(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
     model = Entry
     success_message = _("Entry has been created.")
+    size = 'lg'
 
     def get_notebook(self):
         if not hasattr(self, '_notebook'):
@@ -221,6 +219,7 @@ class CreateEntry(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, 
 class UpdateEntry(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
     model = Entry
     success_message = _("Entry has been updated.")
+    size = 'lg'
 
     def get_form_class(self):
         form_class = get_entry_form_class(self.object.kind)
@@ -257,6 +256,14 @@ class UpdateEntry(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, 
         return entry.can_edit(user)
 
 
+class EditTags(UpdateEntry):
+    form_class = TagsForm
+    size = 'md'
+
+    def get_form_class(self):
+        return TagsForm
+
+
 class DeleteEntry(LoginRequiredMixin, UserPassesTestMixin, ModalDeleteView):
     model = Entry
 
@@ -272,20 +279,28 @@ class DeleteEntry(LoginRequiredMixin, UserPassesTestMixin, ModalDeleteView):
             entry = self.get_object()
         except (Http404, self.model.DoesNotExist):
             return False
-        book_id = self.kwargs.get('book')
-        if book_id and str(entry.notebook.pk) != str(book_id):
-            return False
         return entry.notebook.can_edit(user) and entry.can_edit(user)
 
 
-class AnnotateEntry(View):
+class AnnotateEntry(LoginRequiredMixin, UserPassesTestMixin, View):
+
+    def test_func(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return False
+        try:
+            book = Notebook.objects.get(id=self.kwargs.get('book'))
+            entry = Entry.objects.get(notebook=book, pk=self.kwargs.get('pk'))
+        except (Http404, Notebook.DoesNotExist, Entry.DoesNotExist):
+            return False
+        return entry.notebook.can_view(user)
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         data = request.POST
         try:
-            book = Notebook.objects.get(id=self.kwargs.get('pk'))
-            entry = Entry.objects.get(notebook=book, pk=data.get('entry_id', 0))
+            book = Notebook.objects.get(id=self.kwargs.get('book'))
+            entry = Entry.objects.get(notebook=book, pk=self.kwargs.get('pk'))
         except (Notebook.DoesNotExist, Entry.DoesNotExist):
             return HttpResponseNotFound("Notebook entry not found!")
 
@@ -305,9 +320,7 @@ class AnnotateEntry(View):
             )
         elif method == 'remove' and data.get('pk'):
             entry.annotations.filter(pk=data['pk'], author=request.user).delete()
-
-        t = loader.get_template(f"notebooks/entries/{entry.kind.name}.html")
-        return HttpResponse(t.render({"entry": entry, "notebook": book}, request))
+        return JsonResponse({"status": "ok"})
 
 
 class TagEntry(View):
