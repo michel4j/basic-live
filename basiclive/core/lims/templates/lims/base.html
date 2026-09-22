@@ -1,4 +1,4 @@
-{% load static %}
+{% load static bl_icons %}
 <!doctype html>
 <html lang="en" class="{% block html_class %}{% endblock %}">
 <head>
@@ -10,7 +10,7 @@
 
     <!-- Styles -->
     {% block site_css %}
-        <link rel="stylesheet" href="{% static 'themify-icons/css/themify-icons.css' %}">
+        {% show_icon_css %}
         <link rel="stylesheet" href="{% static 'misc/css/noty.min.css' %}" type="text/css"/>
         <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}" type="text/css"/>
         <link rel="stylesheet" href="{% static 'misc/css/slimselect.min.css' %}" type="text/css"/>

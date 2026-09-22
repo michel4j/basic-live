@@ -3,23 +3,57 @@ import os
 import re
 from django import template
 from django.conf import settings
+from django.templatetags.static import static
 from django.utils.safestring import mark_safe
 from django.template import Library
+
+from basiclive.core.lims.icons import get_icon_backend
 
 register = Library()
 
 
 @register.inclusion_tag('lims/components/icon-info.html')
-def show_icon(label='', icon='', badge=None, size=None, color=None, tooltip='', show_null=False):
+def show_icon(
+    label='',
+    icon='',
+    badge=None,
+    size=None,
+    color=None,
+    tooltip='',
+    show_null=False,
+    extra_class=''
+):
     badge = None if not badge and not show_null else badge
+    backend = get_icon_backend()
+    icon_class = backend.get_css_classes(icon=icon, size=size, extra_class=extra_class) if icon else ''
+
     return {
         'label': label,
-        'icon': icon,
+        'icon': icon_class,
+        'icon_class': icon_class,
         'badge': badge,
         'color': color,
         'size': size,
-        'tooltip': tooltip
+        'tooltip': tooltip,
+        'extra_class': extra_class,
     }
+
+
+@register.simple_tag
+def show_icon_css():
+    """
+    Renders <link rel="stylesheet" ...> tags for the active icon backend stylesheets.
+    """
+    backend = get_icon_backend()
+    urls = backend.get_stylesheet_urls()
+    links = []
+    for url in urls:
+        if not url:
+            continue
+        href = url if url.startswith(('http://', 'https://', '/')) else static(url)
+        links.append(f'<link rel="stylesheet" href="{href}">')
+    return mark_safe('\n'.join(links))
+
 
 @register.simple_tag
 def render_svg_icon(icon_name, extra_class=""):

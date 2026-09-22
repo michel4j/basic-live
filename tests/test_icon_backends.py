@@ -116,3 +116,69 @@ class IconBackendTests(SimpleTestCase):
             self.assertIn(f".icon-{size}", css_content)
             self.assertIn(f".ti-{size}", css_content)
 
+    def test_show_icon_template_tag_plain_icon(self):
+        from django.template import Template, Context
+        tmpl = Template('{% load bl_icons %}{% show_icon icon="home" %}')
+        rendered = tmpl.render(Context({})).strip()
+        self.assertIn('class="ti ti-home position-relative"', rendered)
+
+    def test_show_icon_template_tag_with_size(self):
+        from django.template import Template, Context
+        tmpl = Template('{% load bl_icons %}{% show_icon icon="calendar" size="md" %}')
+        rendered = tmpl.render(Context({})).strip()
+        self.assertIn('class="ti ti-calendar bl-icon-md position-relative"', rendered)
+
+    def test_show_icon_template_tag_with_extra_class(self):
+        from django.template import Template, Context
+        tmpl = Template('{% load bl_icons %}{% show_icon icon="alert" size="sm" extra_class="text-danger" %}')
+        rendered = tmpl.render(Context({})).strip()
+        self.assertIn('class="ti ti-alert bl-icon-sm text-danger position-relative"', rendered)
+
+    def test_show_icon_template_tag_with_label_and_tooltip(self):
+        from django.template import Template, Context
+        tmpl = Template('{% load bl_icons %}{% show_icon label="Calendar" icon="calendar" size="md" tooltip="View calendar" %}')
+        rendered = tmpl.render(Context({})).strip()
+        self.assertIn('title="View calendar"', rendered)
+        self.assertIn('<div class="icon-label d-none d-md-inline-block">Calendar</div>', rendered)
+
+    def test_show_icon_template_tag_with_badge_and_color(self):
+        from django.template import Template, Context
+        tmpl = Template('{% load bl_icons %}{% show_icon icon="headphone-alt" badge="+" color="primary" %}')
+        rendered = tmpl.render(Context({})).strip()
+        self.assertIn('class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-condensed text-bg-primary"', rendered)
+        self.assertIn('>+</span>', rendered)
+
+    def test_show_icon_template_tag_invalid_size_raises(self):
+        from django.template import Template, Context
+        tmpl = Template('{% load bl_icons %}{% show_icon icon="star" size="invalid_size" %}')
+        with self.assertRaises(ValueError) as ctx:
+            tmpl.render(Context({}))
+        self.assertIn("Invalid icon size 'invalid_size'", str(ctx.exception))
+
+    def test_show_icon_css_template_tag(self):
+        from django.template import Template, Context
+        from django.templatetags.static import static
+        tmpl = Template('{% load bl_icons %}{% show_icon_css %}')
+        rendered = tmpl.render(Context({})).strip()
+        expected = f'<link rel="stylesheet" href="{static("themify-icons/css/themify-icons.css")}">'
+        self.assertEqual(rendered, expected)
+
+    @override_settings(BASICLIVE_ICON_BACKEND="tests.test_icon_backends.DummyIconBackend")
+    def test_show_icon_css_custom_backend(self):
+        from django.template import Template, Context
+        from django.templatetags.static import static
+        tmpl = Template('{% load bl_icons %}{% show_icon_css %}')
+        rendered = tmpl.render(Context({})).strip()
+        expected = f'<link rel="stylesheet" href="{static("dummy/dummy.css")}">'
+        self.assertEqual(rendered, expected)
+
+    def test_lims_base_html_uses_show_icon_css(self):
+        from django.template.loader import get_template
+        from django.templatetags.static import static
+        tmpl = get_template("lims/base.html")
+        rendered = tmpl.render({"user": None, "APP_NAME": "BasicLIVE"})
+        expected = f'<link rel="stylesheet" href="{static("themify-icons/css/themify-icons.css")}">'
+        self.assertIn(expected, rendered)
+
+
+

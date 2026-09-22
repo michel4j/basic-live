@@ -87,8 +87,15 @@ class ThemifyBackend(BaseIconBackend):
         clean = icon.strip()
         if not clean:
             return ""
-        # Strip legacy prefix if accidentally passed
-        canonical = clean[3:] if clean.startswith("ti-") else clean
+        # Support plain names, ti-prefixed names, and legacy compound strings
+        tokens = clean.split()
+        canonical = tokens[-1]
+        for token in tokens:
+            if token.startswith("ti-") and token not in ("ti-xs", "ti-sm", "ti-md", "ti-lg", "ti-xl"):
+                canonical = token
+                break
+        if canonical.startswith("ti-"):
+            canonical = canonical[3:]
         target = self.aliases.get(canonical, canonical)
         return f"{self.icon_prefix}{target}"
 
@@ -100,6 +107,14 @@ class ThemifyBackend(BaseIconBackend):
     ) -> str:
         if not icon or not icon.strip():
             return ""
+
+        clean = icon.strip()
+        # Fallback to extract size token from legacy compound string if size argument omitted
+        if not size:
+            for token in clean.split():
+                if token.startswith("ti-") and token[3:] in self.allowed_sizes:
+                    size = token[3:]
+                    break
 
         parts = [self.base_class, self.resolve_icon_name(icon)]
         size_cls = self.format_size_class(size)
