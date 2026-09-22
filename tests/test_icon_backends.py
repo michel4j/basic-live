@@ -99,3 +99,20 @@ class IconBackendTests(SimpleTestCase):
             backend.get_css_classes("home")
         with self.assertRaises(NotImplementedError):
             backend.get_stylesheet_urls()
+
+    def test_framework_icon_sizing_classes_in_scss_and_css(self):
+        from pathlib import Path
+        from django.apps import apps
+        lims_static = Path(apps.get_app_config("lims").path) / "static" / "lims" / "css"
+        scss_content = (lims_static / "basiclive.scss").read_text()
+        css_content = (lims_static / "basiclive.min.css").read_text()
+
+        for size in ("xs", "sm", "md", "lg", "xl"):
+            self.assertIn(f".bl-icon-{size}", scss_content)
+            self.assertIn(f".icon-{size}", scss_content)
+            self.assertIn(f".ti-{size}", scss_content)
+
+            self.assertIn(f".bl-icon-{size}", css_content)
+            self.assertIn(f".icon-{size}", css_content)
+            self.assertIn(f".ti-{size}", css_content)
+
