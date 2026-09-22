@@ -1,5 +1,5 @@
 // Variables
-$web-font-path: "https://fonts.googleapis.com/css?family=Fira+Code|Fira+Sans+Condensed:400,800|Fira+Sans:200,400,800|Architects+Daughter&display=swap" !default;
+$web-font-path: "https://fonts.googleapis.com/css?family=Fira+Code|Fira+Sans+Condensed:400,800|Fira+Sans:200,400,800|Nanum+Pen+Script&display=swap" !default;
 
 // import web-font
 @import url($web-font-path);
@@ -32,7 +32,7 @@ $min_font: 9px;
 $max_font: 15px;
 
 :root {
-  --bl-font-cursive: "Architects Daughter", sans-serif;
+  --bl-font-cursive: "Nanum Pen Script", cursive;
   --bl-font-condensed: "Fira Sans Condensed", sans-serif;
   --bs-font-monospace: "Fira Code", monospace;
   --bl-font-sans-serif: "Fira Sans", sans-serif;
