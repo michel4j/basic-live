@@ -4,7 +4,7 @@
 
 ## Executive Summary
 
-This document provides a comprehensive audit and migration catalog for all `show_icon` template tag invocations across the BasicLIVE codebase. Every invocation has been extracted, analyzed, mapped to canonical plain icon names and standardized size tokens, and evaluated for edge cases (including compound utility classes, anomalous token placements, vestigial color parameters, and dynamic model-driven icons).
+This document provides a comprehensive audit and migration catalog for all `show_icon` template tag invocations across the BasicLIVE codebase. Every invocation has been extracted, analyzed, mapped to canonical plain icon names and standardized size tokens, and evaluated for edge cases (including compound utility classes, anomalous token placements, vestigial color parameters, missing tag library loads, and dynamic model-driven icons).
 
 ### Key Inventory Statistics
 
@@ -101,7 +101,7 @@ Across all 165 calls, **58 unique static icon glyphs** and **1 dynamic icon prop
 
 ## Identified Edge Cases & Migration Strategies
 
-During the comprehensive scan, 16 call sites exhibited non-standard patterns that require explicit handling during migration.
+During the comprehensive scan, 18 call sites exhibited non-standard patterns or template anomalies that require explicit handling during migration.
 
 ### 1. Compound Styling Classes Embedded in `icon` (1 site)
 - **Call site**: `basiclive/core/schedule/templates/schedule/beamtime.html:11`
@@ -110,7 +110,12 @@ During the comprehensive scan, 16 call sites exhibited non-standard patterns tha
 - **Migration Target**: Extract the utility class into the `extra_class` argument: `{% show_icon icon='alert' size='sm' extra_class='text-danger' %}`.
 - **Downstream Dependency**: Ticket [#114](https://github.com/michel4j/basic-live/issues/114) must include `extra_class` in `show_icon` and pass it to the rendered template.
 
-### 2. Anomaly: Sizing Token at End of Icon String (7 sites)
+### 2. Missing `{% load bl_icons %}` in Template Header (2 calls in 1 file)
+- **Call sites**: `basiclive/core/lims/templates/lims/forms/seat-samples.html:13` and `77`
+- **Analysis**: `seat-samples.html` invokes `{% show_icon %}` in modal header and footer blocks, but failed to load the tag library `{% load bl_icons %}` at the top of the file. This causes `TemplateSyntaxError` when the template is compiled.
+- **Migration Target**: Ticket [#115](https://github.com/michel4j/basic-live/issues/115) must add `{% load bl_icons %}` to `seat-samples.html` alongside `{% load bl_layouts %}` and `{% load static %}`.
+
+### 3. Anomaly: Sizing Token at End of Icon String (8 sites across 7 glyph patterns)
 - **Call sites**:
   - `basiclive/core/lims/templates/lims/details/project-profile.html:53` (`icon="ti ti-key ti-sm"`)
   - `basiclive/core/lims/templates/lims/details/user.html:85` (`icon="ti ti-key ti-sm"`)
@@ -120,10 +125,10 @@ During the comprehensive scan, 16 call sites exhibited non-standard patterns tha
   - `basiclive/core/notebooks/templates/notebooks/notebook.html:23` (`icon="ti ti-calendar ti-md"`)
   - `basiclive/core/notebooks/templates/notebooks/notebook.html:27` (`icon="ti ti-settings ti-md"`)
   - `basiclive/core/notebooks/templates/notebooks/notebook_list.html:17` (`icon="ti ti-plus ti-md"`)
-- **Analysis**: In standard calls, the size token was the second token (`ti ti-md ti-...`). In these 8 calls (7 distinct glyph patterns across 8 sites), the size token was placed at the end.
+- **Analysis**: In standard calls, the size token was the second token (`ti ti-md ti-...`). In these 8 calls, the size token was placed at the end.
 - **Migration Target**: Discard string token order; cleanly map to `icon='<name>' size='<size>'`.
 
-### 3. Vestigial `color` Attribute Without `badge` (6 sites)
+### 4. Vestigial `color` Attribute Without `badge` (6 sites)
 - **Call sites**:
   - `basiclive/core/lims/templates/lims/details/container.html:51` (`color="primary"`)
   - `basiclive/core/lims/templates/lims/details/group.html:35` (`color="primary"`)
@@ -134,7 +139,7 @@ During the comprehensive scan, 16 call sites exhibited non-standard patterns tha
 - **Analysis**: In `icon-info.html`, `color` is only evaluated when `badge` is present (`{% if badge is not None %}<span class="... text-bg-{{ color }}">...{% endif %}`). In `container.html:51`, `group.html:35`, and `tools-shipment-edit.html:22`, lines were duplicated from an `{% if not object.samples.exists %}` branch where `badge="+" color="primary"` was used, leaving orphaned `color="primary"` in the `{% else %}` block. In `beamtime-list-item.html`, the author likely expected `color='info'` to tint the icon.
 - **Migration Target**: Retain `color` in the tag call if desired for future icon coloring in #114, or clean up vestigial color if strictly reserved for badge backgrounds.
 
-### 4. Dynamic Model-Driven Icon Expression (1 site)
+### 5. Dynamic Model-Driven Icon Expression (1 site)
 - **Call site**: `basiclive/core/notebooks/templates/notebooks/notebook.html:39`
 - **Legacy invocation**: `{% show_icon icon=entry_type.icon label=entry_type.name|title %}`
 - **Analysis**: `entry_type.icon` is a method on `basiclive.core.notebooks.models.EntryType` that returns `f'ti-md entry-selector-{self.name.lower()}'`. This tightly couples the model to the `ti-md` class.
@@ -380,8 +385,8 @@ The tables below catalog every single `show_icon` call site in the repository, o
 
 | Line | Current Legacy Call | Proposed Replacement Tag | Plain Icon | Size | Notes / Edge Cases |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 13 | `{% show_icon icon="ti ti-paint-bucket ti-md" %}` | `{% show_icon icon="paint-bucket" size='md' %}` | `paint-bucket` | `md` | Size token `ti-md` positioned at end of icon string in legacy call. |
-| 77 | `{% show_icon icon="ti ti-info-alt ti-md" %}` | `{% show_icon icon="info-alt" size='md' %}` | `info-alt` | `md` | Size token `ti-md` positioned at end of icon string in legacy call. |
+| 13 | `{% show_icon icon="ti ti-paint-bucket ti-md" %}` | `{% show_icon icon="paint-bucket" size='md' %}` | `paint-bucket` | `md` | Missing `{% load bl_icons %}` in template header (must be added in #115).; Size token `ti-md` positioned at end of icon string in legacy call. |
+| 77 | `{% show_icon icon="ti ti-info-alt ti-md" %}` | `{% show_icon icon="info-alt" size='md' %}` | `info-alt` | `md` | Missing `{% load bl_icons %}` in template header (must be added in #115).; Size token `ti-md` positioned at end of icon string in legacy call. |
 
 #### `basiclive/core/lims/templates/lims/list-plots.html` (1 call)
 
@@ -585,6 +590,7 @@ This audit provides concrete inputs for the remaining work packages in Map [#110
    - Clarify behavior when `color` is provided without `badge` (either render `text-{{ color }}` on the icon or ignore).
 4. **Issue [#115](https://github.com/michel4j/basic-live/issues/115) (Core LIMS migration)**:
    - Migrate the 126 call sites across 37 core LIMS templates strictly following the catalog mappings in Section 4.1.
+   - Ensure `basiclive/core/lims/templates/lims/forms/seat-samples.html` adds `{% load bl_icons %}`.
 5. **Issue [#116](https://github.com/michel4j/basic-live/issues/116) (ACL, CRM, Schedule, Notebooks, Publications migration)**:
    - Migrate the 39 call sites across the remaining 12 templates in `acl` (5), `crm` (5), `schedule` (17), `notebooks` (7), and `publications` (5) following Sections 4.2–4.6.
 6. **Issue [#117](https://github.com/michel4j/basic-live/issues/117) (`render_icon` helper & Python forms)**:
