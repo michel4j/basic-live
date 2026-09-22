@@ -1,17 +1,20 @@
 {% load bl_notebooks %}
 
-<li class="list-item notebook-entry entry-{{ entry.kind.name }}"
+<div class="card notebook-entry entry-{{ entry.kind.name }} mb-3"
     data-page-url=""
     data-entry-pk="{{ entry.pk }}"
     data-entry-date="{{ entry.created|date:'Y-m-d' }}"
     data-annotate-url="{% url 'notebooks:entry-annotations' book=notebook.id pk=entry.id %}"
     id="entry-{{ entry.pk }}"
 >
+    <div class="card-body">
     {% block entry_content %}{% endblock %}
+    </div>
+<div class="card-footer">
     <div class="tag-cloud w-100 text-end">
         <ul class="list-unstyled mb-0">
         {% for tag in entry.tags %}
-        <li data-search-prefix="tag" onclick="doSearch(this);">{{ tag }}</li>
+        <li data-search-prefix="tag"><a href="?search={{tag}}">{{ tag }}</a></li>
         {% endfor %}
         </ul>
     </div>
@@ -23,28 +26,36 @@
             <i class="mi mi-trash mi-lg mi-fw delete-button"
                title="Delete" data-modal-url="{% url 'notebooks:delete-entry' book=entry.notebook.pk pk=entry.pk %}">
             </i>
-            {% else %}
             <i class="mi mi-tag-o mi-lg mi-fw tag-button" data-modal-url="{% url 'notebooks:edit-tags' book=entry.notebook.pk pk=entry.pk %}" title="Tags"></i>
             {% endif %}
-            <button type="button" class="btn btn-sm btn-link text-muted p-0 entry-comment-badge d-inline-flex align-items-center gap-1 text-decoration-none" title="Comments" data-entry-pk="{{ entry.pk }}">
-                <i class="mi mi-comment-alt mi-fw"></i>
-                <span class="comment-count badge rounded-pill {% if entry.annotations.count %}bg-secondary text-white{% else %}bg-transparent text-muted{% endif %}">
+            {% if entry.annotations.count %}
+            <button
+                type="button"
+                class="btn btn-sm btn-link text-muted p-0 entry-comment-badge d-inline-flex align-items-center gap-1 text-decoration-none"
+                title="Comments"
+                data-entry-pk="{{ entry.pk }}"
+            >
+                <i class="mi mi-comment-alt ti-md mi-fw position-relative">
+                    <strong class="position-absolute top-50 start-50 translate-middle text-light comment-count">
                     {{ entry.annotations.count }}
-                </span>
+                    </strong>
+                </i>
             </button>
+            {% endif %}
         </span>
-        <span class="col-sm-4 text-end px-0 small">
+        <span class="col-sm-4 text-end px-0">
             @<span>{{ entry.author }}</span>&nbsp;|&nbsp;{{ entry.created|simpletime }}
         </span>
     </div>
+</div>
     {% for annotation in entry.annotations.all %}
     {% if forloop.first %}<div class="annotations-data" hidden>{% endif %}
         <script id="annotation-{{ annotation.id }}" type="application/json"
                 data-pk="{{ annotation.id }}"
                 data-isauthor="{% if user == annotation.author or user.is_superuser %}true{% else %}false{% endif %}"
         >
-            {{ annotation.json|json }}
+            {{ annotation.json | json }}
         </script>
     {% if forloop.last %}</div>{% endif %}
     {% endfor %}
-</li>
+</div>

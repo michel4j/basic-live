@@ -1,3 +1,4 @@
+@use "sass:math";
 
 $monospace-stack: 'Fira Code', monospace;
 $default-text-color: #333;
@@ -366,27 +367,41 @@ canvas#sketcher {
   min-height: 50vh;
 }
 
-.notebook-entry + .notebook-entry:hover {
-  border-top: 1px dotted var(--bs-border-color-translucent);
-}
-
 .notebook-entry {
-  border: 1px solid transparent;
+  border: 1px solid var(--bs-border-color-translucent);
   position: relative;
-  padding: 0.5rem 1rem;
   list-style: none;
 
   & > * {
     position: relative;
   }
 
+  h1 {
+    font-size: calc(1rem * 1.6);
+  }
+  h2 {
+    font-size: calc(1rem * 1.5);
+  }
+    h3 {
+    font-size: calc(1rem * 1.4);
+    }
+  h4 {
+    font-size: calc(1rem * 1.3);
+  }
+    h5 {
+    font-size: calc(1rem * 1.2);
+    }
+  h6 {
+    font-size: calc(1rem * 1.1);
+  }
+
   &:hover {
-    border-left: 1px dotted var(--bs-border-color-translucent);
-    border-right: 1px dotted var(--bs-border-color-translucent);
-    border-bottom: 1px dotted var(--bs-border-color-translucent);
     .entry-tools i {
       visibility: visible;
     }
+  }
+  .card-footer {
+    padding: 1rem;
   }
   .entry-tools {
     i + i {
