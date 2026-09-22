@@ -24,7 +24,7 @@
     </a>
     {% if user.is_superuser or notebook.owner == user %}
     <a href="#!" data-modal-url="{% url 'notebooks:notebook-edit' pk=notebook.pk %}">
-        {% show_icon icon="ti ti-settings ti-md" label="Edit Notebook" %}
+        {% show_icon icon="ti ti-settings ti-md" label="Settings" %}
     </a>
     {% endif %}
 {% if notebook|is_editable_by:user %}
@@ -58,17 +58,13 @@
         </div>
 
         <div class="col-12 col-lg-3 d-none d-lg-block">
-            <div class="notebook-sidebar sticky-top" style="top: 1rem;">
+            <div class="notebook-sidebar">
                 <div id="notebook-sidebar-calendar" class="calendar-container"
                      data-dates-url="{% url 'notebooks:notebook-dates' pk=notebook.id %}"
                      data-select-target="{% url 'notebooks:notebook-detail' pk=notebook.id %}">
                     <div class="contents"></div>
                 </div>
             </div>
-        </div>
-
-        <div id="nav-tools">
-            <a href="#!" id="to-bottom" title="End of Page"><i class="mi mi-arrow-down-circle"></i></a>
         </div>
     </div>
     <div class="row">

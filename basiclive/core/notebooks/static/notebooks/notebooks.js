@@ -377,11 +377,10 @@ function initFileDropzoneModal($modal) {
     const acceptedFiles = $fileInput.attr("accept") || null;
     const dropzoneHtml = (
         `<div id="modal-file-dropzone" 
-            class="dropzone mb-2 rounded border p-3 text-center text-muted" 
+            class="dropzone mb-2 rounded border p-3 text-center" 
             style="cursor: pointer; min-height: 110px;"
         >  
-            <div class="dz-message needsclick my-2">    
-                <i class="mi mi-upload mi-2x mb-1 d-block text-secondary"></i>    
+            <div class="dz-message needsclick my-2">
                 <span class="small">Drop file here or click to browse</span>  
             </div>
         </div>`
