@@ -14,7 +14,7 @@
 {% endblock %}
 {% block page-subtitle %}
     <span class="text-muted">
-        {% if not object.is_editable %}{% show_icon icon="ti ti-lock" %}{% endif %}
+        {% if not object.is_editable %}{% show_icon icon="lock" %}{% endif %}
         {{ object.identity }} | {{ object.kind.name }}
     </span>
 {% endblock %}

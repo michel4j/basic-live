@@ -31,7 +31,7 @@
                     <td data-field="group" contenteditable="true">{{ placeholder.group.name|default:"" }}</td>
                     <td data-field="barcode" contenteditable="true">{{ placeholder.barcode|default:"" }}</td>
                     <td data-field="comments" contenteditable="true">{{ placeholder.comments|default:"" }}</td>
-                    <td class="text-center"><a href="#!" class="remove-sample" title="Delete Sample?">{% show_icon icon="ti ti-trash" %}</a></td>
+                    <td class="text-center"><a href="#!" class="remove-sample" title="Delete Sample?">{% show_icon icon="trash" %}</a></td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -42,7 +42,7 @@
 {% block modal_footer %}
     <div class="col-10">
         <div class="alert alert-info m-0 p-2" id="spreadsheet-instructions">
-            <span class="float-start pe-2">{% show_icon icon="ti ti-info-alt ti-md" %}</span>
+            <span class="float-start pe-2">{% show_icon icon="info-alt" size='md' %}</span>
             Click on a field to edit it. Copy and paste single columns from a spreadsheet. Remove existing samples by clearing the name.
         </div>
     </div>

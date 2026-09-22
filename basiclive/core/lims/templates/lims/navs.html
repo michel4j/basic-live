@@ -8,26 +8,26 @@
             {% if user.is_superuser %}
                <li class="nav-item">
                    <a  class="nav-link" href="/admin/" target="_blank">
-                       {% show_icon icon="ti ti-unlock" %}<span class="d-none d-md-inline-block">&nbsp;Admin</span>
+                       {% show_icon icon="unlock" %}<span class="d-none d-md-inline-block">&nbsp;Admin</span>
                    </a>
                </li>
             {% endif %}
             <li class="nav-item">
                 <a class="nav-link" href="/">
-                    {% show_icon icon="ti ti-home" %}<span class="d-none d-md-inline-block">&nbsp;Dashboard</span>
+                    {% show_icon icon="home" %}<span class="d-none d-md-inline-block">&nbsp;Dashboard</span>
                 </a>
             </li>
             {% if USE_NOTEBOOKS %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'notebooks:notebook-list' %}">
-                    {% show_icon icon="ti ti-book" %}<span class="d-none d-md-inline-block">&nbsp;Notebooks</span>
+                    {% show_icon icon="book" %}<span class="d-none d-md-inline-block">&nbsp;Notebooks</span>
                 </a>
             </li>
             {% endif %}
             <li class="nav-item dropdown">
                 <a class="nav-link  dropdown-toggle me-md-2" href="#"
                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="search-menu">
-                    {% show_icon icon="ti ti-list" %}<span class="d-none d-md-inline-block">&nbsp;Search</span>
+                    {% show_icon icon="list" %}<span class="d-none d-md-inline-block">&nbsp;Search</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="search-menu">
                     <a class="dropdown-item" href='{% url "shipment-list" %}'>Shipments</a>
@@ -53,19 +53,19 @@
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle me-md-2" href="#"
                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="profile-menu">
-                    {% show_icon icon="ti ti-user" %}<span class="d-none d-md-inline-block">&nbsp;{{user.name.upper}}</span>
+                    {% show_icon icon="user" %}<span class="d-none d-md-inline-block">&nbsp;{{user.name.upper}}</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="profile-menu">
                     {% include "lims/address.html" %}
                     <div class="dropdown-divider"></div>
                     <button type="button" href="#!" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
-                        {% show_icon icon="ti ti-shine" %}&nbsp;Light
+                        {% show_icon icon="shine" %}&nbsp;Light
                     </button>
                     <button type="button" href="#!" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
-                        {% show_icon icon="ti ti-drupal" %}&nbsp;Dark
+                        {% show_icon icon="drupal" %}&nbsp;Dark
                     </button>
                     <button type="button" href="#!" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
-                        {% show_icon icon="ti ti-widget" %}&nbsp;Auto
+                        {% show_icon icon="widget" %}&nbsp;Auto
                     </button>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="#!" data-modal-url="{% url 'edit-profile' user.username %}">Edit Profile</a>

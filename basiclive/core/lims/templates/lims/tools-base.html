@@ -2,10 +2,10 @@
 {% if object.status == object.STATES.DRAFT or object.comments or object.staff_comments %}
     {% if object.status == object.STATES.DRAFT %}
         <a href="#!" data-modal-url="{{ handler }}edit/">
-            {% show_icon label='Edit' icon='ti ti-md ti-pencil-alt' %}
+            {% show_icon label='Edit' icon='pencil-alt' size='md' %}
         </a>
         <a href="#!" data-modal-url="{{ handler }}delete/">
-            {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
+            {% show_icon label='Delete' icon='trash' size='md' %}
         </a>
     {% endif %}
 {% endif %}

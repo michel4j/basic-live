@@ -21,7 +21,7 @@
                 {% if user.is_superuser %}
                     {% if sample.pk %}
                         <a href="#!" data-modal-url="{% url 'sample-admin-edit' sample.pk %}" title="Edit Notes">
-                            {% show_icon icon="ti ti-comments-alt" %}
+                            {% show_icon icon="comments-alt" %}
                         </a>
                     {% endif %}
                 {% else %}
@@ -31,10 +31,10 @@
                               data-bs-content="{{ sample.staff_comments|default:''}}"
                               data-bs-placement="bottom"
                               data-bs-trigger="hover">
-                            {% show_icon icon="ti ti-comments-alt" %}
+                            {% show_icon icon="comments-alt" %}
                         </span>
                     {% endif %}
-                    {% if sample.collect_status %}{% show_icon icon="ti ti-check-box" %}{% endif %}
+                    {% if sample.collect_status %}{% show_icon icon="check-box" %}{% endif %}
                 {% endif %}
             </td>
 

@@ -7,7 +7,7 @@
             {% if editable %}
                 <div class="box-status text-center align-middle pt-2" style="width: 50px; min-width: 50px;">
                     <span class='cursor'>
-                        {% show_icon icon='ti ti-md ti-move' tooltip='Priority' %}
+                        {% show_icon icon='move' size='md' tooltip='Priority' %}
                     </span>
                 </div>
             {% endif %}
@@ -30,7 +30,7 @@
                 <div class="tools-box">
                     <a href="#!" data-modal-url="{% url 'request-new' %}?groups={{ group.pk }}"
                         title="Add a Request">
-                        {% show_icon label='Request' icon="ti ti-md ti-ruler-pencil" badge="+" color="primary" %}
+                        {% show_icon label='Request' icon="ruler-pencil" size='md' badge="+" color="primary" %}
                     </a>
                 </div>
             {% else %}

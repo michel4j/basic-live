@@ -26,21 +26,21 @@
     {% with object.active_automounter as automounter %}
     {% if automounter.container.children_history.all %}
         <a href="#!" data-modal-url="{% url 'automounter-history' object.active_automounter.container.pk %}">
-            {% show_icon label='History' icon='ti ti-md ti-timer' %}
+            {% show_icon label='History' icon='timer' size='md' %}
         </a>
     {% endif %}
     <a href="{% url 'data-stats' %}?beamline__id__exact={{ object.pk }}">
-        {% show_icon label='Stats' icon='ti ti-md ti-pulse' %}
+        {% show_icon label='Stats' icon='pulse' size='md' %}
     </a>
     <a href="{% url 'beamline-usage' %}?beamline__id__exact={{ object.pk }}">
-        {% show_icon label='Usage' icon='ti ti-md ti-pie-chart' %}
+        {% show_icon label='Usage' icon='pie-chart' size='md' %}
     </a>
     <a href="{% url 'session-list' %}?beamline__id__exact={{ object.pk }}">
-        {% show_icon label='Sessions' icon='ti ti-md ti-calendar' %}
+        {% show_icon label='Sessions' icon='calendar' size='md' %}
     </a>
     {% if automounter %}
         <a href="#!" data-modal-url="{% url 'automounter-edit' pk=automounter.pk %}">
-            {% show_icon label='Comment' icon='ti ti-md ti-comment-alt' %}
+            {% show_icon label='Comment' icon='comment-alt' size='md' %}
         </a>
     {% endif %}
     {% endwith %}

@@ -4,20 +4,20 @@
 {% url "project-statistics" username=user.username as stats_url %}
 
 <a  href="{% url 'session-list' %}">
-    {% show_icon label='Sessions' icon='ti ti-md ti-calendar' %}
+    {% show_icon label='Sessions' icon='calendar' size='md' %}
 </a>
 {% if USE_SCHEDULE %}
     <a  href="{% url 'schedule' %}">
-        {% show_icon label="Schedule" icon="ti ti-md ti-time" %}
+        {% show_icon label="Schedule" icon="time" size='md' %}
     </a>
 {% endif %}
 {% if request.path != stats_url %}
     <a  href="{{ stats_url }}">
-        {% show_icon label='My Stats' icon='ti ti-md ti-pulse' %}
+        {% show_icon label='My Stats' icon='pulse' size='md' %}
     </a>
 {% endif %}
 {% if request.path != profile_url %}
     <a  href="{{ profile_url }}">
-        {% show_icon label='My Profile' icon='ti ti-md ti-user' %}
+        {% show_icon label='My Profile' icon='user' size='md' %}
     </a>
 {% endif %}

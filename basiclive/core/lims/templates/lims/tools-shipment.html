@@ -4,17 +4,17 @@
     {% comment %}Shipment Details{% endcomment %}
     {% if shipment.requests.count %}
         <a href="{% url 'shipment-requests' shipment.pk %}">
-            {% show_icon label='Requests' icon='ti ti-md ti-layout-accordion-list' %}
+            {% show_icon label='Requests' icon='layout-accordion-list' size='md' %}
         </a>
     {% endif %}
     <a href="{% url 'shipment-samples' shipment.pk %}">
-        {% show_icon label='Samples' icon='ti ti-md ti-view-list-alt' %}
+        {% show_icon label='Samples' icon='view-list-alt' size='md' %}
     </a>
     <a href="{% url 'shipment-data' shipment.pk %}" title="Go to Data from this shipment">
-        {% show_icon label='Data' icon='ti ti-md ti-layout-grid3' badge=shipment.num_datasets color='info' %}
+        {% show_icon label='Data' icon='layout-grid3' size='md' badge=shipment.num_datasets color='info' %}
     </a>
     <a href="{% url 'shipment-reports' shipment.pk %}" title="Go to Reports from this shipment">
-        {% show_icon label='Reports' icon='ti ti-md ti-bar-chart-alt' badge=shipment.num_reports color='info' %}
+        {% show_icon label='Reports' icon='bar-chart-alt' size='md' badge=shipment.num_reports color='info' %}
     </a>
 {% endif %}
 {% if user == shipment.project %}
@@ -23,49 +23,49 @@
         {% include "lims/tools-shipment-edit.html" %}
 
         <a href="#!" data-modal-url="{% url 'shipment-delete' shipment.pk %}">
-            {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
+            {% show_icon label='Delete' icon='trash' size='md' %}
         </a>
         <a href="#!" data-modal-url="{% url 'shipment-edit' shipment.pk %}">
-            {% show_icon label='Edit' icon='ti ti-md ti-pencil-alt' %}
+            {% show_icon label='Edit' icon='pencil-alt' size='md' %}
         </a>
         <a href="#!" data-modal-url="{% url 'shipment-send' shipment.pk %}">
-            {% show_icon label='Send' icon='ti ti-md ti-location-arrow'%}
+            {% show_icon label='Send' icon='location-arrow' size='md' %}
         </a>
     {% endif %}
     {% if shipment.status == shipment.STATES.SENT %}
         <a href="#!" data-modal-url="{% url 'shipment-update-send' shipment.pk %}">
-            {% show_icon label='Recall' icon='ti ti-md ti-control-backward' %}
+            {% show_icon label='Recall' icon='control-backward' size='md' %}
         </a>
     {% endif %}
     {% if shipment.status <= shipment.STATES.ON_SITE %}
         <a href="{% url 'shipment-labels' shipment.pk %}">
-            {% show_icon label='Labels' icon='ti ti-md ti-tag' %}
+            {% show_icon label='Labels' icon='tag' size='md' %}
         </a>
     {% endif %}
 {% elif user.is_superuser %}
     {% comment %}Staff Actions{% endcomment %}
 
     <a href="{% url 'shipment-labels' shipment.pk %}">
-        {% show_icon label='Labels' icon='ti ti-md ti-tag' %}
+        {% show_icon label='Labels' icon='tag' size='md' %}
     </a>
     <a href="#!" data-modal-url="{% url 'shipment-comments' shipment.pk %}">
-        {% show_icon label='Comment' icon='ti ti-md ti-comment-alt' %}
+        {% show_icon label='Comment' icon='comment-alt' size='md' %}
     </a>
     {% if shipment.status == shipment.STATES.SENT %}
         <a href="#!" data-modal-url="{% url "shipment-receive" shipment.pk %}">
-            {% show_icon label='Receive' icon='ti ti-md ti-shopping-cart-full' %}
+            {% show_icon label='Receive' icon='shopping-cart-full' size='md' %}
         </a>
     {% elif shipment.status == shipment.STATES.ON_SITE %}
         <a href="#!" data-modal-url="{% url "shipment-return" shipment.pk %}">
-            {% show_icon label='Return' icon='ti ti-md ti-location-arrow' %}
+            {% show_icon label='Return' icon='location-arrow' size='md' %}
         </a>
 
         <a href="{% url 'shipment-revise' shipment.pk %}">
-            {% show_icon label='Revise' icon='ti ti-md ti-pencil'%}
+            {% show_icon label='Revise' icon='pencil' size='md' %}
         </a>
     {% elif shipment.status == shipment.STATES.RETURNED %}
         <a href="#!" data-modal-url="{% url "shipment-update-return" shipment.pk %}">
-            {% show_icon label='Recall' icon='ti ti-md ti-control-backward' %}
+            {% show_icon label='Recall' icon='control-backward' size='md' %}
         </a>
     {% endif %}
 {% endif %}

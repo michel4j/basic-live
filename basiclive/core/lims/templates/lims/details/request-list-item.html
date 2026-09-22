@@ -7,7 +7,7 @@
             {% if editable %}
                 <div class="box-status text-center" style="width: 50px; min-width: 50px;">
                     <span class='cursor'>
-                        {% show_icon icon='ti ti-md ti-move' tooltip='Priority' %}
+                        {% show_icon icon='move' size='md' tooltip='Priority' %}
                     </span>
                 </div>
             {% endif %}
@@ -22,7 +22,7 @@
                 <div class="tools-box">
                     <a href="#!" data-modal-url="{% url 'request-edit' request.pk %}"
                         title="Edit Request Parameters">
-                        {% show_icon icon="ti ti-md ti-pencil" color="primary" %}
+                        {% show_icon icon="pencil" size='md' color="primary" %}
                     </a>
                 </div>
             {% else %}

@@ -68,11 +68,11 @@
             {% if object.url %}
                 <a href="{% url 'files-proxy' section='archive' path=object.download_url %}"
                    download="{{ object.name }}.tar.gz" title="Download Full Dataset">
-                    {% show_icon label="Download" icon="ti ti-md ti-download" %}
+                    {% show_icon label="Download" icon="download" size='md' %}
                 </a>
             {% else %}
                 <span class="text-muted not-allowed" title="Download Not Available">
-                    {% show_icon label="Download" icon="ti ti-md ti-download" %}
+                    {% show_icon label="Download" icon="download" size='md' %}
                 </span>
             {% endif %}
             </div>

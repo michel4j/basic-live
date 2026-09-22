@@ -13,7 +13,7 @@
 {% endblock %}
 {% block page-subtitle %}
     <span class="text-muted">
-        {% if not object.is_editable %}{% show_icon icon="ti ti-lock" %}{% endif %}
+        {% if not object.is_editable %}{% show_icon icon="lock" %}{% endif %}
         {{ object.identity }} |
         {% if object.shipment %}
             {% with object.shipment.groups.count as count %}
@@ -30,14 +30,14 @@
         {% if object.shipment %}
             <a href="#!" data-modal-url="{% url 'seat-samples' object.shipment.pk %}" title="Sample Seat Selection">
             {% if not objects.samples.exists %}
-                {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' badge="+" color="primary" %}
+                {% show_icon label='Samples' icon='paint-bucket' size='md' badge="+" color="primary" %}
             {% else %}
-                {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' color="primary" %}
+                {% show_icon label='Samples' icon='paint-bucket' size='md' color="primary" %}
             {% endif %}
             </a>
         {% endif %}
         <a href="#!" data-modal-url="{% url 'request-new' %}?groups={{ object.pk }}" title="Add a Request">
-            {% show_icon label='Request' icon="ti ti-md ti-ruler-pencil" badge="+" color="primary" %}
+            {% show_icon label='Request' icon="ruler-pencil" size='md' badge="+" color="primary" %}
         </a>
 
     {% endif %}
@@ -78,7 +78,7 @@
                 <tbody>
                 {% for sample in object.samples.all %}
                     <tr id="sample_{{ sample.pk }}" data-sample="{{ sample.pk }}">
-                        <td><span class='cursor movable'>{% show_icon icon="ti ti-move" %}</span></td>
+                        <td><span class='cursor movable'>{% show_icon icon="move" %}</span></td>
                         <td><a href="{% url 'sample-detail' sample.pk %}">{{ sample.name }}</a></td>
                         <td>{{ sample.location }}</td>
                         <td>{{ sample.container.name }}</td>

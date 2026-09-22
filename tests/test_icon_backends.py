@@ -180,5 +180,23 @@ class IconBackendTests(SimpleTestCase):
         expected = f'<link rel="stylesheet" href="{static("themify-icons/css/themify-icons.css")}">'
         self.assertIn(expected, rendered)
 
+    def test_core_lims_templates_have_no_legacy_show_icon_calls(self):
+        import re
+        from pathlib import Path
+        from django.apps import apps
+
+        lims_tmpl_dir = Path(apps.get_app_config("lims").path) / "templates"
+        legacy_pattern = re.compile(r'{%\s*show_icon\b[^%]*\bicon=[\'"][^\'"]*ti[-\s][^\'"]*[\'"]')
+
+        violating_calls = []
+        for html_file in lims_tmpl_dir.rglob("*.html"):
+            content = html_file.read_text()
+            matches = legacy_pattern.findall(content)
+            if matches:
+                violating_calls.append((html_file.name, matches))
+
+        self.assertEqual(violating_calls, [], f"Found legacy show_icon calls in core lims templates: {violating_calls}")
+
+
 
 

@@ -20,29 +20,29 @@
 
 {% block page-tools %}
     <a href="{% url 'session-reports' object.pk %}" title="Go to Reports from this session">
-        {% show_icon label='Reports' icon='ti ti-md ti-bar-chart-alt' badge=object.num_reports %}
+        {% show_icon label='Reports' icon='bar-chart-alt' size='md' badge=object.num_reports %}
     </a>
     <a href="{% url 'session-data' object.pk %}" title="Go to Data from this session">
-        {% show_icon label='Data' icon='ti ti-md ti-layout-grid3' badge=object.datasets.count %}
+        {% show_icon label='Data' icon='layout-grid3' size='md' badge=object.datasets.count %}
     </a>
     <a href="#!" data-modal-url="{% url 'session-history' object.pk %}">
-        {% show_icon label='History' icon='ti ti-md ti-timer' %}
+        {% show_icon label='History' icon='timer' size='md' %}
     </a>
     {% if user.is_superuser %}
         <a href="{% url 'session-statistics' pk=object.pk %}">
-            {% show_icon label='Statistics' icon='ti ti-md ti-pulse' %}
+            {% show_icon label='Statistics' icon='pulse' size='md' %}
         </a>
     {% endif %}
     {% if object.datasets.count %}
 
         <a href="{% url 'files-proxy' section='archive' path=object.download_url %}">
-            {% show_icon label='Download' icon='ti ti-md ti-download' %}
+            {% show_icon label='Download' icon='download' size='md' %}
         </a>
     {% endif %}
     {% if USE_CRM %}
         {% if request.user == object.project %}
             <a href="{% url 'session-feedback' key=object.feedback_key %}" title="Give feedback about this session">
-                {% show_icon label='Feedback' icon='ti ti-md ti-star' %}
+                {% show_icon label='Feedback' icon='star' size='md' %}
             </a>
         {% endif %}
     {% endif %}

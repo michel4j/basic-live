@@ -1,10 +1,10 @@
 {% load bl_icons %}
 
 <a href="#!"  data-modal-url="{% url 'shipment-add-containers' shipment.pk %}" title="Containers">
-    {% show_icon icon="ti ti-md ti-package" label="Containers" %}
+    {% show_icon label="Containers" icon="package" size='md' %}
 </a>
 <a href="#!"  data-modal-url="{% url 'shipment-add-groups' shipment.pk %}" title="Groups">
-    {% show_icon icon="ti ti-md ti-layout-accordion-list" label="Groups" %}
+    {% show_icon label="Groups" icon="layout-accordion-list" size='md' %}
 </a>
 <a  href="#!" data-modal-url="{% url 'seat-samples' shipment.pk %}" title="Samples"
     {% if shipment.num_samples == 0 %}
@@ -17,14 +17,14 @@
     {% endif %}
     >
 {% if shipment.num_samples == 0 %}
-    {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' badge="+" color="primary" %}
+    {% show_icon label='Samples' icon='paint-bucket' size='md' badge="+" color="primary" %}
 {% else %}
-    {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' color="primary" %}
+    {% show_icon label='Samples' icon='paint-bucket' size='md' color="primary" %}
 {% endif %}
 </a>
 {% if user.is_superuser and shipment.status == shipment.STATES.ON_SITE %}
 
     <a href="{% url 'shipment-detail' shipment.pk %}">
-        {% show_icon label='Done' icon='ti ti-md ti-check'%}
+        {% show_icon label='Done' icon='check' size='md' %}
     </a>
 {% endif %}

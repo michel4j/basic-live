@@ -19,7 +19,7 @@
 {% endblock %}
 {% block page-subtitle %}
     <span class="text-muted">
-        {% if not object.is_editable %}{% show_icon icon="ti ti-lock" %}{% endif %}
+        {% if not object.is_editable %}{% show_icon icon="lock" %}{% endif %}
         {{ object.identity }} |
         {% if object.shipment %}
             {% with object.shipment.containers.count as count %}
@@ -46,21 +46,21 @@
         {% endif %}
         >
         {% if not object.samples.exists %}
-            {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' badge="+" color="primary" %}
+            {% show_icon label='Samples' icon='paint-bucket' size='md' badge="+" color="primary" %}
         {% else %}
-            {% show_icon label='Samples' icon='ti ti-md ti-paint-bucket' color="primary" %}
+            {% show_icon label='Samples' icon='paint-bucket' size='md' color="primary" %}
         {% endif %}
     </a>
     {% endif %}
     {% include "lims/tools-base.html" %}
     {% if object.parent_history.exists %}
         <a href="#!" data-modal-url="{% url 'container-history' object.pk %}">
-            {% show_icon label='History' icon='ti ti-md ti-timer' %}
+            {% show_icon label='History' icon='timer' size='md' %}
         </a>
     {% endif %}
     {% if object.children_history.exists %}
         <a class="float-end" data-modal-url="{% url 'automounter-history' object.pk %}">
-            {% show_icon label='Load History' icon='ti ti-md ti-timer' %}
+            {% show_icon label='Load History' icon='timer' size='md' %}
         </a>
     {% endif %}
 {% endblock %}

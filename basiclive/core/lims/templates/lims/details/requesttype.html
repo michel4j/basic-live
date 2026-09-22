@@ -26,14 +26,14 @@
 
 {% block page-tools %}
     <a href="#!" data-modal-url="{% url 'requesttype-layout' object.pk %}">
-        {% show_icon label='Layout' icon='ti ti-md ti-layout' %}
+        {% show_icon label='Layout' icon='layout' size='md' %}
     </a>
     <span class="separator"></span>
     <a href="#!" data-modal-url="{{ handler }}edit/">
-        {% show_icon label='Edit' icon='ti ti-md ti-pencil-alt' %}
+        {% show_icon label='Edit' icon='pencil-alt' size='md' %}
     </a>
     <a href="#!" data-modal-url="{{ handler }}delete/">
-        {% show_icon label='Delete' icon='ti ti-md ti-trash' %}
+        {% show_icon label='Delete' icon='trash' size='md' %}
     </a>
 {% endblock %}
 

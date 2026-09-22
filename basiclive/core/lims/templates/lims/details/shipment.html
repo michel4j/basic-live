@@ -22,7 +22,7 @@
 {% endblock %}
 {% block page-subtitle %}
     <span class="text-muted">
-        {% if not shipment.is_editable %}{% show_icon icon="ti ti-lock" %}{% endif %}
+        {% if not shipment.is_editable %}{% show_icon icon="lock" %}{% endif %}
         {{ shipment.identity }} |
         {% if shipment.status == shipment.STATES.DRAFT %}Created {{ shipment.created|naturalday }}
         {% elif shipment.status == shipment.STATES.SENT %}Sent {{ shipment.date_shipped|naturalday }}
