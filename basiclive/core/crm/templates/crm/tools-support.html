@@ -1,18 +1,18 @@
 {% load bl_icons %}
 
 <a href="{% url "supportarea-list" %}" title="Support Areas">
-    {% show_icon label='Areas' icon='ti ti-md ti-target' %}
+    {% show_icon label='Areas' icon='target' size='md' %}
 </a>
 <a href="{% url "supportrecord-list" %}" title="Records of User Support">
-    {% show_icon label='Support' icon='ti ti-md ti-headphone-alt' %}
+    {% show_icon label='Support' icon='headphone-alt' size='md' %}
 </a>
 <a href="{% url "user-feedback-list" %}" title="User Feedback">
-    {% show_icon label='Feedback' icon='ti ti-md ti-star' %}
+    {% show_icon label='Feedback' icon='star' size='md' %}
 </a>
 <a class="separator"></a>
 <a href="#!" data-modal-url="{% url "new-supportrecord" %}" title="Record User Support">
-    {% show_icon label='Support' icon='ti ti-md ti-headphone-alt' badge='+' color='primary' %}
+    {% show_icon label='Support' icon='headphone-alt' size='md' badge='+' color='primary' %}
 </a>
 <a href="#!" data-modal-url="{% url "new-supportarea" %}" title="Add Support Area">
-    {% show_icon label='New Area' icon='ti ti-md ti-target' badge='+' color='primary' %}
+    {% show_icon label='New Area' icon='target' size='md' badge='+' color='primary' %}
 </a>

@@ -13,15 +13,15 @@
     {% if support %}
         <div class="tools-box float-end pe-0 mb-0">
             <a href="#!" data-modal-url="{% url "support-edit" support.pk %}" title="Edit" class="pe-0">
-                {% show_icon icon='ti ti-sm ti-pencil' %}
+                {% show_icon icon='pencil' size='sm' %}
             </a>
             <a href="#!" data-modal-url="{% url "support-delete" support.pk %}" title="Delete">
-                {% show_icon icon='ti ti-sm ti-trash' %}
+                {% show_icon icon='trash' size='sm' %}
             </a>
         </div>
     {% else %}
         <a href="#!" data-modal-url="{% url "new-support" %}?date={{ date }}" title="Create">
-            {% show_icon icon='ti ti-md ti-user' %}
+            {% show_icon icon='user' size='md' %}
         </a>
     {% endif %}
 {% endif %}

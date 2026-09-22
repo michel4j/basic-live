@@ -20,11 +20,11 @@
 
 {% block page-tools %}
     <a href="#!" id="calendar-button" class="d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#calendar-offcanvas" role="button" aria-controls="calendar-offcanvas">
-        {% show_icon icon="ti ti-calendar ti-md" label="Calendar" %}
+        {% show_icon label="Calendar" icon="calendar" size='md' %}
     </a>
     {% if user.is_superuser or notebook.owner == user %}
     <a href="#!" data-modal-url="{% url 'notebooks:notebook-edit' pk=notebook.pk %}">
-        {% show_icon icon="ti ti-settings ti-md" label="Settings" %}
+        {% show_icon label="Settings" icon="settings" size='md' %}
     </a>
     {% endif %}
 {% if notebook|is_editable_by:user %}
@@ -36,7 +36,7 @@
                data-modal-url="{% url 'notebooks:create-entry' book=notebook.pk kind=entry_type.name.lower %}"
                data-entry-kind="{{ entry_type.name.lower }}"
             >
-                {% show_icon icon=entry_type.icon label=entry_type.name|title %}
+                {% show_icon label=entry_type.name|title icon=entry_type.icon size='md' %}
             </a>
     {% endfor %}
 {% endif %}

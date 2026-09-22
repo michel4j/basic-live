@@ -97,6 +97,8 @@ class ThemifyBackend(BaseIconBackend):
         if canonical.startswith("ti-"):
             canonical = canonical[3:]
         target = self.aliases.get(canonical, canonical)
+        if target.startswith("entry-selector-"):
+            return target
         return f"{self.icon_prefix}{target}"
 
     def get_css_classes(

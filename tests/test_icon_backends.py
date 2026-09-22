@@ -180,22 +180,34 @@ class IconBackendTests(SimpleTestCase):
         expected = f'<link rel="stylesheet" href="{static("themify-icons/css/themify-icons.css")}">'
         self.assertIn(expected, rendered)
 
-    def test_core_lims_templates_have_no_legacy_show_icon_calls(self):
+    def test_all_app_templates_have_no_legacy_show_icon_calls(self):
         import re
         from pathlib import Path
         from django.apps import apps
 
-        lims_tmpl_dir = Path(apps.get_app_config("lims").path) / "templates"
+        app_names = ["lims", "acl", "crm", "schedule", "notebooks", "publications"]
         legacy_pattern = re.compile(r'{%\s*show_icon\b[^%]*\bicon=[\'"][^\'"]*ti[-\s][^\'"]*[\'"]')
 
         violating_calls = []
-        for html_file in lims_tmpl_dir.rglob("*.html"):
-            content = html_file.read_text()
-            matches = legacy_pattern.findall(content)
-            if matches:
-                violating_calls.append((html_file.name, matches))
+        for app_name in app_names:
+            tmpl_dir = Path(apps.get_app_config(app_name).path) / "templates"
+            for html_file in tmpl_dir.rglob("*.html"):
+                content = html_file.read_text()
+                matches = legacy_pattern.findall(content)
+                if matches:
+                    violating_calls.append((f"{app_name}/{html_file.name}", matches))
 
-        self.assertEqual(violating_calls, [], f"Found legacy show_icon calls in core lims templates: {violating_calls}")
+        self.assertEqual(violating_calls, [], f"Found legacy show_icon calls in app templates: {violating_calls}")
+
+    def test_themify_entry_selector_resolution(self):
+        backend = ThemifyBackend()
+        # Verify notebooks dynamic icon resolution retains entry-selector class
+        self.assertEqual(backend.resolve_icon_name("ti-md entry-selector-note"), "entry-selector-note")
+        self.assertEqual(
+            backend.get_css_classes("ti-md entry-selector-note", size="md"),
+            "ti entry-selector-note bl-icon-md"
+        )
+
 
 
 

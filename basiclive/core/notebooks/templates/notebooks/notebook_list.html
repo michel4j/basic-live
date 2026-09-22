@@ -14,7 +14,7 @@
 {% block page-tools %}
 {% if user.is_authenticated %}
     <a href="#!" data-modal-url="{% url 'notebooks:create-notebook' %}" title="Create Notebook">
-        {% show_icon icon="ti ti-plus ti-md" label="Notebook" %}
+        {% show_icon label="Notebook" icon="plus" size='md' %}
     </a>
 {% endif %}
 {% endblock %}

@@ -33,18 +33,18 @@
             {% if beamtime.current %}
                 {% for session in beamtime.sessions %}
                     <a href="{% url 'session-detail' session.pk %}" title='View Session "{{ session.name }}"'>
-                        {% show_icon label=session.name|truncatechars:6 icon='ti ti-md ti-calendar' color='info' %}
+                        {% show_icon label=session.name|truncatechars:6 icon='calendar' size='md' color='info' %}
                     </a>
                 {% endfor %}
             {% else %}
                 <a href="#!" data-modal-url="{% url "beamtime-info" beamtime.pk %}" title="Get information about your upcoming beamtime">
-                    {% show_icon label='Info' icon='ti ti-md ti-info-alt' color='info' %}
+                    {% show_icon label='Info' icon='info-alt' size='md' color='info' %}
                 </a>
             {% endif %}
             {% with beamtime.local_contact as local_contact %}
                 {% if local_contact %}
                     <a href="#!" data-modal-url="{% url "support-info" local_contact.pk %}?current={{ beamtime.current }}" title="Get support from your local contact">
-                        {% show_icon label='Support' icon='ti ti-md ti-headphone-alt' %}
+                        {% show_icon label='Support' icon='headphone-alt' size='md' %}
                     </a>
                 {% endif %}
             {% endwith %}
