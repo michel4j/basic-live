@@ -427,15 +427,18 @@ canvas#sketcher {
   p {
     margin-bottom: var(--bl-notebook-line);
   }
-
+  ol, ul, dl {
+    margin-bottom: var(--bl-notebook-line);
+  }
   pre {
     background-color: var(--bl-gray-barely);
     padding: calc(var(--bl-notebook-line));
     margin: calc(var(--bl-notebook-line));
-    font-size: 0.7em;
+    font-size: 0.7rem;
 
     code {
       font-family: $monospace-stack !important;
+      font-size: 0.7rem;
       text-wrap: auto;
     }
   }
