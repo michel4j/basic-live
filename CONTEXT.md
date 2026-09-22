@@ -150,3 +150,17 @@ _Avoid_: Note Type, Kind, Block Type.
 A reviewer comment attached to a specific Entry, with an optional text selection quote (`quote`) anchored within the entry content. Attaching an annotation permanently locks the entry against author editing.
 _Avoid_: Feedback, Note on Note, Markup, Highlight.
 
+### User Interface & Theming
+
+**IconBackend**:
+The pluggable provider responsible for resolving canonical icon names and size tokens into font- or format-specific presentation classes.
+_Avoid_: Font Provider, Icon Strategy, Theme Service.
+
+**Canonical Icon Name**:
+A provider-neutral semantic identifier representing a conceptual icon independent of vendor prefixing.
+_Avoid_: Icon Class, Glyph Code, Font Symbol.
+
+**Icon Size Token**:
+A standardized categorical sizing literal (`xs`, `sm`, `md`, `lg`, `xl`) translated into consistent viewport metrics across icon backends.
+_Avoid_: Font Scale, Icon Dimensions, Font Size.
+

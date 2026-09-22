@@ -1,0 +1,151 @@
+"""
+Pluggable icon subsystem for BasicLIVE.
+
+Provides backend-agnostic icon resolution, sizing classes, and stylesheet injection.
+"""
+
+from typing import List, Optional
+from django.conf import settings
+from django.utils.module_loading import import_string
+from django.utils.safestring import mark_safe
+
+
+class BaseIconBackend:
+    """
+    Abstract base class for BasicLIVE icon backends.
+    """
+    name = "base"
+    allowed_sizes = ("xs", "sm", "md", "lg", "xl")
+    size_class_prefix = "bl-icon-"
+
+    def format_size_class(self, size: Optional[str] = None) -> str:
+        """
+        Validates and returns the CSS class corresponding to a standardized size literal.
+        """
+        if not size:
+            return ""
+        size_str = str(size).strip().lower()
+        if size_str not in self.allowed_sizes:
+            raise ValueError(
+                f"Invalid icon size '{size}'. Allowed sizes: {', '.join(self.allowed_sizes)}"
+            )
+        return f"{self.size_class_prefix}{size_str}"
+
+    def resolve_icon_name(self, icon: str) -> str:
+        """
+        Resolves a canonical icon name into the provider-specific icon class.
+        """
+        raise NotImplementedError("Icon backends must implement resolve_icon_name()")
+
+    def get_css_classes(
+        self,
+        icon: str,
+        size: Optional[str] = None,
+        extra_class: str = ""
+    ) -> str:
+        """
+        Returns the full combined CSS class string for rendering the icon.
+        """
+        raise NotImplementedError("Icon backends must implement get_css_classes()")
+
+    def get_stylesheet_urls(self) -> List[str]:
+        """
+        Returns a list of static asset relative paths or URLs required for this icon font.
+        """
+        raise NotImplementedError("Icon backends must implement get_stylesheet_urls()")
+
+
+class ThemifyBackend(BaseIconBackend):
+    """
+    Default icon backend using Themify Icons.
+    """
+    name = "themify"
+    base_class = "ti"
+    icon_prefix = "ti-"
+    stylesheet_urls = ("themify-icons/css/themify-icons.css",)
+
+    # Canonical aliases mapping semantic action/object names to Themify glyph names
+    aliases = {
+        "add": "plus",
+        "remove": "minus",
+        "edit": "pencil",
+        "delete": "trash",
+        "view": "eye",
+        "history": "timer",
+        "stats": "pulse",
+        "usage": "pie-chart",
+        "connections": "rss-alt",
+        "feedback": "star",
+        "support": "headphone-alt",
+        "areas": "target",
+        "new-area": "target",
+        "request": "ruler-pencil",
+        "samples": "paint-bucket",
+    }
+
+    def resolve_icon_name(self, icon: str) -> str:
+        clean = icon.strip()
+        if not clean:
+            return ""
+        # Strip legacy prefix if accidentally passed
+        canonical = clean[3:] if clean.startswith("ti-") else clean
+        target = self.aliases.get(canonical, canonical)
+        return f"{self.icon_prefix}{target}"
+
+    def get_css_classes(
+        self,
+        icon: str,
+        size: Optional[str] = None,
+        extra_class: str = ""
+    ) -> str:
+        if not icon or not icon.strip():
+            return ""
+
+        parts = [self.base_class, self.resolve_icon_name(icon)]
+        size_cls = self.format_size_class(size)
+        if size_cls:
+            parts.append(size_cls)
+        if extra_class and extra_class.strip():
+            parts.append(extra_class.strip())
+        return " ".join(parts)
+
+    def get_stylesheet_urls(self) -> List[str]:
+        return list(self.stylesheet_urls)
+
+
+def get_icon_backend() -> BaseIconBackend:
+    """
+    Retrieves the configured icon backend instance.
+    Defaults to ThemifyBackend.
+    """
+    backend_config = getattr(
+        settings,
+        "BASICLIVE_ICON_BACKEND",
+        "basiclive.core.lims.icons.ThemifyBackend"
+    )
+
+    if isinstance(backend_config, BaseIconBackend):
+        return backend_config
+    if isinstance(backend_config, type) and issubclass(backend_config, BaseIconBackend):
+        return backend_config()
+    if isinstance(backend_config, str):
+        backend_cls = import_string(backend_config)
+        return backend_cls()
+
+    raise ValueError(
+        f"Invalid BASICLIVE_ICON_BACKEND: {backend_config!r}. Expected a subclass or dotted path to BaseIconBackend."
+    )
+
+
+def render_icon(
+    icon: str,
+    size: Optional[str] = None,
+    extra_class: str = ""
+) -> str:
+    """
+    Convenience helper to render a standalone HTML icon element for use in Python code (forms, admin).
+    """
+    classes = get_icon_backend().get_css_classes(icon, size=size, extra_class=extra_class)
+    if not classes:
+        return ""
+    return mark_safe(f'<i class="{classes}"></i>')
