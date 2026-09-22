@@ -13,7 +13,7 @@
 {% endblock %}
 {% block page-subtitle %}
     <span class="text-muted">
-        {% if not object.is_editable %}<i class="text-muted ti ti-lock"></i>{% endif %}
+        {% if not object.is_editable %}{% show_icon icon="ti ti-lock" %}{% endif %}
         {{ object.identity }} |
         {% if object.shipment %}
             {% with object.shipment.groups.count as count %}
@@ -78,7 +78,7 @@
                 <tbody>
                 {% for sample in object.samples.all %}
                     <tr id="sample_{{ sample.pk }}" data-sample="{{ sample.pk }}">
-                        <td><span class='cursor'><i class='movable ti ti-move'></i></span></td>
+                        <td><span class='cursor movable'>{% show_icon icon="ti ti-move" %}</span></td>
                         <td><a href="{% url 'sample-detail' sample.pk %}">{{ sample.name }}</a></td>
                         <td>{{ sample.location }}</td>
                         <td>{{ sample.container.name }}</td>
