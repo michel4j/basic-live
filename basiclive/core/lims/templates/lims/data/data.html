@@ -17,26 +17,26 @@
 
 {% block modal_body %}
     <div class="d-flex flex-row small p-2 gap-3 overflow-ellipsis">
-        <div>
-            <strong>Session:</strong><br/>
+        <div class="d-flex flex-column justify-content-between">
+            <strong>Session:</strong>
             <span class="text-muted">{% if object.session %}<a href="{% url 'session-detail' object.session.pk %}">{{ object.session.name }}</a>{% else %}
                 Unrecorded Session{% endif %}</span>
         </div>
-        <div>
-            <strong>Beamline / Energy:</strong><br/>
+        <div class="d-flex flex-column justify-content-between">
+            <strong>Beamline / Energy:</strong>
             <span class="text-muted">{{ object.beamline }} at {{ object.energy }} keV</span>
 
         </div>
-        <div>
-            <strong>Beam:</strong><br/>
+        <div class="d-flex flex-column justify-content-between">
+            <strong>Beam:</strong>
             <span class="text-muted">
                 <span title="Exposure Time">{{ object.exposure_time }}s</span> /
                 <span title="Attenuation">{{ object.attenuation }}% </span>
                 {% if object.beam_size %}/ <span class="text-muted" title="Beam Size">{{ object.beam_size|floatformat:0 }} &mu;m</span>{% endif %}
             </span>
         </div>
-        <div>
-            <strong>Group / Sample:</strong><br/>
+        <div class="d-flex flex-column justify-content-between">
+            <strong>Group / Sample:</strong>
             <span class="text-muted">
                 {% if object.group %}
                     <a title="Group" href="{% url 'group-detail' object.sample.group.pk %}">{{ object.group }}</a>
@@ -52,18 +52,18 @@
             </span>
         </div>
         {% if object.reports.exists %}
-        <div>
-            <strong>Reports:</strong><br/>
-            <span class="text-muted">
+        <div class="d-flex flex-column justify-content-between">
+            <strong>Reports:</strong>
+            <small class="text-muted">
             {% for report in object.reports.all %}
                 <a href="{% url 'report-detail' report.pk %}" title="View {{ report.name }} Report">
                     {% score_badge report.score %}
                 </a>
             {% endfor %}
-            </span>
+            </small>
         </div>
         {% endif %}
-        <div class="ms-auto">
+        <div class="ms-auto d-flex flex-column justify-content-between">
             <div class="tools-box">
             {% if object.url %}
                 <a href="{% url 'files-proxy' section='archive' path=object.download_url %}"

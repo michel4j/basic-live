@@ -16,7 +16,6 @@
          data-first-file='{{ object.first_file }}'
          data-first-frame='{{ object.first_frame }}'
          data-base-url='{% url "files-proxy" section="frame" path=object.url %}'
-         data-frame-set='{{ object.frames }}'
          data-wavelength='{{ object.energy|energy_to_wavelength }}'
          data-resolution='{{ object.meta_data.resolution|default:2 }}'
          data-start-angle='{{ object.meta_data.start_angle|default:0 }}'
@@ -53,12 +52,17 @@
                     <div id="frames" class="tab-pane fade show active">
                         <ul class="list-unstyled small">
                             {% for frame_info in object.frame_records %}
-                                <li class="overflow ellipsis"
+                                <li class="overflow ellipsis frame-list-item"
                                     data-frame-id="{{ frame_info.frame }}"
                                     data-frame-name="{{ frame_info.file_name }}"
                                     data-start-angle="{{ frame_info.start }}"
-                                    data-end-angle="{{ frame_info.end }}">
-                                    <a href="javascript:void(0);">{{ frame_info.file_name|truncate_middle:36 }}</a>
+                                    data-end-angle="{{ frame_info.end }}"
+                                    title="{{ frame_info.file_name }}"
+                                >
+                                    <a href="javascript:void(0);" class="d-flex flex-row justify-content-between px-3">
+<!--                                        {{ frame_info.file_name|truncate_middle:36 }}-->
+                                        <span>Image #{{frame_info.frame}}</span><span class="ms-auto">{{ frame_info.start }}&deg;</span>
+                                    </a>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -206,7 +210,9 @@
                 delta_angle = Number($viewer.data('delta-angle')) || 0;
                 start_angle = Number($viewer.data('start-angle')) || 0;
                 current_brightness = "nm";
-                $expanded_frame_set = $viewer.data('frame-set') || [];
+                $expanded_frame_set = $('.frame-list-item').map(function() {
+                    return parseInt($(this).data('frame-id'));
+                }).get();
 
                 dataViewer.setPars($viewer.data('wavelength'), $viewer.data('resolution'));
                 const url = `${$viewer.data('base-url')}/${current_frame_to_display}/${current_brightness}.png`;
