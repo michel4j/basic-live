@@ -5,13 +5,6 @@
         <!-- Brand and toggle get grouped for better mobile display -->
         <a class="navbar-brand mx-3" href="/">{{ APP_NAME }}</a>
         <ul class="navbar-nav ms-auto">
-            {% if user.is_superuser %}
-               <li class="nav-item">
-                   <a  class="nav-link" href="/admin/" target="_blank">
-                       {% show_icon icon="unlock" %}<span class="d-none d-md-inline-block">&nbsp;Admin</span>
-                   </a>
-               </li>
-            {% endif %}
             <li class="nav-item">
                 <a class="nav-link" href="/">
                     {% show_icon icon="home" %}<span class="d-none d-md-inline-block">&nbsp;Dashboard</span>
@@ -67,8 +60,10 @@
                     <button type="button" href="#!" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
                         {% show_icon icon="widget" %}&nbsp;Auto
                     </button>
+                    {% if user.is_superuser %}
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="{% url 'admin:index' %}">{% show_icon icon="unlock" %}<span class="d-none d-md-inline-block">&nbsp;Backend Admin</span></a>
+                    <a class="dropdown-item" href="{% url 'admin:index' %}">Admin Backend</a>
+                    {% endif %}
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="#!" data-modal-url="{% url 'edit-profile' user.username %}">Edit Profile</a>
                     <a class="dropdown-item" href="#!" id="logout-action">Log Out</a>
