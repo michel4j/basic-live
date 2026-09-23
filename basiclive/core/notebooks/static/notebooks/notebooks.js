@@ -897,7 +897,7 @@ if (typeof MutationObserver !== "undefined") {
             const m3 = currentReferenceMonth.clone();
             const m2 = m3.clone().subtract(1, 'month');
             const m1 = m3.clone().subtract(2, 'month');
-            const months = [m1, m2, m3];
+            const months = [m3, m2, m1];
 
             // Check if we are at or past the initial/latest month
             const isAtLatest = currentReferenceMonth.isSameOrAfter(initialReferenceMonth, 'month');
