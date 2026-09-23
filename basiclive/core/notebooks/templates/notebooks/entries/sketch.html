@@ -2,6 +2,6 @@
 {% load markup %}
 
 {% block entry_content %}
-    {% if entry.file %}<img src="{{ entry.file.url }}" class="img-fluid w-100"/>{% endif %}
+    {% if entry.file %}<div class="image-container"><img src="{{ entry.file.url }}" class="img-fluid w-100"/></div>{% endif %}
     {% if entry.text %}{{ entry.text|markdown }}{% endif %}
 {% endblock %}

@@ -5,6 +5,7 @@ Provides backend-agnostic icon resolution, sizing classes, and stylesheet inject
 """
 
 from typing import List, Optional
+
 from django.conf import settings
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -81,6 +82,16 @@ class ThemifyBackend(BaseIconBackend):
         "new-area": "target",
         "request": "ruler-pencil",
         "samples": "paint-bucket",
+        "profile": "user",
+        'journal': 'agenda',
+        "projects": "briefcase",
+        'help': 'help-alt',
+        'text-entry': 'align-left',
+        'file-entry': 'clip',
+        'image-entry': 'image',
+        'video-entry': 'youtube',
+        'sketch-entry': 'brush',
+        'data-entry': 'layout-grid3',
     }
 
     def resolve_icon_name(self, icon: str) -> str:

@@ -31,12 +31,11 @@
     {% get_entry_types as entry_types %}
     {% for entry_type in entry_types %}
             <a href="#!"
-               title="Add {{ entry_type.name|title }} Entry"
-               class="entry-selector-btn"
+               title="Add {{ entry_type.name }} Entry"
                data-modal-url="{% url 'notebooks:create-entry' book=notebook.pk kind=entry_type.name.lower %}"
                data-entry-kind="{{ entry_type.name.lower }}"
             >
-                {% show_icon label=entry_type.name|title icon=entry_type.icon size='md' %}
+                {% show_icon label=entry_type.name icon=entry_type.icon size='md' %}
             </a>
     {% endfor %}
 {% endif %}

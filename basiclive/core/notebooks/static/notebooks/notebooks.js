@@ -315,7 +315,7 @@ function initDataModal($modal) {
     $dataEditor.hide();
 
     const table_toolbar = (
-        '<div class="editor-toolbar mb-2" id="table-toolbar">' +
+        '<div class="editor-toolbar" id="table-toolbar">' +
         '<a title="Add Column" tabindex="-1" class="mi mi-add-col mi-md text-primary" id="table-add-col"></a>' +
         '<i class="separator">|</i>' +
         '<a title="Remove Column" tabindex="-1" class="mi mi-del-col mi-md text-danger" id="table-del-col"></a>' +
@@ -327,7 +327,7 @@ function initDataModal($modal) {
     );
 
     const $container = $('<div id="modal-table-container" class="mb-3"></div>');
-    $container.html(table_toolbar + '<div class="table-editable table-responsive border rounded p-2" style="max-height: 400px; overflow: auto;"></div><div class="drop-csv text-muted small mt-1">Drag and drop a .csv or .xdi file onto the table to import data.</div>');
+    $container.html(table_toolbar + '<div class="table-editable table-responsive border rounded-bottom" style="max-height: 400px; overflow: auto;"></div><div class="drop-csv text-muted small mt-1">Drag and drop a .csv or .xdi file onto the table to import data.</div>');
     $dataEditor.before($container);
 
     if ($.fn.myelnTable) {

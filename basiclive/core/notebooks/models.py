@@ -80,7 +80,7 @@ class EntryType(models.Model):
 
     def icon(self):
         # Return the icon associated with this entry type
-        return f'ti-md entry-selector-{self.name.lower()}'
+        return f"{self.name.lower()}-entry"
 
     def __str__(self):
         return self.name
