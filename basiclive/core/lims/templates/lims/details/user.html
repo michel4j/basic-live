@@ -21,10 +21,10 @@
 
 {% block page-tools %}
     <a href="{% url 'data-list' %}?search={{ object.username }}" title="Go to Data for {{ object.username }}">
-        {% show_icon label="Data" icon="layout-grid3" size='md' badge=object.datasets.count %}
+        {% show_icon label="Data" icon="data" size='md' badge=object.datasets.count %}
     </a>
     <a class="float-end" href="{% url 'result-list' %}?search={{ object.username }}" title="Go to Reports for {{ object.username }}">
-        {% show_icon label="Reports" icon="bar-chart-alt" size='md' badge=object.reports.count %}
+        {% show_icon label="Reports" icon="reports" size='md' badge=object.reports.count %}
     </a>
     <a class="float-end" href="{% url 'session-list' %}?search={{ object.username }}" title="Go to Sessions for {{ object.username }}">
         {% show_icon label="Sessions" icon="calendar" size='md' badge=object.sessions.count %}

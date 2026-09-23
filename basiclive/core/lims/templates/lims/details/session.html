@@ -20,10 +20,10 @@
 
 {% block page-tools %}
     <a href="{% url 'session-reports' object.pk %}" title="Go to Reports from this session">
-        {% show_icon label='Reports' icon='bar-chart-alt' size='md' badge=object.num_reports %}
+        {% show_icon label='Reports' icon='reports' size='md' badge=object.num_reports %}
     </a>
     <a href="{% url 'session-data' object.pk %}" title="Go to Data from this session">
-        {% show_icon label='Data' icon='layout-grid3' size='md' badge=object.datasets.count %}
+        {% show_icon label='Data' icon='data' size='md' badge=object.datasets.count %}
     </a>
     <a href="#!" data-modal-url="{% url 'session-history' object.pk %}">
         {% show_icon label='History' icon='timer' size='md' %}

@@ -8,12 +8,12 @@
 </a>
 {% if USE_SCHEDULE %}
     <a  href="{% url 'schedule' %}">
-        {% show_icon label="Schedule" icon="time" size='md' %}
+        {% show_icon label="Schedule" icon="calendar" size='md' %}
     </a>
 {% endif %}
 {% if request.path != stats_url %}
     <a  href="{{ stats_url }}">
-        {% show_icon label='My Stats' icon='pulse' size='md' %}
+        {% show_icon label='My Stats' icon='stats' size='md' %}
     </a>
 {% endif %}
 {% if request.path != profile_url %}

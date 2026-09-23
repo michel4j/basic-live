@@ -4,17 +4,17 @@
     {% comment %}Shipment Details{% endcomment %}
     {% if shipment.requests.count %}
         <a href="{% url 'shipment-requests' shipment.pk %}">
-            {% show_icon label='Requests' icon='layout-accordion-list' size='md' %}
+            {% show_icon label='Requests' icon='requests' size='md' %}
         </a>
     {% endif %}
     <a href="{% url 'shipment-samples' shipment.pk %}">
-        {% show_icon label='Samples' icon='view-list-alt' size='md' %}
+        {% show_icon label='Samples' icon='samples' size='md' %}
     </a>
     <a href="{% url 'shipment-data' shipment.pk %}" title="Go to Data from this shipment">
-        {% show_icon label='Data' icon='layout-grid3' size='md' badge=shipment.num_datasets color='info' %}
+        {% show_icon label='Data' icon='data' size='md' badge=shipment.num_datasets color='info' %}
     </a>
     <a href="{% url 'shipment-reports' shipment.pk %}" title="Go to Reports from this shipment">
-        {% show_icon label='Reports' icon='bar-chart-alt' size='md' badge=shipment.num_reports color='info' %}
+        {% show_icon label='Reports' icon='reports' size='md' badge=shipment.num_reports color='info' %}
     </a>
 {% endif %}
 {% if user == shipment.project %}
@@ -26,15 +26,15 @@
             {% show_icon label='Delete' icon='trash' size='md' %}
         </a>
         <a href="#!" data-modal-url="{% url 'shipment-edit' shipment.pk %}">
-            {% show_icon label='Edit' icon='pencil-alt' size='md' %}
+            {% show_icon label='Edit' icon='edit' size='md' %}
         </a>
         <a href="#!" data-modal-url="{% url 'shipment-send' shipment.pk %}">
-            {% show_icon label='Send' icon='location-arrow' size='md' %}
+            {% show_icon label='Send' icon='send' size='md' %}
         </a>
     {% endif %}
     {% if shipment.status == shipment.STATES.SENT %}
         <a href="#!" data-modal-url="{% url 'shipment-update-send' shipment.pk %}">
-            {% show_icon label='Recall' icon='control-backward' size='md' %}
+            {% show_icon label='Recall' icon='recall' size='md' %}
         </a>
     {% endif %}
     {% if shipment.status <= shipment.STATES.ON_SITE %}

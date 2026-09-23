@@ -7,7 +7,7 @@
             {% elif shipment.status == shipment.STATES.SENT %}
                 {% show_icon label=shipment.date_shipped|date:"M j"|upper icon='truck' size='sm' tooltip='Incoming' %}
             {% elif shipment.status == shipment.STATES.ON_SITE %}
-                {% show_icon label=shipment.date_shipped|date:"M j"|upper icon='location-pin' size='sm' tooltip='On-site' %}
+                {% show_icon label=shipment.date_shipped|date:"M j"|upper icon='onsite' size='sm' tooltip='On-site' %}
             {% elif shipment.status == shipment.STATES.RETURNED %}
                 {% show_icon label=shipment.date_returned|date:"M j"|upper icon='check-box' size='sm' tooltip='Returned' %}
             {% elif shipment.status == shipment.STATES.ARCHIVED %}
@@ -31,25 +31,25 @@
         <div class="tools-box ms-auto">
             {% if shipment.status >= shipment.STATES.ON_SITE %}
                 <a href="{% url 'shipment-data' shipment.pk %}" title="Go to Data from this shipment">
-                    {% show_icon label='Data' icon='layout-grid3' size='sm' badge=shipment.data_count color='primary' %}
+                    {% show_icon label='Data' icon='data' size='sm' badge=shipment.data_count color='primary' %}
                 </a>
                 <a href="{% url 'shipment-reports' shipment.pk %}" title="Go to Reports from this shipment">
-                    {% show_icon label='Reports' icon='bar-chart-alt' size='sm' badge=shipment.report_count color='primary' %}
+                    {% show_icon label='Reports' icon='reports' size='sm' badge=shipment.report_count color='primary' %}
                 </a>
             {% endif %}
             {% if user.is_superuser and shipment.status <= shipment.STATES.ON_SITE and shipment.status >= shipment.STATES.SENT %}
                 {% if shipment.status == shipment.STATES.ON_SITE %}
                     <a data-modal-url="{% url 'shipment-return' shipment.pk %}" title="Return shipment">
-                        {% show_icon label='Return' icon='location-arrow' size='sm' %}
+                        {% show_icon label='Return' icon='send-check' size='sm' %}
                     </a>
                 {% else %}
                     <a data-modal-url="{% url 'shipment-receive' shipment.pk %}" title="Receive shipment">
-                        {% show_icon label='Receive' icon='shopping-cart-full' size='sm' %}
+                        {% show_icon label='Receive' icon='receive' size='sm' %}
                     </a>
                 {% endif %}
             {% elif shipment.status == shipment.STATES.DRAFT and not user.is_superuser %}
                     <a data-modal-url="{% url 'shipment-send' shipment.pk %}" title="Send shipment">
-                        {% show_icon label='Send' icon='location-arrow' size='sm' %}
+                        {% show_icon label='Send' icon='send' size='sm' %}
                     </a>
             {% endif %}
         </div>

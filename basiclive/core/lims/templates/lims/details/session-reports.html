@@ -12,6 +12,6 @@
 
 {% block page-tools %}
     <a href="{% url 'session-data' session.pk %}" title="Go to Data from this session">
-        {% show_icon label='Data' icon='layout-grid3' size='md' badge=session.datasets.count %}
+        {% show_icon label='Data' icon='data' size='md' badge=session.datasets.count %}
     </a>
 {% endblock %}

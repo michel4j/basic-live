@@ -28,12 +28,12 @@
     {% url 'shipment-samples' shipment.pk as sample_url %}
     {% if request.path != data_url %}
     <a href="{{ data_url }}" title="Go to Data from this shipment">
-        {% show_icon label="Data" icon="layout-grid3" size='md' badge=shipment.num_datasets %}
+        {% show_icon label="Data" icon="data" size='md' badge=shipment.num_datasets %}
     </a>
     {% endif %}
     {% if request.path != report_url %}
     <a href="{{ report_url }}" title="Go to Reports from this shipment">
-        {% show_icon label="Reports" icon="bar-chart-alt" size='md' badge=shipment.num_reports %}
+        {% show_icon label="Reports" icon="reports" size='md' badge=shipment.num_reports %}
     </a>
     {% endif %}
     {% if shipment.requests.count and request.path != request_url %}

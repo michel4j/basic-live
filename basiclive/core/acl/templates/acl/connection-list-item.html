@@ -8,7 +8,7 @@
         {% if USE_CRM %}
             <div class="box-status text-center small">
                 <a href="#!" data-modal-url="{% url 'new-supportrecord' %}?project={{ connection.user.username }}&beamline={{ connection.beamline }}"
-                   title='Record User Support'>{% show_icon label='Support' icon='headphone-alt' size='sm' %}
+                   title='Record User Support'>{% show_icon label='Support' icon='support' size='sm' %}
                 </a>
             </div>
         {% endif %}
@@ -47,15 +47,15 @@
                 <a href="{% url 'access-connections' %}?search={{ connection.user.username }}&status=Connected&userlist__id__exact={{ conn.0.userlist.pk }}"
                    title='View {{ connection.user.username|upper }} Connections to {{ access }}'>
                     {% if conn|length == 1 %}
-                        {% show_icon label=access|upper icon='rss-alt' size='sm' %}
+                        {% show_icon label=access|upper icon='access' size='sm' %}
                     {% else %}
-                        {% show_icon label=access|upper icon='rss-alt' size='sm' badge=conn|length %}
+                        {% show_icon label=access|upper icon='access' size='sm' badge=conn|length %}
                     {% endif %}
                 </a>
             {% endfor %}
             {% for session in connection.sessions %}
                 <a href="{% url 'session-detail' session.pk %}" title='View Session "{{ session.name }}"'>
-                    {% show_icon label=session.start.date|date:"M j"|upper icon='calendar' size='sm' %}
+                    {% show_icon label=session.start.date|date:"M j"|upper icon='history' size='sm' %}
                 </a>
             {% endfor %}
         </div>

@@ -84,12 +84,13 @@ class ThemifyBackend(BaseIconBackend):
     name = "themify"
     base_class = "ti"
     icon_prefix = "ti-"
-    stylesheet_urls = ("themify-icons/css/themify-icons.css",)
+    stylesheet_urls = ("themify-icons/css/themify-icons.min.css",)
 
     # Canonical aliases mapping semantic action/object names to Themify glyph names
     aliases = {
         "add": "plus",
         "remove": "minus",
+        "calendar": "calendar",
         "edit": "pencil",
         "delete": "trash",
         "view": "eye",
@@ -103,6 +104,7 @@ class ThemifyBackend(BaseIconBackend):
         "new-area": "target",
         "request": "ruler-pencil",
         "samples": "paint-bucket",
+        "groups": "layout-accordion-list",
         "profile": "user",
         'journal': 'agenda',
         "projects": "briefcase",
@@ -113,24 +115,33 @@ class ThemifyBackend(BaseIconBackend):
         'video-entry': 'youtube',
         'sketch-entry': 'brush',
         'data-entry': 'layout-grid3',
+        "settings": "gear",
+        "light-theme": "shine",
+        "dark-theme": "drupal",
+        "auto-theme": "widget",
+        "data": "layout-grid3",
+        "home": "home",
+        "reports": "bar-chart",
+        "send": "location-arrow",
+        "receive": "shopping-cart-full",
+        "shipment": "truck",
+        "onsite": "location-pin",
+        "recall": "control-backward",
+        "error": "alert",
+        "comments": "comment-alt",
+        "arrow-left": "arrow-left",
+        "arrow-right": "arrow-right",
+        "arrow-up": "arrow-up",
+        "arrow-down": "arrow-down",
     }
 
     def resolve_icon_name(self, icon: str) -> str:
         clean = icon.strip()
         if not clean:
             return ""
-        # Support plain names, ti-prefixed names, and legacy compound strings
-        tokens = clean.split()
-        canonical = tokens[-1]
-        for token in tokens:
-            if token.startswith("ti-") and token not in ("ti-xs", "ti-sm", "ti-md", "ti-lg", "ti-xl"):
-                canonical = token
-                break
-        if canonical.startswith("ti-"):
-            canonical = canonical[3:]
+
+        canonical = clean.split()[-1]
         target = self.aliases.get(canonical, canonical)
-        if target.startswith("entry-selector-"):
-            return target
         return f"{self.icon_prefix}{target}"
 
     def get_css_classes(
@@ -141,15 +152,6 @@ class ThemifyBackend(BaseIconBackend):
     ) -> str:
         if not icon or not icon.strip():
             return ""
-
-        clean = icon.strip()
-        # Fallback to extract size token from legacy compound string if size argument omitted
-        if not size:
-            for token in clean.split():
-                if token.startswith("ti-") and token[3:] in self.allowed_sizes:
-                    size = token[3:]
-                    break
-
         parts = [self.base_class, self.resolve_icon_name(icon)]
         size_cls = self.format_size_class(size)
         if size_cls:
@@ -167,7 +169,7 @@ class ThemifyBackend(BaseIconBackend):
                 "url": "https://cdn.jsdelivr.net/gh/lykmapipo/themify-icons@0.1.2/",
                 "css": [
                     {
-                        "path": "css/themify-icons.css",
+                        "path": "css/themify-icons.min.css",
                         "sri": "sha256-8g4waLJVanZaKB04tvyhKu2CZges6pA5SUelZAux/1U=",
                     }
                 ],

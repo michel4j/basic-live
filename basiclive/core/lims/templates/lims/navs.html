@@ -46,19 +46,19 @@
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle me-md-2" href="#"
                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="profile-menu">
-                    {% show_icon icon="user" %}<span class="d-none d-md-inline-block">&nbsp;{{user.name.upper}}</span>
+                    {% show_icon icon="profile" %}<span class="d-none d-md-inline-block">&nbsp;{{user.name.upper}}</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="profile-menu">
                     {% include "lims/address.html" %}
                     <div class="dropdown-divider"></div>
                     <button type="button" href="#!" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
-                        {% show_icon icon="shine" %}&nbsp;Light
+                        {% show_icon icon="light-theme" %}&nbsp;Light
                     </button>
                     <button type="button" href="#!" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
-                        {% show_icon icon="drupal" %}&nbsp;Dark
+                        {% show_icon icon="dark-theme" %}&nbsp;Dark
                     </button>
                     <button type="button" href="#!" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
-                        {% show_icon icon="widget" %}&nbsp;Auto
+                        {% show_icon icon="auto-theme" %}&nbsp;Auto
                     </button>
                     {% if user.is_superuser %}
                     <div class="dropdown-divider"></div>
