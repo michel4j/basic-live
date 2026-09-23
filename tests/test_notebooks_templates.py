@@ -159,7 +159,7 @@ class NotebookTemplatesTestCase(TestCase):
         }, request)
         self.assertIn(self.notebook.title, rendered)
         self.assertIn("notebook-content", rendered)
-        self.assertIn("entry-selector", rendered)
+        self.assertIn("data-entry-kind", rendered)
         self.assertIn(f"/notebooks/{self.notebook.pk}/entry/new/text/", rendered)
         self.assertNotIn('id="entry-editor"', rendered)
         self.assertNotIn('id="editor-body"', rendered)

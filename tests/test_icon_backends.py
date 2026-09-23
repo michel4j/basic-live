@@ -29,6 +29,17 @@ class DummyIconBackend(BaseIconBackend):
     def get_stylesheet_urls(self) -> list[str]:
         return ["dummy/dummy.css"]
 
+    def get_assets(self) -> dict:
+        return {
+            "dummy-icons": {
+                "url": "https://example.com/dummy/",
+                "css": [{"path": "dummy.css", "sri": "sha256-dummy"}]
+            }
+        }
+
+    def cleanup_assets(self, assets_root):
+        DummyIconBackend.cleanup_invoked = True
+
 
 class IconBackendTests(SimpleTestCase):
     def test_default_backend_resolution(self):
@@ -258,6 +269,81 @@ class IconBackendTests(SimpleTestCase):
                     violations.append((str(path.relative_to(base_dir)), matches))
 
         self.assertEqual(violations, [], f"Found hardcoded icon HTML in codebase: {violations}")
+
+    def test_base_backend_asset_defaults(self):
+        backend = BaseIconBackend()
+        self.assertEqual(backend.get_assets(), {})
+        # Verify default cleanup and post_collect do not raise
+        from pathlib import Path
+        backend.cleanup_assets(Path("/tmp"))
+        backend.post_collect(Path("/tmp"))
+
+    def test_themify_backend_get_assets(self):
+        backend = ThemifyBackend()
+        assets = backend.get_assets()
+        self.assertIn("themify-icons", assets)
+        conf = assets["themify-icons"]
+        self.assertIn("url", conf)
+        self.assertIn("css", conf)
+        self.assertIn("fonts", conf)
+
+        # Check css entry
+        self.assertEqual(conf["css"][0]["path"], "css/themify-icons.css")
+        self.assertTrue(conf["css"][0]["sri"].startswith("sha256-"))
+
+        # Check fonts entries
+        font_paths = [entry["path"] for entry in conf["fonts"]]
+        self.assertIn("fonts/themify.eot", font_paths)
+        self.assertIn("fonts/themify.svg", font_paths)
+        self.assertIn("fonts/themify.ttf", font_paths)
+        self.assertIn("fonts/themify.woff", font_paths)
+        for entry in conf["fonts"]:
+            self.assertTrue(entry["sri"].startswith("sha256-"))
+
+    def test_lims_assets_json_has_no_themify_icons(self):
+        import json
+        from pathlib import Path
+        from django.apps import apps
+        lims_app = apps.get_app_config("lims")
+        assets_file = Path(lims_app.path) / "static" / "lims" / "assets.json"
+        with open(assets_file, "r") as f:
+            data = json.load(f)
+        self.assertNotIn("themify-icons", data, "themify-icons should be provided by ThemifyBackend, not assets.json")
+
+    def test_collectassets_command_integrates_icon_backend(self):
+        from unittest.mock import patch
+        from django.core.management import call_command
+
+        with patch("basiclive.core.lims.management.commands.collectassets.download_asset") as mock_download:
+            call_command("collectassets")
+            # Verify download_asset was called for Themify assets provided by backend
+            called_urls = [call.args[0] for call in mock_download.call_args_list]
+            self.assertTrue(
+                any("themify-icons.css" in url for url in called_urls),
+                f"Expected themify-icons.css in download calls, got: {called_urls}"
+            )
+            self.assertTrue(
+                any("themify.woff" in url for url in called_urls),
+                f"Expected themify.woff in download calls, got: {called_urls}"
+            )
+
+    @override_settings(BASICLIVE_ICON_BACKEND="tests.test_icon_backends.DummyIconBackend")
+    def test_collectassets_command_with_custom_backend_and_cleanup(self):
+        from unittest.mock import patch
+        from django.core.management import call_command
+
+        DummyIconBackend.cleanup_invoked = False
+        with patch("basiclive.core.lims.management.commands.collectassets.download_asset") as mock_download:
+            call_command("collectassets")
+            called_urls = [call.args[0] for call in mock_download.call_args_list]
+            self.assertTrue(
+                any("dummy.css" in url for url in called_urls),
+                f"Expected dummy.css in download calls, got: {called_urls}"
+            )
+            self.assertTrue(
+                DummyIconBackend.cleanup_invoked,
+                "Expected DummyIconBackend.cleanup_assets to be called during collectassets"
+            )
 
 
 

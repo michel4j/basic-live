@@ -4,7 +4,8 @@ Pluggable icon subsystem for BasicLIVE.
 Provides backend-agnostic icon resolution, sizing classes, and stylesheet injection.
 """
 
-from typing import List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from django.conf import settings
 from django.utils.module_loading import import_string
@@ -54,6 +55,26 @@ class BaseIconBackend:
         Returns a list of static asset relative paths or URLs required for this icon font.
         """
         raise NotImplementedError("Icon backends must implement get_stylesheet_urls()")
+
+    def get_assets(self) -> Dict[str, Any]:
+        """
+        Returns an asset specification dictionary (matching the schema in assets.json)
+        to be downloaded and verified by the `collectassets` management command.
+        """
+        return {}
+
+    def cleanup_assets(self, assets_root: Path) -> None:
+        """
+        Optional cleanup hook for pruning stale or unneeded files in the backend's asset directory.
+        """
+        pass
+
+    def post_collect(self, assets_root: Path) -> None:
+        """
+        Lifecycle hook invoked by `collectassets` after downloading assets.
+        Calls `cleanup_assets()` by default.
+        """
+        self.cleanup_assets(assets_root)
 
 
 class ThemifyBackend(BaseIconBackend):
@@ -139,6 +160,37 @@ class ThemifyBackend(BaseIconBackend):
 
     def get_stylesheet_urls(self) -> List[str]:
         return list(self.stylesheet_urls)
+
+    def get_assets(self) -> Dict[str, Any]:
+        return {
+            "themify-icons": {
+                "url": "https://cdn.jsdelivr.net/gh/lykmapipo/themify-icons@0.1.2/",
+                "css": [
+                    {
+                        "path": "css/themify-icons.css",
+                        "sri": "sha256-8g4waLJVanZaKB04tvyhKu2CZges6pA5SUelZAux/1U=",
+                    }
+                ],
+                "fonts": [
+                    {
+                        "path": "fonts/themify.eot",
+                        "sri": "sha256-3/QV2uyRG2Xcpb4CBxoYJbdVCP8VjeW42Fl2lX25Mcs=",
+                    },
+                    {
+                        "path": "fonts/themify.svg",
+                        "sri": "sha256-968uCWyFwu1vaLsIb3ksZ/KmBBy7gU/CeWkSsu70/nY=",
+                    },
+                    {
+                        "path": "fonts/themify.ttf",
+                        "sri": "sha256-NQZjpGZeAAcsaKh60/oL5HuKkUJBJ/Xz4J9mQZcpXwE=",
+                    },
+                    {
+                        "path": "fonts/themify.woff",
+                        "sri": "sha256-DbXFoUdet6PlAomD6h5kLRssAPr/aiUKN1ArDzgypKc=",
+                    },
+                ],
+            }
+        }
 
 
 def get_icon_backend() -> BaseIconBackend:
