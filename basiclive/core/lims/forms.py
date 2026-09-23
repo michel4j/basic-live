@@ -20,6 +20,7 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 
 from basiclive.core.lims.conf import settings
+from .icons import render_icon
 from .models import Guide, ProjectType, SSHKey, RequestType, Request, REQUEST_SPEC_SCHEMA
 from .models import Project, Shipment, Automounter, Sample, ComponentType, Container, Group, ContainerLocation, \
     ContainerType
@@ -238,7 +239,7 @@ class RequestTypeForm(ModalModelForm):
                                     HTML('<label>&nbsp;</label>'),
                                     Div(
                                         Button(
-                                            '<i class="ti ti-minus"></i>',
+                                            render_icon('minus'),
                                             style="btn-warning float-end safe-remove"
                                         ),
                                     ),
@@ -252,7 +253,7 @@ class RequestTypeForm(ModalModelForm):
                     ),
                     FullWidth(
                         Button(
-                            "<i class='ti ti-plus'></i> Add Parameter", type="button",
+                            f"{render_icon('plus')} Add Parameter", type="button",
                             style='btn-sm btn-success add'
                         ),
                         style="mt-2"
@@ -348,7 +349,7 @@ class RequestTypeLayoutForm(ModalModelForm):
                         Div(
                             HTML('<label>&nbsp;</label>'),
                             HTML(
-                                '<a title="Drag to change priority" class="move btn btn-white"><i class="ti ti-move"></i></a>'
+                                f'<a title="Drag to change priority" class="move btn btn-white">{render_icon("move")}</a>'
                             ),
                             css_class="mb-3"
                         ),
@@ -1271,7 +1272,7 @@ class ShipmentContainerForm(ModalModelForm):
                                     HTML("<label>&nbsp;</label>"),
                                     Div(
                                         Button(
-                                            '<i class="ti ti-minus"></i>',
+                                            render_icon('minus'),
                                             style="btn-warning float-end safe-remove"
                                         ),
                                     ),
@@ -1286,7 +1287,7 @@ class ShipmentContainerForm(ModalModelForm):
                     ),
                     FullWidth(
                         Button(
-                            "<i class='ti ti-plus'></i> Add Container", type="button",
+                            f"{render_icon('plus')} Add Container", type="button",
                             style='btn-sm btn-success add'
                         ),
                         style="mt-2"
@@ -1391,15 +1392,15 @@ class ShipmentGroupForm(ModalModelForm):
                                         '<div class="spaced-buttons">'
                                         '<a title="Drag to change group priority" '
                                         '   class="move btn btn-white">'
-                                        '   <i class="ti ti-move"></i>'
+                                        f'   {render_icon("move")}'
                                         '</a>'
                                         '<a title="Edit more group details" href="#group-details--{rowcount}" '
                                         '   class="btn btn-info btn-collapse collapsed"'
                                         '   aria-expanded="false" data-bs-toggle="collapse">'
-                                        '   <i class="ti ti-angle-double-right"></i>'
+                                        f'   {render_icon("angle-double-right")}'
                                         '</a>'
                                         '<a title="Delete Group" class="btn safe-remove btn-warning">'
-                                        '   <i class="ti ti-minus"></i>'
+                                        f'   {render_icon("minus")}'
                                         '</a>'
                                         '</div>'
                                     ),
@@ -1424,7 +1425,7 @@ class ShipmentGroupForm(ModalModelForm):
                     ),
                     FullWidth(
                         Button(
-                            "<i class='ti ti-plus'></i> Add Group", type="button",
+                            f"{render_icon('plus')} Add Group", type="button",
                             style='btn-sm btn-success add'
                         ),
                         style="mt-2"
@@ -1440,7 +1441,7 @@ class ShipmentGroupForm(ModalModelForm):
             return Div(
                 HTML(
                     '<h5 class="my-0"><strong>Update Groups</strong></h5>'
-                    'Samples in new groups can be added later using the <i class="ti ti-paint-bucket"></i> tool. '
+                    f'Samples in new groups can be added later using the {render_icon("paint-bucket")} tool. '
                     '<span class="text-danger">Removing a group will also remove any samples in the group</span>'
                 ),
                 css_class="text-condensed mb-1"
@@ -1450,7 +1451,7 @@ class ShipmentGroupForm(ModalModelForm):
                 HTML(
                     '<h5 class="my-0"><strong>Add Groups</strong></h5>'
                     'Specify groups for similar samples. Groups names will be used as the prefix for sample names. '
-                    'Use the <i class="ti ti-paint-bucket"></i> tool to add samples after your shipment is created. '
+                    f'Use the {render_icon("paint-bucket")} tool to add samples after your shipment is created. '
                 ),
                 css_class="text-condensed mb-1"
             )

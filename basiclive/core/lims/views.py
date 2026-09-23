@@ -22,6 +22,7 @@ from basiclive.core.lims.conf import settings
 from basiclive.utils import filters
 from basiclive.utils.mixins import AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
 from . import forms, models, stats
+from .icons import render_icon
 
 if settings.USE_SCHEDULE:
     from basiclive.core.schedule.models import BeamlineSupport
@@ -622,7 +623,7 @@ class GroupList(ListViewMixin, ItemListView):
 
 
 def movable(val, record):
-    return "<span class='cursor'><i class='movable ti ti-move'></i> {}</span>".format(val or "")
+    return f"<span class='cursor'>{render_icon('move', extra_class='movable')} {val or ''}</span>"
 
 
 class GroupDetail(DetailListMixin, SampleList):

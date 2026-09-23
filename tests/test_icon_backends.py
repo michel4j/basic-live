@@ -85,11 +85,26 @@ class IconBackendTests(SimpleTestCase):
     def test_render_icon_helper(self):
         from basiclive.core.lims.icons import render_icon
         self.assertEqual(render_icon("home"), '<i class="ti ti-home"></i>')
+        self.assertEqual(render_icon(name="home"), '<i class="ti ti-home"></i>')
+        self.assertEqual(render_icon(icon="home"), '<i class="ti ti-home"></i>')
         self.assertEqual(
             render_icon("download", size="md", extra_class="text-primary"),
             '<i class="ti ti-download bl-icon-md text-primary"></i>'
         )
+        self.assertEqual(render_icon("move", extra_class="movable"), '<i class="ti ti-move movable"></i>')
+        self.assertEqual(render_icon("minus"), '<i class="ti ti-minus"></i>')
+        self.assertEqual(render_icon("plus"), '<i class="ti ti-plus"></i>')
         self.assertEqual(render_icon(""), "")
+        self.assertEqual(render_icon(None), "")
+
+    @override_settings(BASICLIVE_ICON_BACKEND="tests.test_icon_backends.DummyIconBackend")
+    def test_render_icon_with_custom_backend(self):
+        from basiclive.core.lims.icons import render_icon
+        self.assertEqual(render_icon("plus"), '<i class="dummy dummy-plus"></i>')
+        self.assertEqual(
+            render_icon("move", size="sm", extra_class="movable"),
+            '<i class="dummy dummy-move bl-icon-sm movable"></i>'
+        )
 
     def test_base_backend_abstract_methods(self):
         backend = BaseIconBackend()
@@ -207,6 +222,43 @@ class IconBackendTests(SimpleTestCase):
             backend.get_css_classes("ti-md entry-selector-note", size="md"),
             "ti entry-selector-note bl-icon-md"
         )
+
+    def test_views_movable_uses_render_icon(self):
+        from basiclive.core.lims.views import movable
+        rendered = movable(42, None)
+        self.assertIn('<i class="ti ti-move movable"></i>', rendered)
+        self.assertIn("42", rendered)
+
+    def test_forms_use_render_icon(self):
+        from crispy_forms.utils import render_crispy_form
+        from basiclive.core.lims.forms import RequestTypeForm
+        form = RequestTypeForm()
+        form_html = render_crispy_form(form, helper=form.body)
+        self.assertIn('<i class="ti ti-minus"></i>', form_html)
+        self.assertIn('<i class="ti ti-plus"></i> Add Parameter', form_html)
+
+    def test_no_hardcoded_ti_icons_in_python_and_templates(self):
+        import re
+        from pathlib import Path
+        import basiclive
+
+        base_dir = Path(basiclive.__file__).parent
+        # Search for raw HTML icon tags referencing ti or ti-
+        raw_icon_pattern = re.compile(r'<i\s+class=[\'"][^\'"]*\bti[-\s][^\'"]*[\'"]')
+
+        violations = []
+        for path in base_dir.rglob("*"):
+            if path.suffix in (".py", ".html"):
+                # Skip icons.py itself where render_icon generates <i class="...">
+                if path.name == "icons.py":
+                    continue
+                content = path.read_text(errors="ignore")
+                matches = raw_icon_pattern.findall(content)
+                if matches:
+                    violations.append((str(path.relative_to(base_dir)), matches))
+
+        self.assertEqual(violations, [], f"Found hardcoded icon HTML in codebase: {violations}")
+
 
 
 

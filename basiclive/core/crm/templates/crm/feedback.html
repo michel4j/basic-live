@@ -1,6 +1,7 @@
 {% extends "lims/modal/content.html" %}
 
 {% load bl_tags %}
+{% load bl_icons %}
 {% load humanize %}
 
 {% block modal_title %}
@@ -27,7 +28,7 @@
         {% if object.comments %}
         <div class="col-12">
             <div class="alert alert-info mt-3">
-                <sup><i class="ti ti-sm ti-quote-left"></i></sup> {{ object.comments }} <sup><i class="ti ti-sm ti-quote-right"></i></sup>
+                <sup>{% show_icon icon="quote-left" size="sm" %}</sup> {{ object.comments }} <sup>{% show_icon icon="quote-right" size="sm" %}</sup>
             </div>
         </div>
         {% endif %}

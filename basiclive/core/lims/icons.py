@@ -155,14 +155,19 @@ def get_icon_backend() -> BaseIconBackend:
 
 
 def render_icon(
-    icon: str,
+    icon: Optional[str] = None,
     size: Optional[str] = None,
-    extra_class: str = ""
+    extra_class: Optional[str] = None,
+    name: Optional[str] = None,
 ) -> str:
     """
     Convenience helper to render a standalone HTML icon element for use in Python code (forms, admin).
+    Accepts either 'icon' or 'name' as positional or keyword argument.
     """
-    classes = get_icon_backend().get_css_classes(icon, size=size, extra_class=extra_class)
+    icon_name = name or icon
+    if not icon_name or not str(icon_name).strip():
+        return mark_safe("")
+    classes = get_icon_backend().get_css_classes(str(icon_name), size=size, extra_class=extra_class or "")
     if not classes:
-        return ""
+        return mark_safe("")
     return mark_safe(f'<i class="{classes}"></i>')
