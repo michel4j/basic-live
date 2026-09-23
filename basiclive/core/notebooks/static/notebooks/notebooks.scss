@@ -135,6 +135,8 @@ canvas#sketcher {
     height: 450px;
     margin: 0;
     border: 0 transparent !important;
+    background: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
   }
 
   &.caption > .CodeMirror {
