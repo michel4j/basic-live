@@ -40,7 +40,7 @@
             {% if user.is_superuser and shipment.status <= shipment.STATES.ON_SITE and shipment.status >= shipment.STATES.SENT %}
                 {% if shipment.status == shipment.STATES.ON_SITE %}
                     <a href="#0" data-modal-url="{% url 'shipment-return' shipment.pk %}" title="Return shipment">
-                        {% show_icon label='Return' icon='send-check' size='sm' %}
+                        {% show_icon label='Return' icon='send' size='sm' %}
                     </a>
                 {% else %}
                     <a href="#0" data-modal-url="{% url 'shipment-receive' shipment.pk %}" title="Receive shipment">

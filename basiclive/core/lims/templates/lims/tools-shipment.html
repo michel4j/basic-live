@@ -53,19 +53,19 @@
     </a>
     {% if shipment.status == shipment.STATES.SENT %}
         <a href="#!" data-modal-url="{% url "shipment-receive" shipment.pk %}">
-            {% show_icon label='Receive' icon='shopping-cart-full' size='md' %}
+            {% show_icon label='Receive' icon='receive' size='md' %}
         </a>
     {% elif shipment.status == shipment.STATES.ON_SITE %}
         <a href="#!" data-modal-url="{% url "shipment-return" shipment.pk %}">
-            {% show_icon label='Return' icon='location-arrow' size='md' %}
+            {% show_icon label='Return' icon='send' size='md' %}
         </a>
 
         <a href="{% url 'shipment-revise' shipment.pk %}">
-            {% show_icon label='Revise' icon='pencil' size='md' %}
+            {% show_icon label='Revise' icon='edit' size='md' %}
         </a>
     {% elif shipment.status == shipment.STATES.RETURNED %}
         <a href="#!" data-modal-url="{% url "shipment-update-return" shipment.pk %}">
-            {% show_icon label='Recall' icon='control-backward' size='md' %}
+            {% show_icon label='Recall' icon='recall' size='md' %}
         </a>
     {% endif %}
 {% endif %}

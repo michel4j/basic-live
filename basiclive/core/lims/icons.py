@@ -84,7 +84,7 @@ class ThemifyBackend(BaseIconBackend):
     name = "themify"
     base_class = "ti"
     icon_prefix = "ti-"
-    stylesheet_urls = ("themify-icons/css/themify-icons.min.css",)
+    stylesheet_urls = ("themify-icons/css/themify-icons.css",)
 
     # Canonical aliases mapping semantic action/object names to Themify glyph names
     aliases = {
@@ -117,7 +117,7 @@ class ThemifyBackend(BaseIconBackend):
         'video-entry': 'youtube',
         'sketch-entry': 'brush',
         'data-entry': 'layout-grid3',
-        "settings": "gear",
+        "settings": "settings",
         "light-theme": "shine",
         "dark-theme": "drupal",
         "auto-theme": "widget",
@@ -171,28 +171,26 @@ class ThemifyBackend(BaseIconBackend):
     def get_assets(self) -> Dict[str, Any]:
         return {
             "themify-icons": {
-                "url": "https://cdn.jsdelivr.net/gh/lykmapipo/themify-icons@0.1.2/",
+                "url": "https://cdn.jsdelivr.net/npm/@icon/themify-icons@1.0.1-alpha.3/",
                 "css": [
                     {
-                        "path": "css/themify-icons.min.css",
-                        "sri": "sha256-8g4waLJVanZaKB04tvyhKu2CZges6pA5SUelZAux/1U=",
-                    }
-                ],
-                "fonts": [
+                        "path": "themify-icons.css",
+                        "sri": "sha256-qoOBcGvQQnLXRmjq/r5ajkQ88/GGiFhWN4RXOutpnAY=",
+                    },
                     {
-                        "path": "fonts/themify.eot",
+                        "path": "themify-icons.eot",
                         "sri": "sha256-3/QV2uyRG2Xcpb4CBxoYJbdVCP8VjeW42Fl2lX25Mcs=",
                     },
                     {
-                        "path": "fonts/themify.svg",
+                        "path": "themify-icons.svg",
                         "sri": "sha256-968uCWyFwu1vaLsIb3ksZ/KmBBy7gU/CeWkSsu70/nY=",
                     },
                     {
-                        "path": "fonts/themify.ttf",
+                        "path": "themify-icons.ttf",
                         "sri": "sha256-NQZjpGZeAAcsaKh60/oL5HuKkUJBJ/Xz4J9mQZcpXwE=",
                     },
                     {
-                        "path": "fonts/themify.woff",
+                        "path": "themify-icons.woff",
                         "sri": "sha256-DbXFoUdet6PlAomD6h5kLRssAPr/aiUKN1ArDzgypKc=",
                     },
                 ],

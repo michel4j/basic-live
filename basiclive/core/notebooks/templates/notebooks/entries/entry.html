@@ -15,7 +15,7 @@
         <div class="entry-tools d-flex flex-row align-items-center gap-3 justify-content-end">
             {% if entry.is_editable and user == entry.author %}
             <a href="#!" class="edit-button" data-modal-url="{% url 'notebooks:edit-entry' book=entry.notebook.pk pk=entry.pk %}" title="Edit">
-                {% show_icon icon="pencil" size='md' %}
+                {% show_icon icon="edit" size='md' %}
             </a>
             <a href="#!" class="tag-button" data-modal-url="{% url 'notebooks:edit-tags' book=entry.notebook.pk pk=entry.pk %}" title="Tags">
                 {% show_icon icon="tag" size='md' %}

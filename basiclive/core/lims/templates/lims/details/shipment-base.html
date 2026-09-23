@@ -38,7 +38,7 @@
     {% endif %}
     {% if shipment.requests.count and request.path != request_url %}
         <a href="{{ request_url }}">
-            {% show_icon label="Requests" icon="layout-accordion-list" size='md' %}
+            {% show_icon label="Requests" icon="requests" size='md' %}
         </a>
     {% endif %}
     {% if request.path != sample_url %}

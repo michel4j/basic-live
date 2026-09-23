@@ -37,11 +37,10 @@
     <a href="#!" data-modal-url="{% url 'edit-container-samples' object.pk %}"
         {% if not object.samples.exists %}
             class="attention"
-            title="No Samples"
             data-bs-toggle="popover"
             data-bs-trigger="hover"
             data-bs-placement="bottom"
-            data-type="popover-info"
+            data-bs-custom-class="popover-primary"
             data-bs-content="Click here to add samples"
         {% endif %}
         >

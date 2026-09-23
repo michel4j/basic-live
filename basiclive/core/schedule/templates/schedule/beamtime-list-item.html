@@ -38,13 +38,13 @@
                 {% endfor %}
             {% else %}
                 <a href="#!" data-modal-url="{% url "beamtime-info" beamtime.pk %}" title="Get information about your upcoming beamtime">
-                    {% show_icon label='Info' icon='info-alt' size='md' color='info' %}
+                    {% show_icon label='Info' icon='info' size='md' color='info' %}
                 </a>
             {% endif %}
             {% with beamtime.local_contact as local_contact %}
                 {% if local_contact %}
                     <a href="#!" data-modal-url="{% url "support-info" local_contact.pk %}?current={{ beamtime.current }}" title="Get support from your local contact">
-                        {% show_icon label='Support' icon='headphone-alt' size='md' %}
+                        {% show_icon label='Support' icon='support' size='md' %}
                     </a>
                 {% endif %}
             {% endwith %}
