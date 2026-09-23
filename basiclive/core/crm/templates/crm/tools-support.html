@@ -4,15 +4,15 @@
     {% show_icon label='Areas' icon='areas' size='md' %}
 </a>
 <a href="{% url "supportrecord-list" %}" title="Records of User Support">
-    {% show_icon label='Support' icon='support' size='md' %}
+    {% show_icon label='Records' icon='support' size='md' %}
 </a>
 <a href="{% url "user-feedback-list" %}" title="User Feedback">
     {% show_icon label='Feedback' icon='star' size='md' %}
 </a>
 <a class="separator"></a>
 <a href="#!" data-modal-url="{% url "new-supportrecord" %}" title="Record User Support">
-    {% show_icon label='Support' icon='support' size='md' badge='+' color='primary' %}
+    {% show_icon label='Record' icon='support' size='md' badge='+' color='primary' %}
 </a>
 <a href="#!" data-modal-url="{% url "new-supportarea" %}" title="Add Support Area">
-    {% show_icon label='New Area' icon='new-area' size='md' badge='+' color='primary' %}
+    {% show_icon label='Area' icon='new-area' size='md' badge='+' color='primary' %}
 </a>

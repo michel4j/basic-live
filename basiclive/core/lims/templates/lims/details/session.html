@@ -26,11 +26,11 @@
         {% show_icon label='Data' icon='data' size='md' badge=object.datasets.count %}
     </a>
     <a href="#!" data-modal-url="{% url 'session-history' object.pk %}">
-        {% show_icon label='History' icon='timer' size='md' %}
+        {% show_icon label='History' icon='history' size='md' %}
     </a>
     {% if user.is_superuser %}
         <a href="{% url 'session-statistics' pk=object.pk %}">
-            {% show_icon label='Statistics' icon='pulse' size='md' %}
+            {% show_icon label='Statistics' icon='stats' size='md' %}
         </a>
     {% endif %}
     {% if object.datasets.count %}

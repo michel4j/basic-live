@@ -46,21 +46,21 @@
         {% endif %}
         >
         {% if not object.samples.exists %}
-            {% show_icon label='Samples' icon='paint-bucket' size='md' badge="+" color="primary" %}
+            {% show_icon label='Samples' icon='samples' size='md' badge="+" color="primary" %}
         {% else %}
-            {% show_icon label='Samples' icon='paint-bucket' size='md' color="primary" %}
+            {% show_icon label='Samples' icon='samples' size='md' color="primary" %}
         {% endif %}
     </a>
     {% endif %}
     {% include "lims/tools-base.html" %}
     {% if object.parent_history.exists %}
         <a href="#!" data-modal-url="{% url 'container-history' object.pk %}">
-            {% show_icon label='History' icon='timer' size='md' %}
+            {% show_icon label='History' icon='history' size='md' %}
         </a>
     {% endif %}
     {% if object.children_history.exists %}
-        <a class="float-end" data-modal-url="{% url 'automounter-history' object.pk %}">
-            {% show_icon label='Load History' icon='timer' size='md' %}
+        <a href="#!" data-modal-url="{% url 'automounter-history' object.pk %}">
+            {% show_icon label='Load History' icon='history' size='md' %}
         </a>
     {% endif %}
 {% endblock %}

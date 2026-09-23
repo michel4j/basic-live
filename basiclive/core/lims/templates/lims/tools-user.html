@@ -4,7 +4,7 @@
 {% url "project-statistics" username=user.username as stats_url %}
 
 <a  href="{% url 'session-list' %}">
-    {% show_icon label='Sessions' icon='calendar' size='md' %}
+    {% show_icon label='Sessions' icon='history' size='md' %}
 </a>
 {% if USE_SCHEDULE %}
     <a  href="{% url 'schedule' %}">
@@ -18,6 +18,6 @@
 {% endif %}
 {% if request.path != profile_url %}
     <a  href="{{ profile_url }}">
-        {% show_icon label='My Profile' icon='user' size='md' %}
+        {% show_icon label='My Profile' icon='profile' size='md' %}
     </a>
 {% endif %}

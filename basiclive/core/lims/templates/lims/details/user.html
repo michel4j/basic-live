@@ -27,7 +27,7 @@
         {% show_icon label="Reports" icon="reports" size='md' badge=object.reports.count %}
     </a>
     <a class="float-end" href="{% url 'session-list' %}?search={{ object.username }}" title="Go to Sessions for {{ object.username }}">
-        {% show_icon label="Sessions" icon="calendar" size='md' badge=object.sessions.count %}
+        {% show_icon label="Sessions" icon="history" size='md' badge=object.sessions.count %}
     </a>
     {% if user.is_superuser %}
     <span class="separator"></span>
@@ -35,7 +35,7 @@
         {% show_icon label="Labels" icon="tag" size='md' %}
     </a>
     <a href="#!" data-modal-url="{% url 'edit-profile' object.username %}" title="Edit Profile">
-        {% show_icon label="Edit" icon="pencil-alt" size='md' %}
+        {% show_icon label="Edit" icon="edit" size='md' %}
     </a>
     <a href="#!" data-modal-url="{% url 'project-reset' object.username %}" title="Reset API Key">
         {% show_icon label="Reset Key" icon="key" size='md' %}

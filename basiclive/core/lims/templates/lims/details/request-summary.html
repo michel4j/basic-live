@@ -11,17 +11,13 @@
                         {% if user.is_superuser%}
                             <a href="#!" data-modal-url="{% url 'request-admin-edit' request.pk %}"
                                title="Update Status">
-                                {% if request.staff_comments %}
-                                    {% show_icon label=request.get_status_display icon='comment-alt' size='md' %}
-                                {% else %}
-                                    {% show_icon label=request.get_status_display icon='comment' size='md' %}
-                                {% endif %}
+                                {% show_icon label=request.get_status_display icon='comment' size='md' %}
                             </a>
                         {% else %}
                             {% if request.status == request.STATUS_CHOICES.COMPLETE %}
-                                {% show_icon label=request.get_status_display icon='check-box' size='md' tooltip=request.get_status_display %}
+                                {% show_icon label=request.get_status_display icon='check' size='md' tooltip=request.get_status_display %}
                             {% else %}
-                                {% show_icon label=request.get_status_display icon='layout-width-full' size='md' tooltip=request.get_status_display %}
+                                {% show_icon label=request.get_status_display icon='hourglass' size='md' tooltip=request.get_status_display %}
                             {% endif %}
                         {% endif %}
                     </div>

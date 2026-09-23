@@ -21,7 +21,7 @@
 
 {% block page-tools %}
     <a  href="{% url 'project-statistics' username=object.username %}">
-        {% show_icon label='My Stats' icon='pulse' size='md' %}
+        {% show_icon label='My Stats' icon='stats' size='md' %}
     </a>
     <a  href="#!" data-modal-url="{% url 'new-sshkey' username=object.username %}">
         {% show_icon label='Add SSH Key' icon='key' size='md' %}

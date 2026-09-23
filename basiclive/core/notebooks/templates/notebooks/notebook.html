@@ -19,14 +19,6 @@
 {% block page-title %}{{ notebook.title }}{% endblock %}
 
 {% block page-tools %}
-    <a href="#!" id="calendar-button" class="d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#calendar-offcanvas" role="button" aria-controls="calendar-offcanvas">
-        {% show_icon label="Calendar" icon="calendar" size='md' %}
-    </a>
-    {% if user.is_superuser or notebook.owner == user %}
-    <a href="#!" data-modal-url="{% url 'notebooks:notebook-edit' pk=notebook.pk %}">
-        {% show_icon label="Settings" icon="settings" size='md' %}
-    </a>
-    {% endif %}
 {% if notebook|is_editable_by:user %}
     {% get_entry_types as entry_types %}
     {% for entry_type in entry_types %}
@@ -38,7 +30,16 @@
                 {% show_icon label=entry_type.name icon=entry_type.icon size='md' %}
             </a>
     {% endfor %}
+    <div class="separator"></div>
 {% endif %}
+    <a href="#!" id="calendar-button" class="d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#calendar-offcanvas" role="button" aria-controls="calendar-offcanvas">
+        {% show_icon label="Calendar" icon="calendar" size='md' %}
+    </a>
+    {% if user.is_superuser or notebook.owner == user %}
+    <a href="#!" data-modal-url="{% url 'notebooks:notebook-edit' pk=notebook.pk %}">
+        {% show_icon label="Settings" icon="settings" size='md' %}
+    </a>
+    {% endif %}
 {% endblock %}
 
 {% block page-content %}

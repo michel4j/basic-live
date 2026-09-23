@@ -4,10 +4,8 @@
 {% load bl_icons %}
 {% load humanize %}
 
-{% block modal_title %}
-    <h3 class="text-condensed">User Feedback</h3>
-    <span class="text-muted"><small>Submitted {{ object.created }}</small></span>
-{% endblock %}
+{% block modal_title %}User Feedback{% endblock %}
+{% block modal_subtitle %}Submitted {{ object.created }}{% endblock %}
 
 {% block modal_body %}
     <div class="row status-bar pb-1 overflow-ellipsis">
@@ -28,7 +26,7 @@
         {% if object.comments %}
         <div class="col-12">
             <div class="alert alert-info mt-3">
-                <sup>{% show_icon icon="quote-left" size="sm" %}</sup> {{ object.comments }} <sup>{% show_icon icon="quote-right" size="sm" %}</sup>
+                {% show_icon icon="quote" size="sm" %} {{ object.comments }}
             </div>
         </div>
         {% endif %}

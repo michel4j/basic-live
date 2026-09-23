@@ -16,18 +16,18 @@
 {% block modal_subtitle %}<small>{{ object.identity }} &mdash; {{ object.kind }} from {{ object.modified|naturalday }}</small>{% endblock %}
 
 {% block modal_body %}
-    <div class="row small py-1 overflow-ellipsis">
-        <div class="col">
+    <div class="d-flex flex-row small p-2 gap-3 overflow-ellipsis">
+        <div>
             <strong>Session:</strong><br/>
             <span class="text-muted">{% if object.session %}<a href="{% url 'session-detail' object.session.pk %}">{{ object.session.name }}</a>{% else %}
                 Unrecorded Session{% endif %}</span>
         </div>
-        <div class="col">
+        <div>
             <strong>Beamline / Energy:</strong><br/>
             <span class="text-muted">{{ object.beamline }} at {{ object.energy }} keV</span>
 
         </div>
-        <div class="col">
+        <div>
             <strong>Beam:</strong><br/>
             <span class="text-muted">
                 <span title="Exposure Time">{{ object.exposure_time }}s</span> /
@@ -35,7 +35,7 @@
                 {% if object.beam_size %}/ <span class="text-muted" title="Beam Size">{{ object.beam_size|floatformat:0 }} &mu;m</span>{% endif %}
             </span>
         </div>
-        <div class="col">
+        <div>
             <strong>Group / Sample:</strong><br/>
             <span class="text-muted">
                 {% if object.group %}
@@ -52,7 +52,7 @@
             </span>
         </div>
         {% if object.reports.exists %}
-        <div class="col">
+        <div>
             <strong>Reports:</strong><br/>
             <span class="text-muted">
             {% for report in object.reports.all %}
@@ -63,16 +63,16 @@
             </span>
         </div>
         {% endif %}
-        <div class="col">
-            <div class="tools-box float-end">
+        <div class="ms-auto">
+            <div class="tools-box">
             {% if object.url %}
                 <a href="{% url 'files-proxy' section='archive' path=object.download_url %}"
                    download="{{ object.name }}.tar.gz" title="Download Full Dataset">
-                    {% show_icon label="Download" icon="download" size='md' %}
+                    {% show_icon icon="download" size='md' %}
                 </a>
             {% else %}
                 <span class="text-muted not-allowed" title="Download Not Available">
-                    {% show_icon label="Download" icon="download" size='md' %}
+                    {% show_icon icon="download" size='md' %}
                 </span>
             {% endif %}
             </div>

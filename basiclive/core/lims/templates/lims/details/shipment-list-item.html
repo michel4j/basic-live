@@ -39,16 +39,16 @@
             {% endif %}
             {% if user.is_superuser and shipment.status <= shipment.STATES.ON_SITE and shipment.status >= shipment.STATES.SENT %}
                 {% if shipment.status == shipment.STATES.ON_SITE %}
-                    <a data-modal-url="{% url 'shipment-return' shipment.pk %}" title="Return shipment">
+                    <a href="#0" data-modal-url="{% url 'shipment-return' shipment.pk %}" title="Return shipment">
                         {% show_icon label='Return' icon='send-check' size='sm' %}
                     </a>
                 {% else %}
-                    <a data-modal-url="{% url 'shipment-receive' shipment.pk %}" title="Receive shipment">
+                    <a href="#0" data-modal-url="{% url 'shipment-receive' shipment.pk %}" title="Receive shipment">
                         {% show_icon label='Receive' icon='receive' size='sm' %}
                     </a>
                 {% endif %}
             {% elif shipment.status == shipment.STATES.DRAFT and not user.is_superuser %}
-                    <a data-modal-url="{% url 'shipment-send' shipment.pk %}" title="Send shipment">
+                    <a href="#0" data-modal-url="{% url 'shipment-send' shipment.pk %}" title="Send shipment">
                         {% show_icon label='Send' icon='send' size='sm' %}
                     </a>
             {% endif %}

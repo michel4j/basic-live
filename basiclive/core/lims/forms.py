@@ -1441,7 +1441,7 @@ class ShipmentGroupForm(ModalModelForm):
             return Div(
                 HTML(
                     '<h5 class="my-0"><strong>Update Groups</strong></h5>'
-                    f'Samples in new groups can be added later using the {render_icon("paint-bucket")} tool. '
+                    f'Samples in new groups can be added later using the {render_icon("samples")} tool. '
                     '<span class="text-danger">Removing a group will also remove any samples in the group</span>'
                 ),
                 css_class="text-condensed mb-1"
@@ -1451,7 +1451,7 @@ class ShipmentGroupForm(ModalModelForm):
                 HTML(
                     '<h5 class="my-0"><strong>Add Groups</strong></h5>'
                     'Specify groups for similar samples. Groups names will be used as the prefix for sample names. '
-                    f'Use the {render_icon("paint-bucket")} tool to add samples after your shipment is created. '
+                    f'Use the {render_icon("samples")} tool to add samples after your shipment is created. '
                 ),
                 css_class="text-condensed mb-1"
             )

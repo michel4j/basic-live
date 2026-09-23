@@ -3,6 +3,6 @@
 {% block page-title %}<h3>Request Types</h3>{% endblock %}
 {% block page-tools %}{% if user.is_superuser %}
     <a href="#!0" data-modal-url="{% url 'new-requesttype' %}" title="Add Request Type">
-        {% show_icon label="Add Request Type" icon="plus" size='md' %}
+        {% show_icon label="Add Request Type" icon="add" size='md' %}
     </a>
 {% endif %}{% endblock %}

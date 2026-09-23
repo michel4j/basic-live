@@ -91,9 +91,11 @@ class ThemifyBackend(BaseIconBackend):
         "add": "plus",
         "remove": "minus",
         "calendar": "calendar",
+        "check": "check2-square",
         "edit": "pencil",
         "delete": "trash",
         "view": "eye",
+        "list": "view-list-alt",
         "history": "timer",
         "stats": "pulse",
         "usage": "pie-chart",
@@ -121,6 +123,7 @@ class ThemifyBackend(BaseIconBackend):
         "auto-theme": "widget",
         "data": "layout-grid3",
         "home": "home",
+        "quote": "quote-left",
         "reports": "bar-chart",
         "send": "location-arrow",
         "receive": "shopping-cart-full",
@@ -133,6 +136,8 @@ class ThemifyBackend(BaseIconBackend):
         "arrow-right": "arrow-right",
         "arrow-up": "arrow-up",
         "arrow-down": "arrow-down",
+        "requests": "ruler-pencil",
+        "container": "package"
     }
 
     def resolve_icon_name(self, icon: str) -> str:
