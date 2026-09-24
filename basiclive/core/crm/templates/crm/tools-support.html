@@ -1,18 +1,19 @@
 {% load bl_icons %}
 
-<a href="{% url "supportarea-list" %}" title="Support Areas">
+<a href='{% url "supportarea-list" %}' title="Support Areas">
     {% show_icon label='Areas' icon='areas' size='md' %}
 </a>
-<a href="{% url "supportrecord-list" %}" title="Records of User Support">
+<a href='{% url "supportrecord-list" %}' title="Records of User Support">
     {% show_icon label='Records' icon='support' size='md' %}
 </a>
-<a href="{% url "user-feedback-list" %}" title="User Feedback">
+<a href='{% url "user-feedback-list" %}' title="User Feedback">
     {% show_icon label='Feedback' icon='star' size='md' %}
 </a>
 <a class="separator"></a>
-<a href="#!" data-modal-url="{% url "new-supportrecord" %}" title="Record User Support">
-    {% show_icon label='Record' icon='support' size='md' badge='+' color='primary' %}
+<a href="#!" data-modal-url='{% url "new-supportarea" %}' title="Add Support Area">
+    {% show_icon label='Area' icon='new-area' size='md' %}
 </a>
-<a href="#!" data-modal-url="{% url "new-supportarea" %}" title="Add Support Area">
-    {% show_icon label='Area' icon='new-area' size='md' badge='+' color='primary' %}
+<a href="#!" data-modal-url='{% url "new-supportrecord" %}' title="Record User Support">
+    {% show_icon label='Record' icon='add' size='md' %}
 </a>
+
