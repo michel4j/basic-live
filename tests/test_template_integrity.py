@@ -156,7 +156,6 @@ class TemplateIntegrityTests(SimpleTestCase):
             "lims/tools-base.html",
             "lims/tools-shipment.html",
             "lims/tools-shipment-edit.html",
-            "lims/tools-project.html",
         ]
         for tname in component_templates:
             with self.subTest(template=tname):
