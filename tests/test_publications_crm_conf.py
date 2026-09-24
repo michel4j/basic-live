@@ -6,14 +6,20 @@ from tests import setup_django
 setup_django()
 
 from django.test import SimpleTestCase, override_settings
+from django.urls import include, path
 
 from basiclive.core.crm.conf import settings as crm_settings
 from basiclive.core.lims.conf import settings as lims_settings
 from basiclive.core.publications.conf import settings as pub_settings
 from basiclive.core.publications.utils import get_search_json, tag_function
-from basiclive.core.publications.views import PDBEntryList
+from basiclive.core.publications.views import PDBDetail, PDBEntryList
+
+urlpatterns = [
+    path("publications/", include("basiclive.core.publications.urls")),
+]
 
 
+@override_settings(ROOT_URLCONF="tests.test_publications_crm_conf")
 class PublicationsConfTests(SimpleTestCase):
     def test_default_settings(self):
         self.assertEqual(pub_settings.PDB_FACILITY_ACRONYM, "CLSI")
@@ -27,6 +33,7 @@ class PublicationsConfTests(SimpleTestCase):
         self.assertEqual(pub_settings.GOOGLE_BOOKS_API, "https://www.googleapis.com/books/v1/volumes")
         self.assertEqual(pub_settings.SCIMAGO_URL, "https://www.scimagojr.com/journalrank.php")
         self.assertEqual(pub_settings.PDB_URL_TEMPLATE, "https://www.rcsb.org/structure/{}")
+        self.assertEqual(pub_settings.PDB_IMAGE_URL_TEMPLATE, "https://cdn.rcsb.org/images/structures/{}_assembly-1.jpeg")
         self.assertEqual(pub_settings.YEAR_FILTER_START, 2005)
         self.assertTrue(pub_settings.LOCAL_DIR)
 
@@ -47,6 +54,7 @@ class PublicationsConfTests(SimpleTestCase):
                 "CROSSREF_BATCH_SIZE": 50,
                 "GOOGLE_API_KEY": "secret-key",
                 "PDB_URL_TEMPLATE": "https://custom.rcsb.org/entry/{}",
+                "PDB_IMAGE_URL_TEMPLATE": "https://custom.rcsb.org/images/{}.png",
                 "YEAR_FILTER_START": 2012,
                 "PDB_TAG_FUNCTION": lambda e: ["CUSTOM_TAG"],
             }
@@ -57,6 +65,7 @@ class PublicationsConfTests(SimpleTestCase):
             self.assertEqual(pub_settings.CROSSREF_BATCH_SIZE, 50)
             self.assertEqual(pub_settings.GOOGLE_API_KEY, "secret-key")
             self.assertEqual(pub_settings.PDB_URL_TEMPLATE, "https://custom.rcsb.org/entry/{}")
+            self.assertEqual(pub_settings.PDB_IMAGE_URL_TEMPLATE, "https://custom.rcsb.org/images/{}.png")
             self.assertEqual(pub_settings.YEAR_FILTER_START, 2012)
 
             # Custom tag function
@@ -73,19 +82,42 @@ class PublicationsConfTests(SimpleTestCase):
         self.assertEqual(pub_settings.CROSSREF_BATCH_SIZE, 10)
         self.assertIsNone(pub_settings.GOOGLE_API_KEY)
         self.assertEqual(pub_settings.PDB_URL_TEMPLATE, "https://www.rcsb.org/structure/{}")
+        self.assertEqual(pub_settings.PDB_IMAGE_URL_TEMPLATE, "https://cdn.rcsb.org/images/structures/{}_assembly-1.jpeg")
         self.assertEqual(pub_settings.YEAR_FILTER_START, 2005)
 
-    def test_views_pdb_url_template_dynamic_resolution(self):
+    def test_pdb_entry_list_modal_links(self):
         mock_obj = MagicMock()
         mock_obj.code = "1ABC"
         view = PDBEntryList()
 
-        self.assertEqual(view.get_link_url(mock_obj), "https://www.rcsb.org/structure/1ABC")
+        self.assertEqual(view.link_field, "code")
+        self.assertEqual(view.link_attr, "data-modal-url")
+        self.assertEqual(str(view.get_link_url(mock_obj)), "/publications/pdbs/1ABC/")
+        self.assertEqual(view.get_link_attr(mock_obj), "data-modal-url")
 
-        with override_settings(BASICLIVE_PUBLICATIONS={"PDB_URL_TEMPLATE": "https://pdb.example.com/{}/view"}):
-            self.assertEqual(view.get_link_url(mock_obj), "https://pdb.example.com/1ABC/view")
+    def test_pdb_detail_view_context_resolution(self):
+        mock_obj = MagicMock()
+        mock_obj.code = "4HHB"
+        view = PDBDetail()
+        view.object = mock_obj
 
-        self.assertEqual(view.get_link_url(mock_obj), "https://www.rcsb.org/structure/1ABC")
+        context = view.get_context_data(object=mock_obj)
+        self.assertEqual(context["pdb_url"], "https://www.rcsb.org/structure/4HHB")
+        self.assertEqual(context["image_url"], "https://cdn.rcsb.org/images/structures/4hhb_assembly-1.jpeg")
+
+        with override_settings(
+            BASICLIVE_PUBLICATIONS={
+                "PDB_URL_TEMPLATE": "https://custom.rcsb.org/entry/{}",
+                "PDB_IMAGE_URL_TEMPLATE": "https://cdn.custom.org/{}_model.png",
+            }
+        ):
+            context = view.get_context_data(object=mock_obj)
+            self.assertEqual(context["pdb_url"], "https://custom.rcsb.org/entry/4HHB")
+            self.assertEqual(context["image_url"], "https://cdn.custom.org/4hhb_model.png")
+
+        context = view.get_context_data(object=mock_obj)
+        self.assertEqual(context["pdb_url"], "https://www.rcsb.org/structure/4HHB")
+        self.assertEqual(context["image_url"], "https://cdn.rcsb.org/images/structures/4hhb_assembly-1.jpeg")
 
 
 class CrmConfTests(SimpleTestCase):

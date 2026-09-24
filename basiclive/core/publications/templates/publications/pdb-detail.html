@@ -1,0 +1,94 @@
+{% extends "lims/modal/content.html" %}
+{% load bl_icons %}
+
+{% block modal_styles %}modal-lg{% endblock %}
+
+{% block modal_title %}
+    <span class="text-muted">PDB | </span><strong>{{ object.code }}</strong>
+{% endblock %}
+
+{% block modal_subtitle %}
+    {{ object.title }}
+{% endblock %}
+
+{% block modal_body %}
+    <div class="row">
+        <div class="col-md-5 text-center mb-3 mb-md-0">
+            <figure class="figure m-0">
+                <img src="{{ image_url }}"
+                     class="figure-img img-fluid rounded border shadow-sm"
+                     alt="PDB structure {{ object.code }}"
+                     loading="lazy"
+                     onerror="this.onerror=null; this.classList.add('d-none'); document.getElementById('pdb-image-fallback-{{ object.code }}').classList.remove('d-none');">
+                <div id="pdb-image-fallback-{{ object.code }}" class="alert alert-light border d-none p-3 text-center text-muted">
+                    {% show_icon icon="image" size="lg" %}
+                    <div class="small mt-1">Structure preview unavailable</div>
+                </div>
+                <figcaption class="figure-caption text-center mt-2">
+                    <strong>{{ object.code }}</strong> &mdash; Assembly 1
+                </figcaption>
+            </figure>
+        </div>
+        <div class="col-md-7">
+            <dl class="row mb-0 small">
+                <dt class="col-sm-4 text-muted">Structure Title</dt>
+                <dd class="col-sm-8 fw-semibold">{{ object.title }}</dd>
+
+                <dt class="col-sm-4 text-muted">Authors</dt>
+                <dd class="col-sm-8">{{ object.authors|default:"&mdash;" }}</dd>
+
+                <dt class="col-sm-4 text-muted">Resolution</dt>
+                <dd class="col-sm-8">
+                    {% if object.resolution %}
+                        {{ object.resolution|floatformat:2 }} &Aring;
+                    {% else %}
+                        &mdash;
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Released</dt>
+                <dd class="col-sm-8">{{ object.released|date:"Y-m-d"|default:"&mdash;" }}</dd>
+
+                <dt class="col-sm-4 text-muted">Deposited</dt>
+                <dd class="col-sm-8">{{ object.deposited|date:"Y-m-d"|default:"&mdash;" }}</dd>
+
+                {% if object.collected %}
+                <dt class="col-sm-4 text-muted">Collected</dt>
+                <dd class="col-sm-8">{{ object.collected|date:"Y-m-d" }}</dd>
+                {% endif %}
+
+                {% if object.doi %}
+                <dt class="col-sm-4 text-muted">DOI</dt>
+                <dd class="col-sm-8">
+                    <a href="https://doi.org/{{ object.doi }}" target="_blank" rel="noopener noreferrer">
+                        {{ object.doi }}
+                    </a>
+                </dd>
+                {% endif %}
+
+                {% if object.reference %}
+                <dt class="col-sm-4 text-muted">Publication</dt>
+                <dd class="col-sm-8">
+                    {{ object.reference.title }}
+                    {% if object.reference.code %}
+                        <br/>
+                        <small class="text-muted">({{ object.reference.code }})</small>
+                    {% endif %}
+                </dd>
+                {% elif object.citation %}
+                <dt class="col-sm-4 text-muted">Citation</dt>
+                <dd class="col-sm-8">{{ object.citation }}</dd>
+                {% endif %}
+            </dl>
+        </div>
+    </div>
+{% endblock %}
+
+{% block modal_footer %}
+    {% if pdb_url %}
+        <a href="{{ pdb_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary me-auto">
+            {% show_icon icon="share" size="sm" %} View on RCSB PDB
+        </a>
+    {% endif %}
+    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Close</button>
+{% endblock %}

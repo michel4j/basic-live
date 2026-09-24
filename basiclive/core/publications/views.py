@@ -1,5 +1,5 @@
 from django.utils.safestring import mark_safe
-from django.views.generic import TemplateView, list
+from django.views.generic import DetailView, TemplateView, list
 from itemlist.views import ItemListView
 
 from basiclive.core.publications.conf import settings
@@ -8,6 +8,7 @@ from basiclive.utils.mixins import AdminRequiredMixin
 from . import models, stats
 
 PDB_URL_TEMPLATE = settings.PDB_URL_TEMPLATE
+PDB_IMAGE_URL_TEMPLATE = settings.PDB_IMAGE_URL_TEMPLATE
 YEAR_FILTER_START = settings.YEAR_FILTER_START
 
 
@@ -60,9 +61,33 @@ class PDBEntryList(AdminRequiredMixin, ItemListView):
     paginate_by = 16
     page_title = 'PDB Depositions'
     link_field = 'code'
+    link_url = 'pdb-entry-detail'
+    link_kwarg = 'code'
+    link_attr = 'data-modal-url'
 
-    def get_link_url(self, obj):
-        return settings.PDB_URL_TEMPLATE.format(obj.code)
+
+class PDBDetail(AdminRequiredMixin, DetailView):
+    model = models.Deposition
+    template_name = 'publications/pdb-detail.html'
+    slug_field = 'code'
+    slug_url_kwarg = 'code'
+
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+        code = self.kwargs.get(self.slug_url_kwarg)
+        if code:
+            obj = queryset.filter(code__iexact=code).first()
+            if obj:
+                return obj
+        return super().get_object(queryset=queryset)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        code = self.object.code
+        context['pdb_url'] = settings.PDB_URL_TEMPLATE.format(code)
+        context['image_url'] = settings.PDB_IMAGE_URL_TEMPLATE.format(code.lower())
+        return context
 
 
 class PDBEntryText(list.ListView):

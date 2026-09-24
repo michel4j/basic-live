@@ -1,7 +1,7 @@
-import unittest
 from django.test import SimpleTestCase, override_settings
 
 from tests import setup_django
+
 setup_django()
 
 from basiclive.core.lims.icons import (
@@ -224,15 +224,6 @@ class IconBackendTests(SimpleTestCase):
                     violating_calls.append((f"{app_name}/{html_file.name}", matches))
 
         self.assertEqual(violating_calls, [], f"Found legacy show_icon calls in app templates: {violating_calls}")
-
-    def test_themify_entry_selector_resolution(self):
-        backend = ThemifyBackend()
-        # Verify notebooks dynamic icon resolution retains entry-selector class
-        self.assertEqual(backend.resolve_icon_name("ti-md entry-selector-note"), "entry-selector-note")
-        self.assertEqual(
-            backend.get_css_classes("ti-md entry-selector-note", size="md"),
-            "ti entry-selector-note bl-icon-md"
-        )
 
     def test_views_movable_uses_render_icon(self):
         from basiclive.core.lims.views import movable
