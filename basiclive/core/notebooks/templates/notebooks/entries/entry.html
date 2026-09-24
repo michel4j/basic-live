@@ -31,11 +31,7 @@
                 title="Comments"
                 data-entry-pk="{{ entry.pk }}"
             >
-                <i class="mi mi-comment-alt bl-icon-md mi-fw position-relative">
-                    <strong class="position-absolute top-50 start-50 translate-middle text-light comment-count">
-                    {{ entry.annotations.count }}
-                    </strong>
-                </i>
+                {% show_icon icon="comments" badge=entry.annotations.count size='md' %}
             </button>
             {% endif %}
         </div>

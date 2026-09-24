@@ -4,14 +4,13 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+from pathlib import Path
+from urllib.parse import urljoin
 
 import requests
-from urllib.parse import urljoin
-from pathlib import Path
-from django.apps import apps as django_apps, apps
-from django.core.management.base import BaseCommand
-
+from django.apps import apps as django_apps
 from django.conf import settings
+from django.core.management.base import BaseCommand
 
 from basiclive.core.lims.icons import get_icon_backend
 
@@ -78,7 +77,7 @@ class Command(BaseCommand):
             for kind in conf.keys():
                 for asset in conf[kind]:
                     # get the directory and the file_name
-                    filename = asset.get('file', Path(asset['path']).name)
+                    filename = asset.get('file', Path(asset['path']))
                     file_path = assets_root / key / kind / filename
                     file_path.parent.mkdir(parents=True, exist_ok=True)
 

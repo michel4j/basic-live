@@ -9,17 +9,10 @@
                     {% show_icon icon="home" %}<span class="d-none d-md-inline-block">&nbsp;Dashboard</span>
                 </a>
             </li>
-            {% if USE_NOTEBOOKS %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'notebooks:notebook-list' %}">
-                    {% show_icon icon="book" %}<span class="d-none d-md-inline-block">&nbsp;Notebooks</span>
-                </a>
-            </li>
-            {% endif %}
             <li class="nav-item dropdown">
                 <a class="nav-link  dropdown-toggle me-md-2" href="#"
-                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="search-menu">
-                    {% show_icon icon="list" %}<span class="d-none d-md-inline-block">&nbsp;Search</span>
+                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {% show_icon icon="samples" %}<span class="d-none d-md-inline-block">&nbsp;Samples</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="search-menu">
                     <a class="dropdown-item" href='{% url "shipment-list" %}'>Shipments</a>
@@ -28,20 +21,34 @@
                     <a class="dropdown-item" href="{% url 'sample-list' %}">Samples</a>
                     <a class="dropdown-item" href="{% url 'request-list' %}">Requests</a>
                     <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'session-list' %}">Sessions</a>
+                </div>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link  dropdown-toggle me-md-2" href="#"
+                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {% show_icon icon="list" %}<span class="d-none d-md-inline-block">&nbsp;Experiments</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="search-menu">
+                    <a class="dropdown-item" href="{% url 'request-list' %}">Requests</a>
+                    <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{% url 'data-list' %}">Datasets</a>
                     <a class="dropdown-item" href="{% url 'result-list' %}">Reports</a>
                     <div class="dropdown-divider"></div>
-                    {% if USE_NOTEBOOKS %}
-                    <a class="dropdown-item" href="{% url 'notebooks:notebook-list' %}">Notebooks</a>
-                    <div class="dropdown-divider"></div>
-                    {% endif %}
                     <a class="dropdown-item" href="{% url 'session-list' %}">Sessions</a>
                     {% if user.is_superuser %}
                         <a class="dropdown-item" href="{% url 'requesttype-list' %}">Request Types</a>
                     {% endif %}
-                    <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity Log</a>
+                    <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity</a>
                 </div>
             </li>
+            {% if USE_NOTEBOOKS %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'notebooks:notebook-list' %}">
+                    {% show_icon icon="book" %}<span class="d-none d-md-inline-block">&nbsp;Notebooks</span>
+                </a>
+            </li>
+            {% endif %}
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle me-md-2" href="#"
                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="profile-menu">

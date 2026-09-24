@@ -49,7 +49,7 @@
         {% show_icon label='Labels' icon='tag' size='md' %}
     </a>
     <a href="#!" data-modal-url="{% url 'shipment-comments' shipment.pk %}">
-        {% show_icon label='Comment' icon='comment-alt' size='md' %}
+        {% show_icon label='Comment' icon='comments' size='md' %}
     </a>
     {% if shipment.status == shipment.STATES.SENT %}
         <a href="#!" data-modal-url="{% url "shipment-receive" shipment.pk %}">

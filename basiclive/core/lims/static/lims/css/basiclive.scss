@@ -412,39 +412,42 @@ table {
     display: table !important;
   }
 }
-
+.ti {
+  --base-icon-size: 1.2rem;
+  font-weight: 200;
+}
 .bl-icon-xs,
 .icon-xs,
 .ti-xs {
-  font-size: 0.8rem;
+  font-size: calc(var(--base-icon-size, 1rem) * 0.8);
   margin-bottom: 2px;
 }
 
 .bl-icon-sm,
 .icon-sm,
 .ti-sm {
-  font-size: 1.1rem;
+  font-size: calc(var(--base-icon-size, 1rem) * 1.1);
   margin-bottom: 2px;
 }
 
 .bl-icon-md,
 .icon-md,
 .ti-md {
-  font-size: 1.5rem;
+  font-size: calc(var(--base-icon-size, 1rem) * 1.5);
   margin-bottom: 2px;
 }
 
 .bl-icon-lg,
 .icon-lg,
 .ti-lg {
-  font-size: 2rem;
+  font-size: calc(var(--base-icon-size, 1rem) * 2);
   margin-bottom: 2px;
 }
 
 .bl-icon-xl,
 .icon-xl,
 .ti-xl {
-  font-size: 3.0rem;
+  font-size: calc(var(--base-icon-size, 1rem) * 3);
   margin-bottom: 2px;
 }
 
@@ -952,8 +955,11 @@ a[data-modal-url], .back text[port], .cursor {
   }
 }
 
-.dropdown-menu[aria-labelledby="profile-menu"] {
-    min-width: 200px;
+.dropdown-menu {
+    --bs-dropdown-link-active-bg: var(--bs-primary);
+    &[aria-labelledby="profile-menu"] {
+      min-width: 200px;
+    }
 }
 
 /* image loading indicator kept separate */
