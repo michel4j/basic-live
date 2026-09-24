@@ -31,10 +31,10 @@
         <div class="tools-box ms-auto">
             {% if shipment.status >= shipment.STATES.ON_SITE %}
                 <a href="{% url 'shipment-data' shipment.pk %}" title="Go to Data from this shipment">
-                    {% show_icon label='Data' icon='data' size='sm' badge=shipment.data_count color='primary' %}
+                    {% show_icon label='Data' icon='data' size='sm' badge=shipment.data_count %}
                 </a>
                 <a href="{% url 'shipment-reports' shipment.pk %}" title="Go to Reports from this shipment">
-                    {% show_icon label='Reports' icon='reports' size='sm' badge=shipment.report_count color='primary' %}
+                    {% show_icon label='Reports' icon='reports' size='sm' badge=shipment.report_count %}
                 </a>
             {% endif %}
             {% if user.is_superuser and shipment.status <= shipment.STATES.ON_SITE and shipment.status >= shipment.STATES.SENT %}
