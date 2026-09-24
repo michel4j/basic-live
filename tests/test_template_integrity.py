@@ -156,7 +156,7 @@ class TemplateIntegrityTests(SimpleTestCase):
             "lims/tools-base.html",
             "lims/tools-shipment.html",
             "lims/tools-shipment-edit.html",
-            "lims/tools-user.html",
+            "lims/tools-project.html",
             "publications/tools.html",
         ]
         for tname in component_templates:

@@ -15,7 +15,7 @@
         <div class="ps-3 overflow-ellipsis align-self-center">
             <h6 class="m-0 text-condensed">
                 <span class="text-muted">
-                    <a href="#!" data-modal-url="{% url 'user-info' connection.user.username %}"
+                    <a href="#!" data-modal-url="{% url 'project-info' connection.user.username %}"
                        title='View Contact Information for {{ connection.user.username }}'>
                         {% if connection.user.alias %}
                             {{ connection.user.alias }} (<strong>{{ connection.user.name|upper }}</strong>)

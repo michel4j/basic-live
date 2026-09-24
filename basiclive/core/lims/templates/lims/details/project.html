@@ -37,10 +37,11 @@
     <a href="#!" data-modal-url="{% url 'edit-profile' object.username %}" title="Edit Profile">
         {% show_icon label="Edit" icon="edit" size='md' %}
     </a>
-    <a href="#!" data-modal-url="{% url 'project-reset' object.username %}" title="Reset API Key">
-        {% show_icon label="Reset Key" icon="key" size='md' %}
+    {% endif %}
+    <a  href="#!" data-modal-url="{% url 'new-sshkey' username=object.username %}">
+        {% show_icon label='Add SSH Key' icon='key' size='md' %}
     </a>
-{% endif %}
+
 {% endblock %}
 
 {% block page-status-style %}callout{% endblock %}

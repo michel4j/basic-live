@@ -4,15 +4,15 @@
         <!-- Brand and toggle get grouped for better mobile display -->
         <a class="navbar-brand mx-3" href="/">{{ APP_NAME }}</a>
         <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-                <a class="nav-link" href="/">
+            <li class="nav-item ">
+                <a class="nav-link me-md-2" href="/">
                     {% show_icon icon="home" %}<span class="d-none d-md-inline-block">&nbsp;Dashboard</span>
                 </a>
             </li>
             <li class="nav-item dropdown">
                 <a class="nav-link  dropdown-toggle me-md-2" href="#"
                     data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    {% show_icon icon="samples" %}<span class="d-none d-md-inline-block">&nbsp;Samples</span>
+                    {% show_icon icon="container" %}<span class="d-none d-md-inline-block">&nbsp;Samples</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="search-menu">
                     <a class="dropdown-item" href='{% url "shipment-list" %}'>Shipments</a>
@@ -42,13 +42,6 @@
                     <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity</a>
                 </div>
             </li>
-            {% if USE_NOTEBOOKS %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'notebooks:notebook-list' %}">
-                    {% show_icon icon="book" %}<span class="d-none d-md-inline-block">&nbsp;Notebooks</span>
-                </a>
-            </li>
-            {% endif %}
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle me-md-2" href="#"
                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="profile-menu">

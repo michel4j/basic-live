@@ -69,9 +69,9 @@ class ProjectForm(ModalModelForm):
                 style="g-2"
             ),
             Row(
-                HalfWidth('email') if self.user.is_superuser else FullWidth('email'),
+                HalfWidth('email') if self.user.is_superuser else TwoThirdWidth('email'),
+                QuarterWidth('alias') if self.user.is_superuser else ThirdWidth('alias'),
                 QuarterWidth(Field('designation', css_class='select')) if self.user.is_superuser else Div('designation'),
-                QuarterWidth('alias'),
                 style="g-2"
             ),
             Row(

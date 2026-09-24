@@ -28,51 +28,6 @@ if settings.USE_SCHEDULE:
     from basiclive.core.schedule.models import BeamlineSupport
 
 
-class ProjectReset(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
-    template_name = "lims/forms/project-reset.html"
-    model = models.Project
-    success_message = "Account API key reset"
-    fields = ("key", )
-
-    def get_success_url(self):
-        return self.object.get_absolute_url()
-
-    def get_object(self, *args, **kwargs):
-        obj = self.model.objects.get(username=self.kwargs.get('username'))
-        return obj
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_action'] = reverse_lazy('project-reset', kwargs={'username': self.object.username})
-        return context
-
-
-class ProjectProfile(UserPassesTestMixin, detail.DetailView):
-    model = models.Project
-    template_name = "lims/details/project-profile.html"
-    slug_field = 'username'
-    slug_url_kwarg = 'username'
-
-    def test_func(self):
-        # Allow access to admin or owner
-        return self.request.user.is_superuser or self.get_object() == self.request.user
-
-    def get_object(self, *args, **kwargs):
-        # inject username in to kwargs if not already present
-        if not self.kwargs.get('username'):
-            self.kwargs['username'] = self.request.user
-        return super().get_object(*args, **kwargs)
-
-
-class ProjectStatistics(ProjectProfile):
-    template_name = "lims/details/project-statistics.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['report'] = stats.project_stats(self.object)
-        return context
-
-
 class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """
     Mixin to limit access to the owner of an object (or superusers).
@@ -1416,24 +1371,29 @@ class ProjectList(AdminRequiredMixin, ItemListView):
         'username', 'contact_person', 'contact_phone', 'contact_email', 'city', 'province', 'country',
         'department', 'organisation'
     ]
-    link_url = 'user-detail'
+    link_url = 'project-profile'
     link_kwarg = 'username'
     add_url = 'new-project'
     add_ajax = True
     ordering = ['name']
 
 
-class UserDetail(AdminRequiredMixin, detail.DetailView):
+class ProjectInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
     model = models.Project
-    template_name = "lims/modal/user-info.html"
+    template_name = "lims/modal/project-info.html"
+
+    def test_func(self) -> bool | None:
+        if self.request.user.is_superuser:
+            return True
+        return self.kwargs.get('username') == self.request.user.username
 
     def get_object(self, **kwargs):
         return models.Project.objects.get(username=self.kwargs.get('username'))
 
 
-class UserStats(UserDetail):
-    template_name = "lims/details/user.html"
-    page_title = "User Profile"
+class ProjectProfile(ProjectInfo):
+    template_name = "lims/details/project.html"
+    page_title = "Project Profile"
 
     def get_object(self, **kwargs):
         return models.Project.objects.get(username=self.kwargs.get('username'))
@@ -1473,11 +1433,11 @@ class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
 
     def get_context_data(self, **kwargs):
         context = super(ProjectDelete, self).get_context_data(**kwargs)
-        context['form_action'] = reverse_lazy('user-delete', kwargs={'username': self.object.username})
+        context['form_action'] = reverse_lazy('project-delete', kwargs={'username': self.object.username})
         return context
 
     def confirmed(self, *args, **kwargs):
-        self.success_message = "{} account has been deleted".format(self.kwargs.get('username'))
+        self.success_message = f"{self.kwargs.get('username')} account has been deleted"
         return super().confirmed(*args, **kwargs)
 
 
