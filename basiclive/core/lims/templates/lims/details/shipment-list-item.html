@@ -5,7 +5,7 @@
             {% if shipment.status == shipment.STATES.DRAFT %}
                 {% show_icon label='DRAFT' icon='clipboard' size='sm' tooltip='Draft' %}
             {% elif shipment.status == shipment.STATES.SENT %}
-                {% show_icon label=shipment.date_shipped|date:"M j"|upper icon='truck' size='sm' tooltip='Incoming' %}
+                {% show_icon label=shipment.date_shipped|date:"M j"|upper icon='shipment' size='sm' tooltip='Incoming' %}
             {% elif shipment.status == shipment.STATES.ON_SITE %}
                 {% show_icon label=shipment.date_shipped|date:"M j"|upper icon='onsite' size='sm' tooltip='On-site' %}
             {% elif shipment.status == shipment.STATES.RETURNED %}

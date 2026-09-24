@@ -3,7 +3,7 @@ Pluggable icon subsystem for BasicLIVE.
 
 Provides backend-agnostic icon resolution, sizing classes, and stylesheet injection.
 """
-
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -17,8 +17,11 @@ class BaseIconBackend:
     Abstract base class for BasicLIVE icon backends.
     """
     name = "base"
+    base_class = ""
+    icon_prefix = "icon-"
     allowed_sizes = ("xs", "sm", "md", "lg", "xl")
     size_class_prefix = "bl-icon-"
+    aliases: Dict[str, str] = {}
 
     def format_size_class(self, size: Optional[str] = None) -> str:
         """
@@ -33,11 +36,21 @@ class BaseIconBackend:
             )
         return f"{self.size_class_prefix}{size_str}"
 
+    @lru_cache(maxsize=100)
     def resolve_icon_name(self, icon: str) -> str:
-        """
-        Resolves a canonical icon name into the provider-specific icon class.
-        """
-        raise NotImplementedError("Icon backends must implement resolve_icon_name()")
+        clean = icon.strip()
+        if not clean:
+            return ""
+
+        canonical = clean.split()[-1]
+        candidates = [clean, canonical, clean.split("-")[0]]
+        for candidate in candidates:
+            target = self.aliases.get(candidate)
+            if target:
+                break
+        else:
+            target = canonical
+        return f"{self.icon_prefix}{target}"
 
     def get_css_classes(
         self,
@@ -45,10 +58,15 @@ class BaseIconBackend:
         size: Optional[str] = None,
         extra_class: str = ""
     ) -> str:
-        """
-        Returns the full combined CSS class string for rendering the icon.
-        """
-        raise NotImplementedError("Icon backends must implement get_css_classes()")
+        if not icon or not icon.strip():
+            return ""
+        parts = [self.base_class, self.resolve_icon_name(icon)]
+        size_cls = self.format_size_class(size)
+        if size_cls:
+            parts.append(size_cls)
+        if extra_class and extra_class.strip():
+            parts.append(extra_class.strip())
+        return " ".join(parts)
 
     def get_stylesheet_urls(self) -> List[str]:
         """
@@ -89,6 +107,7 @@ class ThemifyBackend(BaseIconBackend):
     # Canonical aliases mapping semantic action/object names to Themify glyph names
     aliases = {
         "add": "plus",
+        "add-shipment": "plus",
         "remove": "minus",
         "calendar": "calendar",
         "check": "check2-square",
@@ -139,31 +158,6 @@ class ThemifyBackend(BaseIconBackend):
         "requests": "ruler-pencil",
         "container": "package"
     }
-
-    def resolve_icon_name(self, icon: str) -> str:
-        clean = icon.strip()
-        if not clean:
-            return ""
-
-        canonical = clean.split()[-1]
-        target = self.aliases.get(canonical, canonical)
-        return f"{self.icon_prefix}{target}"
-
-    def get_css_classes(
-        self,
-        icon: str,
-        size: Optional[str] = None,
-        extra_class: str = ""
-    ) -> str:
-        if not icon or not icon.strip():
-            return ""
-        parts = [self.base_class, self.resolve_icon_name(icon)]
-        size_cls = self.format_size_class(size)
-        if size_cls:
-            parts.append(size_cls)
-        if extra_class and extra_class.strip():
-            parts.append(extra_class.strip())
-        return " ".join(parts)
 
     def get_stylesheet_urls(self) -> List[str]:
         return list(self.stylesheet_urls)

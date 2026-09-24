@@ -113,8 +113,8 @@ class SupportEntryForm(ModalModelForm):
         fields = ['kind', 'areas', 'staff', 'project', 'beamline', 'comments', 'staff_comments', 'lost_time']
         widgets = {
             'comments': forms.Textarea(attrs={
-                "cols": 40, "rows": 7, "placeholder": 'Question/Concern from User:\nMy Response/Action Taken:'}),
-            'staff_comments': forms.Textarea(attrs={'cols': 40, 'rows': 7})
+                "rows": 7, "placeholder": 'Question/Concern from User:\nMy Response/Action Taken:'}),
+            'staff_comments': forms.Textarea(attrs={'rows': 3})
         }
 
     def __init__(self, *args, **kwargs):
