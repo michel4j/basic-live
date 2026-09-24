@@ -29,7 +29,7 @@ DEFAULTS: dict[str, Any] = {
     "PDB_TAG_FUNCTION": default_tag_function,
     "LOCAL_DIR": tempfile.gettempdir(),
     "PDB_URL_TEMPLATE": "https://www.rcsb.org/structure/{}",
-    "PDB_IMAGE_URL_TEMPLATE": "https://cdn.rcsb.org/images/structures/{}_assembly-1.jpeg",
+    "PDB_IMAGE_URL_TEMPLATE": "https://cdn.rcsb.org/images/structures/{}_assembly-2.jpeg",
     "YEAR_FILTER_START": 2005,
 }
 
