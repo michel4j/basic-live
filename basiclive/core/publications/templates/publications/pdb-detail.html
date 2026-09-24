@@ -1,4 +1,4 @@
-{% extends "lims/modal/content.html" %}
+{% extends "crisp_modals/modal.html" %}
 {% load bl_icons %}
 
 {% block modal_styles %}modal-lg{% endblock %}
@@ -23,20 +23,19 @@
             </figure>
         </div>
         <div class="col-md-6">
-            <div class="mb-3"><strong>Authors:</strong> {{ object.authors|default:"&mdash;" }}</div>
-
-            <div><strong>Resolution:</strong>
+            <div class="mb-3">
+                <strong>Authors:</strong> {{ object.authors|default:"&mdash;" }}
+            </div>
+            <div>
+                <strong>Resolution:</strong>
                 {% if object.resolution %}
                     {{ object.resolution|floatformat:2 }} &Aring;
                 {% else %}
                     &mdash;
                 {% endif %}
             </div>
-
             <div><strong>Released:</strong> {{ object.released|date:"Y-m-d"|default:"&mdash;" }}</div>
-
             <div><strong>Deposited:</strong> {{ object.deposited|date:"Y-m-d"|default:"&mdash;" }}</div>
-
             {% if object.collected %}
             <div><strong>Collected:</strong> {{ object.collected|date:"Y-m-d" }}</div>
             {% endif %}
@@ -59,7 +58,7 @@
             {% elif object.citation %}
             <div><strong>Citation:</strong> {{ object.citation }}</div>
             {% endif %}
-
+        </div>
     </div>
 {% endblock %}
 
