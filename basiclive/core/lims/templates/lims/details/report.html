@@ -12,6 +12,16 @@
     <link href="{% static "lims/css/reports.min.css" %}" rel="stylesheet">
 {% endblock %}
 
+{% block page-pre-title %}Report{% endblock %}
+{% block page-title %}
+    <span class="fw-lighter">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
+{% endblock %}
+{% block page-subtitle %}
+    <span class="text-muted">
+        {{ object.identity }} &mdash; {{ object.kind }} Created {{ object.created|naturalday }}
+    </span>
+{% endblock %}
+
 {% block page-tools %}
     {% if object.url %}
     <a  href="{% url 'files-proxy' section='archive' path=object.download_url %}" download="{{ object.name }}.tar.gz" title="Download all output files">
@@ -51,19 +61,6 @@
     </div>
     {% include "lims/comments.html" with object=object %}
 {% endblock %}
-
-{% block page-title %}
-    <h4>
-        <span class="text-thin">Analysis Report |</span>
-        <span class="text-condensed">
-            <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
-        </span>
-    </h4>
-    <span class="text-muted">
-        {{ object.identity }} &mdash; {{ object.kind }} Created {{ object.created|naturalday }}
-    </span>
-{% endblock %}
-
 
 {% block page-content %}
     <div id="report-builder"></div>

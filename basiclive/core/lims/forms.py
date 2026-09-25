@@ -192,7 +192,7 @@ class RequestTypeForm(ModalModelForm):
             if info.get('description'):
                 self.fields[f].widget.attrs['label'] = info['description']
                 self.fields[f].label = info['description']
-            self.fields['{}_set'.format(f)] = forms.CharField(required=False)
+            self.fields[f'{f}_set'] = forms.CharField(required=False)
         if pk:
             spec = self.instance.spec
             parameters = spec.keys()
@@ -208,7 +208,7 @@ class RequestTypeForm(ModalModelForm):
             self.body.title = "Edit Request Type"
             self.body.form_action = reverse_lazy('requesttype-edit', kwargs={'pk': pk})
         else:
-            self.body.title = "Create New Request Type"
+            self.body.title = "Create Request Type"
             self.body.form_action = reverse_lazy('new-requesttype')
 
         self.body.layout = Layout(
@@ -247,7 +247,7 @@ class RequestTypeForm(ModalModelForm):
                                 ),
                                 css_class="col-1"
                             ),
-                            style="repeat-row template"
+                            style="repeat-row template g-2"
                         ),
                         style="repeat-group repeat-container"
                     ),
@@ -1384,20 +1384,16 @@ class ShipmentGroupForm(ModalModelForm):
                 Row(
                     FullWidth(
                         Row(
-                            Div('name', css_class="col-8"),
-                            Div(
+                            ThirdWidth('name'),
+                            HalfWidth('comments'),
+                            SixthWidth(
                                 Div(
                                     HTML(
-                                        '<label></label>'
+                                        '<label>&nbsp;</label>'
                                         '<div class="spaced-buttons">'
                                         '<a title="Drag to change group priority" '
                                         '   class="move btn btn-white">'
                                         f'   {render_icon("move")}'
-                                        '</a>'
-                                        '<a title="Edit more group details" href="#group-details--{rowcount}" '
-                                        '   class="btn btn-info btn-collapse collapsed"'
-                                        '   aria-expanded="false" data-bs-toggle="collapse">'
-                                        f'   {render_icon("angle-double-right")}'
                                         '</a>'
                                         '<a title="Delete Group" class="btn safe-remove btn-warning">'
                                         f'   {render_icon("minus")}'
@@ -1406,20 +1402,14 @@ class ShipmentGroupForm(ModalModelForm):
                                     ),
                                     css_class="mb-3 float-end"
                                 ),
-                                css_class="col-4"
                             ),
                             Div(
-                                Row(
-                                    FullWidth(Field('comments')),
-                                    style="g-2"
-                                ),
                                 Field('shipment'),
                                 Field('priority'),
                                 Field('id'),
-                                css_class="col-12 collapse",
                                 id="group-details--{rowcount}"
                             ),
-                            style="repeat-row template"
+                            style="repeat-row template g-3"
                         ),
                         style="repeat-group repeat-container"
                     ),
@@ -1440,20 +1430,18 @@ class ShipmentGroupForm(ModalModelForm):
         if self.initial.get('shipment'):
             return Div(
                 HTML(
-                    '<h5 class="my-0"><strong>Update Groups</strong></h5>'
-                    f'Samples in new groups can be added later using the {render_icon("samples")} tool. '
+                    f'Add samples in new groups later from the shipment page. '
                     '<span class="text-danger">Removing a group will also remove any samples in the group</span>'
                 ),
-                css_class="text-condensed mb-1"
+                css_class="alert alert-info mb-1"
             )
         else:
             return Div(
                 HTML(
-                    '<h5 class="my-0"><strong>Add Groups</strong></h5>'
                     'Specify groups for similar samples. Groups names will be used as the prefix for sample names. '
-                    f'Use the {render_icon("samples")} tool to add samples after your shipment is created. '
+                    f'Add samples from the shipment page after your shipment is created. '
                 ),
-                css_class="text-condensed mb-1"
+                css_class="alert alert-info mb-1"
             )
 
     def clean(self):

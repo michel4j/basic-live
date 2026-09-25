@@ -10,13 +10,13 @@
     <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
 {% endblock %}
 
+{% block page-pre-title %}Project{% endblock %}
 {% block page-title %}
-    <span class="text-thin">User |</span> <span class="text-muted">{{ object.name|upper }}</span> | <strong>{{ object.first_name }} {{ object.last_name }}</strong>
+    <span class="fw-lighter">{% if user.is_superuser %}{{ object }} | {% endif %}</span><strong>{{ object.first_name }} {{ object.last_name }}</strong>
 {% endblock %}
+
 {% block page-subtitle %}
-    <span class="text-muted">
-        Beamline User since {{ object.created|naturalday }}
-    </span>
+    <span class="text-muted">Beamline User since {{ object.created|naturalday }}</span>
 {% endblock %}
 
 {% block page-tools %}

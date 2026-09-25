@@ -10,16 +10,13 @@
     <script src="{% static 'lims/js/basiclive-layouts.min.js' %}"></script>
 {% endblock %}
 
+{% block page-pre-title %}Beamline{% endblock %}
 {% block page-title %}
-    <span class="text-condensed">
-        <i class="text-muted fa fa-fw {% if object.is_editable %}fa-unlock{% else %}fa-lock{% endif %}"></i>
-        <strong class="text-muted">{{ object.acronym }}</strong> | {{ object.active_automounter.container.kind|default:"Manual Mounting" }}
-    </span>
+    <span class="fw-lighter">{{ object.acronym }} |</span><strong>{{ object.active_automounter.container.kind|default:"Manual Mounting" }}</strong>
 {% endblock %}
+
 {% block page-subtitle %}
-    <span class="text-muted">
-        {{ object.name }}
-    </span>
+    <span class="text-muted">{{ object.name }}</span>
 {% endblock %}
 
 {% block page-tools %}

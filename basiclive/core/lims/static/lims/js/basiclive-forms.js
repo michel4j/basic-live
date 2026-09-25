@@ -76,11 +76,11 @@ function initShipmentWizard() {
         // Update and renumber field ids, reconstructing select2 elements as needed
         $(row_selector+':not(.template)').each(function(pos, row){
 
-            $(row).find(".select-alt.select2-hidden-accessible").each(function (i, elem){
-                if ($(this).data('select2')) {
-                    $(this).select2('destroy');
-                }
-            });
+            // $(row).find(".select-alt.select2-hidden-accessible").each(function (i, elem){
+            //     if ($(this).data('select2')) {
+            //         $(this).select2('destroy');
+            //     }
+            // });
 
             $(row).find('[id]').each(function(i, item){
                 if (item.id.match(/--\d+$/)) {
@@ -101,16 +101,17 @@ function initShipmentWizard() {
                     $(item).attr('href', $(item).attr('href').replace(/--\d+$/, '--'+pos));
                 }
             });
-            $(row).find(".select-alt:not(.select2-hidden-accessible)").select2({theme: 'bootstrap-5'});
+            // $(row).find(".select-alt:not(.select2-hidden-accessible)").select2({theme: 'bootstrap-5'});
+
         });
     }
     $('.repeat').each(function() {
         // Destroy select2 widgets as they will be added later
-        $(this).find(".select-alt.select2-hidden-accessible").each(function() {
-            if ($(this).data('select2')) {
-               $(this).select2('destroy');
-            }
-        });
+        // $(this).find(".select-alt.select2-hidden-accessible").each(function() {
+        //     if ($(this).data('select2')) {
+        //        $(this).select2('destroy');
+        //     }
+        // });
 
         // Connect remove event handler globally for this repeat-group
         $(this).on('click', '.safe-remove:not(.remove)', function (){

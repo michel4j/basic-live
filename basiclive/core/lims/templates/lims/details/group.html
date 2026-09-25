@@ -5,12 +5,12 @@
 {% load bl_themes %}
 {% load static %}
 
+
+{% block page-pre-title %}Group{% endblock %}
 {% block page-title %}
-    <span class="text-thin">Group |</span>
-    <span class="text-condensed">
-        <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
-    </span>
+    <span class="fw-lighter">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
 {% endblock %}
+
 {% block page-subtitle %}
     <span class="text-muted">
         {% if not object.is_editable %}{% show_icon icon="lock" %}{% endif %}
@@ -29,7 +29,7 @@
     {%  if object.status == object.STATES.DRAFT %}
         {% if object.shipment %}
             <a href="#!" data-modal-url="{% url 'seat-samples' object.shipment.pk %}" title="Sample Seat Selection">
-            {% if not objects.samples.exists %}
+            {% if not object.samples.exists %}
                 {% show_icon label='Samples' icon='samples' size='md' badge="+" color="primary" %}
             {% else %}
                 {% show_icon label='Samples' icon='samples' size='md' color="primary" %}
@@ -44,7 +44,7 @@
     {% include "lims/tools-base.html" %}
 {% endblock %}
 
-{% block page-status-style %}callout callout-info{% endblock %}
+{% block page-status-style %}callout{% endblock %}
 {% block page-status-bar %}
     <span class="status-badge badge bg-{% status_theme object.status warning=object.STATES.DRAFT success=object.STATES.COMPLETE info=object.STATES.ARCHIVED default='primary' %} text-condensed">
         {{ object.get_status_display }}

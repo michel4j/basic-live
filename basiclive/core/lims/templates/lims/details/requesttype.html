@@ -14,14 +14,13 @@
     <script src="{% static "misc/js/repeatable-fields.min.js" %}"></script>
 {% endblock %}
 
+{% block page-pre-title %}Request Type{% endblock %}
 {% block page-title %}
-    <h3 class="text-condensed">
-        <i class="text-muted fa fa-fw"></i>
-        <strong>{{ object.name }}</strong>
-    </h3>
-    <span class="text-muted">
-        {{ object.description }}
-    </span>
+    <span class="fw-lighter">{{ object.name }} </span>
+{% endblock %}
+
+{% block page-subtitle %}
+    <span class="text-muted">{{ object.description }}</span>
 {% endblock %}
 
 {% block page-tools %}

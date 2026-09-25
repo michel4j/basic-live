@@ -6,12 +6,12 @@
 {% load bl_themes %}
 {% load static %}
 
+
+{% block page-pre-title %}Request{% endblock %}
 {% block page-title %}
-    <span class="text-thin">Request |</span>
-    <span class="text-condensed">
-        <span class="text-muted">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
-    </span>
+    <span class="fw-lighter">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
 {% endblock %}
+
 {% block page-subtitle %}
     <span class="text-muted">
         {% if not object.is_editable %}{% show_icon icon="lock" %}{% endif %}

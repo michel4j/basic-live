@@ -1053,7 +1053,7 @@ REQUEST_SPEC_SCHEMA = {
     "propertyNames": {
         "pattern": r"^[^\d\W]\w*\Z$"
     },
-    "additionalProperties": { "$ref": "#/definitions/field"},
+    "additionalProperties": {"$ref": "#/definitions/field"},
     "definitions": {
         "field": {
             "title": "Request Type Specification",
@@ -1070,8 +1070,8 @@ REQUEST_SPEC_SCHEMA = {
                 },
                 "choices": {
                     "type": "array",
-                    "description": "Choices (comma-separated list)",
-                    "items": { "$ref": "#/definitions/choice" },
+                    "description": "Choices",
+                    "items": {"$ref": "#/definitions/choice"},
                     "uniqueItems": True
                 },
                 "required": {"type": "boolean", "default": False},

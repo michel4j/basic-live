@@ -2,12 +2,15 @@
 
 {% load bl_icons %}
 
+
+{% block page-pre-title %}Sample{% endblock %}
 {% block page-title %}
-    <i class="text-muted fa fa-fw {% if object.is_editable %}fa-unlock{% else %}fa-lock{% endif %}"></i>
-    <span class="text-muted">{% if user.is_superuser %}{{ object.project|upper }} | {% endif %}</span><strong>{{ object.name }}</strong>
+    <span class="fw-lighter">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
 {% endblock %}
+
 {% block page-subtitle %}
     <span class="text-muted">
+        {% if not object.is_editable %}{% show_icon icon="lock" %}{% endif %}
         {% if object.container.shipment %}
             {% with object.container.shipment.num_samples as num_samples %}
             <strong>1</strong> of <strong>{{ num_samples }}</strong> Sample{{ num_samples|pluralize }} in Shipment {{object.container.shipment.name}}
