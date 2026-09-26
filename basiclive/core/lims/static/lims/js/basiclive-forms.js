@@ -71,16 +71,34 @@ function openSelector(group) {
 function initShipmentWizard() {
     let row_selector = '.repeat-row';
     let rowcount_placeholder = '{rowcount}';
+    const registry = new WeakMap();
+
+    function destroySelect(elem) {
+        if (registry.has(elem)) {
+            $(elem).removeClass('form-select-multiple').addClass('form-select');
+            registry.get(elem).destroy();
+            registry.delete(elem);
+        }
+    }
+
+    function setupSelect(elem) {
+        if (!registry.has(elem)) {
+            $(elem).removeClass('form-select').addClass('form-select-multiple');
+            registry.set(elem, new SlimSelect({
+                select: elem,
+                settings: {
+                    maxValuesShown: 40
+                }
+            }));
+        }
+    }
 
     function update_fields() {
-        // Update and renumber field ids, reconstructing select2 elements as needed
+        // Update and renumber field ids, reconstructing SlimSelect elements as needed
         $(row_selector+':not(.template)').each(function(pos, row){
-
-            // $(row).find(".select-alt.select2-hidden-accessible").each(function (i, elem){
-            //     if ($(this).data('select2')) {
-            //         $(this).select2('destroy');
-            //     }
-            // });
+            $(row).find('select[multiple]').each(function () {
+                destroySelect(this);
+            });
 
             $(row).find('[id]').each(function(i, item){
                 if (item.id.match(/--\d+$/)) {
@@ -101,17 +119,17 @@ function initShipmentWizard() {
                     $(item).attr('href', $(item).attr('href').replace(/--\d+$/, '--'+pos));
                 }
             });
-            // $(row).find(".select-alt:not(.select2-hidden-accessible)").select2({theme: 'bootstrap-5'});
-
+            $(row).find('select[multiple]').each(function () {
+                setupSelect(this);
+            });
         });
     }
     $('.repeat').each(function() {
-        // Destroy select2 widgets as they will be added later
-        // $(this).find(".select-alt.select2-hidden-accessible").each(function() {
-        //     if ($(this).data('select2')) {
-        //        $(this).select2('destroy');
-        //     }
-        // });
+
+        // Destroy any existing SlimSelect elements for this repeat-group
+        $(this).find('select[multiple]').each(function () {
+            destroySelect(this);
+        });
 
         // Connect remove event handler globally for this repeat-group
         $(this).on('click', '.safe-remove:not(.remove)', function (){

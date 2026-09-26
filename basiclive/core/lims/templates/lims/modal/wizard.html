@@ -6,7 +6,9 @@
 
 {% block modal_assets %}
     {{ block.super }}
+    <script type="text/javascript" src="{% static 'misc/js/repeatable-fields.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'lims/js/basiclive-forms.min.js' %}"></script>
+
 {% endblock %}
 
 {% block modal_title %}

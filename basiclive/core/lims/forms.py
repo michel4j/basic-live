@@ -174,7 +174,7 @@ class RequestTypeForm(ModalModelForm):
         model = RequestType
         fields = ('name', 'description', 'spec', 'scope', 'edit_template', 'view_template')
         widgets = {
-            'description': forms.Textarea(attrs={'rows': "1"}),
+            'description': forms.TextInput(),
             'scope': forms.Select(attrs={'class': 'select'}, choices=RequestType.SCOPES),
             'spec': disabled_widget
         }
@@ -416,8 +416,8 @@ class RequestForm(ModalModelForm):
         fields = ('project', 'name', 'comments', 'kind', 'groups', 'samples', 'template', 'request')
         widgets = {
             'project': disabled_widget,
-            'groups': forms.HiddenInput,
-            'samples': forms.HiddenInput,
+            'groups': forms.MultipleHiddenInput,
+            'samples': forms.MultipleHiddenInput,
             'comments': forms.Textarea(attrs={'rows': "2"})
         }
 
@@ -465,7 +465,7 @@ class RequestForm(ModalModelForm):
                     'request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'),
                     css_class='select'
                 ),
-                css_class="{}".format(is_template and "col-5" or "col-12")
+                css_class=f"{is_template and 'col-5' or 'col-12'}"
             ) if is_requests else Div(),
             Div(HTML("""OR"""), css_class='col-2 text-center') if (is_requests and is_template) else Div(),
             Div(
@@ -473,7 +473,7 @@ class RequestForm(ModalModelForm):
                     'template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'),
                     css_class='select'
                 ),
-                css_class="{}".format(is_requests and "col-5" or "col-12")
+                css_class=f"{is_requests and 'col-5' or 'col-12'}"
             ) if is_template else Div(),
         )
 
@@ -504,10 +504,12 @@ class RequestParameterForm(ModalModelForm):
 
     class Meta:
         model = Request
-        fields = ('kind', 'name', 'comments', 'parameters')
+        fields = ('kind', 'name', 'comments', 'samples', 'groups', 'parameters')
         widgets = {
             'kind': disabled_widget,
             'name': disabled_widget,
+            'samples': forms.MultipleHiddenInput,
+            'groups': forms.MultipleHiddenInput,
             'comments': disabled_widget,
             'template': disabled_widget,
             'request': disabled_widget,
@@ -1265,30 +1267,24 @@ class ShipmentContainerForm(ModalModelForm):
                 Row(
                     FullWidth(
                         Row(
-                            Div(Field('name'), css_class="col-5"),
-                            Div(Field('kind', css_class="select-alt", data_repeat_enable="true"), css_class="col-5"),
-                            Div(
-                                Div(
-                                    HTML("<label>&nbsp;</label>"),
-                                    Div(
-                                        Button(
-                                            render_icon('minus'),
-                                            style="btn-warning float-end safe-remove"
-                                        ),
-                                    ),
-                                    css_class="mb-3"
+                            HalfWidth('name'),
+                            ThirdWidth(Field('kind', data_repeat_enable="true")),
+                            SixthWidth(
+                                Button(
+                                    render_icon('minus'),
+                                    style="btn-warning safe-remove mb-3"
                                 ),
-                                css_class="col-2"
+                                style="d-flex flex-column justify-content-end align-items-end"
                             ),
-                            Div('shipment', 'id', css_class="col-12 d-none"),
-                            style="repeat-row template"
+                            Div('shipment', 'id', css_class="d-none"),
+                            style="repeat-row template g-2"
                         ),
                         style="repeat-group repeat-container"
                     ),
                     FullWidth(
                         Button(
                             f"{render_icon('plus')} Add Container", type="button",
-                            style='btn-sm btn-success add'
+                            style='btn-success add'
                         ),
                         style="mt-2"
                     ),
@@ -1323,10 +1319,10 @@ class ShipmentContainerForm(ModalModelForm):
         cleaned_data = super().clean()
         for field in self.repeated_fields:
             if 'containers-{}'.format(field) in self.data:
-                cleaned_data['{}_set'.format(field)] = self.data.getlist('containers-{}'.format(field))
+                cleaned_data[f'{field}_set'] = self.data.getlist('containers-{}'.format(field))
             else:
-                cleaned_data['{}_set'.format(field)] = self.data.getlist(field)
-            self.fields[field].initial = cleaned_data['{}_set'.format(field)]
+                cleaned_data[f'{field}_set'] = self.data.getlist(field)
+            self.fields[field].initial = cleaned_data[f'{field}_set']
         if not self.is_valid():
             for k, v in cleaned_data.items():
                 if isinstance(v, list):
@@ -1384,24 +1380,19 @@ class ShipmentGroupForm(ModalModelForm):
                 Row(
                     FullWidth(
                         Row(
-                            ThirdWidth('name'),
+                            QuarterWidth('name'),
                             HalfWidth('comments'),
-                            SixthWidth(
-                                Div(
-                                    HTML(
-                                        '<label>&nbsp;</label>'
-                                        '<div class="spaced-buttons">'
-                                        '<a title="Drag to change group priority" '
-                                        '   class="move btn btn-white">'
-                                        f'   {render_icon("move")}'
-                                        '</a>'
-                                        '<a title="Delete Group" class="btn safe-remove btn-warning">'
-                                        f'   {render_icon("minus")}'
-                                        '</a>'
-                                        '</div>'
-                                    ),
-                                    css_class="mb-3 float-end"
+                            QuarterWidth(
+                                HTML(
+                                    f'<a title="Drag to change group priority" '
+                                    f'class="move btn btn-white">{render_icon("move")}</a>'
                                 ),
+                                Button(
+                                    render_icon('minus'),
+                                    style="btn-warning safe-remove",
+                                    title="Delete Group",
+                                ),
+                                style="d-flex flex-row justify-content-end align-items-end mb-3 gap-2"
                             ),
                             Div(
                                 Field('shipment'),
@@ -1409,14 +1400,14 @@ class ShipmentGroupForm(ModalModelForm):
                                 Field('id'),
                                 id="group-details--{rowcount}"
                             ),
-                            style="repeat-row template g-3"
+                            style="repeat-row template g-2"
                         ),
                         style="repeat-group repeat-container"
                     ),
                     FullWidth(
                         Button(
                             f"{render_icon('plus')} Add Group", type="button",
-                            style='btn-sm btn-success add'
+                            style='btn-success add'
                         ),
                         style="mt-2"
                     ),

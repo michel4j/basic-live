@@ -1119,8 +1119,8 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
                             })
                             models.Group.objects.get_or_create(**data)
 
-        # Staff created shipments should be sent and received automatically.
-        if self.request.user.is_superuser:
+        # Staff created shipments for other users should be sent and received automatically
+        if self.request.user.is_superuser and self.shipment.project != self.request.user:
             self.shipment.send()
             self.shipment.receive()
         return JsonResponse({'url': reverse('shipment-detail', kwargs={'pk': self.shipment.pk})})

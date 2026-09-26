@@ -50,11 +50,19 @@
 
 {% block page-content %}
     <div class="row">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-body" id="modal-content">
-                    {% crispy form form.body %}
+        <div class="card col-10 border p-0 col-md-8 col-lg-7 mx-auto my-5">
+            <div class="card-header text-bg-primary">
+                <span class="fs-3 card-title fw-light">Request Details</span>
+            </div>
+            <div class="card-body">
+                <div class="card-body">
+<!--                    {% crispy form form.body %}-->
+                    {% include object.edit_template with object=object %}
                 </div>
+            </div>
+            <div class="card-footer text-end py-3 ">
+                <button class="btn btn-secondary">Revert</button>
+                <button class="btn btn-primary ms-2">Save</button>
             </div>
         </div>
     </div>
