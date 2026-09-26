@@ -296,7 +296,6 @@ function ev2k(energy) {
 (function ( $ ) {
     $.fn.showRegions = function (data) {
         let target = d3.select($(this)[0]);
-
         // create a row for each object in the data
         let table = target.append('table').attr('class', 'table table-sm regions');
         let thead = table.append('thead');

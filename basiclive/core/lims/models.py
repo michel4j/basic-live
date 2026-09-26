@@ -1142,7 +1142,7 @@ class Request(ProjectObjectMixin):
     def identity(self):
         return 'REQ-{:07,d}'.format(self.id).replace(',', '-')
 
-    def parameter_labels(self):
+    def labeled_parameters(self):
         parameters = self.parameters or {}
         p = {self.kind.spec.get(k, {}).get('label') or k: v for k, v in parameters.items() if v not in [None, '']}
         return p

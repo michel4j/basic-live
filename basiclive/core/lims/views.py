@@ -808,12 +808,11 @@ class RequestDetail(DetailListMixin, SampleList):
         obj = self.get_object()
         if 'project' in self.list_columns:
             self.list_columns.pop(0)
-        return 'Samples in {}'.format(obj.name)
+        return f'Samples in {obj.name}'
 
     def get_object(self):
         obj = super().get_object()
         if obj.status != self.extra_model.STATES.DRAFT:
-            self.detail_ajax = False
             self.detail_target = None
         return obj
 

@@ -45,7 +45,7 @@
 
 {% block page-content %}
 <div class="row">
-    <div class="col-sm-7 bulk-edit">
+    <div class="col-md-7 bulk-edit">
         {% if object.status == object.STATES.DRAFT %}
             <div class="item-list sortable">
             <table class="table table-hover table-sm">
@@ -77,7 +77,7 @@
             {% include "lims/details/group-samples.html" with samples=object.sample_list %}
         {% endif %}
     </div>
-    <div class="col-sm-5">
+    <div class="col-md-5">
         <div class="card">
             <div class="card-header p-1 text-center text-wide text-muted"><small>PARAMETERS</small></div>
             <ul class="list-group list-group-flush">

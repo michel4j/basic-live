@@ -16,15 +16,40 @@
     }
 </style>
 
-<div class="row py-3">
-    <b> Edge:</b>&nbsp;{{ request.parameters.edge }}
+<div id="request-{{request.pk}}" class="row">
+    <div class="col">
+    <table class="table regions table-sm">
+        <thead>
+        <tr>
+            <th colspan="6">Absorption Edge</th>
+        </tr>
+        <tr>
+            <td colspan="6" class="pb-3">{{ request.parameters.edge }}</td>
+        </tr>
+        <tr>
+            <th colspan="6">Scan Regions</th>
+        </tr>
+        <tr>
+            <th>#</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Step</th>
+            <th>Time</th>
+            <th>k-space</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for region in request.parameters.regions %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ region.start }}</td>
+                <td>{{ region.end }}</td>
+                <td>{{ region.step }}</td>
+                <td>{{ region.time }}</td>
+                <td>{{ region.kspace }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 </div>
-<div id="request-{{request.pk}}" class="row"></div>
-
-
-<script type="text/javascript" src="{% static 'd3/js/d3.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'lims/js/exafs-regions.js' %}"></script>
-<script>
-    let regions = {{ request.parameters | jsonify }};
-    $('#request-{{request.pk}}').showRegions(regions);
-</script>
+</div>

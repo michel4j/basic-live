@@ -1,3 +1,4 @@
+import json
 import re
 
 import fastjsonschema
@@ -609,9 +610,16 @@ class RequestParameterForm(ModalModelForm):
     def clean_parameters(self):
         cleaned_data = self.cleaned_data
         parameters = {}
-        prefix = "{}-".format("".join([self.data.get(k) for k in self.data.keys() if k.endswith('current_step')]))
-        for param in cleaned_data['kind'].spec.keys():
-            parameters[param] = self.data.get("{}{}".format(prefix, param))
+        prefix = f"{''.join([self.data.get(k) for k in self.data.keys() if k.endswith('current_step')])}-"
+        for param, param_type in cleaned_data['kind'].spec.items():
+            if param_type['type'] == 'json':
+                parameters[param] = json.loads(self.data.get(f"{prefix}{param}"))
+            elif param_type['type'] == 'number':
+                parameters[param] = float(self.data.get(f"{prefix}{param}"))
+            elif param_type['type'] == 'boolean':
+                parameters[param] = self.data.get(f"{prefix}{param}") in ['True', 'true', '1', 1, 'on', 'yes', 'Yes', 'On']
+            else:
+                parameters[param] = self.data.get(f"{prefix}{param}")
         return parameters
 
 
