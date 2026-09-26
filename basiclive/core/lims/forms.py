@@ -404,17 +404,13 @@ class RequestTypeLayoutForm(ModalModelForm):
 
 class RequestForm(ModalModelForm):
     template = forms.ModelChoiceField(
-        label=_("Copy settings from past request"), queryset=Request.objects.all(),
-        required=False
-    )
-    request = forms.ModelChoiceField(
-        label=_("Use existing request"), queryset=Request.objects.all(),
+        label=_("Copy Settings From"), queryset=Request.objects.all(),
         required=False
     )
 
     class Meta:
         model = Request
-        fields = ('project', 'name', 'comments', 'kind', 'groups', 'samples', 'template', 'request')
+        fields = ('project', 'name', 'comments', 'kind', 'groups', 'samples', 'template')
         widgets = {
             'project': disabled_widget,
             'groups': forms.MultipleHiddenInput,
@@ -455,26 +451,14 @@ class RequestForm(ModalModelForm):
             self.fields['template'].queryset = old_requests
         else:
             self.fields['template'].widget = forms.HiddenInput()
-        if is_requests:
-            self.fields['request'].queryset = requests
-        else:
-            self.fields['request'].widget = forms.HiddenInput()
 
         autofill = Row(
-            Div(
-                Field(
-                    'request', css_id='request-existing', data_post_action=reverse_lazy('fetch-request'),
-                    css_class='select'
-                ),
-                css_class=f"{is_template and 'col-5' or 'col-12'}"
-            ) if is_requests else Div(),
-            Div(HTML("""OR"""), css_class='col-2 text-center') if (is_requests and is_template) else Div(),
             Div(
                 Field(
                     'template', css_id='request-template', data_post_action=reverse_lazy('fetch-request'),
                     css_class='select'
                 ),
-                css_class=f"{is_requests and 'col-5' or 'col-12'}"
+                css_class='col-12'
             ) if is_template else Div(),
         )
 
