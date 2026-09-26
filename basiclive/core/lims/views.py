@@ -918,7 +918,6 @@ class RequestWizardEdit(UserPassesTestMixin, SessionWizardView):
                 for field in ['groups', 'samples']:
                     related[field] = info.pop(field)
                 info.pop('template')
-                info.pop('request')
             elif label == 'parameters':
                 for field in ['parameters']:
                     info[field] = form.cleaned_data.get(field)

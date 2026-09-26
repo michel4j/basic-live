@@ -7,22 +7,26 @@
             {% if editable %}
                 <div class="box-status text-center" style="width: 50px; min-width: 50px;">
                     <span class='cursor'>
-                        {% show_icon icon='move' size='md' tooltip='Priority' %}
+                        {% show_icon icon='move' size='sm' tooltip='Priority' %}
                     </span>
                 </div>
             {% endif %}
-            <div class="text-start flex-fill ps-3 overflow-ellipsis">
-                <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
-                <span class="text-condensed">{{ request.kind.name }}</span>
-                <div class="small">
-                    {{ request.comments | default:"" }}
+            <div class="text-start flex-fill ps-3 d-flex flex-column justify-content-center overflow-ellipsis">
+                <div>
+                    <a href="{% url 'request-detail' request.pk %}"><strong>{{ request.name }}</strong></a> |
+                    <span class="text-condensed">{{ request.kind.name }}</span>
                 </div>
+                {% if request.comments %}
+                    <div class="small text-muted overflow-ellipsis">
+                        {{ request.comments }}
+                    </div>
+                {% endif %}
             </div>
             {% if editable %}
                 <div class="tools-box">
                     <a href="#!" data-modal-url="{% url 'request-edit' request.pk %}"
                         title="Edit Request Parameters">
-                        {% show_icon icon="edit" size='md' color="primary" %}
+                        {% show_icon icon="edit" size='sm' color="primary" %}
                     </a>
                 </div>
             {% else %}

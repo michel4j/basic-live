@@ -139,7 +139,7 @@
         <div class="col-sm-5 col-12">
             {% if shipment.requests or shipment.is_editable %}
             <div class="card mb-3">
-                <div class="card-header p-1 text-center text-wide text-muted"><small>REQUESTS</small></div>
+                <div class="card-header text-center text-wide text-muted"><small>REQUESTS</small></div>
                 <ul class="list-group list-group-flush sortable" data-url="{% url 'update-request-priority' %}" data-sort="request">
                     {% for request in shipment.requests %}
                         {% include "lims/details/request-list-item.html" with editable=shipment.is_editable %}
@@ -159,7 +159,7 @@
             </div>
             {% endif %}
             <div class="card">
-                <div class="card-header p-1 text-center text-wide text-muted"><small>GROUPS</small></div>
+                <div class="card-header text-center text-wide text-muted"><small>GROUPS</small></div>
                 <ul class="list-group list-group-flush sortable" data-url="{% url 'update-group-priority' %}" data-sort="group">
                     {% for group in shipment.groups_by_priority %}
                         {% include "lims/details/group-list-item.html" with group=group editable=shipment.is_editable %}
