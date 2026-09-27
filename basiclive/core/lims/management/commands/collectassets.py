@@ -90,7 +90,7 @@ class Command(BaseCommand):
             for kind in conf.keys():
                 for asset in conf[kind]:
                     # get the directory and the file_name
-                    filename = asset.get('file', Path(asset['path']))
+                    filename = asset.get('file', Path(asset['path']).name)
                     file_path = assets_root / key / kind / filename
                     file_path.parent.mkdir(parents=True, exist_ok=True)
                     collected_files.add(file_path.resolve())
