@@ -12,7 +12,7 @@
 
 {% block page-pre-title %}Project{% endblock %}
 {% block page-title %}
-    <span class="fw-lighter">{% if user.is_superuser %}{{ object }} | {% endif %}</span><strong>{{ object.first_name }} {{ object.last_name }}</strong>
+{% if user.is_superuser %}<span class="fw-lighter">{{ object }} | </span>{% endif %}<strong>{{ object.first_name }} {{ object.last_name }}</strong>
 {% endblock %}
 
 {% block page-subtitle %}

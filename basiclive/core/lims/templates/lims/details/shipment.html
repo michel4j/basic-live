@@ -16,7 +16,7 @@
 
 {% block page-pre-title %}Shipment{% endblock %}
 {% block page-title %}
-    <span class="fw-lighter">{% if user.is_superuser %}{{ shipment.project }} | {% endif %}</span><strong>{{ shipment.name }}</strong>
+{% if user.is_superuser %}<span class="fw-lighter">{{ shipment.project }} | </span>{% endif %}<strong>{{ shipment.name }}</strong>
 {% endblock %}
 {% block page-subtitle %}
     <span class="text-muted">

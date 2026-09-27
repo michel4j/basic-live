@@ -1862,15 +1862,15 @@ $category-colors: (
     &.btn-#{$state} {
     --bs-btn-bg: var(--bs-#{$state});
     --bs-btn-border-color: var(--bs-#{$state});
-    --bs-btn-color: contrast-color(var(--bs-#{$state}));
-    --bs-btn-hover-color: contrast-color(var(--bs-#{$state}));;
+    //--bs-btn-color: contrast-color(var(--bs-#{$state}));
+    //--bs-btn-hover-color: contrast-color(var(--bs-#{$state}));;
     --bs-btn-hover-bg: oklch(from var(--bs-#{$state}) calc(l - 0.15) c h);
     --bs-btn-hover-border-color: color-mix(in oklab, var(--bs-#{$state}), black 10%);
-    --bs-btn-active-color: contrast-color(var(--bs-#{$state}));
+    //--bs-btn-active-color: contrast-color(var(--bs-#{$state}));
     --bs-btn-active-bg: color-mix(in oklab, var(--bs-#{$state}), black 10%);
     --bs-btn-active-border-color: color-mix(in oklab, var(--bs-#{$state}), black 20%);
     --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
-    --bs-btn-disabled-color: contrast-color(var(--bs-#{$state}));
+    //--bs-btn-disabled-color: contrast-color(var(--bs-#{$state}));
     --bs-btn-disabled-bg: rgb(var(--bs-#{$state}), 0.5);
     --bs-btn-disabled-border-color: rgb(var(--bs-#{$state}), 0.5);
     }

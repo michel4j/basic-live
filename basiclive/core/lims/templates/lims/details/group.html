@@ -8,7 +8,7 @@
 
 {% block page-pre-title %}Group{% endblock %}
 {% block page-title %}
-    <span class="fw-lighter">{% if user.is_superuser %}{{ object.project }} | {% endif %}</span><strong>{{ object.name }}</strong>
+{% if user.is_superuser %}<span class="fw-lighter">{{ object.project }} | </span>{% endif %}<strong>{{ object.name }}</strong>
 {% endblock %}
 
 {% block page-subtitle %}

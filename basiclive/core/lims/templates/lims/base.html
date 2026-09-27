@@ -32,9 +32,9 @@
 <body class="{% block body_class %}{% endblock %}">
 {% block body %}
     <!-- User Profile Menu -->
-    {% if user.is_authenticated %}
-        {% include "lims/navs.html" %}
-    {% endif %}
+    {% block navs %}
+    {% if user.is_authenticated %}{% include "lims/navs.html" %}{% endif %}
+    {% endblock %}
     <main role="main" class="content">
         <div class="container-fluid h-100 p-0">
         {% block full %}
