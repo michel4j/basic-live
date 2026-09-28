@@ -42,6 +42,37 @@
                     <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity</a>
                 </div>
             </li>
+            {% if user.is_authenticated %}
+                {% with user_projects=user.get_projects %}
+                    {% if user_projects.count > 1 %}
+                        <li class="nav-item dropdown" id="project-switcher">
+                            <a class="nav-link dropdown-toggle me-md-2" href="#"
+                               data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="project-menu">
+                                {% show_icon icon="projects" %}<span class="d-none d-md-inline-block">&nbsp;{% if request.project %}{{ request.project.name.upper }}{% else %}Select Project{% endif %}</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="project-menu">
+                                <h6 class="dropdown-header">Active Project</h6>
+                                {% for proj in user_projects %}
+                                    <a class="dropdown-item d-flex align-items-center justify-content-between {% if request.project and proj.pk == request.project.pk %}active{% endif %}"
+                                       href="{% url 'switch-project' proj.pk %}?next={{ request.get_full_path|default:'/'|urlencode }}">
+                                        <span>{{ proj.name.upper }}</span>
+                                        {% if request.project and proj.pk == request.project.pk %}
+                                            {% show_icon icon="check" %}
+                                        {% endif %}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </li>
+                    {% elif request.project %}
+                        <li class="nav-item d-flex align-items-center" id="project-display">
+                            <span class="navbar-text text-light me-md-2">
+                                {% show_icon icon="projects" %}<span class="d-none d-md-inline-block">&nbsp;{{ request.project.name.upper }}</span>
+                            </span>
+                        </li>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+            {% if user.is_authenticated %}
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle me-md-2" href="#"
                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="profile-menu">
@@ -69,10 +100,13 @@
                     <a class="dropdown-item" href="#!" id="logout-action">Log Out</a>
                 </div>
             </li>
+            {% endif %}
         </ul>
     </nav>
 </header>
+{% if user.is_authenticated %}
 <form class="d-none" id="logout-form" action="{% url 'logout' %}" method="post">{% csrf_token %}</form>
+{% endif %}
 <script>
 document.addEventListener('click', function (event) {
     if (event.target.closest('#logout-action')) {

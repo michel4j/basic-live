@@ -7,11 +7,15 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import JsonResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
+from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils import dateformat, timezone
 from django.utils.decorators import method_decorator
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import edit, detail, View
@@ -1453,6 +1457,48 @@ class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     def confirmed(self, *args, **kwargs):
         self.success_message = f"{self.kwargs.get('username')} account has been deleted"
         return super().confirmed(*args, **kwargs)
+
+
+class SwitchProjectView(LoginRequiredMixin, View):
+    """
+    Dedicated view to switch the user's active project context in session and database.
+    """
+    def _switch(self, request, project_id, next_url=None):
+        if not project_id:
+            raise Http404(_("No project specified."))
+
+        project = get_object_or_404(models.Project, pk=project_id)
+
+        # Access check: superuser or project member or PI
+        is_authorized = (
+            request.user.is_superuser
+            or project.members.filter(pk=request.user.pk).exists()
+            or project.pi_id == request.user.pk
+        )
+        if not is_authorized:
+            raise PermissionDenied(_("You do not have access to this project."))
+
+        if hasattr(request, 'session'):
+            request.session['active_project_id'] = project.pk
+
+        if request.user.is_authenticated:
+            request.user.default_project = project
+            request.user.save(update_fields=['default_project'])
+
+        # Safe redirection
+        redirect_to = next_url or request.POST.get('next') or request.GET.get('next') or request.META.get('HTTP_REFERER') or '/'
+        if not url_has_allowed_host_and_scheme(url=redirect_to, allowed_hosts={request.get_host()}):
+            redirect_to = '/'
+
+        return HttpResponseRedirect(redirect_to)
+
+    def get(self, request, pk=None):
+        project_id = pk or request.GET.get('project_id')
+        return self._switch(request, project_id, next_url=request.GET.get('next'))
+
+    def post(self, request, pk=None):
+        project_id = pk or request.POST.get('project_id')
+        return self._switch(request, project_id, next_url=request.POST.get('next'))
 
 
 def record_logout(sender, user, request, **kwargs):

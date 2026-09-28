@@ -42,6 +42,7 @@ def setup_django():
                 "django.middleware.common.CommonMiddleware",
                 "django.middleware.csrf.CsrfViewMiddleware",
                 "django.contrib.auth.middleware.AuthenticationMiddleware",
+                "basiclive.core.lims.middleware.ProjectContextMiddleware",
                 "django.contrib.messages.middleware.MessageMiddleware",
             ],
             AUTH_USER_MODEL="lims.User",

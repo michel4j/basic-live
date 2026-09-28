@@ -1,14 +1,18 @@
+from django.contrib.auth.views import LogoutView
 from django.urls import path
 from django.views.decorators.cache import cache_page
 
 from . import views, ajax_views, forms
 
 urlpatterns = [
+    path('logout/', LogoutView.as_view(), name='logout'),
     path('profile/<slug:username>/', views.ProjectProfile.as_view(), name='project-profile'),
     path('profile/<slug:username>/edit', views.ProjectEdit.as_view(), name='edit-profile'),
     path('profile/<slug:username>/labels', views.ProjectLabels.as_view(), name='project-labels'),
 
     path('projects/', views.ProjectList.as_view(), name='user-list'),
+    path('projects/switch/<int:pk>/', views.SwitchProjectView.as_view(), name='switch-project'),
+    path('projects/switch/', views.SwitchProjectView.as_view(), name='switch-project-form'),
     path('projects/new/', views.ProjectCreate.as_view(), name='new-project'),
     path('projects/<slug:username>/', views.ProjectProfile.as_view(), name='project-profile'),
     path('projects/<slug:username>/info/', views.ProjectInfo.as_view(), name='project-info'),

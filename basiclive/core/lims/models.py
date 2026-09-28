@@ -152,6 +152,14 @@ class ProjectDesignation(TimeStampedModel):
 
 class User(AbstractUser):
     name = models.CharField(max_length=255, blank=True, default='')
+    default_project = models.ForeignKey(
+        'lims.Project',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        verbose_name=_('Default Project'),
+    )
 
     class Meta:
         verbose_name = _('User')
@@ -160,6 +168,11 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.name or self.get_full_name() or self.username
+
+    def get_projects(self):
+        return Project.objects.filter(
+            Q(memberships__user=self) | Q(pi=self)
+        ).distinct().order_by('name')
 
     def save(self, *args, **kwargs):
         if not self.name and (self.first_name or self.last_name):
