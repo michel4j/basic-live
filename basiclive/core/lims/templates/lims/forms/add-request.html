@@ -33,6 +33,13 @@
                 }
             });
         }
+        $('[css-id="kind"]').on('change', function (e) {
+            // Update the name field with the kind name if the name field is empty
+            const kind = e.target;
+            const name = $('[css-id="name"]');
+            let prefix = name.val().split(' - ')[0] || '';
+            name.val(prefix + ' - ' + kind.options[kind.selectedIndex].text);
+        });
         $('[css-id="request-template"]').on('change', function (e) {
             updateRequest(e, true);
         });

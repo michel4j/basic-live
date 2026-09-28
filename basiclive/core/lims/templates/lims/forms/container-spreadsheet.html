@@ -8,7 +8,7 @@
     <script src="{% static "lims/js/basiclive-spreadsheet.min.js" %}"></script>
 {% endblock %}
 {% block modal_styles %}modal-lg{% endblock %}
-{% block modal_title %}{% show_icon icon="samples" extra_class="text-muted" %}&nbsp;<strong>{{ container.name }}</strong>
+{% block modal_title %}{% show_icon icon="samples" %}&emsp;<strong>{{ container.name }}</strong>
     Samples{% endblock %}
 {% block modal_body %}
     <div id="container-spreadsheet">
@@ -40,13 +40,11 @@
 {% endblock %}
 
 {% block modal_footer %}
-    <div class="col-10">
-        <div class="alert alert-info m-0 p-2" id="spreadsheet-instructions">
-            <span class="float-start pe-2">{% show_icon icon="info" size='md' %}</span>
+    <div class="d-flex flex-row justify-content-between align-items-center gap-3">
+        <div class="text-info-emphasis" id="spreadsheet-instructions">
+            <span class="float-start pe-2">{% show_icon icon="help" size='md' %}</span>
             Click on a field to edit it. Copy and paste single columns from a spreadsheet. Remove existing samples by clearing the name.
         </div>
-    </div>
-    <div class="col-2 my-auto text-end">
         <button id='save-spreadsheet' class="btn btn btn-primary" name="save" type="button"
                 data-post-action="{% url 'edit-container-samples' pk=container.pk %}"
         >Save

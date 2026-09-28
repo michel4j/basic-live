@@ -1213,8 +1213,7 @@ svg * {
     opacity: 1;
 
     &::after {
-      font-family: Themify;
-      content: " \e61f ";
+      content: " ✔ ";
       font-size: 1rem;
       float: right;
     }

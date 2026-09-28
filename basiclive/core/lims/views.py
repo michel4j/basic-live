@@ -836,11 +836,27 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
 
     def get_form_initial(self, step):
         project = self.request.user
+        group_ids = list(self.request.GET.getlist('groups'))
+        sample_ids = list(self.request.GET.getlist('samples'))
+        extras = {'groups': [], 'samples': [], 'name': ''}
+        if 'group' in self.kwargs or group_ids:
+            group_ids = [self.kwargs.get('group')] if self.kwargs.get('group') else group_ids
+            groups = project.sample_groups.filter(pk__in=group_ids)
+            names = '/'.join(groups.values_list('name', flat=True))
+            extras['groups'] = groups
+            extras['name'] = f'{names} - '
+
+        if 'sample' in self.kwargs or sample_ids:
+            sample_ids = [self.kwargs.get('sample')] if self.kwargs.get('sample') else sample_ids
+            samples = project.samples.filter(pk__in=sample_ids)
+            names = '/'.join(samples.values_list('name', flat=True))
+            extras['samples'] = samples
+            extras['name'] = f'{names} - '
+
         if step == 'start':
             return self.initial_dict.get(step, {
                 'project': project,
-                'groups': project.sample_groups.filter(pk__in=self.request.GET.getlist('groups')),
-                'samples': project.samples.filter(pk__in=self.request.GET.getlist('samples'))
+                **extras
             })
         elif step == 'parameters':
             start_data = self.storage.get_step_data('start')
@@ -869,7 +885,7 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
                 info.pop('template')
                 info.update({'project': models.Project.objects.get(username=self.request.user.username),})
             elif label == 'parameters':
-                request = info.pop('request')
+                request = info.pop('request', None)
                 if not request:
                     for field in ['parameters']:
                         info[field] = form.cleaned_data.get(field)

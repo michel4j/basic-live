@@ -473,8 +473,8 @@ class RequestForm(ModalModelForm):
         self.body.layout = Layout(
             'project',
             autofill,
-            Field('name', css_id='name'),
             Field('kind', css_id='kind'),
+            Field('name', css_id='name'),
             Field('comments', css_id='comments'),
             related
         )
@@ -979,6 +979,12 @@ class ShipmentArchiveForm(ModalModelForm):
 
 
 class ContainerForm(ModalModelForm):
+    class Meta:
+        model = Container
+        fields = ['project', 'name', 'comments']
+        widgets = {
+            'project': disabled_widget,
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -990,7 +996,8 @@ class ContainerForm(ModalModelForm):
         else:
             self.body.title = "Create New Container"
             self.body.form_action = reverse_lazy("container-new")
-        self.body.layout = Layout('project', 'name', 'shipment', 'comments')
+
+        self.body.layout = Layout('project', 'name', 'comments')
         self.footer.set_buttons(
             Button('Revert', type='reset', value='Reset', style="btn-secondary"),
             Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
@@ -1004,11 +1011,6 @@ class ContainerForm(ModalModelForm):
                 if self.instance.num_samples() > 0:
                     raise forms.ValidationError('Cannot change kind of Container when Samples are associated')
         return cleaned_data['kind']
-
-    class Meta:
-        model = Container
-        fields = ['project', 'name', 'shipment', 'comments']
-        widgets = {'project': disabled_widget}
 
 
 class GroupForm(ModalModelForm):
