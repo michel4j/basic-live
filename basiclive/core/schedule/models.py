@@ -3,6 +3,7 @@ from zoneinfo import ZoneInfo
 
 import timezonefinder
 from colorfield.fields import ColorField
+from django.conf import settings as django_settings
 from django.db import models
 from django.db.models import F, Sum
 from django.template.loader import render_to_string
@@ -46,7 +47,7 @@ class FacilityMode(models.Model):
 
 
 class BeamlineSupport(models.Model):
-    staff = models.ForeignKey(Project, related_name="support", on_delete=models.CASCADE)
+    staff = models.ForeignKey(django_settings.AUTH_USER_MODEL, related_name="support", on_delete=models.CASCADE)
     date = models.DateField()
 
     def __str__(self):

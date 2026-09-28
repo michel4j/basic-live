@@ -149,11 +149,76 @@ class ProjectDesignation(TimeStampedModel):
         return self.name
 
 
-class Project(AbstractUser):
+class User(AbstractUser):
+    name = models.CharField(max_length=255, blank=True, default='')
+
+    class Meta:
+        verbose_name = _('User')
+        verbose_name_plural = _('Users')
+        swappable = 'AUTH_USER_MODEL'
+
+    def __str__(self):
+        return self.name or self.get_full_name() or self.username
+
+    def save(self, *args, **kwargs):
+        if not self.name and (self.first_name or self.last_name):
+            self.name = f"{self.first_name} {self.last_name}".strip()
+        elif not self.name:
+            self.name = self.username
+        super().save(*args, **kwargs)
+
+
+class ProjectMembership(TimeStampedModel):
+    class Role(models.TextChoices):
+        PI = 'PI', _('Principal Investigator')
+        CO_INVESTIGATOR = 'CO_INVESTIGATOR', _('Co-Investigator')
+        MEMBER = 'MEMBER', _('Member')
+
+    ROLES = Role
+
+    user = models.ForeignKey(
+        'lims.User',
+        on_delete=models.CASCADE,
+        related_name='memberships'
+    )
+    project = models.ForeignKey(
+        'lims.Project',
+        on_delete=models.CASCADE,
+        related_name='memberships'
+    )
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.MEMBER)
+
+    class Meta:
+        unique_together = ('user', 'project')
+        verbose_name = _('Project Membership')
+        verbose_name_plural = _('Project Memberships')
+
+    def __str__(self):
+        return f"{self.user} - {self.project} ({self.get_role_display()})"
+
+
+class Project(TimeStampedModel):
     HELP = {
         'contact_person': _("Full name of contact person"),
     }
-    name = models.SlugField()
+    name = models.SlugField(max_length=100, unique=True)
+    username = models.CharField(max_length=150, blank=True, null=True, unique=True)
+    first_name = models.CharField(max_length=150, blank=True, default='')
+    last_name = models.CharField(max_length=150, blank=True, default='')
+    email = models.EmailField(blank=True, default='')
+    pi = models.ForeignKey(
+        'lims.User',
+        related_name='led_projects',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    members = models.ManyToManyField(
+        'lims.User',
+        through=ProjectMembership,
+        related_name='projects',
+        blank=True
+    )
     contact_person = models.CharField(max_length=200, blank=True, null=True)
     contact_email = models.EmailField(max_length=100, blank=True, null=True)
     carrier = models.ForeignKey(Carrier, blank=True, null=True, on_delete=models.SET_NULL)
@@ -174,15 +239,21 @@ class Project(AbstractUser):
                              verbose_name=_("Project Type"))
     alias = models.CharField(max_length=20, blank=True, null=True)
     designation = models.ManyToManyField(ProjectDesignation, verbose_name=_("Project Designation"), blank=True)
-    created = models.DateTimeField(_('date created'), auto_now_add=True, editable=False)
-    modified = models.DateTimeField(_('date modified'), auto_now=True, editable=False)
     updated = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name.upper()
+        return self.name.upper() if self.name else ""
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
 
     def get_absolute_url(self):
-        return reverse('user-detail', kwargs={'username': self.username})
+        return reverse('project-profile', kwargs={'username': self.username or self.name})
 
     def onsite_containers(self):
         return self.containers.filter(status=Container.STATES.ON_SITE).count()
@@ -205,9 +276,26 @@ class Project(AbstractUser):
         return session.created if session else None
 
     def save(self, *args, **kwargs):
+        if not self.name and self.username:
+            self.name = self.username
+        elif not self.username and self.name:
+            self.username = self.name
         if not self.kind:
             self.kind = ProjectType.objects.first()
+        if self.pi:
+            if not self.email and self.pi.email:
+                self.email = self.pi.email
+            if not self.first_name and self.pi.first_name:
+                self.first_name = self.pi.first_name
+            if not self.last_name and self.pi.last_name:
+                self.last_name = self.pi.last_name
         super().save(*args, **kwargs)
+        if self.pi:
+            ProjectMembership.objects.get_or_create(
+                user=self.pi,
+                project=self,
+                defaults={'role': ProjectMembership.Role.PI}
+            )
 
     class Meta:
         verbose_name = _("Project Account")
@@ -216,7 +304,20 @@ class Project(AbstractUser):
 class SSHKey(TimeStampedModel):
     name = models.CharField(max_length=60)
     key = models.TextField()
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="sshkeys")
+    user = models.ForeignKey(
+        'lims.User',
+        on_delete=models.CASCADE,
+        related_name="sshkeys",
+        null=True,
+        blank=True
+    )
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="sshkeys",
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = "SSH Key"
@@ -1560,7 +1661,7 @@ class ActivityLog(models.Model):
     )
     created = models.DateTimeField(_('Date/Time'), auto_now_add=True, editable=False)
     project = models.ForeignKey(Project, blank=True, null=True, on_delete=models.SET_NULL)
-    user = models.ForeignKey(Project, blank=True, null=True, related_name='activities', on_delete=models.SET_NULL)
+    user = models.ForeignKey('lims.User', blank=True, null=True, related_name='activities', on_delete=models.SET_NULL)
     user_description = models.CharField(_('User name'), max_length=60, blank=True, null=True)
     ip_number = models.GenericIPAddressField(_('IP Address'))
     object_id = models.PositiveIntegerField(blank=True, null=True)

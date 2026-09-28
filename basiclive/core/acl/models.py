@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
 from model_utils import Choices
+from django.conf import settings
 
 from basiclive.core.lims.conf import settings as lims_settings
 from basiclive.utils.misc import natural_duration
@@ -72,7 +73,7 @@ class AccessList(models.Model):
     name = models.CharField(max_length=60, unique=True)
     description = models.TextField(blank=True, null=True)
     address = models.CharField(max_length=45, validators=[validate_ip_or_network])
-    users = models.ManyToManyField("lims.Project", blank=True)
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     active = models.BooleanField(default=False)
     created = models.DateTimeField('date created', auto_now_add=True, editable=False)
     modified = models.DateTimeField('date modified', auto_now_add=True, editable=False)
@@ -142,7 +143,7 @@ class Access(TimeStampedModel):
         FAILED = 'Failed', _('Failed')
 
     name = models.CharField(max_length=48, unique=True)
-    user = models.ForeignKey("lims.Project", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     userlist = models.ForeignKey(AccessList, related_name="connections", on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.FINISHED)
     start_time = models.DateTimeField('Start Time', default=timezone.now)

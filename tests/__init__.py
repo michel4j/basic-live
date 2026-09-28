@@ -1,5 +1,14 @@
 import django
 from django.conf import settings
+from django.core.management import call_command
+
+
+class DisableMigrations:
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return None
 
 
 def setup_django():
@@ -35,7 +44,7 @@ def setup_django():
                 "django.contrib.auth.middleware.AuthenticationMiddleware",
                 "django.contrib.messages.middleware.MessageMiddleware",
             ],
-            AUTH_USER_MODEL="lims.Project",
+            AUTH_USER_MODEL="lims.User",
             DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}},
             TEMPLATES=[
                 {
@@ -52,8 +61,10 @@ def setup_django():
             BASICLIVE_LIMS={
                 "DOWNLOAD_PROXY_URL": "http://test-server/download",
             },
+            MIGRATION_MODULES=DisableMigrations(),
         )
         django.setup()
+        call_command('migrate', run_syncdb=True, verbosity=0)
 
 
 setup_django()
