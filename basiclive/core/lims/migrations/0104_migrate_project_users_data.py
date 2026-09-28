@@ -50,12 +50,13 @@ def migrate_project_data_to_users(apps, schema_editor):
         )
 
         # Re-link SSHKeys
-        for key in SSHKey.objects.filter(project=project, user__isnull=True):
+        for key in SSHKey.objects.filter(project=project):
             key.user = user
             key.save(update_fields=['user'])
 
-        # Migrate ActivityLog records
-        ActivityLog.objects.filter(project=project, user__isnull=True).update(user=user)
+        # Migrate ActivityLog records: re-link entries for this project to the new User
+        ActivityLog.objects.filter(project=project).update(user_id=user.pk)
+        ActivityLog.objects.filter(user_id=project.pk).update(user_id=user.pk)
 
         # Migrate SupportRecord staff if pointing to this project
         SupportRecord.objects.filter(staff_id=project.pk).update(staff_id=user.pk)
@@ -70,6 +71,14 @@ def migrate_project_data_to_users(apps, schema_editor):
         for al in AccessList.objects.filter(users__id=project.pk):
             al.users.add(user)
 
+    # Clean up any dangling IDs before constraints are added
+    valid_user_ids = set(User.objects.values_list('pk', flat=True))
+    ActivityLog.objects.exclude(user_id__in=valid_user_ids).update(user_id=None)
+    SupportRecord.objects.exclude(staff_id__in=valid_user_ids).update(staff_id=None)
+    SSHKey.objects.exclude(user_id__in=valid_user_ids).update(user_id=None)
+    BeamlineSupport.objects.exclude(staff_id__in=valid_user_ids).update(staff_id=None)
+    Access.objects.exclude(user_id__in=valid_user_ids).update(user_id=None)
+
 
 def reverse_migrate_project_data_to_users(apps, schema_editor):
     pass
@@ -79,7 +88,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('lims', '0103_add_user_and_membership'),
-        ('crm', '0082_alter_supportrecord_staff'),
+        ('crm', '0081_alter_supportrecord_project'),
         ('schedule', '0006_alter_beamtime_project'),
         ('notebooks', '0003_alter_notebook_project'),
     ]

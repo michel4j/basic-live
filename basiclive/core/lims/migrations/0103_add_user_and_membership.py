@@ -72,11 +72,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='lims.project'),
         ),
         migrations.AlterField(
-            model_name='activitylog',
-            name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activities', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AlterField(
             model_name='analysisreport',
             name='project',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports', to='lims.project'),

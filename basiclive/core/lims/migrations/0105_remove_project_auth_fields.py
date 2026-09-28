@@ -1,15 +1,21 @@
-# Generated schema migration to remove auth fields from Project after data migration
-
-from django.db import migrations
+import django.db.models.deletion
+from django.conf import settings
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('lims', '0104_migrate_project_users_data'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
+        migrations.AlterField(
+            model_name='activitylog',
+            name='user',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activities', to=settings.AUTH_USER_MODEL),
+        ),
         migrations.AlterModelManagers(
             name='project',
             managers=[
