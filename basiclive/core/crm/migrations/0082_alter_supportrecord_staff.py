@@ -9,6 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('crm', '0081_alter_supportrecord_project'),
+        ('lims', '0103_add_user_and_membership'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 

@@ -7,6 +7,20 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def create_user_table_if_not_exists(apps, schema_editor):
+    table_names = schema_editor.connection.introspection.table_names()
+    User = apps.get_model('lims', 'User')
+    if User._meta.db_table not in table_names:
+        schema_editor.create_model(User)
+
+
+def drop_user_table_if_exists(apps, schema_editor):
+    table_names = schema_editor.connection.introspection.table_names()
+    User = apps.get_model('lims', 'User')
+    if User._meta.db_table in table_names:
+        schema_editor.delete_model(User)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -15,32 +29,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='User',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(blank=True, null=True, verbose_name='last login')),
-                ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
-                ('username', models.CharField(error_messages={'unique': 'A user with that username already exists.'}, help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.', max_length=150, unique=True, validators=[django.contrib.auth.validators.UnicodeUsernameValidator()], verbose_name='username')),
-                ('first_name', models.CharField(blank=True, max_length=150, verbose_name='first name')),
-                ('last_name', models.CharField(blank=True, max_length=150, verbose_name='last name')),
-                ('email', models.EmailField(blank=True, max_length=254, verbose_name='email address')),
-                ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
-                ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
-                ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('name', models.CharField(blank=True, default='', max_length=255)),
-                ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
-                ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(create_user_table_if_not_exists, reverse_code=drop_user_table_if_exists),
             ],
-            options={
-                'verbose_name': 'User',
-                'verbose_name_plural': 'Users',
-                'swappable': 'AUTH_USER_MODEL',
-            },
-            managers=[
-                ('objects', django.contrib.auth.models.UserManager()),
-            ],
+            state_operations=[],
         ),
         migrations.AddField(
             model_name='project',
@@ -77,6 +70,11 @@ class Migration(migrations.Migration):
             model_name='activitylog',
             name='project',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='lims.project'),
+        ),
+        migrations.AlterField(
+            model_name='activitylog',
+            name='user',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activities', to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
             model_name='analysisreport',
