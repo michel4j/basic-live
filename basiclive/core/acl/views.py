@@ -37,7 +37,7 @@ def format_authorized(projects, record):
         else:
             css_class = 'badge text-bg-warning'
             title = 'Manual Access'
-        badges.append(f'<span class="{css_class} badge-md" title="{title}">{escape(project.name.upper())}</span>')
+        badges.append(f'<span class="{css_class} badge-md" title="{title}">{escape(project.username.upper())}</span>')
     return ' '.join(badges)
 
 
@@ -45,9 +45,13 @@ class AccessListView(AdminRequiredMixin, ItemListView):
     model = models.AccessList
     list_filters = ['beamline']
     list_columns = ['name', 'description', 'annotated_projects', 'address', 'beamlines']
-    list_headers = {'annotated_projects': 'Authorized Users'}
+    list_headers = {
+        'annotated_users': 'Authorized Users',
+        'annotated_projects': 'Authorized Users',
+    }
     list_transforms = {
         'beamlines': format_beamlines,
+        'annotated_users': format_authorized,
         'annotated_projects': format_authorized,
     }
     list_search = ['name', 'description']
@@ -113,7 +117,7 @@ class EndpointList(View):
         userlist = models.AccessList.objects.active_for_ip(client_addr)
 
         if userlist:
-            return JsonResponse(userlist.authorized_projects(), safe=False)
+            return JsonResponse(userlist.authorized_users(), safe=False)
         else:
             return JsonResponse([], safe=False)
 
@@ -128,7 +132,11 @@ class EndpointList(View):
 
             for connection in connections:
                 try:
-                    project = User.objects.get(username=connection['project'])
+                    project = models.Project.objects.filter(
+                        models.Q(username=connection['project']) | models.Q(name=connection['project'])
+                    ).first()
+                    if not project:
+                        raise models.Project.DoesNotExist()
                     start_time = datetime.fromisoformat(connection['start_time'])
                     end_time = None if not connection.get('end_time') else datetime.fromisoformat(connection['end_time'])
                     name = connection['name']
@@ -148,10 +156,10 @@ class EndpointList(View):
                     r.end_time = end_time
                     r.save()
 
-                except User.DoesNotExist as e:
-                    errors.append(f"User '{connection['project']}' not found.")
+                except models.Project.DoesNotExist:
+                    errors.append(f"Project '{connection['project']}' not found.")
 
-            return JsonResponse(user_list.authorized_projects(), safe=False)
+            return JsonResponse(user_list.authorized_users(), safe=False)
         else:
             return JsonResponse([], safe=False)
 
@@ -172,7 +180,7 @@ class AccessKeys(AuthenticationRequiredMixin, View):
         user = User.objects.filter(username=self.kwargs.get('username')).first()
 
         msg = ''
-        if user and user_list and user.username in user_list.authorized_projects():
+        if user and user_list and user.username in user_list.authorized_users():
             msg = '\n'.join(user.sshkeys.values_list('key', flat=True)).encode()
 
         return HttpResponse(msg, content_type='text/plain')

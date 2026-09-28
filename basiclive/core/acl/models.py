@@ -23,8 +23,30 @@ def validate_ip_or_network(value):
 
 
 class AnnotatedUser(NamedTuple):
-    name: str
+    username: str
     source: str
+
+    @property
+    def name(self) -> str:
+        return self.username
+
+
+def _get_project_usernames(project) -> set[str]:
+    names = set()
+    if not project:
+        return names
+    if getattr(project, 'pi', None) and project.pi:
+        names.add(project.pi.username)
+    if hasattr(project, 'members'):
+        for m in project.members.all():
+            names.add(m.username)
+    # Fallback only for projects without PI/members (e.g. legacy test fixtures where Project was the user)
+    if not names:
+        if getattr(project, 'username', None):
+            names.add(project.username)
+        elif getattr(project, 'name', None):
+            names.add(project.name)
+    return names
 
 
 def get_hours_per_shift() -> int:
@@ -94,36 +116,47 @@ class AccessList(models.Model):
         except (ValueError, TypeError):
             return False
 
-    def authorized_projects(self):
-        return [u.name for u in self.annotated_projects()]
+    def manual_users(self) -> list[str]:
+        usernames = set()
+        for proj in self.users.select_related('pi').prefetch_related('members').all():
+            usernames.update(_get_project_usernames(proj))
+        return sorted(list(usernames))
 
-    def scheduled(self):
+    def scheduled(self) -> list[str]:
         if lims_settings.USE_SCHEDULE:
             now = timezone.localtime()
             slot = get_hours_per_shift()
-            user_names = Beamtime.objects.filter(
+            beamtimes = Beamtime.objects.filter(
                 cancelled=False,
                 access__remote=True,
                 beamline__in=self.beamline.all(),
                 start__lte=now,
                 end__gte=now - timedelta(hours=int(slot / 2))
-            ).values_list(
-                'project__name',
-                flat=True
-            ).order_by().distinct()
-            return list(user_names)
+            ).select_related('project', 'project__pi').prefetch_related('project__members')
+
+            usernames = set()
+            for bt in beamtimes:
+                usernames.update(_get_project_usernames(bt.project))
+            return sorted(list(usernames))
         return []
 
-    def annotated_projects(self) -> list[AnnotatedUser]:
+    def annotated_users(self) -> list[AnnotatedUser]:
         if lims_settings.USE_SCHEDULE:
             scheduled_set = set(self.scheduled())
         else:
             scheduled_set = set()
-        manual_set = set(self.users.values_list('name', flat=True)) - scheduled_set
+        manual_set = set(self.manual_users()) - scheduled_set
 
-        scheduled_users = [AnnotatedUser(n, 'schedule') for n in sorted(scheduled_set)]
-        manual_users = [AnnotatedUser(n, 'manual') for n in sorted(manual_set)]
+        scheduled_users = [AnnotatedUser(u, 'schedule') for u in sorted(scheduled_set)]
+        manual_users = [AnnotatedUser(u, 'manual') for u in sorted(manual_set)]
         return scheduled_users + manual_users
+
+    annotated_projects = annotated_users
+
+    def authorized_users(self) -> list[str]:
+        return [u.username for u in self.annotated_users()]
+
+    authorized_projects = authorized_users
 
     def identity(self):
         return self.name

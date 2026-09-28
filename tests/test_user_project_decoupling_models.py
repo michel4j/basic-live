@@ -98,20 +98,22 @@ class DataModelsDecouplingTestCase(TestCase):
 
     def test_acl_models_user_references(self):
         user = LimsUser.objects.create_user(username="acl_user", email="acl@example.org")
+        project = Project.objects.create(name="acl-proj", pi=user)
         access_list = AccessList.objects.create(
             name="Workstation-1",
             address="10.0.0.1",
             active=True,
         )
-        access_list.users.add(user)
-        self.assertIn(user, access_list.users.all())
+        access_list.users.add(project)
+        self.assertIn(project, access_list.users.all())
+        self.assertIn("acl_user", access_list.authorized_users())
 
         access = Access.objects.create(
             name="conn-1",
-            user=user,
+            user=project,
             userlist=access_list,
         )
-        self.assertEqual(access.user, user)
+        self.assertEqual(access.user, project)
 
     def test_crm_and_schedule_user_and_project_references(self):
         staff_user = LimsUser.objects.create_user(username="beamline_staff", email="staff@example.org")

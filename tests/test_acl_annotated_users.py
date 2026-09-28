@@ -163,6 +163,41 @@ class AnnotatedUsersTests(TestCase):
                 ['name', 'description', 'annotated_projects', 'address', 'beamlines']
             )
 
+    def test_project_members_authorization_scheduled_and_manual(self):
+        from basiclive.core.lims.models import User as LimsUser
+        pi_user = LimsUser.objects.create_user(username="pi_grant", email="pi@example.com")
+        member_user = LimsUser.objects.create_user(username="student_lee", email="lee@example.com")
+        proj_scheduled = Project.objects.create(name="scheduled-lab", pi=pi_user)
+        proj_scheduled.members.add(member_user)
+
+        now = timezone.localtime()
+        Beamtime.objects.create(
+            project=proj_scheduled,
+            beamline=self.beamline,
+            access=self.remote_access_type,
+            start=now - timedelta(hours=1),
+            end=now + timedelta(hours=7),
+            cancelled=False,
+        )
+
+        manual_pi = LimsUser.objects.create_user(username="manual_prof", email="prof@example.com")
+        manual_member = LimsUser.objects.create_user(username="manual_postdoc", email="postdoc@example.com")
+        proj_manual = Project.objects.create(name="manual-lab", pi=manual_pi)
+        proj_manual.members.add(manual_member)
+        self.access_list.users.add(proj_manual)
+
+        authorized = self.access_list.authorized_users()
+        self.assertIn("pi_grant", authorized)
+        self.assertIn("student_lee", authorized)
+        self.assertIn("manual_prof", authorized)
+        self.assertIn("manual_postdoc", authorized)
+
+        annotated_dict = {u.username: u.source for u in self.access_list.annotated_users()}
+        self.assertEqual(annotated_dict["pi_grant"], "schedule")
+        self.assertEqual(annotated_dict["student_lee"], "schedule")
+        self.assertEqual(annotated_dict["manual_prof"], "manual")
+        self.assertEqual(annotated_dict["manual_postdoc"], "manual")
+
 
 if __name__ == "__main__":
     unittest.main()

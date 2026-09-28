@@ -13,7 +13,7 @@ class AccessForm(ModalModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['users'].label = f"Users on {self.instance}"
+        self.fields['users'].label = f"Projects on {self.instance}"
         self.fields['users'].queryset = self.fields['users'].queryset.order_by('name')
 
         self.body.title = "Edit Remote Access List"

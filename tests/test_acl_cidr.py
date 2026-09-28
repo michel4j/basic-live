@@ -23,6 +23,10 @@ class AccessListCIDRTests(TestCase):
         self.user_bob = User.objects.create(username="bob", name="Bob Scientist")
         self.user_charlie = User.objects.create(username="charlie", name="Charlie PI")
 
+        self.project_alice = Project.objects.create(name="proj-alice", pi=self.user_alice)
+        self.project_bob = Project.objects.create(name="proj-bob", pi=self.user_bob)
+        self.project_charlie = Project.objects.create(name="proj-charlie", pi=self.user_charlie)
+
         self.key_alice = SSHKey.objects.create(
             name="alice-key",
             key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0alice alice@lab",
@@ -35,42 +39,42 @@ class AccessListCIDRTests(TestCase):
             address="192.168.1.10",
             active=True,
         )
-        self.al_single_ipv4.users.add(self.user_alice)
+        self.al_single_ipv4.users.add(self.project_alice)
 
         self.al_cidr_subnet = AccessList.objects.create(
             name="Subnet-IPv4",
             address="192.168.1.0/24",
             active=True,
         )
-        self.al_cidr_subnet.users.add(self.user_bob)
+        self.al_cidr_subnet.users.add(self.project_bob)
 
         self.al_broad_subnet = AccessList.objects.create(
             name="Broad-IPv4",
             address="10.0.0.0/16",
             active=True,
         )
-        self.al_broad_subnet.users.add(self.user_charlie)
+        self.al_broad_subnet.users.add(self.project_charlie)
 
         self.al_narrow_subnet = AccessList.objects.create(
             name="Narrow-IPv4",
             address="10.0.5.0/24",
             active=True,
         )
-        self.al_narrow_subnet.users.add(self.user_alice)
+        self.al_narrow_subnet.users.add(self.project_alice)
 
         self.al_ipv6_cidr = AccessList.objects.create(
             name="IPv6-Subnet",
             address="2001:db8::/64",
             active=True,
         )
-        self.al_ipv6_cidr.users.add(self.user_alice)
+        self.al_ipv6_cidr.users.add(self.project_alice)
 
         self.al_inactive = AccessList.objects.create(
             name="Inactive-Subnet",
             address="172.16.0.0/16",
             active=False,
         )
-        self.al_inactive.users.add(self.user_bob)
+        self.al_inactive.users.add(self.project_bob)
 
     def test_model_matches_method(self):
         # Single IPv4 host
