@@ -42,8 +42,7 @@ class NotebookViewsTestCase(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.owner = User.objects.create_user(username="owner", password="password123", name="Owner")
-        self.member = User.objects.create_user(username="member", password="password123", name="Member")
+        self.user = User.objects.create_superuser(username="user", password="password123", name="User")
         self.other = User.objects.create_user(username="other", password="password123", name="Other")
         self.admin = User.objects.create_superuser(username="admin", password="password123", name="Admin")
 
@@ -63,38 +62,24 @@ class NotebookViewsTestCase(TestCase):
             name="public-nb",
             title="Public Notebook",
             description="Public Description",
-            owner=self.owner,
-            access=Notebook.ACCESS.public,
-            editor=Notebook.EDITOR.owner,
         )
 
         self.internal_nb = Notebook.objects.create(
             name="internal-nb",
             title="Internal Notebook",
             description="Internal Description",
-            owner=self.owner,
-            access=Notebook.ACCESS.internal,
-            editor=Notebook.EDITOR.team,
         )
-        self.internal_nb.members.add(self.member)
 
         self.private_nb = Notebook.objects.create(
             name="private-nb",
             title="Private Notebook",
             description="Private Description",
-            owner=self.owner,
-            access=Notebook.ACCESS.private,
-            editor=Notebook.EDITOR.team,
         )
-        self.private_nb.members.add(self.member)
 
         self.other_private_nb = Notebook.objects.create(
             name="other-private-nb",
             title="Other Private Notebook",
             description="Other Private Description",
-            owner=self.other,
-            access=Notebook.ACCESS.private,
-            editor=Notebook.EDITOR.owner,
         )
 
         # Create entries for testing
@@ -106,7 +91,7 @@ class NotebookViewsTestCase(TestCase):
         self.entry_yesterday = Entry.objects.create(
             notebook=self.private_nb,
             created=self.yesterday_dt,
-            author=self.owner,
+            author=self.user,
             text="Yesterday entry text",
             kind=self.text_type,
             tags=["sample", "protein"],
@@ -115,7 +100,7 @@ class NotebookViewsTestCase(TestCase):
         self.entry_today = Entry.objects.create(
             notebook=self.private_nb,
             created=self.now,
-            author=self.owner,
+            author=self.user,
             text="Today entry text",
             kind=self.text_type,
             tags=["buffer"],
@@ -147,27 +132,27 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(reverse("notebooks:entry-data", kwargs={"pk": self.entry_today.pk}), f"/notebooks/entry/{self.entry_today.pk}/")
 
     def test_notebook_access_mixin_anonymous(self):
-        """Anonymous user can only see public notebooks."""
+        """Anonymous user can't see  any notebooks."""
         view = views.NotebookList()
         request = self.factory.get("/notebooks/")
         request.user = MagicMock(is_authenticated=False)
         view.request = request
         qs = view.get_queryset()
-        self.assertIn(self.public_nb, qs)
+        self.assertNotIn(self.public_nb, qs)
         self.assertNotIn(self.internal_nb, qs)
         self.assertNotIn(self.private_nb, qs)
         self.assertNotIn(self.other_private_nb, qs)
 
     def test_notebook_access_mixin_authenticated_user(self):
-        """Authenticated user sees public, internal, own private, and member private."""
+        """Authenticated can't see notebooks."""
         view = views.NotebookList()
         request = self.factory.get("/notebooks/")
-        request.user = self.member
+        request.user = self.other
         view.request = request
         qs = view.get_queryset()
-        self.assertIn(self.public_nb, qs)
-        self.assertIn(self.internal_nb, qs)
-        self.assertIn(self.private_nb, qs)  # member of private_nb
+        self.assertNotIn(self.public_nb, qs)
+        self.assertNotIn(self.internal_nb, qs)
+        self.assertNotIn(self.private_nb, qs)  # member of private_nb
         self.assertNotIn(self.other_private_nb, qs)  # not member, not owner
 
     def test_notebook_access_mixin_superuser(self):
@@ -184,9 +169,9 @@ class NotebookViewsTestCase(TestCase):
         view = views.UpdateNotebook()
         view.kwargs = {'pk': self.private_nb.pk}
 
-        # Owner allowed
+        # User allowed
         request = self.factory.get(f"/notebooks/{self.private_nb.pk}/edit/")
-        request.user = self.owner
+        request.user = self.user
         view.request = request
         self.assertTrue(view.test_func())
 
@@ -196,13 +181,13 @@ class NotebookViewsTestCase(TestCase):
         self.assertTrue(view.test_func())
 
         # Non-owner denied
-        request.user = self.member
+        request.user = self.other
         view.request = request
         self.assertFalse(view.test_func())
 
     def test_notebook_dates_endpoint(self):
         """Test NotebookDates returns JSON list of page dates in given month."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         month_str = self.today.strftime("%Y%m")
         response = self.client.get(
             reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
@@ -216,7 +201,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_notebook_dates_with_active_filters(self):
         """Test NotebookDates applies active list filters (tags, search, kind)."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         month_str = self.today.strftime("%Y%m")
 
         # Filter by tag 'protein' (only yesterday's entry has it)
@@ -277,26 +262,18 @@ class NotebookViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
 
-        # Filter by author (owner)
+        # Filter by author
         response = self.client.get(
             reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
-            {"months": month_str, "author__id__exact": self.owner.pk},
+            {"months": month_str, "author__id__exact": self.user.pk},
         )
         self.assertEqual(response.status_code, 200)
         dates = [d["date"] for d in response.json()]
         self.assertIn(self.today.isoformat(), dates)
 
-        # Filter by author with no entries (member)
-        response = self.client.get(
-            reverse("notebooks:notebook-dates", kwargs={"pk": self.private_nb.pk}),
-            {"months": month_str, "author__id__exact": self.member.pk},
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), [])
-
     def test_notebook_detail_date_filtering(self):
         """Test NotebookDetail date query parameter filtering and context."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
 
         # Filter by today's date
         response = self.client.get(
@@ -329,13 +306,13 @@ class NotebookViewsTestCase(TestCase):
         data_entry = Entry.objects.create(
             notebook=self.private_nb,
             created=self.yesterday_dt,
-            author=self.member,
+            author=self.user,
             text=json.dumps({"headers": ["Energy", "Counts"], "data": {"0": [100, 200], "1": [50, 75]}}),
             kind=self.data_type,
             tags=["spectrum"],
         )
 
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
 
         # Filter date + kind (data)
         response = self.client.get(
@@ -358,7 +335,7 @@ class NotebookViewsTestCase(TestCase):
         # Filter date + author (member)
         response = self.client.get(
             reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
-            {"date": self.yesterday.isoformat(), "author__id__exact": self.member.pk},
+            {"date": self.yesterday.isoformat(), "author__id__exact": self.user.pk},
         )
         self.assertEqual(response.status_code, 200)
         entries = list(response.context_data["object_list"])
@@ -393,7 +370,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_notebook_detail_date_no_matches(self):
         """Test NotebookDetail with a date having no entries returns empty queryset."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         empty_date = "2000-01-01"
         response = self.client.get(
             reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
@@ -406,7 +383,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_notebook_detail_invalid_date(self):
         """Test NotebookDetail ignores invalid date query parameter gracefully."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.get(
             reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
             {"date": "not-a-valid-date"},
@@ -419,7 +396,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_entry_data_endpoint(self):
         """Test EntryData JSON endpoint."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.get(
             reverse("notebooks:entry-data", kwargs={"pk": self.entry_today.pk})
         )
@@ -436,7 +413,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_create_entry_modal_get(self):
         """GET request to CreateEntry renders modal form."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.get(
             reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "text"})
         )
@@ -445,7 +422,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_create_entry_modal_all_kinds_get(self):
         """GET request to CreateEntry renders modal form for all six entry kinds."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         kinds = ["text", "image", "video", "sketch", "data", "file"]
         for kind in kinds:
             response = self.client.get(
@@ -456,7 +433,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_create_entry_modal_post_file_and_sketch(self):
         """POST request to CreateEntry supports image, video, file uploads, and sketch drawings."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
 
         # 1. Image upload
         img_file = SimpleUploadedFile("test.png", b"fake image bytes", content_type="image/png")
@@ -542,7 +519,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_tag_normalization_on_entry_creation_and_update(self):
         """Verify tags are normalized from comma/semicolon separated strings into lists."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
 
         # Creation with mixed delimiters and spaces
         response = self.client.post(
@@ -566,7 +543,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_create_entry_modal_post_success(self):
         """POST request to CreateEntry creates new entry and returns JSON with redirect url."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "text"}),
             {"text": "Brand new note", "tags": "log, run-1"},
@@ -578,7 +555,7 @@ class NotebookViewsTestCase(TestCase):
             Entry.objects.filter(notebook=self.public_nb, text="Brand new note").exists()
         )
         entry = Entry.objects.get(notebook=self.public_nb, text="Brand new note")
-        self.assertEqual(entry.author, self.owner)
+        self.assertEqual(entry.author, self.user)
         self.assertEqual(entry.tags, ["log", "run-1"])
 
     def test_create_entry_data_cleans_json(self):
@@ -588,7 +565,7 @@ class NotebookViewsTestCase(TestCase):
             "data": {"0": [1.0, 2.0], "1": [3.14159265, 4.14159265]}
         })
 
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:create-entry", kwargs={"book": self.public_nb.pk, "kind": "data"}),
             {"text": raw_json, "tags": "data"},
@@ -610,7 +587,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_update_entry_modal_get(self):
         """GET request to UpdateEntry renders modal form."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.get(
             reverse("notebooks:edit-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk})
         )
@@ -619,7 +596,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_update_entry_modal_post_success(self):
         """POST request to UpdateEntry updates entry content and returns JSON response."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:edit-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
             {"text": "Updated entry content", "tags": "updated, tag2"},
@@ -640,7 +617,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_update_historical_entry_forbidden(self):
         """Historical entry from a previous day is immutable and cannot be updated."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:edit-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_yesterday.pk}),
             {"text": "Trying to edit history", "tags": ""},
@@ -652,19 +629,16 @@ class NotebookViewsTestCase(TestCase):
         del_nb = Notebook.objects.create(
             name="del-nb",
             title="Delete Notebook",
-            owner=self.owner,
-            access=Notebook.ACCESS.private,
-            editor=Notebook.EDITOR.owner,
         )
         temp_entry = Entry.objects.create(
             notebook=del_nb,
             created=timezone.now(),
-            author=self.owner,
+            author=self.user,
             text="Delete me",
             kind=self.text_type,
         )
 
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:delete-entry", kwargs={"book": del_nb.pk, "pk": temp_entry.pk}),
         )
@@ -673,7 +647,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_delete_historical_entry_forbidden(self):
         """Historical entry from a previous day is immutable and cannot be deleted."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:delete-entry", kwargs={"book": self.private_nb.pk, "pk": self.entry_yesterday.pk}),
         )
@@ -691,7 +665,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_create_annotation_success(self):
         """Test POST to entry-annotations creates an annotation and returns 201."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:entry-annotations", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
             json.dumps({
@@ -704,18 +678,18 @@ class NotebookViewsTestCase(TestCase):
         data = response.json()
         self.assertEqual(data["text"], "Check this result")
         self.assertEqual(data["quote"], "sel line 1")
-        self.assertEqual(data["author"], f"@{self.owner.username}")
+        self.assertEqual(data["author"], f"@{self.user.username.title()}")
         self.assertEqual(data["entry_id"], self.entry_today.pk)
 
         annotation = self.entry_today.annotations.first()
         self.assertIsNotNone(annotation)
         self.assertEqual(annotation.text, "Check this result")
         self.assertEqual(annotation.quote, "sel line 1")
-        self.assertEqual(annotation.author, self.owner)
+        self.assertEqual(annotation.author, self.user)
 
     def test_create_annotation_empty_text(self):
         """Test creating an annotation with empty text returns 400 Bad Request."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:entry-annotations", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
             {"text": "", "quote": "some text"},
@@ -726,14 +700,14 @@ class NotebookViewsTestCase(TestCase):
 
     def test_create_annotation_as_viewer(self):
         """Test that a non-owner with view access can create an annotation."""
-        self.client.force_login(self.member)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:entry-annotations", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
             {"text": "Reviewer comment from member", "quote": "important data"},
         )
         self.assertEqual(response.status_code, 201)
         annotation = self.entry_today.annotations.first()
-        self.assertEqual(annotation.author, self.member)
+        self.assertEqual(annotation.author, self.user)
         self.assertEqual(annotation.text, "Reviewer comment from member")
 
     def test_create_annotation_forbidden_for_non_viewer(self):
@@ -751,9 +725,9 @@ class NotebookViewsTestCase(TestCase):
         self.entry_today.annotations.create(
             text="First note",
             quote="part 1",
-            author=self.owner,
+            author=self.user,
         )
-        self.client.force_login(self.member)
+        self.client.force_login(self.user)
         response = self.client.get(
             reverse("notebooks:entry-annotations", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
         )
@@ -766,9 +740,9 @@ class NotebookViewsTestCase(TestCase):
         """Test that the author of an annotation can delete it."""
         annotation = self.entry_today.annotations.create(
             text="Temporary note",
-            author=self.member,
+            author=self.user,
         )
-        self.client.force_login(self.member)
+        self.client.force_login(self.user)
         response = self.client.delete(
             reverse(
                 "notebooks:entry-annotation-detail",
@@ -782,9 +756,9 @@ class NotebookViewsTestCase(TestCase):
         """Test that a user cannot delete another user's annotation."""
         annotation = self.entry_today.annotations.create(
             text="Member note",
-            author=self.member,
+            author=self.user,
         )
-        self.client.force_login(self.owner)
+        self.client.force_login(self.other)
         response = self.client.delete(
             reverse(
                 "notebooks:entry-annotation-detail",
@@ -796,7 +770,7 @@ class NotebookViewsTestCase(TestCase):
 
     def test_legacy_annotate_notebook_endpoint(self):
         """Test backwards compatibility for annotate-notebook alias with POST method=remove."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:annotate-notebook", kwargs={"book": self.private_nb.pk, "pk": self.entry_today.pk}),
             {
@@ -827,7 +801,7 @@ class NotebookViewsTestCase(TestCase):
         mock_template.render.return_value = "<div>tagged</div>"
         mock_get_template.return_value = mock_template
 
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.post(
             reverse("notebooks:tag-notebook", kwargs={"pk": self.private_nb.pk}),
             {

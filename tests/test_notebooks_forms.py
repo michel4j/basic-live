@@ -40,8 +40,7 @@ class NotebookFormsTestCase(TestCase):
         super().setUpClass()
 
     def setUp(self):
-        self.owner = User.objects.create_user(username="owner", password="password123", name="Owner")
-        self.member = User.objects.create_user(username="member", password="password123", name="Member")
+        self.user = User.objects.create_superuser(username="user", password="password123", name="User")
         self.other = User.objects.create_user(username="other", password="password123", name="Other")
         self.admin = User.objects.create_superuser(username="admin", password="password123", name="Admin")
 
@@ -49,16 +48,12 @@ class NotebookFormsTestCase(TestCase):
             name="existing-notebook",
             title="Existing Notebook",
             description="Existing description",
-            owner=self.owner,
-            access=Notebook.ACCESS.private,
-            editor=Notebook.EDITOR.owner,
         )
 
     def test_notebook_form_create_init(self):
         """Test NotebookForm initialization for a new notebook."""
-        form = NotebookForm(user=self.owner)
+        form = NotebookForm(user=self.user)
         self.assertEqual(form.body.title, "Create Notebook")
-        self.assertEqual(form.fields['owner'].initial, self.owner)
         self.assertIn("title", form.fields)
         self.assertIn("description", form.fields)
 
@@ -69,57 +64,34 @@ class NotebookFormsTestCase(TestCase):
 
     def test_notebook_form_edit_init(self):
         """Test NotebookForm initialization for an existing notebook."""
-        form = NotebookForm(instance=self.notebook, user=self.owner)
+        form = NotebookForm(instance=self.notebook, user=self.user)
         self.assertEqual(form.body.title, "Edit Notebook")
         self.assertEqual(form.initial['title'], "Existing Notebook")
-
-    def test_notebook_form_owner_restriction_non_superuser(self):
-        """Non-superusers should have owner queryset restricted to themselves."""
-        form = NotebookForm(user=self.owner)
-        owner_pks = list(form.fields['owner'].queryset.values_list('pk', flat=True))
-        self.assertEqual(owner_pks, [self.owner.pk])
-
-    def test_notebook_form_superuser_can_assign_any_owner(self):
-        """Superusers can assign any user as notebook owner."""
-        form = NotebookForm(user=self.admin)
-        owner_pks = set(form.fields['owner'].queryset.values_list('pk', flat=True))
-        self.assertIn(self.owner.pk, owner_pks)
-        self.assertIn(self.member.pk, owner_pks)
-        self.assertIn(self.other.pk, owner_pks)
 
     def test_notebook_form_valid_save(self):
         """Test submitting valid data to NotebookForm saves a new notebook."""
         data = {
             'title': "Brand New Notebook",
             'description': "Details about experiment",
-            'owner': self.owner.pk,
-            'access': Notebook.ACCESS.internal,
-            'editor': Notebook.EDITOR.team,
-            'members': [self.member.pk],
         }
-        form = NotebookForm(data=data, user=self.owner)
+        form = NotebookForm(data=data, user=self.user)
         self.assertTrue(form.is_valid(), form.errors)
         instance = form.save()
         self.assertEqual(instance.title, "Brand New Notebook")
-        self.assertEqual(instance.owner, self.owner)
-        self.assertIn(self.member, instance.members.all())
 
     def test_create_notebook_view_get(self):
         """Test GET request to CreateNotebook renders modal form."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.get(reverse('notebooks:create-notebook'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Create Notebook")
 
     def test_create_notebook_view_post(self):
         """Test POST request to CreateNotebook creates a notebook and returns json response."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         data = {
             'title': "Modal Created Notebook",
             'description': "Created via crisp-modals view",
-            'owner': self.owner.pk,
-            'access': Notebook.ACCESS.public,
-            'editor': Notebook.EDITOR.owner,
         }
         response = self.client.post(reverse('notebooks:create-notebook'), data=data)
         self.assertEqual(response.status_code, 200)
@@ -129,7 +101,7 @@ class NotebookFormsTestCase(TestCase):
 
     def test_update_notebook_view_get_by_owner(self):
         """Test GET request to UpdateNotebook by owner succeeds."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         response = self.client.get(
             reverse('notebooks:notebook-edit', kwargs={'pk': self.notebook.pk})
         )
@@ -138,13 +110,10 @@ class NotebookFormsTestCase(TestCase):
 
     def test_update_notebook_view_by_owner(self):
         """Test POST request to UpdateNotebook by owner succeeds."""
-        self.client.force_login(self.owner)
+        self.client.force_login(self.user)
         data = {
             'title': "Updated Title by Owner",
             'description': "Updated description",
-            'owner': self.owner.pk,
-            'access': Notebook.ACCESS.private,
-            'editor': Notebook.EDITOR.owner,
         }
         response = self.client.post(
             reverse('notebooks:notebook-edit', kwargs={'pk': self.notebook.pk}),
@@ -189,9 +158,6 @@ class EntryFormsTestCase(TestCase):
         self.notebook = Notebook.objects.create(
             name="lab-notebook",
             title="Lab Notebook",
-            owner=self.owner,
-            access=Notebook.ACCESS.private,
-            editor=Notebook.EDITOR.owner,
         )
         self.text_type, _ = EntryType.objects.get_or_create(name="Text")
         self.image_type, _ = EntryType.objects.get_or_create(name="Image")

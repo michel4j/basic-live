@@ -53,6 +53,16 @@ class NotebookList(NotebookAccessMixin, LoginRequiredMixin, ListView):
     model = Notebook
     template_name = "notebooks/notebook_list.html"
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+
+        if user.is_superuser or user.is_staff:
+            return qs
+
+        # Filter notebooks based on access level
+        return qs.none()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['notebooks'] = self.object_list

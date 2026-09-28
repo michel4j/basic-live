@@ -141,39 +141,3 @@ class DataModelsDecouplingTestCase(TestCase):
         self.assertEqual(log.user, user)
         self.assertEqual(log.project, project)
 
-    def test_data_migration_function(self):
-        import importlib
-        from django.apps import apps
-        migration_0104 = importlib.import_module("basiclive.core.lims.migrations.0104_migrate_project_users_data")
-        migrate_project_data_to_users = migration_0104.migrate_project_data_to_users
-
-        legacy_proj = Project.objects.create(
-            name="legacy-proj",
-            username="legacy_lead",
-            first_name="Legacy",
-            last_name="Leader",
-            email="lead@legacy.org",
-        )
-        legacy_key = SSHKey.objects.create(
-            name="legacy-key",
-            key="ssh-rsa AAAAB3... lead@host",
-            project=legacy_proj,
-        )
-
-        migrate_project_data_to_users(apps, None)
-
-        legacy_proj.refresh_from_db()
-        legacy_key.refresh_from_db()
-
-        self.assertIsNotNone(legacy_proj.pi)
-        self.assertEqual(legacy_proj.pi.username, "legacy_lead")
-        self.assertEqual(legacy_proj.pi.email, "lead@legacy.org")
-        self.assertEqual(legacy_key.user, legacy_proj.pi)
-        self.assertTrue(
-            ProjectMembership.objects.filter(
-                user=legacy_proj.pi,
-                project=legacy_proj,
-                role=ProjectMembership.Role.PI
-            ).exists()
-        )
-

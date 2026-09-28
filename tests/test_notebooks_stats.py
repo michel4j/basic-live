@@ -42,31 +42,22 @@ class NotebooksStatsTestCase(TestCase):
         self.nb_pub = Notebook.objects.create(
             name="pub-book",
             title="Public Book",
-            owner=self.user1,
-            access=Notebook.ACCESS.public,
         )
         # Create internal notebook
         self.nb_int = Notebook.objects.create(
             name="int-book",
             title="Internal Book",
-            owner=self.user1,
-            access=Notebook.ACCESS.internal,
         )
         # Create private notebook owned by user1, shared with user2
         self.nb_priv = Notebook.objects.create(
             name="priv-book",
             title="Private Book",
-            owner=self.user1,
-            access=Notebook.ACCESS.private,
         )
-        self.nb_priv.members.add(self.user2)
 
         # Create private notebook owned by user2, not shared
         self.nb_priv2 = Notebook.objects.create(
             name="priv2-book",
             title="Private Book 2",
-            owner=self.user2,
-            access=Notebook.ACCESS.private,
         )
 
         # Entries
@@ -127,8 +118,6 @@ class NotebooksStatsTestCase(TestCase):
         Notebook.objects.create(
             name="priv3-book",
             title="Private Book 3",
-            owner=user3,
-            access=Notebook.ACCESS.private,
         )
         metrics2 = stats.notebook_metrics(user=self.user2)
         self.assertEqual(metrics2["total_notebooks"], 4)

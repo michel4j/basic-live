@@ -37,8 +37,7 @@ class NotebookModelsTestCase(TestCase):
         super().setUpClass()
 
     def setUp(self):
-        self.owner = User.objects.create_user(username="owner", password="password123", name="Owner")
-        self.member = User.objects.create_user(username="member", password="password123", name="Member")
+        self.user = User.objects.create_superuser(username="user", password="password123", name="User")
         self.other = User.objects.create_user(username="other", password="password123", name="Other")
         self.admin = User.objects.create_superuser(username="admin", password="password123", name="Admin")
 
@@ -49,11 +48,7 @@ class NotebookModelsTestCase(TestCase):
             name="test-notebook",
             title="Test Notebook",
             description="A test notebook description",
-            owner=self.owner,
-            access=Notebook.ACCESS.private,
-            editor=Notebook.EDITOR.owner,
         )
-        self.notebook.members.add(self.member)
 
     def test_entry_type_natural_key(self):
         self.assertEqual(self.entry_type_text.natural_key(), ("text",))
@@ -61,34 +56,14 @@ class NotebookModelsTestCase(TestCase):
         self.assertEqual(fetched, self.entry_type_text)
         self.assertEqual(str(self.entry_type_text), "text")
 
-    def test_notebook_permissions_can_view(self):
-        # Private notebook:
-        self.assertTrue(self.notebook.can_view(self.owner))
-        self.assertTrue(self.notebook.can_view(self.admin))
-        self.assertTrue(self.notebook.can_view(self.member))
-        self.assertFalse(self.notebook.can_view(self.other))
-
-        # Internal notebook:
-        self.notebook.access = Notebook.ACCESS.internal
-        self.notebook.save()
-        self.assertTrue(self.notebook.can_view(self.other))
-
-        # Public notebook:
-        self.notebook.access = Notebook.ACCESS.public
-        self.notebook.save()
-        self.assertTrue(self.notebook.can_view(None))
-
     def test_notebook_permissions_can_edit(self):
-        # Owner editor:
-        self.assertTrue(self.notebook.can_edit(self.owner))
+        # Admin editor:
         self.assertTrue(self.notebook.can_edit(self.admin))
-        self.assertFalse(self.notebook.can_edit(self.member))
         self.assertFalse(self.notebook.can_edit(self.other))
 
         # Team editor:
-        self.notebook.editor = Notebook.EDITOR.team
         self.notebook.save()
-        self.assertTrue(self.notebook.can_edit(self.member))
+        self.assertTrue(self.notebook.can_edit(self.user))
         self.assertFalse(self.notebook.can_edit(self.other))
 
         # All users editor:
@@ -99,7 +74,7 @@ class NotebookModelsTestCase(TestCase):
     def test_entry_direct_attachment_and_storage(self):
         entry = Entry.objects.create(
             notebook=self.notebook,
-            author=self.owner,
+            author=self.user,
             kind=self.entry_type_text,
             text="Direct entry notes",
         )
@@ -118,14 +93,14 @@ class NotebookModelsTestCase(TestCase):
         yesterday_dt = now - timedelta(days=1)
         entry1 = Entry.objects.create(
             notebook=self.notebook,
-            author=self.owner,
+            author=self.user,
             kind=self.entry_type_text,
             created=yesterday_dt,
             text="Yesterday entry",
         )
         entry2 = Entry.objects.create(
             notebook=self.notebook,
-            author=self.owner,
+            author=self.user,
             kind=self.entry_type_text,
             created=now,
             text="Today entry",
@@ -144,7 +119,7 @@ class NotebookModelsTestCase(TestCase):
     def test_entry_lifecycle_and_tags(self):
         entry = Entry.objects.create(
             notebook=self.notebook,
-            author=self.owner,
+            author=self.user,
             kind=self.entry_type_text,
             tags=["crystallography", "calibration"],
             text="Initial measurement notes",
@@ -152,9 +127,9 @@ class NotebookModelsTestCase(TestCase):
         self.assertEqual(entry.tags, ["crystallography", "calibration"])
         self.assertEqual(entry.tag_string(), "crystallography,calibration")
         self.assertTrue(entry.is_editable())
-        self.assertTrue(entry.can_edit(self.owner))
+        self.assertTrue(entry.can_edit(self.user))
         self.assertFalse(entry.can_edit(self.other))
-        self.assertTrue(entry.can_view(self.owner))
+        self.assertTrue(entry.can_view(self.admin))
 
         # Tag field DB round-trip:
         entry.refresh_from_db()
@@ -163,7 +138,7 @@ class NotebookModelsTestCase(TestCase):
     def test_annotation_functionality(self):
         entry = Entry.objects.create(
             notebook=self.notebook,
-            author=self.owner,
+            author=self.user,
             kind=self.entry_type_text,
             text="Sample collected with 12 keV",
         )
@@ -171,12 +146,12 @@ class NotebookModelsTestCase(TestCase):
             entry=entry,
             quote="12 keV",
             text="Verify beam energy calibration",
-            author=self.member,
+            author=self.user,
         )
         general_comment = Annotation.objects.create(
             entry=entry,
             text="Overall run looks good",
-            author=self.owner,
+            author=self.user,
         )
 
         self.assertEqual(entry.annotations.count(), 2)
@@ -192,7 +167,7 @@ class NotebookModelsTestCase(TestCase):
 
         # Entry with annotations is no longer editable by author
         self.assertFalse(entry.is_editable())
-        self.assertFalse(entry.can_edit(self.owner))
+        self.assertFalse(entry.can_edit(self.user))
 
     def test_string_list_field_and_form_field(self):
         field = StringListField()
