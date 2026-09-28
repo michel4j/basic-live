@@ -23,7 +23,7 @@ def on_user_create(sender, instance, created, **kwargs):
         return
 
     user_info = {
-        'username': instance.username,
+        'username': instance.name,
         'password': '',
         'first_name': getattr(instance, 'first_name', ''),
         'last_name': getattr(instance, 'last_name', '')
@@ -43,6 +43,6 @@ def on_user_delete(sender, instance, **kwargs):
     if not is_directory_management_enabled():
         return
 
-    name = getattr(instance, 'name', instance.username)
+    name = getattr(instance, 'name', instance.name)
     directory = slap.Directory()
     directory.delete_user(name)

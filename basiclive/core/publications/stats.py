@@ -216,5 +216,5 @@ def h_indices(users):
             metrics__citations__isnull=False, author_names__icontains=user.last_name
         )
         citations = publications.order_by('-metrics__citations').values_list('metrics__citations', flat=True)
-        h_indices[user.username] = len([c for i, c in enumerate(citations) if c >= (i + 1)])
+        h_indices[user.name] = len([c for i, c in enumerate(citations) if c >= (i + 1)])
     return h_indices

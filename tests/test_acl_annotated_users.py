@@ -1,10 +1,12 @@
 import unittest
 from datetime import timedelta
+
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
-from django.core.management import call_command
 
 from tests import setup_django
+
 setup_django()
 
 from basiclive.core.acl.models import AccessList, AnnotatedUser
@@ -37,12 +39,12 @@ class AnnotatedUsersTests(TestCase):
 
     def test_manual_only(self):
         self.access_list.users.add(self.user_bob, self.user_alice)
-        annotated = self.access_list.annotated_users()
+        annotated = self.access_list.annotated_projects()
 
         self.assertEqual(len(annotated), 2)
-        self.assertEqual(annotated[0].username, "alice")
+        self.assertEqual(annotated[0].name, "alice")
         self.assertEqual(annotated[0].source, "manual")
-        self.assertEqual(annotated[1].username, "bob")
+        self.assertEqual(annotated[1].name, "bob")
         self.assertEqual(annotated[1].source, "manual")
 
     def test_scheduled_only(self):
@@ -56,9 +58,9 @@ class AnnotatedUsersTests(TestCase):
             cancelled=False,
         )
 
-        annotated = self.access_list.annotated_users()
+        annotated = self.access_list.annotated_projects()
         self.assertEqual(len(annotated), 1)
-        self.assertEqual(annotated[0].username, "charlie")
+        self.assertEqual(annotated[0].name, "charlie")
         self.assertEqual(annotated[0].source, "schedule")
 
     def test_overlap_prioritizes_schedule_and_orders_groups(self):
@@ -85,7 +87,7 @@ class AnnotatedUsersTests(TestCase):
             cancelled=False,
         )
 
-        annotated = self.access_list.annotated_users()
+        annotated = self.access_list.annotated_projects()
 
         # Scheduled group comes first (sorted alphabetically: alice, charlie)
         # Manual group comes second (bob; alice is excluded from manual because scheduled takes precedence)
@@ -94,7 +96,7 @@ class AnnotatedUsersTests(TestCase):
             ("charlie", "schedule"),
             ("bob", "manual"),
         ]
-        self.assertEqual([(u.username, u.source) for u in annotated], expected)
+        self.assertEqual([(u.name, u.source) for u in annotated], expected)
 
     def test_schedule_disabled(self):
         self.access_list.users.add(self.user_alice)
@@ -109,8 +111,8 @@ class AnnotatedUsersTests(TestCase):
         )
 
         with override_settings(BASICLIVE_LIMS={"USE_SCHEDULE": False}):
-            annotated = self.access_list.annotated_users()
-            self.assertEqual([(u.username, u.source) for u in annotated], [("alice", "manual")])
+            annotated = self.access_list.annotated_projects()
+            self.assertEqual([(u.name, u.source) for u in annotated], [("alice", "manual")])
 
     def test_namedtuple_unpacking(self):
         user = AnnotatedUser(username="testuser", source="schedule")
@@ -119,12 +121,12 @@ class AnnotatedUsersTests(TestCase):
         self.assertEqual(s, "schedule")
 
     def test_format_allowed_users_empty(self):
-        from basiclive.core.acl.views import format_authorized_users
-        html = format_authorized_users([], self.access_list)
+        from basiclive.core.acl.views import format_authorized
+        html = format_authorized([], self.access_list)
         self.assertEqual(html, "")
 
     def test_format_allowed_users_badges(self):
-        from basiclive.core.acl.views import format_authorized_users
+        from basiclive.core.acl.views import format_authorized
 
         self.access_list.users.add(self.user_bob)
         now = timezone.localtime()
@@ -137,28 +139,28 @@ class AnnotatedUsersTests(TestCase):
             cancelled=False,
         )
 
-        html = format_authorized_users(self.access_list.annotated_users(), self.access_list)
+        html = format_authorized(self.access_list.annotated_projects(), self.access_list)
         expected_alice = '<span class="badge text-bg-success badge-md" title="Scheduled Access">ALICE</span>'
         expected_bob = '<span class="badge text-bg-warning badge-md" title="Manual Access">BOB</span>'
         self.assertEqual(html, f"{expected_alice} {expected_bob}")
 
     def test_access_list_view_configuration(self):
-        from basiclive.core.acl.views import AccessListView, format_authorized_users
+        from basiclive.core.acl.views import AccessListView, format_authorized
 
         view = AccessListView()
         self.assertEqual(
             view.get_list_columns(),
-            ['name', 'description', 'annotated_users', 'address', 'beamlines']
+            ['name', 'description', 'annotated_projects', 'address', 'beamlines']
         )
         self.assertNotIn('current_users', view.get_list_columns())
         self.assertNotIn('scheduled_users', view.get_list_columns())
-        self.assertEqual(view.get_list_headers().get('annotated_users'), 'Authorized Users')
-        self.assertIs(view.get_list_transforms().get('annotated_users'), format_authorized_users)
+        self.assertEqual(view.get_list_headers().get('annotated_projects'), 'Authorized Users')
+        self.assertIs(view.get_list_transforms().get('annotated_projects'), format_authorized)
 
         with override_settings(BASICLIVE_LIMS={"USE_SCHEDULE": False}):
             self.assertEqual(
                 view.get_list_columns(),
-                ['name', 'description', 'annotated_users', 'address', 'beamlines']
+                ['name', 'description', 'annotated_projects', 'address', 'beamlines']
             )
 
 

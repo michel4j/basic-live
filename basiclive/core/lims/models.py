@@ -1639,7 +1639,7 @@ class ActivityLogManager(models.Manager):
             e.content_type = ContentType.objects.get_for_model(obj)
         try:
             e.user = request.user
-            e.user_description = request.user.username
+            e.user_description = request.user.name
         except:
             e.user_description = _("System")
         e.ip_number = request.META.get('REMOTE_ADDR', '127.0.0.1')

@@ -145,13 +145,13 @@ class Annotation(models.Model):
     objects = AnnotationManager()
 
     def __str__(self):
-        return f'Annotation by @{self.author.username} on {self.entry}'
+        return f'Annotation by @{self.author.name} on {self.entry}'
 
     def json(self):
         return {
             'id': self.pk,
             'entry_id': self.entry_id,
-            'author': f'@{self.author.username}',
+            'author': f'@{self.author.name}',
             'time': timeish(timezone.localtime(self.created)),
             'text': self.text,
             'quote': self.quote,

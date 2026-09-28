@@ -8,7 +8,7 @@ setup_django()
 
 from basiclive.core.acl.models import AccessList
 from basiclive.core.acl.views import AccessKeys, EndpointList
-from basiclive.core.lims.models import Project, SSHKey
+from basiclive.core.lims.models import Project, User, SSHKey
 
 
 class AccessListCIDRTests(TestCase):
@@ -19,14 +19,14 @@ class AccessListCIDRTests(TestCase):
 
     def setUp(self):
         self.rf = RequestFactory()
-        self.user_alice = Project.objects.create(username="alice", name="Alice Researcher")
-        self.user_bob = Project.objects.create(username="bob", name="Bob Scientist")
-        self.user_charlie = Project.objects.create(username="charlie", name="Charlie PI")
+        self.user_alice = User.objects.create(username="alice", name="Alice Researcher")
+        self.user_bob = User.objects.create(username="bob", name="Bob Scientist")
+        self.user_charlie = User.objects.create(username="charlie", name="Charlie PI")
 
         self.key_alice = SSHKey.objects.create(
             name="alice-key",
             key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0alice alice@lab",
-            project=self.user_alice,
+            user=self.user_alice,
         )
 
         # Diverse AccessList networks

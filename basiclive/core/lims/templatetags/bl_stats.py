@@ -120,12 +120,12 @@ def samples_per_hour_percentile(category, user):
     yr = timezone.localtime() - timedelta(days=365)
     sessions = Session.objects.filter(
         pk__in=Stretch.objects.filter(end__gte=yr).values_list('session__pk', flat=True).distinct())
-    data = {project.username: {'samples': sum([s.samples().count() for s in sessions.filter(project=project)]),
+    data = {project.name: {'samples': sum([s.samples().count() for s in sessions.filter(project=project)]),
                                'total_time': sum([s.total_time() for s in sessions.filter(project=project)])}
             for project in category.projects.all()}
     averages = sorted([round(v['samples'] / v['total_time'], 2) if v['total_time'] else 0 for v in data.values()])
-    my_avg = round(data[user.username]['samples'] / data[user.username]['total_time'], 2) \
-        if data[user.username]['total_time'] else 0
+    my_avg = round(data[user.name]['samples'] / data[user.name]['total_time'], 2) \
+        if data[user.name]['total_time'] else 0
 
     return round((averages.index(my_avg) + 0.5 * averages.count(my_avg)) * 100 / len(averages))
 
@@ -151,8 +151,8 @@ def get_project_stats(user):
 
     stats = {'details': [
         {
-            'title': '{} Summary'.format(user.username.title()),
-            'description': 'Data Collection Summary for {}'.format(user.username.title()),
+            'title': '{} Summary'.format(user.name.title()),
+            'description': 'Data Collection Summary for {}'.format(user.name.title()),
             'style': "col-12",
             'content': [
                 {

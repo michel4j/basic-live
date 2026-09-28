@@ -52,7 +52,7 @@ class ProjectForm(ModalModelForm):
 
         if pk:
             self.body.title = _("Edit Profile")
-            self.body.form_action = reverse_lazy('edit-profile', kwargs={'username': self.instance.username})
+            self.body.form_action = reverse_lazy('edit-profile', kwargs={'username': self.instance.name})
         else:
             self.body.title = _("Create New Profile")
             self.body.form_action = reverse_lazy('new-project')
@@ -1118,7 +1118,7 @@ class EmptyContainers(ModalModelForm):
             Div(
                 HTML(
                     """Any containers owned by <strong>{}</strong> will be removed from the automounter.""".format(
-                        self.instance.username.upper()
+                        self.instance.name.upper()
                     )
                 )
             ),

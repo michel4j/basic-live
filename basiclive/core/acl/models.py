@@ -23,7 +23,7 @@ def validate_ip_or_network(value):
 
 
 class AnnotatedUser(NamedTuple):
-    username: str
+    name: str
     source: str
 
 
@@ -94,8 +94,8 @@ class AccessList(models.Model):
         except (ValueError, TypeError):
             return False
 
-    def authorized_users(self):
-        return [u.username for u in self.annotated_users()]
+    def authorized_projects(self):
+        return [u.name for u in self.annotated_projects()]
 
     def scheduled(self):
         if lims_settings.USE_SCHEDULE:
@@ -108,21 +108,21 @@ class AccessList(models.Model):
                 start__lte=now,
                 end__gte=now - timedelta(hours=int(slot / 2))
             ).values_list(
-                'project__username',
+                'project__name',
                 flat=True
             ).order_by().distinct()
             return list(user_names)
         return []
 
-    def annotated_users(self) -> list[AnnotatedUser]:
+    def annotated_projects(self) -> list[AnnotatedUser]:
         if lims_settings.USE_SCHEDULE:
             scheduled_set = set(self.scheduled())
         else:
             scheduled_set = set()
-        manual_set = set(self.users.values_list('username', flat=True)) - scheduled_set
+        manual_set = set(self.users.values_list('name', flat=True)) - scheduled_set
 
-        scheduled_users = [AnnotatedUser(u, 'schedule') for u in sorted(scheduled_set)]
-        manual_users = [AnnotatedUser(u, 'manual') for u in sorted(manual_set)]
+        scheduled_users = [AnnotatedUser(n, 'schedule') for n in sorted(scheduled_set)]
+        manual_users = [AnnotatedUser(n, 'manual') for n in sorted(manual_set)]
         return scheduled_users + manual_users
 
     def identity(self):

@@ -48,7 +48,7 @@ def clean_user(user, data):
         user.is_staff = True
 
     if not user.name:
-        user.name = user.username
+        user.name = user.name
 
     if (first_name, last_name, email) != (user.first_name, user.last_name, user.email):
         user.first_name = first_name

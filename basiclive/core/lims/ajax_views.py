@@ -146,7 +146,7 @@ class BulkSampleEdit(LoginRequiredMixin, View):
         errors = []
 
         group = request.POST.get('group')
-        if models.Group.objects.get(pk=group).project.username != self.request.user.username:
+        if models.Group.objects.get(pk=group).project.name != self.request.user.username:
             errors.append('You do not have permission to modify these samples.')
             return JsonResponse(errors, safe=False)
 

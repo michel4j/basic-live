@@ -99,7 +99,7 @@ class ListViewMixin(LoginRequiredMixin):
     def get_queryset(self):
         selector = {}
         if not self.request.user.is_superuser:
-            selector = {'project': self.request.user}
+            selector = {'project': self.request.project}
         return super().get_queryset().filter(**selector)
 
     def page_title(self):
@@ -710,14 +710,14 @@ class DataDetail(OwnerRequiredMixin, detail.DetailView):
 
 
 def format_score(val, record):
-    return "{:.2f}".format(val)
+    return f"{val:.2f}"
 
 
 class ReportList(ListViewMixin, ItemListView):
     model = models.AnalysisReport
     list_filters = ['modified', 'kind']
     list_columns = ['id', 'name', 'kind', 'score', 'modified']
-    list_search = ['project__username', 'name', 'data__name']
+    list_search = ['project__name', 'name', 'data__name']
     link_field = 'name'
     link_url = 'report-detail'
     ordering = ['-modified']
@@ -908,7 +908,7 @@ class RequestWizardEdit(UserPassesTestMixin, SessionWizardView):
 
     def test_func(self):
         try:
-            return models.Request.objects.get(**self.kwargs).project.username == self.request.user.username
+            return models.Request.objects.get(**self.kwargs).project.name == self.request.user.username
         except models.Request.DoesNotExist:
             return False
 
@@ -1451,7 +1451,7 @@ class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
 
     def get_context_data(self, **kwargs):
         context = super(ProjectDelete, self).get_context_data(**kwargs)
-        context['form_action'] = reverse_lazy('project-delete', kwargs={'username': self.object.username})
+        context['form_action'] = reverse_lazy('project-delete', kwargs={'username': self.object.name})
         return context
 
     def confirmed(self, *args, **kwargs):
@@ -1503,13 +1503,13 @@ class SwitchProjectView(LoginRequiredMixin, View):
 
 def record_logout(sender, user, request, **kwargs):
     """ user logged outof the system """
-    models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGOUT, '{} logged-out'.format(user.username))
+    models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGOUT, '{} logged-out'.format(user.name))
 
 
 def record_login(sender, user, request, **kwargs):
     """ Login a user into the system """
     if user.is_authenticated:
-        models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGIN, '{} logged-in'.format(user.username))
+        models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGIN, '{} logged-in'.format(user.name))
         last_login = models.ActivityLog.objects.last_login(request, user=user)
         try:
             if last_login is not None:

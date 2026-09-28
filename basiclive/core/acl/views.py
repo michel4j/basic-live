@@ -28,27 +28,27 @@ def format_beamlines(value, record):
     return ', '.join(record.beamline.values_list('acronym', flat=True))
 
 
-def format_authorized_users(users, record):
+def format_authorized(projects, record):
     badges = []
-    for user in users:
-        if user.source == 'schedule':
+    for project in projects:
+        if project.source == 'schedule':
             css_class = 'badge text-bg-success'
             title = 'Scheduled Access'
         else:
             css_class = 'badge text-bg-warning'
             title = 'Manual Access'
-        badges.append(f'<span class="{css_class} badge-md" title="{title}">{escape(user.username.upper())}</span>')
+        badges.append(f'<span class="{css_class} badge-md" title="{title}">{escape(project.name.upper())}</span>')
     return ' '.join(badges)
 
 
 class AccessListView(AdminRequiredMixin, ItemListView):
     model = models.AccessList
     list_filters = ['beamline']
-    list_columns = ['name', 'description', 'annotated_users', 'address', 'beamlines']
-    list_headers = {'annotated_users': 'Authorized Users'}
+    list_columns = ['name', 'description', 'annotated_projects', 'address', 'beamlines']
+    list_headers = {'annotated_projects': 'Authorized Users'}
     list_transforms = {
         'beamlines': format_beamlines,
-        'annotated_users': format_authorized_users,
+        'annotated_projects': format_authorized,
     }
     list_search = ['name', 'description']
     tool_template = "acl/tools-access.html"
@@ -113,7 +113,7 @@ class EndpointList(View):
         userlist = models.AccessList.objects.active_for_ip(client_addr)
 
         if userlist:
-            return JsonResponse(userlist.authorized_users(), safe=False)
+            return JsonResponse(userlist.authorized_projects(), safe=False)
         else:
             return JsonResponse([], safe=False)
 
@@ -151,7 +151,7 @@ class EndpointList(View):
                 except User.DoesNotExist as e:
                     errors.append(f"User '{connection['project']}' not found.")
 
-            return JsonResponse(user_list.authorized_users(), safe=False)
+            return JsonResponse(user_list.authorized_projects(), safe=False)
         else:
             return JsonResponse([], safe=False)
 
@@ -172,7 +172,7 @@ class AccessKeys(AuthenticationRequiredMixin, View):
         user = User.objects.filter(username=self.kwargs.get('username')).first()
 
         msg = ''
-        if user and user_list and user.username in user_list.authorized_users():
+        if user and user_list and user.username in user_list.authorized_projects():
             msg = '\n'.join(user.sshkeys.values_list('key', flat=True)).encode()
 
         return HttpResponse(msg, content_type='text/plain')

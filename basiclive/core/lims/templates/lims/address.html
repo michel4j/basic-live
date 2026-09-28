@@ -1,8 +1,8 @@
 <div class="p-3">
-    <strong>{{ user.contact_person|upper }}</strong><br/>
-    {{ user.organisation }}<br/>
-    {% if user.department %}{{ user.department }} <br/>{% endif %}
-    {{ user.address|upper }}<br/>
-    {{ user.city|upper }} {{ user.province|upper }}&nbsp;&nbsp;&nbsp;{{ user.postal_code|upper }}<br/>
-    {{ user.country|upper }}
+    <strong>{{ project.contact_person|upper }}</strong><br/>
+    {{ project.organisation }}<br/>
+    {% if project.department %}{{ project.department }} <br/>{% endif %}
+    {{ project.address|upper }}<br/>
+    {{ project.city|upper }} {{ project.province|upper }}&nbsp;&nbsp;&nbsp;{{ project.postal_code|upper }}<br/>
+    {{ project.country|upper }}
 </div>
