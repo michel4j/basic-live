@@ -174,6 +174,15 @@ class User(AbstractUser):
             Q(memberships__user=self) | Q(pi=self)
         ).distinct().order_by('name')
 
+    def can_access_project(self, project) -> bool:
+        if not self.is_authenticated:
+            return False
+        if self.is_superuser:
+            return True
+        if not project:
+            return False
+        return project.pi_id == self.pk or project.members.filter(pk=self.pk).exists()
+
     def save(self, *args, **kwargs):
         if not self.name and (self.first_name or self.last_name):
             self.name = f"{self.first_name} {self.last_name}".strip()

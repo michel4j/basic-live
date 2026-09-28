@@ -40,7 +40,17 @@ class OwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     owner_field = 'project'
 
     def test_func(self):
-        return self.request.user.is_superuser or getattr(self.get_object(), self.owner_field) == self.request.user
+        if not self.request.user.is_authenticated:
+            return False
+        if self.request.user.is_superuser:
+            return True
+        obj = self.get_object()
+        target = getattr(obj, self.owner_field, None) if self.owner_field else obj
+        if target is None and isinstance(obj, models.Project):
+            target = obj
+        if isinstance(target, models.Project):
+            return self.request.user.can_access_project(target)
+        return target == self.request.user
 
 
 class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
@@ -49,11 +59,17 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
     success_message = "Profile has been updated."
 
     def get_object(self):
-        return models.Project.objects.get(username=self.kwargs.get('username'))
+        username = self.kwargs.get('username')
+        return models.Project.objects.filter(
+            models.Q(username=username) | models.Q(name=username)
+        ).first() or models.Project.objects.get(username=username)
 
     def test_func(self):
-        """Allow access to admin or owner"""
-        return self.request.user.is_superuser or self.get_object() == self.request.user
+        """Allow access to admin or project members"""
+        try:
+            return self.request.user.can_access_project(self.get_object())
+        except models.Project.DoesNotExist:
+            return False
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -99,6 +115,8 @@ class ListViewMixin(LoginRequiredMixin):
     def get_queryset(self):
         selector = {}
         if not self.request.user.is_superuser:
+            if not self.request.project:
+                return super().get_queryset().none()
             selector = {'project': self.request.project}
         return super().get_queryset().filter(**selector)
 
@@ -190,7 +208,7 @@ class ShipmentEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
 
     def get_initial(self):
         initial = super(ShipmentEdit, self).get_initial()
-        initial.update(project=self.request.user)
+        initial.update(project=self.request.project)
         return initial
 
 
@@ -463,7 +481,7 @@ class ContainerEdit(OwnerRequiredMixin, SuccessMessageMixin, ModalUpdateView):
 
     def get_initial(self):
         initial = super(ContainerEdit, self).get_initial()
-        initial.update(project=self.request.user)
+        initial.update(project=self.request.project)
         return initial
 
     def get_success_url(self):
@@ -839,23 +857,24 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
         return ctx
 
     def get_form_initial(self, step):
-        project = self.request.user
+        project = self.request.project
         group_ids = list(self.request.GET.getlist('groups'))
         sample_ids = list(self.request.GET.getlist('samples'))
         extras = {'groups': [], 'samples': [], 'name': ''}
-        if 'group' in self.kwargs or group_ids:
-            group_ids = [self.kwargs.get('group')] if self.kwargs.get('group') else group_ids
-            groups = project.sample_groups.filter(pk__in=group_ids)
-            names = '/'.join(groups.values_list('name', flat=True))
-            extras['groups'] = groups
-            extras['name'] = f'{names} - '
+        if project:
+            if 'group' in self.kwargs or group_ids:
+                group_ids = [self.kwargs.get('group')] if self.kwargs.get('group') else group_ids
+                groups = project.sample_groups.filter(pk__in=group_ids)
+                names = '/'.join(groups.values_list('name', flat=True))
+                extras['groups'] = groups
+                extras['name'] = f'{names} - '
 
-        if 'sample' in self.kwargs or sample_ids:
-            sample_ids = [self.kwargs.get('sample')] if self.kwargs.get('sample') else sample_ids
-            samples = project.samples.filter(pk__in=sample_ids)
-            names = '/'.join(samples.values_list('name', flat=True))
-            extras['samples'] = samples
-            extras['name'] = f'{names} - '
+            if 'sample' in self.kwargs or sample_ids:
+                sample_ids = [self.kwargs.get('sample')] if self.kwargs.get('sample') else sample_ids
+                samples = project.samples.filter(pk__in=sample_ids)
+                names = '/'.join(samples.values_list('name', flat=True))
+                extras['samples'] = samples
+                extras['name'] = f'{names} - '
 
         if step == 'start':
             return self.initial_dict.get(step, {
@@ -872,8 +891,8 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
                     'request': start_data.get('start-request'),
                     'comments': start_data.get('start-comments'),
                     'name': start_data.get('start-name'),
-                    'samples': project.samples.filter(pk__in=start_data.getlist('start-samples')),
-                    'groups': project.sample_groups.filter(pk__in=start_data.getlist('start-groups')),
+                    'samples': project.samples.filter(pk__in=start_data.getlist('start-samples')) if project else models.Sample.objects.none(),
+                    'groups': project.sample_groups.filter(pk__in=start_data.getlist('start-groups')) if project else models.SampleGroup.objects.none(),
                 })
         return self.initial_dict.get(step, {})
 
@@ -887,7 +906,7 @@ class RequestWizardCreate(LoginRequiredMixin, SessionWizardView):
                 for field in ['groups', 'samples']:
                     related[field] = info.pop(field)
                 info.pop('template')
-                info.update({'project': models.Project.objects.get(username=self.request.user.username),})
+                info.update({'project': self.request.project})
             elif label == 'parameters':
                 request = info.pop('request', None)
                 if not request:
@@ -908,7 +927,8 @@ class RequestWizardEdit(UserPassesTestMixin, SessionWizardView):
 
     def test_func(self):
         try:
-            return models.Request.objects.get(**self.kwargs).project.name == self.request.user.username
+            req = models.Request.objects.get(**self.kwargs)
+            return self.request.user.can_access_project(req.project)
         except models.Request.DoesNotExist:
             return False
 
@@ -1068,11 +1088,12 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
     def get_form_initial(self, step):
         if step == 'shipment':
             today = timezone.now()
-            day_count = self.request.user.shipments.filter(
+            project = self.request.project
+            day_count = project.shipments.filter(
                 created__year=today.year, created__month=today.month, created__day=today.day
-            ).count()
+            ).count() if project else 0
             return self.initial_dict.get(step, {
-                'project': self.request.user,
+                'project': project,
                 'name': '{} #{}'.format(timezone.now().strftime('%Y-%b%d'), day_count + 1)
             })
         elif step == 'groups':
@@ -1097,7 +1118,7 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
                     })
                 else:
                     data.update({
-                        'project': self.request.user
+                        'project': self.request.project
                     })
                 project = data['project']
                 self.shipment, created = models.Shipment.objects.get_or_create(**data)
@@ -1137,8 +1158,8 @@ class ShipmentCreate(LoginRequiredMixin, SessionWizardView):
                             })
                             models.Group.objects.get_or_create(**data)
 
-        # Staff created shipments for other users should be sent and received automatically
-        if self.request.user.is_superuser and self.shipment.project != self.request.user:
+        # Staff created shipments for other projects should be sent and received automatically
+        if self.request.user.is_superuser and (not self.request.project or self.shipment.project != self.request.project):
             self.shipment.send()
             self.shipment.receive()
         return JsonResponse({'url': reverse('shipment-detail', kwargs={'pk': self.shipment.pk})})
@@ -1226,9 +1247,12 @@ class ContainerSpreadsheet(LoginRequiredMixin, detail.DetailView):
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         if request.user.is_superuser:
-            qs = models.Container.objects.filter()
+            qs = models.Container.objects.all()
         else:
-            qs = models.Container.objects.filter(project=self.request.user)
+            if not self.request.project:
+                qs = models.Container.objects.none()
+            else:
+                qs = models.Container.objects.filter(project=self.request.project)
         try:
             container = qs.get(pk=self.kwargs['pk'])
             samples = json.loads(request.POST.get('samples', '[]'))
@@ -1276,19 +1300,30 @@ class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
     success_message = "SSH key has been created"
 
     def test_func(self):
-        # Allow access to admin or owner
-        return self.request.user.is_superuser or self.kwargs['username'] == self.request.user.username
+        # Allow access to admin or project members
+        try:
+            username = self.kwargs.get('username')
+            proj = models.Project.objects.filter(
+                models.Q(username=username) | models.Q(name=username)
+            ).first()
+            if not proj:
+                return False
+            return self.request.user.can_access_project(proj)
+        except Exception:
+            return False
 
     def get_success_url(self):
         return reverse_lazy('project-profile', kwargs={'username': self.kwargs['username']})
 
     def get_initial(self):
         initial = super().get_initial()
-        try:
-            initial['project'] = models.Project.objects.get(username=self.kwargs['username'])
-        except models.Project.DoesNotExist:
-            return http.Http404
-
+        username = self.kwargs.get('username')
+        proj = models.Project.objects.filter(
+            models.Q(username=username) | models.Q(name=username)
+        ).first()
+        if not proj:
+            raise http.Http404
+        initial['project'] = proj
         return initial
 
 
@@ -1401,20 +1436,24 @@ class ProjectInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
     template_name = "lims/modal/project-info.html"
 
     def test_func(self) -> bool | None:
-        if self.request.user.is_superuser:
-            return True
-        return self.kwargs.get('username') == self.request.user.username
+        try:
+            return self.request.user.can_access_project(self.get_object())
+        except models.Project.DoesNotExist:
+            return False
 
     def get_object(self, **kwargs):
-        return models.Project.objects.get(username=self.kwargs.get('username'))
+        username = self.kwargs.get('username') or self.kwargs.get('name')
+        obj = models.Project.objects.filter(
+            models.Q(username=username) | models.Q(name=username)
+        ).first()
+        if not obj:
+            raise models.Project.DoesNotExist(f"Project matching {username} does not exist.")
+        return obj
 
 
 class ProjectProfile(ProjectInfo):
     template_name = "lims/details/project.html"
     page_title = "Project Profile"
-
-    def get_object(self, **kwargs):
-        return models.Project.objects.get(username=self.kwargs.get('username'))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
