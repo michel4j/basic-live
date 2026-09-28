@@ -120,17 +120,18 @@ class DataModelsDecouplingTestCase(TestCase):
         pi_user = LimsUser.objects.create_user(username="pi_user", email="pi@example.org")
         project = Project.objects.create(name="exp-42", pi=pi_user)
 
-        # BeamlineSupport staff references User
-        support = BeamlineSupport(staff=staff_user, date="2026-10-01")
-        self.assertEqual(support.staff, staff_user)
+        # BeamlineSupport user references User, staff references Project
+        support = BeamlineSupport(user=staff_user, staff=project, date="2026-10-01")
+        self.assertEqual(support.user, staff_user)
+        self.assertEqual(support.staff, project)
 
         # Beamtime references Project
         beamtime = Beamtime(project=project)
         self.assertEqual(beamtime.project, project)
 
-        # SupportRecord staff references User, project references Project
-        record = SupportRecord(staff=staff_user, project=project)
-        self.assertEqual(record.staff, staff_user)
+        # SupportRecord user references User, staff and project reference Project
+        record = SupportRecord(user=staff_user, staff=project, project=project)
+        self.assertEqual(record.user, staff_user)
         self.assertEqual(record.project, project)
 
     def test_activity_log_user_and_project_references(self):

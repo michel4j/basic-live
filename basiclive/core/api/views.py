@@ -17,7 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
 from basiclive.core.lims.conf import settings as lims_settings
-from basiclive.core.lims.models import ActivityLog, Beamline, Container, Automounter, Data, DataType
+from basiclive.core.lims.models import ActivityLog, Beamline, Container, Automounter, Data, DataType, Sample
 from basiclive.core.lims.models import AnalysisReport, Project, Session
 from basiclive.core.lims.templatetags.bl_tags import humanize_duration
 from basiclive.utils.data import parse_frames
@@ -54,33 +54,54 @@ def make_secure_path(path):
 class VerificationMixin(object):
     """
     Mixin to verify identity of user.
-    Requires URL parameters `username` and `signature` where the signature is a string that has been time-stamped and
-    signed using a private key, and can be unsigned using the public key stored with the user's BasicLIVE User object.
-
-    If the signature cannot be successfully unsigned, or the User does not exist,
-    the dispatch method will return a HttpResponseNotAllowed.
+    Supports JWT authenticated users (request.user.is_authenticated) as well as
+    legacy URL parameters `username` and `signature` where the signature is a string
+    signed using a private key and verified using the public key stored on the
+    User or Project object.
     """
 
     def dispatch(self, request, *args, **kwargs):
-        if not (kwargs.get('username') and kwargs.get('signature')):
-            return http.HttpResponseForbidden()
-        else:
-            User = get_user_model()
-            try:
-                user = User.objects.get(username=kwargs.get('username'))
-            except User.DoesNotExist:
-                return http.HttpResponseNotFound()
-            if not user.key:
-                return http.HttpResponseBadRequest()
-            else:
-                try:
-                    signer = Signer(public=user.key)
-                    value = signer.unsign(kwargs.get('signature'))
-                except InvalidSignature:
-                    return http.HttpResponseForbidden()
+        if getattr(request, 'user', None) and request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
 
-                if value != kwargs.get('username'):
-                    return http.HttpResponseForbidden()
+        username = kwargs.get('username')
+        signature = kwargs.get('signature')
+
+        if not (username and signature):
+            return http.HttpResponseForbidden("Authentication required.")
+
+        User = get_user_model()
+        user = User.objects.filter(username=username).first()
+        project = Project.objects.filter(Q(username__exact=username) | Q(name__exact=username)).first()
+
+        if not user and not project:
+            return http.HttpResponseNotFound("User or Project not found.")
+
+        public_key = None
+        if user and getattr(user, 'key', None):
+            public_key = user.key
+        elif project and project.key:
+            public_key = project.key
+
+        if not public_key:
+            return http.HttpResponseBadRequest("Public key not configured.")
+
+        try:
+            signer = Signer(public=public_key)
+            value = signer.unsign(signature)
+        except InvalidSignature:
+            return http.HttpResponseForbidden("Invalid signature.")
+
+        if value != username:
+            return http.HttpResponseForbidden("Signature mismatch.")
+
+        if user:
+            request.user = user
+        elif project and project.pi:
+            request.user = project.pi
+
+        if project:
+            request.project = project
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -89,30 +110,56 @@ class VerificationMixin(object):
 class UpdateUserKey(View):
     """
     API for adding a public key to a BasicLIVE Project. This method will only be allowed if the signature can be verified,
-    and the User object does not already have a public key registered.
+    or the request is authenticated by a User with access to the Project, and the Project does not already have a public key registered.
 
-    :key: r'^(?P<signature>(?P<username>):.+)/project/$'
+    :key: r'^(?P<signature>(?P<username>):.+)/project/$' or POST /project/ with project/public.
     """
 
     def post(self, request, *args, **kwargs):
-
         public = request.POST.get('public')
-        signer = Signer(public=public)
+        if not public:
+            return http.HttpResponseBadRequest("Public key required.")
 
-        value = signer.unsign(kwargs.get('signature'))
+        username = (
+            kwargs.get('username')
+            or request.POST.get('project')
+            or request.POST.get('username')
+            or (request.headers.get('X-Project') if hasattr(request, 'headers') else request.META.get('HTTP_X_PROJECT'))
+        )
+        signature = kwargs.get('signature')
 
-        if value == kwargs.get('username'):
-            User = get_user_model()
-            modified = User.objects.filter(username=kwargs['username']).filter(Q(key__isnull=True) | Q(key='')).update(
-                key=public)
+        target_project = None
+        if username:
+            target_project = Project.objects.filter(Q(username__exact=username) | Q(name__exact=username)).first()
+        elif getattr(request, 'project', None):
+            target_project = request.project
 
-            if not modified:
-                return http.HttpResponseNotModified()
+        if not target_project:
+            return http.HttpResponseNotFound("Project does not exist.")
 
-            ActivityLog.objects.log_activity(request, User.objects.get(username=kwargs['username']),
-                                             ActivityLog.TYPE.MODIFY, 'User Key Initialized')
+        if getattr(request, 'user', None) and request.user.is_authenticated:
+            if not request.user.can_access_project(target_project):
+                return http.HttpResponseForbidden("Permission denied.")
+        elif signature:
+            signer = Signer(public=public)
+            try:
+                value = signer.unsign(signature)
+            except InvalidSignature:
+                return http.HttpResponseForbidden("Invalid signature.")
+            if value != kwargs.get('username'):
+                return http.HttpResponseForbidden("Signature mismatch.")
         else:
-            return http.HttpResponseForbidden()
+            return http.HttpResponseForbidden("Authentication required.")
+
+        if target_project.key:
+            return http.HttpResponseNotModified()
+
+        target_project.key = public
+        target_project.save(update_fields=['key'])
+
+        ActivityLog.objects.log_activity(
+            request, target_project, ActivityLog.TYPE.MODIFY, 'Project Key Initialized'
+        )
 
         return JsonResponse({})
 
@@ -126,19 +173,52 @@ class LaunchSession(VerificationMixin, View):
     """
 
     def post(self, request, *args, **kwargs):
-
-        project_name = kwargs.get('username')
+        project_name = (
+            kwargs.get('username')
+            or kwargs.get('project')
+            or request.POST.get('project')
+            or request.GET.get('project')
+            or (request.headers.get('X-Project') if hasattr(request, 'headers') else request.META.get('HTTP_X_PROJECT'))
+        )
         beamline_name = kwargs.get('beamline')
         session_name = kwargs.get('session')
-        try:
-            project = Project.objects.get(username__exact=project_name)
-        except Project.DoesNotExist:
-            raise http.Http404("Project does not exist.")
 
         try:
             beamline = Beamline.objects.get(acronym__exact=beamline_name)
         except Beamline.DoesNotExist:
             raise http.Http404("Beamline does not exist.")
+
+        project = None
+        if project_name:
+            project = Project.objects.filter(Q(username__exact=project_name) | Q(name__exact=project_name)).first()
+            if not project and str(project_name).isdigit():
+                project = Project.objects.filter(id=int(project_name)).first()
+            if not project:
+                raise http.Http404("Project does not exist.")
+        elif getattr(request, 'project', None):
+            project = request.project
+
+        if not project and lims_settings.USE_SCHEDULE:
+            try:
+                from basiclive.core.schedule.models import Beamtime
+                now = timezone.now()
+                bts = Beamtime.objects.filter(
+                    beamline=beamline,
+                    start__lte=now + timedelta(hours=HALF_SHIFT),
+                    end__gte=now - timedelta(hours=HALF_SHIFT),
+                    cancelled=False
+                )
+                accessible = [bt.project for bt in bts if request.user.can_access_project(bt.project)]
+                if len(accessible) == 1:
+                    project = accessible[0]
+            except Exception:
+                pass
+
+        if not project:
+            raise http.Http404("Project does not exist or not specified.")
+
+        if not request.user.can_access_project(project):
+            return http.HttpResponseForbidden("Permission denied.")
 
         end_time = None
         if lims_settings.USE_SCHEDULE:
@@ -154,7 +234,7 @@ class LaunchSession(VerificationMixin, View):
         if created:
             # Download  key
             try:
-                key = make_secure_path(os.path.join(project_name, session.name))
+                key = make_secure_path(os.path.join(project.username or project.name, session.name))
                 session.url = key
                 session.save()
             except ValueError:
@@ -163,11 +243,15 @@ class LaunchSession(VerificationMixin, View):
         if created:
             ActivityLog.objects.log_activity(request, session, ActivityLog.TYPE.CREATE, 'Session launched')
 
-        feedback_url = force_str(reverse_lazy('session-feedback', kwargs={'key': session.feedback_key()}))
+        try:
+            feedback_url = force_str(reverse_lazy('session-feedback', kwargs={'key': session.feedback_key()}))
+            survey_url = request.build_absolute_uri(feedback_url)
+        except Exception:
+            survey_url = None
 
         session_info = {'session': session.name,
                         'duration': humanize_duration(session.total_time()),
-                        'survey': request.build_absolute_uri(feedback_url),
+                        'survey': survey_url,
                         'end_time': end_time}
         return JsonResponse(session_info)
 
@@ -180,28 +264,57 @@ class CloseSession(VerificationMixin, View):
     """
 
     def post(self, request, *args, **kwargs):
-
-        project_name = kwargs.get('username')
+        project_name = (
+            kwargs.get('username')
+            or kwargs.get('project')
+            or request.POST.get('project')
+            or request.GET.get('project')
+            or (request.headers.get('X-Project') if hasattr(request, 'headers') else request.META.get('HTTP_X_PROJECT'))
+        )
         beamline_name = kwargs.get('beamline')
         session_name = kwargs.get('session')
-        try:
-            project = Project.objects.get(username__exact=project_name)
-        except Project.DoesNotExist:
-            raise http.Http404("Project does not exist.")
 
         try:
             beamline = Beamline.objects.get(acronym__exact=beamline_name)
         except Beamline.DoesNotExist:
             raise http.Http404("Beamline does not exist.")
 
-        try:
-            session = project.sessions.get(beamline=beamline, name=session_name)
-        except Session.DoesNotExist:
+        session = None
+        if project_name:
+            project = Project.objects.filter(Q(username__exact=project_name) | Q(name__exact=project_name)).first()
+            if not project and str(project_name).isdigit():
+                project = Project.objects.filter(id=int(project_name)).first()
+            if not project:
+                raise http.Http404("Project does not exist.")
+            if not request.user.can_access_project(project):
+                return http.HttpResponseForbidden("Permission denied.")
+            session = project.sessions.filter(beamline=beamline, name=session_name).first()
+        else:
+            sessions = Session.objects.filter(beamline=beamline, name=session_name)
+            if getattr(request, 'project', None):
+                session = sessions.filter(project=request.project).first()
+            if not session:
+                accessible = [s for s in sessions if request.user.can_access_project(s.project)]
+                if len(accessible) >= 1:
+                    session = accessible[0]
+
+        if not session:
             raise http.Http404("Session does not exist.")
 
+        if not request.user.can_access_project(session.project):
+            return http.HttpResponseForbidden("Permission denied.")
+
         session.close()
+        try:
+            last_stretch = session.stretches.with_duration().last()
+            duration_val = last_stretch.duration if last_stretch else None
+        except Exception:
+            last_stretch = session.stretches.last()
+            duration_val = ((last_stretch.end or timezone.now()) - last_stretch.start) if last_stretch else None
+
+        duration_str = humanize_duration(duration_val) if duration_val else "0m"
         session_info = {'session': session.name,
-                        'duration': humanize_duration(session.stretches.with_duration().last().duration)}
+                        'duration': duration_str}
         return JsonResponse(session_info)
 
 
@@ -229,25 +342,45 @@ def prep_sample(info, **kwargs):
 
 class ProjectSamples(VerificationMixin, View):
     """
-    :Return: Dictionary for each On-Site sample owned by the User and NOT loaded on another beamline.
+    :Return: Dictionary for each On-Site sample owned by the Project and NOT loaded on another beamline.
 
     :key: r'^(?P<signature>(?P<username>):.+)/samples/(?P<beamline>)/$'
     """
 
     def get(self, request, *args, **kwargs):
-        project_name = kwargs.get('username')
+        project_name = (
+            kwargs.get('username')
+            or kwargs.get('project')
+            or request.GET.get('project')
+            or (request.headers.get('X-Project') if hasattr(request, 'headers') else request.META.get('HTTP_X_PROJECT'))
+        )
         beamline_name = kwargs.get('beamline')
 
         try:
-            project = Project.objects.get(username__exact=project_name)
-        except Project.DoesNotExist:
-            raise http.Http404("Project does not exist.")
-
-        try:
             beamline = Beamline.objects.get(acronym=beamline_name)
-            automounter = beamline.automounters.select_related('container').get(active=True)
+            automounter = Automounter.objects.select_related('container').get(beamline=beamline, active=True)
         except (Beamline.DoesNotExist, Automounter.DoesNotExist):
             raise http.Http404("Beamline or Automounter does not exist")
+
+        project = None
+        if project_name:
+            project = Project.objects.filter(Q(username__exact=project_name) | Q(name__exact=project_name)).first()
+            if not project and str(project_name).isdigit():
+                project = Project.objects.filter(id=int(project_name)).first()
+            if not project:
+                raise http.Http404("Project does not exist.")
+        elif getattr(request, 'project', None):
+            project = request.project
+        else:
+            active_sess = beamline.active_session()
+            if active_sess:
+                project = active_sess.project
+
+        if not project:
+            raise http.Http404("Project does not exist or not specified.")
+
+        if not request.user.can_access_project(project):
+            return http.HttpResponseForbidden("Permission denied.")
 
         lookups = ['container__{}'.format('__'.join(['parent']*(i+1))) for i in range(MAX_CONTAINER_DEPTH)]
         query = Q(container__status=Container.STATES.ON_SITE)
@@ -273,33 +406,56 @@ TRANSFORMS = {
 class AddReport(VerificationMixin, View):
     """
     Method to add meta-data and JSON details about an AnalysisReport.
-
-    :param username: User__username
-    :param data_id: Data objects referenced
-    :param score: float
-    :param type: str
-    :param details: JSON dict
-    :param name: str
-    :param beamline: Beamline__acronym
-
-    :Return: {'id': < Created AnalysisReport.pk >}
-
-    :key: r'^(?P<signature>(?P<username>):.+)/report/(?P<beamline>)/$'
     """
 
     def post(self, request, *args, **kwargs):
         info = msgpack.loads(request.body, raw=False)
 
-        project_name = kwargs.get('username')
+        project_name = (
+            kwargs.get('username')
+            or kwargs.get('project')
+            or (info.get('project') if isinstance(info, dict) else None)
+            or request.GET.get('project')
+            or (request.headers.get('X-Project') if hasattr(request, 'headers') else request.META.get('HTTP_X_PROJECT'))
+        )
+        beamline_name = kwargs.get('beamline')
         try:
-            project = Project.objects.get(username__exact=project_name)
-        except Project.DoesNotExist:
-            raise http.Http404("Project does not exist.")
+            beamline = Beamline.objects.get(acronym=beamline_name) if beamline_name else None
+        except Beamline.DoesNotExist:
+            beamline = None
 
-        try:
-            data = Data.objects.filter(pk__in=info.get('data_id'))
-        except:
-            raise http.Http404("Data does not exist")
+        project = None
+        if project_name:
+            project = Project.objects.filter(Q(username__exact=project_name) | Q(name__exact=project_name)).first()
+            if not project and str(project_name).isdigit():
+                project = Project.objects.filter(id=int(project_name)).first()
+            if not project:
+                raise http.Http404("Project does not exist.")
+
+        data = None
+        if info.get('data_id'):
+            data_ids = info.get('data_id')
+            if not isinstance(data_ids, (list, tuple)):
+                data_ids = [data_ids]
+            data = Data.objects.filter(pk__in=data_ids)
+            if not data.exists():
+                raise http.Http404("Data does not exist")
+            if not project:
+                project = data.first().project
+
+        if not project and getattr(request, 'project', None):
+            project = request.project
+
+        if not project and beamline:
+            active_sess = beamline.active_session()
+            if active_sess:
+                project = active_sess.project
+
+        if not project:
+            raise http.Http404("Project does not exist or not specified.")
+
+        if not request.user.can_access_project(project):
+            return http.HttpResponseForbidden("Permission denied.")
 
         # Download  key
         try:
@@ -322,8 +478,9 @@ class AddReport(VerificationMixin, View):
         else:
             report, created = AnalysisReport.objects.get_or_create(**details)
 
-        for d in data:
-            report.data.add(d)
+        if data:
+            for d in data:
+                report.data.add(d)
 
         ActivityLog.objects.log_activity(request, report, ActivityLog.TYPE.CREATE, "{} uploaded from {}".format(
             report.name, kwargs.get('beamline', 'beamline')))
@@ -333,43 +490,52 @@ class AddReport(VerificationMixin, View):
 class AddData(VerificationMixin, View):
     """
     Method to add meta-data about Data collected on the Beamline.
-
-    :param username: User__username
-    :param data_id: If updating an existing Data object
-    :param directory: Path to files
-    :param energy: float (in keV)
-    :param type: str (one of the acronyms defined for a Data Type)
-    :param exposure: float (in seconds)
-    :param attenuation: float (in percent)
-    :param beam_size: float (in microns)
-    :param name: str
-    :param filename: filename (if single frame) or formattable template (e.g. "test_{:0>4d}.img")
-    :param beamline: Beamline__acronym
-    :param sample_id: If known
-    :param frames: frames collected (e.g. "1-4,8,10-99"),
-    :param start_time:  Starting time for data acquisition. If omitted, will be now - frames * exposure time
-    :param end_time: End time for data acquisition. If omitted and start_time, is provided,
-                     will be start_time + frames * exposure_time, otherwise it will be now
-
-    :Return: {'id': < Created Data.pk >}
-
-    :key: r'^(?P<signature>(?P<username>):.+)/data/(?P<beamline>)/$'
     """
 
     def post(self, request, *args, **kwargs):
         info = msgpack.loads(request.body, raw=False)
 
-        project_name = kwargs.get('username')
+        project_name = (
+            kwargs.get('username')
+            or kwargs.get('project')
+            or (info.get('project') if isinstance(info, dict) else None)
+            or request.GET.get('project')
+            or (request.headers.get('X-Project') if hasattr(request, 'headers') else request.META.get('HTTP_X_PROJECT'))
+        )
         beamline_name = kwargs.get('beamline')
-        try:
-            project = Project.objects.get(username__exact=project_name)
-        except Project.DoesNotExist:
-            raise http.Http404("Project does not exist.")
 
         try:
             beamline = Beamline.objects.get(acronym=beamline_name)
-        except:
+        except Beamline.DoesNotExist:
             raise http.Http404("Beamline does not exist")
+
+        session = beamline.active_session()
+
+        project = None
+        if project_name:
+            project = Project.objects.filter(Q(username__exact=project_name) | Q(name__exact=project_name)).first()
+            if not project and str(project_name).isdigit():
+                project = Project.objects.filter(id=int(project_name)).first()
+            if not project:
+                raise http.Http404("Project does not exist.")
+
+        sample = None
+        if info.get('sample_id'):
+            sample = Sample.objects.filter(pk=info.get('sample_id')).first()
+            if sample and not project:
+                project = sample.project
+
+        if not project and session:
+            project = session.project
+
+        if not project and getattr(request, 'project', None):
+            project = request.project
+
+        if not project:
+            raise http.Http404("Project does not exist or not specified.")
+
+        if not request.user.can_access_project(project):
+            return http.HttpResponseForbidden("Permission denied.")
 
         # Download  key
         try:
@@ -377,8 +543,11 @@ class AddData(VerificationMixin, View):
         except ValueError:
             return http.HttpResponseServerError("Unable to create SecurePath")
 
-        session = beamline.active_session()
-        sample = project.samples.filter(pk=info.get('sample_id')).first()
+        if sample and sample.project != project:
+            sample = None
+        elif not sample:
+            sample = project.samples.filter(pk=info.get('sample_id')).first()
+
         data = Data.objects.filter(pk=info.get('id')).first()
 
         details = {

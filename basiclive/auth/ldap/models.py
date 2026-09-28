@@ -22,17 +22,23 @@ def on_user_create(sender, instance, created, **kwargs):
     if not is_directory_management_enabled():
         return
 
+    username = getattr(instance, 'username', getattr(instance, 'name', ''))
     user_info = {
-        'username': instance.name,
+        'username': username,
         'password': '',
         'first_name': getattr(instance, 'first_name', ''),
         'last_name': getattr(instance, 'last_name', '')
     }
     ldap = slap.Directory()
     info = ldap.add_user(user_info)
-    if hasattr(instance, 'name'):
-        instance.name = info.get('username')
-        instance.save(update_fields=['name'])
+    ldap_username = info.get('username') if info else None
+    if ldap_username:
+        if hasattr(instance, 'username') and instance.username != ldap_username:
+            instance.username = ldap_username
+            instance.save(update_fields=['username'])
+        elif hasattr(instance, 'name') and instance.name != ldap_username:
+            instance.name = ldap_username
+            instance.save(update_fields=['name'])
 
 
 @receiver(pre_delete)
@@ -43,6 +49,6 @@ def on_user_delete(sender, instance, **kwargs):
     if not is_directory_management_enabled():
         return
 
-    name = getattr(instance, 'name', instance.name)
+    name = getattr(instance, 'username', getattr(instance, 'name', ''))
     directory = slap.Directory()
     directory.delete_user(name)
