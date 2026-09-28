@@ -9,14 +9,17 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('crm', '0081_alter_supportrecord_project'),
-        ('lims', '0104_migrate_project_users_data'),
+        ('lims', '0103_add_user_and_membership'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.AddField(
             model_name='supportrecord',
-            name='staff',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='staff_support_records', to=settings.AUTH_USER_MODEL),
+            name='user',
+            field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.SET_NULL,
+                related_name='support_entries', to=settings.AUTH_USER_MODEL
+            ),
         ),
     ]

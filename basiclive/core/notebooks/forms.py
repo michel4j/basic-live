@@ -7,9 +7,8 @@ from crisp_modals.forms import (
     FullWidth,
     ModalModelForm,
     Row,
-    ThirdWidth,
 )
-from crispy_forms.layout import Field, Hidden, Layout
+from crispy_forms.layout import Hidden, Layout
 from django import forms
 from django.core.files.base import ContentFile
 from django.urls import reverse_lazy
@@ -25,10 +24,6 @@ class NotebookForm(ModalModelForm):
         fields = [
             'title',
             'description',
-            'owner',
-            'access',
-            'editor',
-            'members',
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
@@ -53,22 +48,10 @@ class NotebookForm(ModalModelForm):
                 except Exception:
                     pass
 
-        if self.user and not self.user.is_superuser:
-            if self.instance._state.adding:
-                self.fields['owner'].initial = self.user
-            self.fields['owner'].queryset = self.fields['owner'].queryset.filter(pk=self.user.pk)
-
-        self.fields['members'].queryset = self.fields['members'].queryset.order_by('username')
-        self.fields['owner'].queryset = self.fields['owner'].queryset.order_by('username')
-
         self.body.layout = Layout(
             Row(
                 FullWidth('title'),
                 FullWidth('description'),
-                ThirdWidth(Field('owner', css_class='select')),
-                ThirdWidth(Field('access', css_class='select')),
-                ThirdWidth(Field('editor', css_class='select')),
-                FullWidth(Field('members', css_class='select')),
                 style="g-2",
             )
         )

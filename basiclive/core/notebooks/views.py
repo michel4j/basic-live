@@ -30,44 +30,26 @@ from ...utils.filters import TagFilter
 
 class NotebookAccessMixin:
     """Restricts queryset based on notebook access and user authentication."""
+
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if not user.is_authenticated:
-            return qs.filter(access=Notebook.ACCESS.public)
-        if user.is_superuser:
+
+        if user.is_superuser or user.is_staff:
             return qs
-        return qs.filter(
-            Q(owner=user)
-            | Q(access__gte=Notebook.ACCESS.internal)
-            | Q(access=Notebook.ACCESS.private, members__pk=user.pk)
-        ).distinct()
+
+        # Filter notebooks based on access level
+        return qs.none()
 
 
 class NotebookEditMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Restricts editing to notebook owners and superusers."""
     def test_func(self):
         user = self.request.user
-        if not user.is_authenticated:
-            return False
-        if user.is_superuser:
-            return True
-        try:
-            obj = self.get_object()
-        except (Http404, self.model.DoesNotExist):
-            return False
-        return obj.owner == user
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return super().get_queryset().none()
-        if user.is_superuser:
-            return super().get_queryset()
-        return super().get_queryset().filter(owner=user)
+        return user.is_superuser or user.is_staff
 
 
-class NotebookList(NotebookAccessMixin, ListView):
+class NotebookList(NotebookAccessMixin, LoginRequiredMixin, ListView):
     model = Notebook
     template_name = "notebooks/notebook_list.html"
 
@@ -87,14 +69,8 @@ class NotebookDetail(LoginRequiredMixin, ItemListView):
 
     def get_queryset(self, **kwargs):
         qs = super().get_queryset(**kwargs)
-        user = self.request.user
+
         flt = Q(notebook__pk=self.kwargs.get('pk'))
-        if not (user.is_authenticated and user.is_superuser):
-            flt &= (
-                Q(notebook__owner=user)
-                | Q(notebook__access__gte=Notebook.ACCESS.internal)
-                | Q(notebook__access=Notebook.ACCESS.private, notebook__members=user)
-            )
         date_str = self.request.GET.get('date', '').strip() or self.kwargs.get('date')
         if date_str:
             try:
@@ -208,7 +184,7 @@ class CreateEntry(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, 
         user = self.request.user
         if not user.is_authenticated:
             return False
-        if user.is_superuser:
+        if user.is_superuser or user.is_staff:
             return True
         try:
             notebook = self.get_notebook()

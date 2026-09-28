@@ -11,20 +11,20 @@ class EntryTypeAdmin(admin.ModelAdmin):
 
 @admin.register(models.Notebook)
 class NotebookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'name', 'owner', 'access', 'editor', 'created', 'modified')
-    list_filter = ('access', 'editor')
-    search_fields = ('title', 'name', 'description', 'owner__username', 'owner__name')
+    list_display = ('title', 'name', 'created', 'modified')
+    list_filter = ('created', 'modified')
+    search_fields = ('title', 'name', 'description', )
 
 
 @admin.register(models.Entry)
 class EntryAdmin(admin.ModelAdmin):
     list_display = ('notebook', 'author', 'kind', 'created')
     list_filter = ('kind', 'created')
-    search_fields = ('text', 'tags', 'author__username', 'notebook__title', 'notebook__name')
+    search_fields = ('text', 'tags', 'notebook__title', 'notebook__name')
 
 
 @admin.register(models.Annotation)
 class AnnotationAdmin(admin.ModelAdmin):
     list_display = ('entry', 'author', 'created')
     list_filter = ('created',)
-    search_fields = ('text', 'quote', 'author__username')
+    search_fields = ('text', 'quote',)

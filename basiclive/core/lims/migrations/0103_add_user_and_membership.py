@@ -38,22 +38,41 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='project',
             name='pi',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='led_projects', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='led_projects',
+                to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AddField(
             model_name='sshkey',
             name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='sshkeys', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                related_name='sshkeys', to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.CreateModel(
             name='ProjectMembership',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('role', models.CharField(choices=[('PI', 'Principal Investigator'), ('CO_INVESTIGATOR', 'Co-Investigator'), ('MEMBER', 'Member')], default='MEMBER', max_length=20)),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to='lims.project')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to=settings.AUTH_USER_MODEL)),
+                ('created', model_utils.fields.AutoCreatedField(
+                    default=django.utils.timezone.now, editable=False, verbose_name='created'
+                )),
+                ('modified', model_utils.fields.AutoLastModifiedField(
+                    default=django.utils.timezone.now, editable=False, verbose_name='modified'
+                )),
+                ('role', models.CharField(
+                    choices=[
+                        ('PI', 'Principal Investigator'), ('CO_INVESTIGATOR', 'Co-Investigator'), ('MEMBER', 'Member')
+                    ],
+                    default='MEMBER', max_length=20
+                )),
+                ('project', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to='lims.project'
+                )),
+                ('user', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to=settings.AUTH_USER_MODEL
+                )),
             ],
             options={
                 'verbose_name': 'Project Membership',
@@ -64,37 +83,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='project',
             name='members',
-            field=models.ManyToManyField(blank=True, related_name='projects', through='lims.ProjectMembership', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AlterField(
-            model_name='activitylog',
-            name='project',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='lims.project'),
-        ),
-        migrations.AlterField(
-            model_name='analysisreport',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports', to='lims.project'),
-        ),
-        migrations.AlterField(
-            model_name='container',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='containers', to='lims.project'),
-        ),
-        migrations.AlterField(
-            model_name='data',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='datasets', to='lims.project'),
-        ),
-        migrations.AlterField(
-            model_name='group',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sample_groups', to='lims.project'),
+            field=models.ManyToManyField(
+                blank=True, related_name='projects', through='lims.ProjectMembership', to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.AlterField(
             model_name='project',
             name='created',
-            field=model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created'),
+            field=model_utils.fields.AutoCreatedField(
+                default=django.utils.timezone.now, editable=False, verbose_name='created'
+            ),
         ),
         migrations.AlterField(
             model_name='project',
@@ -114,7 +112,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='project',
             name='modified',
-            field=model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified'),
+            field=model_utils.fields.AutoLastModifiedField(
+                default=django.utils.timezone.now, editable=False, verbose_name='modified'
+            ),
         ),
         migrations.AlterField(
             model_name='project',
@@ -127,28 +127,11 @@ class Migration(migrations.Migration):
             field=models.CharField(blank=True, max_length=150, null=True, unique=True),
         ),
         migrations.AlterField(
-            model_name='request',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requests', to='lims.project'),
-        ),
-        migrations.AlterField(
-            model_name='sample',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='samples', to='lims.project'),
-        ),
-        migrations.AlterField(
-            model_name='session',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sessions', to='lims.project'),
-        ),
-        migrations.AlterField(
-            model_name='shipment',
-            name='project',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='shipments', to='lims.project'),
-        ),
-        migrations.AlterField(
             model_name='sshkey',
             name='project',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='sshkeys', to='lims.project'),
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                related_name='sshkeys', to='lims.project'
+            ),
         ),
     ]

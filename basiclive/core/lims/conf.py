@@ -12,6 +12,7 @@ DEFAULTS = {
     "DOWNLOAD_PROXY_URL": "http://basiclive.core-data/download",
     "MAX_CONTAINER_DEPTH": 2,
     "RESTRICT_DOWNLOADS": False,
+    "KEEP_ACTIVITY_WEEKS": 104,  # 2 years
     "LOADER_SELECT_DURATION": 5 * 60,  # 5 minutes
     "RESTRUCTUREDTEXT_FILTER_SETTINGS": {},
     "SEND_EMAILS": False,

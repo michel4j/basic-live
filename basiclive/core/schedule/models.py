@@ -47,11 +47,14 @@ class FacilityMode(models.Model):
 
 
 class BeamlineSupport(models.Model):
-    staff = models.ForeignKey(django_settings.AUTH_USER_MODEL, related_name="support", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        django_settings.AUTH_USER_MODEL, related_name="support", on_delete=models.CASCADE, null=True
+    )
+    staff = models.ForeignKey('lims.Project', related_name="support", on_delete=models.CASCADE)
     date = models.DateField()
 
     def __str__(self):
-        return "{} {}".format(self.staff.first_name, self.staff.last_name)
+        return f"{self.staff.first_name} {self.staff.last_name}"
 
     def active(self):
         now = timezone.localtime()

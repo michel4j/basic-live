@@ -6,6 +6,7 @@ import os
 from collections import OrderedDict, defaultdict
 from datetime import timedelta
 
+from django.conf import settings as main_settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -1661,7 +1662,7 @@ class ActivityLog(models.Model):
     )
     created = models.DateTimeField(_('Date/Time'), auto_now_add=True, editable=False)
     project = models.ForeignKey(Project, blank=True, null=True, on_delete=models.SET_NULL)
-    user = models.ForeignKey('lims.User', blank=True, null=True, related_name='activities', on_delete=models.SET_NULL)
+    user = models.ForeignKey(main_settings.AUTH_USER_MODEL, blank=True, null=True, related_name='activities', on_delete=models.SET_NULL)
     user_description = models.CharField(_('User name'), max_length=60, blank=True, null=True)
     ip_number = models.GenericIPAddressField(_('IP Address'))
     object_id = models.PositiveIntegerField(blank=True, null=True)

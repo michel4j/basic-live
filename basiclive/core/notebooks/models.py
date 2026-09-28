@@ -30,39 +30,15 @@ class Notebook(models.Model):
     name = models.SlugField(_('name'), max_length=100, db_index=True)
     title = models.CharField(_('title'), max_length=256)
     description = models.TextField(_('description'), blank=True)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notebooks')
-    members = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='shared_notebooks')
-    access = models.SmallIntegerField(_('access'), choices=ACCESS, default=ACCESS.private)
-    editor = models.SmallIntegerField(_('editor'), choices=EDITOR, default=EDITOR.owner)
-    session = models.ForeignKey('lims.Session', on_delete=models.SET_NULL, null=True, blank=True, related_name='notebooks')
-    project = models.ForeignKey('lims.Project', on_delete=models.SET_NULL, null=True, blank=True, related_name='project_notebooks')
 
     def __str__(self):
         return self.title or self.name
 
     def can_edit(self, user):
-        if not user or not user.is_authenticated:
-            return False
-        if user.is_superuser or self.owner == user:
-            return True
-        if self.editor == self.EDITOR.users:
-            return True
-        if self.editor == self.EDITOR.team and self.members.filter(pk=user.pk).exists():
-            return True
-        return False
+        return user.is_superuser or user.is_staff
 
     def can_view(self, user):
-        if self.access == self.ACCESS.public:
-            return True
-        if not user or not user.is_authenticated:
-            return False
-        if user.is_superuser or self.owner == user:
-            return True
-        if self.access == self.ACCESS.internal:
-            return True
-        if self.access == self.ACCESS.private and self.members.filter(pk=user.pk).exists():
-            return True
-        return False
+        return user.is_superuser or user.is_staff
 
 
 class EntryTypeManager(models.Manager):
@@ -108,7 +84,7 @@ class Entry(models.Model):
     created = models.DateTimeField(_('created'), default=timezone.now, db_index=True)
     modified = models.DateTimeField(_('modified'), auto_now=True)
     notebook = models.ForeignKey(Notebook, related_name='entries', on_delete=models.CASCADE)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='entries')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='entries', null=True)
     tags = models.JSONField(_('Tags'), default=list)
     kind = models.ForeignKey(EntryType, on_delete=models.CASCADE)
     text = models.TextField(blank=True, null=True)
@@ -164,7 +140,7 @@ class Annotation(models.Model):
     entry = models.ForeignKey(Entry, related_name='annotations', on_delete=models.CASCADE)
     quote = models.TextField(_('Quote'), blank=True, default='')
     text = models.TextField(_('Comment text'))
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='annotations')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='annotations', null=True)
 
     objects = AnnotationManager()
 
