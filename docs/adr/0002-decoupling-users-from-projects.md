@@ -28,3 +28,6 @@ This model prevented team collaboration, eliminated personal auditability for da
 4. **Machine APIs & Access Control**:
    - Machine APIs and JWT bearer tokens authenticate individual `User` identities and resolve project context via `X-Project` headers.
    - Beamline workstation access validates individual user credentials (`SSHKey`) while granting shift access to all active project team members.
+5. **Electronic Lab Notebooks (`basiclive.core.notebooks`)**:
+   - Attributed `Entry` and `Annotation` records directly to individual `User` accounts (`author = ForeignKey(settings.AUTH_USER_MODEL)`), establishing individual scientific auditability.
+   - Decoupled `Notebook` from project and session ownership, removing legacy `owner`, `members`, `access`, and `editor` fields in favor of staff-governed shared notebooks, while dynamically aggregating project notebook metrics through active team membership (ADR-0024).

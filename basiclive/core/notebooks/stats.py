@@ -33,9 +33,6 @@ def notebook_metrics(user=None):
 
     return {
         'total_notebooks': total_notebooks,
-        'public_notebooks': 0,
-        'internal_notebooks': 0,
-        'private_notebooks': 0,
         'total_days': total_days,
         'total_entries': total_entries,
         'total_annotations': total_annotations,
