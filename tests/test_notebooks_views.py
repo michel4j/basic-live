@@ -302,11 +302,11 @@ class NotebookViewsTestCase(TestCase):
 
     def test_notebook_detail_combined_filters(self):
         """Test NotebookDetail date filtering combined with kind, author, tags, and search."""
-        # Create an entry on yesterday by member with data_type and distinct tag
+        # Create an entry on yesterday by other with data_type and distinct tag
         data_entry = Entry.objects.create(
             notebook=self.private_nb,
             created=self.yesterday_dt,
-            author=self.user,
+            author=self.other,
             text=json.dumps({"headers": ["Energy", "Counts"], "data": {"0": [100, 200], "1": [50, 75]}}),
             kind=self.data_type,
             tags=["spectrum"],
@@ -332,10 +332,10 @@ class NotebookViewsTestCase(TestCase):
         entries = list(response.context_data["object_list"])
         self.assertEqual(entries, [self.entry_yesterday])
 
-        # Filter date + author (member)
+        # Filter date + author (other)
         response = self.client.get(
             reverse("notebooks:notebook-detail", kwargs={"pk": self.private_nb.pk}),
-            {"date": self.yesterday.isoformat(), "author__id__exact": self.user.pk},
+            {"date": self.yesterday.isoformat(), "author__id__exact": self.other.pk},
         )
         self.assertEqual(response.status_code, 200)
         entries = list(response.context_data["object_list"])

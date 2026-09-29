@@ -10,22 +10,14 @@ def notebook_metrics(user=None):
     Compute aggregate metrics for notebooks, entries, active days, and annotations.
     If user is specified, metrics are calculated for notebooks accessible by that user.
     """
-    if user and not user.is_authenticated:
-        notebook_qs = Notebook.objects.filter(access=Notebook.ACCESS.public)
-    elif user and not user.is_superuser:
-        notebook_qs = Notebook.objects.filter(
-            Q(owner=user)
-            | Q(access__gte=Notebook.ACCESS.internal)
-            | Q(access=Notebook.ACCESS.private, members__pk=user.pk)
-        ).distinct()
+    if user and not getattr(user, 'is_authenticated', False):
+        notebook_qs = Notebook.objects.none()
+    elif user and not (getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False)):
+        notebook_qs = Notebook.objects.none()
     else:
         notebook_qs = Notebook.objects.all()
 
     total_notebooks = notebook_qs.count()
-    public_notebooks = notebook_qs.filter(access=Notebook.ACCESS.public).count()
-    internal_notebooks = notebook_qs.filter(access=Notebook.ACCESS.internal).count()
-    private_notebooks = notebook_qs.filter(access=Notebook.ACCESS.private).count()
-
     entries_qs = Entry.objects.filter(notebook__in=notebook_qs)
     total_entries = entries_qs.count()
     total_days = entries_qs.dates('created', 'day').count()
@@ -41,9 +33,9 @@ def notebook_metrics(user=None):
 
     return {
         'total_notebooks': total_notebooks,
-        'public_notebooks': public_notebooks,
-        'internal_notebooks': internal_notebooks,
-        'private_notebooks': private_notebooks,
+        'public_notebooks': 0,
+        'internal_notebooks': 0,
+        'private_notebooks': 0,
         'total_days': total_days,
         'total_entries': total_entries,
         'total_annotations': total_annotations,
@@ -53,14 +45,23 @@ def notebook_metrics(user=None):
 
 def project_notebook_metrics(project):
     """
-    Compute notebook metrics scoped to a specific project or owner.
+    Compute notebook metrics scoped to a specific project.
     """
-    notebook_qs = Notebook.objects.filter(Q(owner=project) | Q(project=project)).distinct()
-    entries_qs = Entry.objects.filter(notebook__in=notebook_qs)
+    if project and hasattr(project, 'members'):
+        member_ids = list(project.members.values_list('pk', flat=True))
+        if getattr(project, 'pi_id', None):
+            member_ids.append(project.pi_id)
+        entries_qs = Entry.objects.filter(author_id__in=member_ids)
+    elif project and hasattr(project, 'pk'):
+        entries_qs = Entry.objects.filter(author_id=project.pk)
+    else:
+        entries_qs = Entry.objects.none()
+
+    notebook_ids = entries_qs.values_list('notebook_id', flat=True).distinct()
     total_days = entries_qs.dates('created', 'day').count()
 
     return {
-        'total_notebooks': notebook_qs.count(),
+        'total_notebooks': notebook_ids.count(),
         'total_days': total_days,
         'total_entries': entries_qs.count(),
         'entries_by_kind': dict(

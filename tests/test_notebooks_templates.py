@@ -41,7 +41,7 @@ class NotebookTemplatesTestCase(TestCase):
 
     def setUp(self):
         self.factory = RequestFactory()
-        self.user = User.objects.create_user(username="testuser", password="password123", name="Test User")
+        self.user = User.objects.create_user(username="testuser", password="password123", name="Test User", is_staff=True)
         self.text_type, _ = EntryType.objects.get_or_create(name="Text")
         self.data_type, _ = EntryType.objects.get_or_create(name="Data")
         self.file_type, _ = EntryType.objects.get_or_create(name="File")

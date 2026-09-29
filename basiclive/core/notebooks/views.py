@@ -35,7 +35,7 @@ class NotebookAccessMixin:
         qs = super().get_queryset()
         user = self.request.user
 
-        if user.is_superuser or user.is_staff:
+        if getattr(user, 'is_authenticated', False) and (getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False)):
             return qs
 
         # Filter notebooks based on access level
@@ -46,7 +46,7 @@ class NotebookEditMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Restricts editing to notebook owners and superusers."""
     def test_func(self):
         user = self.request.user
-        return user.is_superuser or user.is_staff
+        return getattr(user, 'is_authenticated', False) and (getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False))
 
 
 class NotebookList(NotebookAccessMixin, LoginRequiredMixin, ListView):
@@ -57,7 +57,7 @@ class NotebookList(NotebookAccessMixin, LoginRequiredMixin, ListView):
         qs = super().get_queryset()
         user = self.request.user
 
-        if user.is_superuser or user.is_staff:
+        if getattr(user, 'is_authenticated', False) and (getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False)):
             return qs
 
         # Filter notebooks based on access level

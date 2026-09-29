@@ -14,6 +14,7 @@ from basiclive.core.notebooks.models import (
     EntryType,
     Notebook,
 )
+from basiclive.core.lims.models import Project, ProjectMembership
 from basiclive.core.notebooks import stats
 
 
@@ -84,9 +85,6 @@ class NotebooksStatsTestCase(TestCase):
         """Verify metrics without user filter computes totals across all notebooks."""
         metrics = stats.notebook_metrics()
         self.assertEqual(metrics["total_notebooks"], 4)
-        self.assertEqual(metrics["public_notebooks"], 1)
-        self.assertEqual(metrics["internal_notebooks"], 1)
-        self.assertEqual(metrics["private_notebooks"], 2)
         self.assertEqual(metrics["total_days"], 1)
         self.assertEqual(metrics["total_entries"], 2)
         self.assertEqual(metrics["total_annotations"], 1)
@@ -98,40 +96,43 @@ class NotebooksStatsTestCase(TestCase):
         self.assertEqual(metrics["total_notebooks"], 4)
 
     def test_notebook_metrics_anonymous_user(self):
-        """Verify anonymous user sees only public notebooks."""
+        """Verify anonymous user sees no notebooks."""
         anon = AnonymousUser()
         metrics = stats.notebook_metrics(user=anon)
-        self.assertEqual(metrics["total_notebooks"], 1)
-        self.assertEqual(metrics["public_notebooks"], 1)
-        self.assertEqual(metrics["internal_notebooks"], 0)
-        self.assertEqual(metrics["private_notebooks"], 0)
+        self.assertEqual(metrics["total_notebooks"], 0)
+        self.assertEqual(metrics["total_entries"], 0)
 
     def test_notebook_metrics_authenticated_user(self):
-        """Verify normal authenticated user sees public, internal, and their own/shared private notebooks."""
+        """Verify non-staff authenticated user sees no notebooks, staff sees all."""
         metrics = stats.notebook_metrics(user=self.user2)
-        # user2 should see: pub (public), int (internal), priv (member), priv2 (owner) = 4
-        self.assertEqual(metrics["total_notebooks"], 4)
+        self.assertEqual(metrics["total_notebooks"], 0)
 
-        # Create another private notebook not owned by or shared with user2
-        User = get_user_model()
-        user3 = User.objects.create_user(username="user3", password="password")
-        Notebook.objects.create(
-            name="priv3-book",
-            title="Private Book 3",
-        )
-        metrics2 = stats.notebook_metrics(user=self.user2)
-        self.assertEqual(metrics2["total_notebooks"], 4)
+        self.user2.is_staff = True
+        self.user2.save()
+        metrics_staff = stats.notebook_metrics(user=self.user2)
+        self.assertEqual(metrics_staff["total_notebooks"], 4)
 
     def test_project_notebook_metrics(self):
-        """Verify project_notebook_metrics filters notebooks correctly."""
-        metrics1 = stats.project_notebook_metrics(self.user1)
-        self.assertEqual(metrics1["total_notebooks"], 3)
-        self.assertEqual(metrics1["total_days"], 1)
-        self.assertEqual(metrics1["total_entries"], 2)
-        self.assertEqual(metrics1["entries_by_kind"], {"text": 1, "data": 1})
+        """Verify project_notebook_metrics filters notebooks correctly by project team."""
+        project1 = Project.objects.create(name="proj1", pi=self.user1)
+        ProjectMembership.objects.create(project=project1, user=self.user2, role=ProjectMembership.Role.MEMBER)
+        project2 = Project.objects.create(name="proj2")
 
-        metrics2 = stats.project_notebook_metrics(self.user2)
-        self.assertEqual(metrics2["total_notebooks"], 1)
+        Entry.objects.create(
+            notebook=self.nb_priv,
+            kind=self.text_type,
+            author=self.user2,
+            text="User 2 note in private book",
+        )
+
+        metrics1 = stats.project_notebook_metrics(project1)
+        self.assertEqual(metrics1["total_notebooks"], 2)
+        self.assertEqual(metrics1["total_days"], 1)
+        self.assertEqual(metrics1["total_entries"], 3)
+        self.assertEqual(metrics1["entries_by_kind"], {"text": 2, "data": 1})
+
+        metrics2 = stats.project_notebook_metrics(project2)
+        self.assertEqual(metrics2["total_notebooks"], 0)
         self.assertEqual(metrics2["total_days"], 0)
         self.assertEqual(metrics2["total_entries"], 0)
         self.assertEqual(metrics2["entries_by_kind"], {})

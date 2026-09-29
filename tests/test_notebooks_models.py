@@ -61,14 +61,9 @@ class NotebookModelsTestCase(TestCase):
         self.assertTrue(self.notebook.can_edit(self.admin))
         self.assertFalse(self.notebook.can_edit(self.other))
 
-        # Team editor:
-        self.notebook.save()
-        self.assertTrue(self.notebook.can_edit(self.user))
-        self.assertFalse(self.notebook.can_edit(self.other))
-
-        # All users editor:
-        self.notebook.editor = Notebook.EDITOR.users
-        self.notebook.save()
+        # Staff editor:
+        self.other.is_staff = True
+        self.other.save()
         self.assertTrue(self.notebook.can_edit(self.other))
 
     def test_entry_direct_attachment_and_storage(self):
@@ -159,7 +154,7 @@ class NotebookModelsTestCase(TestCase):
         self.assertEqual(entry.annotations.with_quotes().first(), quote_comment)
 
         payload = quote_comment.json()
-        self.assertEqual(payload["author"], "@member")
+        self.assertEqual(payload["author"], f"@{self.user.name}")
         self.assertEqual(payload["text"], "Verify beam energy calibration")
         self.assertEqual(payload["quote"], "12 keV")
         self.assertEqual(payload["entry_id"], entry.pk)
