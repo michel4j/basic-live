@@ -22,6 +22,10 @@ _Avoid_: Assignment, Team Role, Project User.
 The researcher holding primary scientific and financial accountability for a Project and its shipments.
 _Avoid_: Project Lead, Project Owner, Primary Investigator.
 
+**Active Project**:
+The currently selected Project context under which a User's session, view queries, and operational actions are performed.
+_Avoid_: Current Project, Selected Project, Active Context.
+
 **Facility Account**:
 A system-level Project representing the facility or a specific beamline used to own permanent hardware vessels and calibration containers.
 _Avoid_: System User, Hardware Project, Admin Project.
@@ -31,7 +35,7 @@ The integration mechanism that synchronizes approved research proposals and team
 _Avoid_: User Importer, Portal Bridge, Sync Service.
 
 **SSHKey**:
-A public cryptographic key registered by a User or Project, used by beamline workstations to authenticate operational connections.
+A public cryptographic key registered by a User, used by beamline workstations to authenticate operational connections.
 _Avoid_: Private Key, Host Key.
 
 ### Facility & Hardware
@@ -93,7 +97,7 @@ An observational log entry recorded by beamline staff documenting technical assi
 _Avoid_: Help Ticket, Incident Log, Trouble Report.
 
 **Remote Operator**:
-An individual User designated on a Beamtime reservation authorized to remotely control beamline hardware during that shift.
+An authorized User belonging to a Project who remotely operates beamline workstations and instrumentation during an active Beamtime shift.
 _Avoid_: Driver, Remote User, Pilot.
 
 ### Experiments & Data
@@ -135,7 +139,7 @@ _Avoid_: Structure Entry, Protein Deposit, Database Record.
 ### Electronic Lab Notebooks (ELN)
 
 **Notebook**:
-A digital laboratory notebook owned by a User (or Project), optionally associated with a Session or Project, organizing date-stamped experimental records, observations, and data attachments.
+A digital laboratory notebook organizing date-stamped experimental records, observations, and data attachments.
 _Avoid_: Logbook, Diary, Journal.
 
 **Entry**:
