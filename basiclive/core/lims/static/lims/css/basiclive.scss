@@ -400,8 +400,10 @@ table {
   &.table {
     margin-bottom: 0;
     --bs-table-bg: transparent;
+    td, th {
+      vertical-align: middle;
+    }
   }
-
 }
 
 .table-hover {
@@ -434,7 +436,6 @@ table {
 }
 
 .bl-icon-md,
-.icon-md,
 .ti-md {
   font-size: calc(var(--base-icon-size, 1rem) * 1.5);
   margin-bottom: 2px;
@@ -1874,4 +1875,9 @@ $category-colors: (
     --bs-btn-disabled-border-color: rgb(var(--bs-#{$state}), 0.5);
     }
   }
+}
+
+#rc-editor {
+  height: calc(100vh - 51px) !important;
+  max-height: calc(100vh - 51px) !important;
 }

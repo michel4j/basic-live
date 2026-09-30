@@ -154,6 +154,10 @@ class ProjectDesignation(TimeStampedModel):
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
 
+    class Meta:
+        verbose_name = _("Project Designation")
+        verbose_name_plural = _("Project Designations")
+
     def __str__(self):
         return self.name
 
