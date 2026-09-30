@@ -91,6 +91,7 @@
                     {% if user.is_superuser %}
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{% url 'user-dashboard' %}">User Dashboard</a>
+                    <a class="dropdown-item" href="{% url 'report-editor-root' %}">Report Builder</a>
                     <a class="dropdown-item" href="{% url 'admin:index' %}">Admin Backend</a>
                     {% endif %}
                     <div class="dropdown-divider"></div>
