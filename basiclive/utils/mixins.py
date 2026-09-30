@@ -35,6 +35,15 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_superuser
 
 
+class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """
+    Mixin to allow access through a view only if the user is a staff member.
+    Can be used with any View.
+    """
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class AuthenticationRequiredMixin(object):
     """

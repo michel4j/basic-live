@@ -30,6 +30,10 @@ class AccessType(models.Model):
     email_body = models.TextField(blank=True)
     remote = models.BooleanField(_("Remote Access"), default=False)
 
+    class Meta:
+        verbose_name = _("Access Type")
+        verbose_name_plural = _("Access Types")
+
     def __str__(self):
         return self.name
 
@@ -38,6 +42,10 @@ class FacilityMode(models.Model):
     kind = models.CharField(max_length=30)
     description = models.CharField(blank=True, max_length=60)
     color = ColorField(default="#000000")
+
+    class Meta:
+        verbose_name = _("Facility Mode")
+        verbose_name_plural = _("Facility Modes")
 
     def __str__(self):
         return self.kind
@@ -52,6 +60,10 @@ class BeamlineSupport(models.Model):
     )
     staff = models.ForeignKey('lims.Project', related_name="support", on_delete=models.CASCADE)
     date = models.DateField()
+
+    class Meta:
+        verbose_name = _("Beamline Support")
+        verbose_name_plural = _("Beamline Support")
 
     def __str__(self):
         return f"{self.staff.first_name} {self.staff.last_name}"
@@ -84,6 +96,11 @@ class Beamtime(models.Model):
     end = models.DateTimeField(verbose_name=_('End'))
 
     objects = BeamtimeManager()
+
+    class Meta:
+        verbose_name = _("Beamtime")
+        verbose_name_plural = _("Beamtimes")
+        ordering = ['start']
 
     @property
     def start_time(self):
@@ -160,6 +177,10 @@ class Downtime(TimeFramedModel):
 
     objects = BeamtimeManager()
 
+    class Meta:
+        verbose_name = _("Downtime")
+        verbose_name_plural = _("Downtimes")
+
     @property
     def start_time(self):
         return datetime.strftime(timezone.localtime(self.start), '%Y-%m-%dT%H')
@@ -186,6 +207,10 @@ class EmailNotification(models.Model):
     email_body = models.TextField(blank=True)
     send_time = models.DateTimeField(verbose_name=_('Send Time'), null=True)
     sent = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = _("Email Notification")
+        verbose_name_plural = _("Email Notifications")
 
     def recipient_list(self):
         return list(set([e for e in [self.beamtime.project.email, self.beamtime.project.contact_email] if e]))

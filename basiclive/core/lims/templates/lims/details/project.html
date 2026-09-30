@@ -5,7 +5,7 @@
 {% load bl_tags %}
 {% load bl_themes %}
 
-{% block extra_css %}
+{% block page-styles %}
     <link href="{% static 'misc/css/c3.min.css' %}" rel="stylesheet">
     <link href="{% static 'lims/css/reports.min.css' %}" rel="stylesheet">
 {% endblock %}
@@ -101,7 +101,7 @@
     </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block page-scripts %}
     <script type="text/javascript" src="{% static 'd3/js/d3.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'd3/js/d3-legend.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'd3/js/d3.layout.timeline.min.js' %}"></script>

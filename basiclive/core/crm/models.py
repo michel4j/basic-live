@@ -15,7 +15,8 @@ class LikertScale(models.Model):
     best = models.CharField("2", max_length=25)
 
     class Meta:
-        verbose_name = "Likert Scale"
+        verbose_name = _("Likert Scale")
+        verbose_name_plural = _("Likert Scales")
 
     def __str__(self):
         return ' | '.join([self.worst, self.worse, self.better, self.best])
@@ -36,6 +37,10 @@ class SupportArea(models.Model):
     external = models.BooleanField(_("External (out of the beamline's control)"), default=False)
     scale = models.ForeignKey(LikertScale, on_delete=models.SET_NULL, null=True, blank=True, related_name='areas')
 
+    class Meta:
+        verbose_name = _("Support Area")
+        verbose_name_plural = _("Support Areas")
+
     def __str__(self):
         return self.name
 
@@ -45,6 +50,10 @@ class Feedback(TimeStampedModel):
     comments = models.TextField(blank=True, null=True)
     contact = models.BooleanField(_('Contact User'), default=False)
 
+    class Meta:
+        verbose_name = _("Feedback")
+        verbose_name_plural = _("Feedbacks")
+
     def __str__(self):
         return self.session and self.session.name or "No Session"
 
@@ -53,6 +62,10 @@ class AreaFeedback(models.Model):
     feedback = models.ForeignKey(Feedback, on_delete=models.CASCADE, related_name='areas')
     area = models.ForeignKey(SupportArea, on_delete=models.CASCADE, related_name='impressions')
     rating = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = _("Area Feedback")
+        verbose_name_plural = _("Area Feedbacks")
 
     def get_rating_display(self):
         return self.area.scale.choices()[self.rating]
@@ -74,6 +87,10 @@ class SupportRecord(TimeStampedModel):
     comments = models.TextField(blank=True, null=True)
     lost_time = models.FloatField(_('Time Lost (hours)'), default=0.0)
     staff_comments = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("Support Record")
+        verbose_name_plural = _("Support Records")
 
     def __str__(self):
         return f"{self.staff} | {self.beamline} | {self.project}"

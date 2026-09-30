@@ -97,7 +97,7 @@
     {% include "lims/comments.html" with object=object %}
 {% endblock %}
 
-{% block extra_js %}
+{% block page-scripts %}
     <script src="{% static 'jquery/js/jquery-ui.min.js' %}"></script>
     <script>
         $(".sortable tbody").sortable({

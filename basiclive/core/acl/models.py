@@ -8,8 +8,6 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
-from model_utils import Choices
-from django.conf import settings
 
 from basiclive.core.lims.conf import settings as lims_settings
 from basiclive.utils.misc import natural_duration
@@ -103,6 +101,10 @@ class AccessList(models.Model):
 
     objects = AccessListQuerySet.as_manager()
 
+    class Meta:
+        verbose_name = _("Access List")
+        verbose_name_plural = _("Access Lists")
+
     @property
     def network(self):
         return ip_network(self.address, strict=False)
@@ -164,9 +166,6 @@ class AccessList(models.Model):
     def __str__(self):
         return str(self.name)
 
-    class Meta:
-        verbose_name = "Access List"
-
 
 class Access(TimeStampedModel):
     class Status(models.TextChoices):
@@ -182,10 +181,14 @@ class Access(TimeStampedModel):
     start_time = models.DateTimeField('Start Time', default=timezone.now)
     end_time = models.DateTimeField('End Time', null=True, blank=True)
 
+    class Meta:
+        verbose_name = _("Access")
+        verbose_name_plural = _("Accesses")
+
     def is_active(self):
         return self.status in [self.Status.CONNECTED, self.Status.DISCONNECTED]
 
     def total_time(self):
         end = self.end_time or timezone.now()
         return natural_duration(end - self.start_time)
-    total_time.short_description = "Duration"
+    total_time.short_description = _("Duration")

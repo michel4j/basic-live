@@ -31,6 +31,10 @@ class Notebook(models.Model):
     title = models.CharField(_('title'), max_length=256)
     description = models.TextField(_('description'), blank=True)
 
+    class Meta:
+        verbose_name = _("Notebook")
+        verbose_name_plural = _("Notebooks")
+
     def __str__(self):
         return self.title or self.name
 
@@ -50,6 +54,10 @@ class EntryType(models.Model):
     name = models.SlugField(_('name'), max_length=20, unique=True)
 
     objects = EntryTypeManager()
+
+    class Meta:
+        verbose_name = _("Entry Type")
+        verbose_name_plural = _("Entry Types")
 
     def natural_key(self):
         return (self.name,)
@@ -91,7 +99,8 @@ class Entry(models.Model):
     file = models.FileField(upload_to=entry_storage, blank=True, null=True)
 
     class Meta:
-        verbose_name_plural = 'entries'
+        verbose_name = _("Entry")
+        verbose_name_plural = _("Entries")
         ordering = ['created']
 
     def __str__(self):
@@ -143,6 +152,10 @@ class Annotation(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='annotations', null=True)
 
     objects = AnnotationManager()
+
+    class Meta:
+        verbose_name = _("Annotation")
+        verbose_name_plural = _("Annotations")
 
     def __str__(self):
         return f'Annotation by @{self.author.name} on {self.entry}'

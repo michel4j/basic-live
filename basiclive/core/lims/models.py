@@ -103,6 +103,10 @@ class Beamline(models.Model):
     automounters = models.ManyToManyField('Container', through='Automounter', through_fields=('beamline', 'container'))
     active = models.BooleanField(default=True)
 
+    class Meta:
+        verbose_name = _("Beamline")
+        verbose_name_plural = _("Beamlines")
+
     def __str__(self):
         return self.acronym
 
@@ -129,6 +133,10 @@ class Carrier(models.Model):
 
     name = models.CharField(max_length=60)
     url = models.URLField()
+
+    class Meta:
+        verbose_name = _("Courier Carrier")
+        verbose_name_plural = _("Courier Carriers")
 
     def __str__(self):
         return self.name
@@ -258,11 +266,16 @@ class Project(TimeStampedModel):
     organisation = models.CharField(max_length=600, blank=True, null=True)
     show_archives = models.BooleanField(default=True)
     key = models.TextField(blank=True)
-    kind = models.ForeignKey(ProjectType, blank=True, null=True, on_delete=models.SET_NULL,
-                             verbose_name=_("Project Type"))
+    kind = models.ForeignKey(
+        ProjectType, blank=True, null=True, on_delete=models.SET_NULL, verbose_name=_("Project Type")
+    )
     alias = models.CharField(max_length=20, blank=True, null=True)
     designation = models.ManyToManyField(ProjectDesignation, verbose_name=_("Project Designation"), blank=True)
     updated = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = _("Project")
+        verbose_name_plural = _("Projects")
 
     def __str__(self):
         return self.name.upper() if self.name else ""
@@ -320,9 +333,6 @@ class Project(TimeStampedModel):
                 defaults={'role': ProjectMembership.Role.PI}
             )
 
-    class Meta:
-        verbose_name = _("Project Account")
-
 
 class SSHKey(TimeStampedModel):
     name = models.CharField(max_length=60)
@@ -343,7 +353,8 @@ class SSHKey(TimeStampedModel):
     )
 
     class Meta:
-        verbose_name = "SSH Key"
+        verbose_name = _("SSH Key")
+        verbose_name_plural = _("SSH Keys")
 
     def fingerprint(self):
         import hashlib
@@ -426,6 +437,8 @@ class Session(models.Model):
     objects = SessionManager()
 
     class Meta:
+        verbose_name = _("Session")
+        verbose_name_plural = _("Sessions")
         ordering = ('-created',)
 
     def __str__(self):
@@ -560,8 +573,8 @@ class Stretch(models.Model):
     objects = StretchManager()
 
     class Meta:
-        verbose_name = _("Beamline Usage")
-        verbose_name_plural = _("Beamline Usage")
+        verbose_name = _("Session Stretch")
+        verbose_name_plural = _("Session Stretches")
         ordering = ['-start', ]
 
 
@@ -716,8 +729,12 @@ class Shipment(TransitStatusMixin):
 
     objects = ShipmentQuerySet.as_manager()
 
+    class Meta:
+        verbose_name = _("Shipment")
+        verbose_name_plural = _("Shipments")
+
     def identity(self):
-        return 'SHP-{:07,d}'.format(self.id).replace(',', '-')
+        return f'SHP-{self.id:07,d}'.replace(',', '-')
 
     def get_absolute_url(self):
         return reverse('shipment-detail', kwargs={'pk': self.id})
@@ -875,6 +892,10 @@ class Shipment(TransitStatusMixin):
 class ComponentType(models.Model):
     name = models.CharField(max_length=50)
 
+    class Meta:
+        verbose_name = _("Component Type")
+        verbose_name_plural = _("Component Types")
+
     def __str__(self):
         return self.name
 
@@ -882,6 +903,10 @@ class ComponentType(models.Model):
 class Component(models.Model):
     shipment = models.ForeignKey(Shipment, related_name="components", on_delete=models.CASCADE)
     kind = models.ForeignKey(ComponentType, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _("Component")
+        verbose_name_plural = _("Components")
 
 
 class ContainerType(models.Model):
@@ -913,6 +938,10 @@ class ContainerType(models.Model):
     envelope = models.CharField(max_length=200, blank=True, choices=ENVELOPES)
     active = models.BooleanField("User option", default=False)
 
+    class Meta:
+        verbose_name = _("Container Type")
+        verbose_name_plural = _("Container Types")
+
     def __str__(self):
         return self.name
 
@@ -923,6 +952,11 @@ class ContainerLocation(models.Model):
     kind = models.ForeignKey(ContainerType, on_delete=models.CASCADE, null=True, related_name="locations")
     x = models.FloatField(default=0.0)
     y = models.FloatField(default=0.0)
+
+    class Meta:
+        verbose_name = _("Container Location")
+        verbose_name_plural = _("Container Locations")
+        ordering = ('kind', 'name')
 
     def __str__(self):
         return self.name
@@ -960,6 +994,8 @@ class Container(TransitStatusMixin):
     objects = ContainerManager()
 
     class Meta:
+        verbose_name = _("Container")
+        verbose_name_plural = _("Containers")
         unique_together = (
             ("project", "name", "shipment"),
         )
@@ -1140,7 +1176,7 @@ class LoadHistory(models.Model):
         ordering = ['-start', ]
 
     def __str__(self):
-        return '{}|{}|{}|{}'.format(self.child, self.parent, self.start, self.end)
+        return f'{self.child}|{self.parent}|{self.start}|{self.end}'
 
 
 class Automounter(models.Model):
@@ -1155,11 +1191,15 @@ class Automounter(models.Model):
     modified = models.DateTimeField('date modified', auto_now=True, editable=False)
     active = models.BooleanField(default=False)
 
+    class Meta:
+        verbose_name = _("Automounter")
+        verbose_name_plural = _("Automounters")
+
     def __str__(self):
         return "{} | {}".format(self.beamline.acronym, self.container.name)
 
     def identity(self):
-        return 'ATM-{:07,d}'.format(self.id).replace(',', '-')
+        return f'ATM-{self.id:07,d}'.replace(',', '-')
 
     def json_dict(self):
         return {
@@ -1232,6 +1272,10 @@ class RequestType(models.Model):
     layout = models.JSONField(blank=True, default=list)
     active = models.BooleanField(default=True)
 
+    class Meta:
+        verbose_name = _('Request Type')
+        verbose_name_plural = _('Request Types')
+
     def __str__(self):
         return self.name
 
@@ -1261,10 +1305,11 @@ class Request(ProjectObjectMixin):
 
     class Meta:
         verbose_name = _('Request')
+        verbose_name_plural = _('Requests')
         ordering = ['priority']
 
     def identity(self):
-        return 'REQ-{:07,d}'.format(self.id).replace(',', '-')
+        return f'REQ-{self.id:07,d}'.replace(',', '-')
 
     def labeled_parameters(self):
         parameters = self.parameters or {}
@@ -1319,13 +1364,14 @@ class Group(ProjectObjectMixin):
 
     class Meta:
         verbose_name = _('Group')
+        verbose_name_plural = _('Groups')
         unique_together = (
             ("project", "name", "shipment"),
         )
         ordering = ['priority']
 
     def identity(self):
-        return 'GRP-{:07,d}'.format(self.id).replace(',', '-')
+        return f'GRP-{self.id:07,d}'.replace(',', '-')
 
     def get_absolute_url(self):
         return reverse('group-detail', kwargs={'pk': self.id})
@@ -1382,6 +1428,8 @@ class Sample(ProjectObjectMixin):
     objects = SampleManager()
 
     class Meta:
+        verbose_name = _('Sample')
+        verbose_name_plural = _('Samples')
         unique_together = (
             ("container", "location"),
         )
@@ -1391,7 +1439,7 @@ class Sample(ProjectObjectMixin):
         return reverse('sample-detail', kwargs={'pk': self.id})
 
     def identity(self):
-        return 'SPL-{:07,d}'.format(self.id).replace(',', '-')
+        return f'SPL-{self.id:07,d}'.replace(',', '-')
 
     def automounter(self):
         return self.container.automounter()
@@ -1470,6 +1518,10 @@ class DataType(models.Model):
 
     objects = DataTypeManager()
 
+    class Meta:
+        verbose_name = _('Data Type')
+        verbose_name_plural = _('Data Types')
+
     def natural_key(self):
         return self.acronym,
 
@@ -1507,6 +1559,7 @@ class Data(ActiveStatusMixin):
 
     class Meta:
         verbose_name = _('Dataset')
+        verbose_name_plural = _('Datasets')
         ordering = ['created', ]
 
     def __str__(self):
@@ -1595,14 +1648,16 @@ class AnalysisReport(ActiveStatusMixin):
     objects = ProjectObjectManager()
 
     class Meta:
+        verbose_name = _('Analysis Report')
+        verbose_name_plural = _('Analysis Reports')
         ordering = ['created', '-score']
 
     def download_url(self):
         dataset = self.data.first()
-        return '{}/{}-report-{}.tar.gz'.format(self.url, dataset.name, self.pk)
+        return f'{self.url}/{dataset.name}-report-{self.pk}.tar.gz'
 
     def identity(self):
-        return 'RPT-{:07,d}'.format(self.id).replace(',', '-')
+        return f'RPT-{self.id:07,d}'.replace(',', '-')
 
     def label(self):
         if 'MX' in self.kind:
@@ -1697,6 +1752,8 @@ class ActivityLog(models.Model):
     objects = ActivityLogManager()
 
     class Meta:
+        verbose_name = _('Activity Log')
+        verbose_name_plural = _('Activity Logs')
         ordering = ('-created',)
 
     def __str__(self):
@@ -1733,6 +1790,11 @@ class Guide(TimeStampedModel):
     modal = models.BooleanField(default=False)
     url = models.CharField(_("URL or Resource"), max_length=200, blank=True, null=True)
 
+    class Meta:
+        verbose_name = _('Guide')
+        verbose_name_plural = _('Guides')
+        ordering = ("-staff_only", "priority",)
+
     def has_document(self):
         if self.attachment:
             mime, encoding = mimetypes.guess_type(self.attachment.url)
@@ -1751,15 +1813,17 @@ class Guide(TimeStampedModel):
     def __str__(self):
         return self.title
 
-    class Meta:
-        ordering = ("-staff_only", "priority",)
-
 
 class Config(TimeStampedModel):
     beamline = models.ForeignKey(Beamline, on_delete=models.CASCADE)
     automounter = models.ForeignKey(Automounter, on_delete=models.CASCADE)
     selected = models.ForeignKey(Container, related_name='selected', on_delete=models.SET_NULL, null=True)
     pending = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = _("Automounter Config")
+        verbose_name_plural = _("Automounter Configs")
+        ordering = ("-modified",)
 
     def __str__(self):
         return f"{self.automounter.container.kind}"
