@@ -101,7 +101,14 @@ class Beamline(models.Model):
     energy_hi = models.FloatField(default=18.5)
     contact_phone = models.CharField(max_length=60)
     automounters = models.ManyToManyField('Container', through='Automounter', through_fields=('beamline', 'container'))
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(
+        default=True,
+        help_text=_("Designates whether this beamline is operational. Unselect instead of deleting decommissioned beamlines.")
+    )
+    simulated = models.BooleanField(
+        default=False,
+        help_text=_("Designates whether this beamline is used for testing and simulation rather than physical production.")
+    )
 
     class Meta:
         verbose_name = _("Beamline")
@@ -122,6 +129,14 @@ class Beamline(models.Model):
         only one active automounter referencing each beamline at any given time.
         """
         return self.layouts.filter(active=True).first()
+
+    @property
+    def is_decommissioned(self):
+        return not self.active
+
+    @property
+    def is_production(self):
+        return self.active and not self.simulated
 
 
 class Carrier(models.Model):

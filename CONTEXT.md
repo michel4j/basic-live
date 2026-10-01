@@ -41,7 +41,7 @@ _Avoid_: Private Key, Host Key.
 ### Facility & Hardware
 
 **Beamline**:
-A physical synchrotron radiation experimental station equipped with endstation instrumentation where experiments are performed.
+A physical synchrotron radiation experimental station equipped with endstation instrumentation where experiments are performed, or a virtual station configured for software testing and simulation (`simulated`). Operational lifecycle (`active`) distinguishes beamlines in active service from decommissioned or retired stations.
 _Avoid_: Station, Instrument, Endstation, Hutch.
 
 **Automounter**:

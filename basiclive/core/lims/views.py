@@ -701,6 +701,7 @@ class UsageSummary(PlotViewMixin, DataList):
     list_filters = [
         'beamline',
         'beamline__active',
+        'beamline__simulated',
         'kind',
         filters.StartYearFilter('modified'),
         filters.EndYearFilter('modified'),

@@ -85,7 +85,7 @@ class Command(BaseCommand):
                 bt = Beamtime.objects.create(**info)
 
             for p in downtime:
-                for bl in Beamline.objects.exclude(simulated=True):
+                for bl in Beamline.objects.filter(active=True, simulated=False):
                     info = {
                         'start': get_date(p['fields']['start_date'], p['fields']['first_shift']),
                         'end': get_date(p['fields']['end_date'], p['fields']['last_shift'], True),

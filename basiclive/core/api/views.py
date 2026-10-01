@@ -188,6 +188,9 @@ class LaunchSession(VerificationMixin, View):
         except Beamline.DoesNotExist:
             raise http.Http404("Beamline does not exist.")
 
+        if not beamline.active:
+            return http.HttpResponseForbidden("Beamline is inactive or decommissioned.")
+
         project = None
         if project_name:
             project = Project.objects.filter(Q(username__exact=project_name) | Q(name__exact=project_name)).first()
@@ -227,7 +230,7 @@ class LaunchSession(VerificationMixin, View):
                                                end__gte=now - timedelta(hours=HALF_SHIFT))
             if beamtime.exists():
                 end_time = max(beamtime.values_list('end', flat=True)).isoformat()
-            elif not beamline.active:
+            elif beamline.simulated:
                 end_time = (timezone.now() + timedelta(hours=2)).isoformat()
 
         session, created = Session.objects.get_or_create(project=project, beamline=beamline, name=session_name)

@@ -50,7 +50,7 @@ class CalendarView(TemplateView):
         context['year'] = year
         context['week'] = week
         context['support'] = f"{MIN_SUPPORT_HOUR:02d}:00 - {MAX_SUPPORT_HOUR:02d}:00"
-        context['beamlines'] = Beamline.objects.filter(active=True)
+        context['beamlines'] = Beamline.objects.filter(active=True, simulated=False)
         context['access_types'] = models.AccessType.objects.all()
         context['facility_modes'] = models.FacilityMode.objects.all()
         context['scope_types'] = [(s[1].replace(' ', ''), s[1]) for s in models.Downtime.SCOPE_CHOICES]
