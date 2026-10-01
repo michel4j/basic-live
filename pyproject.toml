@@ -30,6 +30,7 @@ dependencies = [
     "timezonefinder",
     "fastjsonschema",
     "django-crisp-modals >= 2026.1.2",
+    "django-reportcraft (>=2026.9.5,<2027.0.0)",
 ]
 
 [project.optional-dependencies]

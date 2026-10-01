@@ -24,5 +24,7 @@ Single-context layout (`CONTEXT.md` and `docs/adr/` at repo root). See `docs/age
 * **Environment Path Inspection:** Use `poetry env info --path` if an absolute path to the virtual environment python interpreter is required.
 
 ## Commands
-- Run the test suite: `poetry run python -m unittest `
-- Run a specific test file: `poetry run python -m unittest tests/test_xxx.py`
+- Run the full test suite: `poetry run python manage.py test`
+- Run tests for a specific app: `poetry run python manage.py test basiclive.core.lims`
+- Run a specific test file: `poetry run python manage.py test basiclive.core.lims.tests.test_conf`
+- Run a specific test case: `poetry run python manage.py test basiclive.core.lims.tests.test_conf.LimsConfTests`

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     'memoize',
     'itemlist',
+    'reportcraft',
     'basiclive.core.lims',
     'basiclive.core.api',
     'basiclive.core.acl',
@@ -50,6 +51,8 @@ INSTALLED_APPS = [
     'basiclive.core.crm',
     'basiclive.core.publications',
     'basiclive.core.notebooks',
+    'basiclive.auth.ldap',
+    'basiclive.auth.cas',
 
     "crispy_forms",
     "crispy_bootstrap5",
@@ -134,6 +137,33 @@ SECURE_CSP = {
     "script-src": [CSP.UNSAFE_INLINE, CSP.UNSAFE_EVAL, CSP.SELF],
     "frame-src": [CSP.NONE],
 }
+
+REPORTCRAFT_APPS = ['lims', 'schedule', 'crm', 'publications', 'acl', 'notebooks']
+REPORTCRAFT_MIXINS = {
+    'VIEW': ['basiclive.utils.mixins.StaffRequiredMixin'],
+    'EDIT': ['basiclive.utils.mixins.AdminRequiredMixin'],
+}
+REPORTCRAFT_FUNCTIONS = [
+    'basiclive.utils.functions.String',
+    'basiclive.utils.functions.JoinArray',
+    'basiclive.utils.functions.ArrayLength',
+    'reportcraft.functions.postgres.Join',
+    'django.contrib.postgres.aggregates.ArrayAgg',
+    'django.contrib.postgres.aggregates.JSONBAgg',
+    'basiclive.utils.functions.ArrayItems',
+    'basiclive.utils.functions.JSONAvg',
+    'basiclive.utils.functions.AgeYears',
+    'basiclive.utils.functions.AgeMonths',
+    'basiclive.utils.functions.YearMonth',
+    'basiclive.utils.functions.Quarter',
+    'basiclive.utils.functions.RootValue',
+    'basiclive.utils.functions.SubMin',
+    'basiclive.utils.functions.SubMax',
+    'basiclive.utils.functions.SubCount',
+    'basiclive.utils.functions.SubAvg',
+    'basiclive.utils.functions.SubSum',
+    'basiclive.utils.functions.Shifts',
+]
 
 AUTH_PROVIDERS = []
 AUTH_USER_MODEL = 'lims.User'

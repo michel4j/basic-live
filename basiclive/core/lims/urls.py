@@ -11,6 +11,7 @@ urlpatterns = [
     path('profile/<slug:username>/labels', views.ProjectLabels.as_view(), name='project-labels'),
 
     path('projects/', views.ProjectList.as_view(), name='user-list'),
+    path('projects/dashboard/', views.ProjectList.as_view(), name='user-dashboard'),
     path('projects/switch/<int:pk>/', views.SwitchProjectView.as_view(), name='switch-project'),
     path('projects/switch/', views.SwitchProjectView.as_view(), name='switch-project-form'),
     path('projects/new/', views.ProjectCreate.as_view(), name='new-project'),

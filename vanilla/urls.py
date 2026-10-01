@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/v2/', include('basiclive.core.api.urls')),
     path('api/v3/', include('basiclive.core.api.urls')),
     path('api/', include('basiclive.core.api.urls')),
+    path('reports/', include('reportcraft.urls')),
 ]
 
 if lims_settings.USE_SCHEDULE:
