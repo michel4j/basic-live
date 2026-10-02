@@ -64,7 +64,10 @@ def energy_to_wavelength(energy):
 def humanize_duration(duration, sec=False):
     if isinstance(duration, (int, float)):
         return natural_seconds(timedelta(hours=duration).total_seconds())
-    return natural_seconds(duration.total_seconds())
+    elif isinstance(duration, timedelta):
+        return natural_seconds(duration.total_seconds())
+    else:
+        return str(duration)
 
 
 @register.filter("natural_duration")

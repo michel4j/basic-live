@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import requests
 from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView, ModalFormView
@@ -27,6 +28,7 @@ from basiclive.utils import filters
 from basiclive.utils.mixins import AdminRequiredMixin, PlotViewMixin, AuthenticationRequiredMixin
 from . import forms, models, stats
 from .icons import render_icon
+from ...utils.reporting import translate_report
 
 if settings.USE_SCHEDULE:
     from basiclive.core.schedule.models import BeamlineSupport
@@ -749,6 +751,15 @@ class ReportList(ListViewMixin, ItemListView):
 class ReportDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.AnalysisReport
     template_name = "lims/details/report.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        if isinstance(self.object.details, list) and self.object.details:
+            report_data = translate_report(self.object.details)
+        else:
+            report_data = self.object.details
+        context['report_data'] = report_data
+        return context
 
 
 class ShipmentDataList(DataList):

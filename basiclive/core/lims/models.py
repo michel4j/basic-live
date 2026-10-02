@@ -1566,7 +1566,7 @@ class Data(ActiveStatusMixin):
     frames_per_file = models.IntegerField(_("Maximum Frames per File"), default=1)
     exposure_time = models.FloatField(null=True, blank=True)
     attenuation = models.FloatField(default=0.0)
-    energy = models.DecimalField(decimal_places=4, max_digits=10)
+    energy = models.FloatField(default=0.0)
     beamline = models.ForeignKey(Beamline, on_delete=models.PROTECT, related_name='datasets')
     beam_size = models.FloatField(null=True, blank=True)
     url = models.CharField(max_length=200)

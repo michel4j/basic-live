@@ -1,6 +1,6 @@
 // Variables
-$web-font-path: "https://fonts.googleapis.com/css?family=Fira+Code|Fira+Sans+Condensed:400,800|Fira+Sans:200,400,800|Nanum+Pen+Script|LXGW+WenKai+Mono+TC&display=swap" !default;
-
+$web-font-path: "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Fira+Sans+Condensed:ital,wght@0,300;0,400;0,600;0,900;1,400&family=Fira+Sans:ital,wght@0,300;0,400;0,600;0,900;1,400&family=Nanum+Pen+Script&display=swap";
+//$web-font-path: "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Nanum+Pen+Script&family=Signika:wght@300..700&display=swap";
 
 
 // import web-font
@@ -1134,6 +1134,10 @@ a {
 .report-viewer table.table tbody td {
   font-family: var(--bs-font-monospace);
   font-size: 0.85rem;
+}
+#report-entry {
+  padding-top: 1rem;
+
 }
 
 svg * {

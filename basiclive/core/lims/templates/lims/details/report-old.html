@@ -1,9 +1,15 @@
 {% extends "lims/base.html" %}
 
-{% load static humanize bl_badges bl_data_tags bl_icons bl_tags reportcraft %}
+{% load humanize %}
+{% load static %}
+{% load bl_badges %}
+{% load bl_data_tags %}
+{% load bl_icons %}
+{% load bl_tags %}
 
 {% block page-styles %}
-    <link href="{% static "reportcraft/reportcraft.min.css" %}" rel="stylesheet">
+    <link href="{% static "misc/css/c3.min.css" %}" rel="stylesheet">
+    <link href="{% static "lims/css/reports.min.css" %}" rel="stylesheet">
 {% endblock %}
 
 {% block page-pre-title %}Report{% endblock %}
@@ -57,25 +63,22 @@
 {% endblock %}
 
 {% block page-content %}
-    <div id="report-entry" class="report-default p-5 m-5"></div>
+    <div id="report-builder"></div>
 {% endblock %}
 
 {% block page-scripts %}
-    {{ report_data |json_script:"rc-report-data" }}
-    <script type="module">
-        import {showReport} from '';
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const inlineDataEl = document.getElementById("rc-report-data");
-            if (inlineDataEl) {
-                try {
-                    const data = JSON.parse(inlineDataEl.textContent);
-                    const sections = data["sections"] || data["content"] || [];
-                    showReport("#report-entry", sections, "{% static 'reportcraft' %}");
-                } catch (error) {
-                    console.error('Error rendering inline report data:', error);
-                }
-            }
+    <script type="text/javascript" src="{% static 'd3/js/d3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'd3/js/d3-legend.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'misc/js/showdown.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'misc/js/c3.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'lims/js/basiclive-reports.min.js' %}"></script>
+    {{ report_data |json_script:"report-data" }}
+    <script type="text/javascript">
+        let report = {
+            details: JSON.parse(document.getElementById('report-data').textContent)
+        };
+        $('#report-builder').liveReport({
+            data: report
         });
     </script>
 {% endblock %}
