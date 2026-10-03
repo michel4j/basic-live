@@ -1557,7 +1557,7 @@ class Data(ActiveStatusMixin):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='datasets')
     group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.SET_NULL, related_name='datasets')
     sample = models.ForeignKey(Sample, null=True, blank=True, on_delete=models.SET_NULL, related_name='datasets')
-    session = models.ForeignKey(Session, null=True, blank=True, on_delete=models.SET_NULL, related_name='datasets')
+    session = models.ForeignKey(Session, null=True, blank=True, on_delete=models.CASCADE, related_name='datasets')
     start_time = models.DateTimeField(null=True, blank=False)
     end_time = models.DateTimeField(null=True, blank=False)
     file_name = models.CharField(max_length=200, null=True, blank=True)
