@@ -81,8 +81,12 @@ A scheduled calendar time allocation granted to a Project on a specific Beamline
 _Avoid_: Booking, Slot, Reservation.
 
 **Session**:
-A discrete period of experimental execution conducted on a Beamline by a Project.
+A discrete period of experimental execution conducted on a Beamline by a Project. On physical production beamlines, sessions require scheduled Beamtime; on virtual simulation stations (`simulated`), ad-hoc sandbox sessions may be launched without allocated shifts.
 _Avoid_: Run, Experiment, Shift.
+
+**Simulated Session Cleanup**:
+The housekeeping operation (`clean_simulated_sessions`) that permanently purges testing sessions, stretches, datasets, dependent analysis reports, feedback, and activity logs on simulated beamlines exceeding the configured retention lifetime (`SIMULATED_SESSION_LIFETIME_DAYS`).
+_Avoid_: Session Pruner, Database Purge, Table Wipe.
 
 **Stretch**:
 A continuous, uninterrupted interval of active beamline usage within a Session used to calculate active machine duration and shift consumption.
