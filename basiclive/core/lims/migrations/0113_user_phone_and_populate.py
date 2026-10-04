@@ -3,6 +3,8 @@
 from django.db import migrations, models
 from django.db.models import Q
 
+from basiclive.core.lims.models import Project
+
 
 def populate_user_phone_from_projects(apps, schema_editor):
     User = apps.get_model('lims', 'User')
@@ -15,10 +17,14 @@ def populate_user_phone_from_projects(apps, schema_editor):
             .order_by('-modified')
             .first()
         )
-        if project and getattr(project, 'contact_phone', None):
+        modified = []
+        if project:
             user.default_project = project
-            user.phone = project.contact_phone
-            user.save(update_fields=['phone', 'default_project'])
+            modified.append('default_project')
+            if project.contact_phone:
+                user.phone = project.contact_phone
+                modified.append('phone')
+            user.save(update_fields=modified)
 
 
 def reverse_populate_user_phone(apps, schema_editor):
