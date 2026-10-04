@@ -84,9 +84,8 @@ class SupportRecord(TimeStampedModel):
     )
     kind = models.CharField(_("Kind"), max_length=20, default=TYPE.info, choices=TYPE)
     area = models.ForeignKey(SupportArea, on_delete=models.SET_NULL, null=True, blank=True, related_name='records')
-    staff = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='support_entries'
+    staff = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='support_records'
     )
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, related_name='help')
     beamline = models.ForeignKey(Beamline, on_delete=models.SET_NULL, null=True, related_name='help')
