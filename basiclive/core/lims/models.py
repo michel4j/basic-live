@@ -179,6 +179,7 @@ class ProjectDesignation(TimeStampedModel):
 
 class User(AbstractUser):
     name = models.CharField(max_length=255, blank=True, default='')
+    phone = models.CharField(max_length=60, blank=True, default='', verbose_name=_('Phone'))
     default_project = models.ForeignKey(
         'lims.Project',
         null=True,

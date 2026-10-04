@@ -35,10 +35,12 @@ class DataModelsDecouplingTestCase(TestCase):
             email="jdoe@example.org",
             password="securepassword123",
             name="John Doe",
+            phone="555-123-4567",
         )
         self.assertEqual(user.username, "jdoe")
         self.assertEqual(user.email, "jdoe@example.org")
         self.assertEqual(user.name, "John Doe")
+        self.assertEqual(user.phone, "555-123-4567")
         self.assertEqual(str(user), "John Doe")
         self.assertTrue(user.check_password("securepassword123"))
 
