@@ -83,6 +83,7 @@ class SupportRecord(TimeStampedModel):
         ('info', _('Info')),
     )
     kind = models.CharField(_("Kind"), max_length=20, default=TYPE.info, choices=TYPE)
+    area = models.ForeignKey(SupportArea, on_delete=models.SET_NULL, null=True, blank=True, related_name='records')
     areas = models.ManyToManyField(SupportArea, blank=True, related_name='help')
     staff = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(
