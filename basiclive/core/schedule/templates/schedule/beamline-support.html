@@ -1,13 +1,13 @@
 {% load bl_icons %}
 
 <h6 class="text-condensed">
-  {% if support.staff.contact_email %}
-    <a href="mailto:{{ support.staff.contact_email|urlencode }}" title="Contact {{support}}">{{ support|default_if_none:"" }}</a>
+  {% if support.staff.email %}
+    <a href="mailto:{{ support.staff.email|urlencode }}" title="Contact {{support}}">{{ support|default_if_none:"" }}</a>
   {% else %}
     {{ support | default_if_none:"" }}
   {% endif %}
 </h6>
-<span>{{ support.staff.contact_phone|default_if_none:"" }}</span>
+<span>{{ support.staff.phone|default_if_none:"" }}</span>
 
 {% if editable %}
     {% if support %}

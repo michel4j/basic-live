@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 from django.utils.timezone import make_aware
@@ -11,9 +12,13 @@ from datetime import datetime, timedelta
 
 SHIFT_MAP = ["08", "16", "00"]
 
-def get_project_by_name(name):
-    return Project.objects.filter((Q(last_name=name['last_name']) & Q(first_name=name['first_name'])) | (
+def get_user_by_name(name):
+    User = get_user_model()
+    return User.objects.filter((Q(last_name=name['last_name']) & Q(first_name=name['first_name'])) | (
                 Q(username__iexact=name['last_name']) | Q(username__iexact=name['first_name']))).first()
+
+def get_project_by_name(name):
+    return Project.objects.filter(name__icontains=name['last_name']).first()
 
 def get_project_by_account(account):
     try:
@@ -43,7 +48,7 @@ class Command(BaseCommand):
             beamtime = [p for p in data if p['model'] == 'scheduler.visit']
             downtime = [p for p in data if p['model'] == 'scheduler.stat' and p['fields']['mode'] == 'FacilityRepair']
             support = [p for p in data if p['model'] == 'scheduler.oncall']
-            contact_map = { p['pk']: get_project_by_name(p['fields'])
+            contact_map = { p['pk']: get_user_by_name(p['fields'])
                          for p in data if p['model'] == 'scheduler.supportperson' }
             beamline_map = {1: 2, 2: 1}
             project_map = {}

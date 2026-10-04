@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -13,6 +14,8 @@ from crispy_forms.layout import Div, Field, Layout, HTML
 
 from basiclive.core.lims.models import Project
 from .models import Beamtime, BeamlineSupport, Downtime, EmailNotification
+
+User = get_user_model()
 
 
 class BeamtimeForm(ModalModelForm):
@@ -72,7 +75,9 @@ class BeamtimeForm(ModalModelForm):
 
 class BeamlineSupportForm(ModalModelForm):
 
-    staff = forms.ModelChoiceField(queryset=Project.objects.filter(kind__name="Staff"))
+    staff = forms.ModelChoiceField(
+        queryset=User.objects.filter(is_staff=True, is_active=True).order_by('first_name', 'last_name', 'username')
+    )
 
     class Meta:
         model = BeamlineSupport

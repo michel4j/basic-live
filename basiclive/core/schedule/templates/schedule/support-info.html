@@ -36,9 +36,9 @@
                 {% if active %}
                     <div class="alert alert-success mt-3">
                         Contact <strong>{{ object.staff.first_name }}</strong> at
-                        <strong><a href="mailto:{{ object.staff.contact_email|urlencode }}" title="Email {{ object }}">
-                            {{ object.staff.contact_email }}
-                        </a></strong> or <strong>{{ object.staff.contact_phone }}</strong>.
+                        <strong><a href="mailto:{{ object.staff.email|urlencode }}" title="Email {{ object }}">
+                            {{ object.staff.email }}
+                        </a></strong>{% if object.staff.phone %} or <strong>{{ object.staff.phone }}</strong>{% endif %}.
                     </div>
                 {% else %}
                     <div class="alert alert-{% if current %}warning{% else %}info{% endif %} mt-3">
