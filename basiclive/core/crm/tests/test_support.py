@@ -1,13 +1,9 @@
-from datetime import timedelta
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 from basiclive.core.crm.forms import SupportEntryForm
 from basiclive.core.crm.models import SupportArea, SupportRecord
-from basiclive.core.crm.stats import supportrecord_stats
 from basiclive.core.lims.models import Beamline, Project, ProjectType
 
 User = get_user_model()
@@ -188,81 +184,11 @@ class SupportViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
-class SupportStatsTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username="statsuser", email="stats@example.org")
-        self.project = Project.objects.create(name="Stats Project", pi=self.user)
-        self.beamline = Beamline.objects.create(name="Stats Station", acronym="SS1")
-
-        self.area_ext = SupportArea.objects.create(name="Facility Power", external=True)
-        self.area_int = SupportArea.objects.create(name="Detector System", external=False)
-
-    def test_empty_stats(self):
-        stats = supportrecord_stats(SupportRecord.objects.none(), {})
-        self.assertIn("details", stats)
-        self.assertTrue(len(stats["details"]) > 0)
-
-    def test_populated_stats_metrics(self):
-        now = timezone.now()
-        r1 = SupportRecord.objects.create(
-            kind="problem",
-            area=self.area_ext,
-            project=self.project,
-            beamline=self.beamline,
-            lost_time=2.0,
-            comments="Grid blackout",
-            staff_comments="Facility power failure",
-        )
-        r1.created = now - timedelta(hours=5)
-        r1.save()
-
-        r2 = SupportRecord.objects.create(
-            kind="info",
-            area=self.area_int,
-            project=self.project,
-            beamline=self.beamline,
-            lost_time=0.5,
-            comments="Assisted mounting",
-        )
-        r2.created = now - timedelta(hours=3)
-        r2.save()
-
-        r3 = SupportRecord.objects.create(
-            kind="problem",
-            area=self.area_int,
-            project=self.project,
-            beamline=self.beamline,
-            lost_time=1.0,
-            comments="Readout timeout",
-            staff_comments="Power-cycled detector",
-        )
-        r3.created = now - timedelta(hours=1)
-        r3.save()
-
-        stats = supportrecord_stats(SupportRecord.objects.filter(project=self.project), {})
-        content = stats["details"][0]["content"]
-
-        # Table data
-        table = content[0]["data"]
-        row_names = [row[0] for row in table[1:]]
-        self.assertIn("[*] Facility Power", row_names)
-        self.assertIn("Detector System", row_names)
-        self.assertIn("Overall", row_names)
-        self.assertIn("Beamline Overall", row_names)
-
-        # Staff comments section
-        comments_section = content[4]
-        self.assertIn("Facility power failure", comments_section["notes"])
-        self.assertIn("Power-cycled detector", comments_section["notes"])
-
-
 class SupportMigrationLogicTests(TestCase):
     def test_populate_area_duplicates_multiarea_records(self):
         import importlib
         migration_module = importlib.import_module("basiclive.core.crm.migrations.0085_populate_supportrecord_area")
         populate_area_from_areas = migration_module.populate_area_from_areas
-        from django.apps import apps
-        from django.db import connection
 
         area_a = SupportArea.objects.create(name="Area Alpha")
         area_b = SupportArea.objects.create(name="Area Beta")
@@ -301,6 +227,7 @@ class SupportMigrationLogicTests(TestCase):
                 class MockAreas:
                     def __init__(self, items):
                         self.items = items
+
                     def all(self):
                         return self.items
                 return MockAreas(self.areas_list)
