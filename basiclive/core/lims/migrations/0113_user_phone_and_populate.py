@@ -1,6 +1,7 @@
 # Generated migration to add phone field to User and populate from Project contact_phone
 
 from django.db import migrations, models
+from django.db.models import Q
 
 
 def populate_user_phone_from_projects(apps, schema_editor):
@@ -10,32 +11,14 @@ def populate_user_phone_from_projects(apps, schema_editor):
     for user in User.objects.all():
         # Check project where user is PI
         project = (
-            Project.objects.filter(pi_id=user.pk)
-            .exclude(contact_phone__isnull=True)
-            .exclude(contact_phone='')
+            Project.objects.filter(Q(pi_id=user.pk) | Q(memberships__user_id=user.pk))
             .order_by('-modified')
             .first()
         )
-        if not project:
-            # Check project where user is a member
-            project = (
-                Project.objects.filter(memberships__user_id=user.pk)
-                .exclude(contact_phone__isnull=True)
-                .exclude(contact_phone='')
-                .order_by('-modified')
-                .first()
-            )
-        if not project:
-            # Check project matching username
-            project = (
-                Project.objects.filter(name=user.username)
-                .exclude(contact_phone__isnull=True)
-                .exclude(contact_phone='')
-                .first()
-            )
         if project and getattr(project, 'contact_phone', None):
+            user.default_project = project
             user.phone = project.contact_phone
-            user.save(update_fields=['phone'])
+            user.save(update_fields=['phone', 'default_project'])
 
 
 def reverse_populate_user_phone(apps, schema_editor):
