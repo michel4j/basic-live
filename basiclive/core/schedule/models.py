@@ -138,7 +138,8 @@ class Beamtime(models.Model):
     def name(self):
         name = 'User'
         if self.project:
-            name = self.project.contact_person or '{person.first_name} {person.last_name}'.format(person=self.project)
+            pi = self.project.pi
+            name = pi.last_name
         return name
 
     def start_date_display(self):
@@ -162,7 +163,7 @@ class Beamtime(models.Model):
         return self.access.email_body.format(**self.format_info())
 
     def __str__(self):
-        return "{} on {}".format(self.project, self.beamline.acronym)
+        return f"{self.project} on {self.beamline.acronym}"
 
 
 class Downtime(TimeFramedModel):

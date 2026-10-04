@@ -195,7 +195,7 @@ class User(AbstractUser):
         swappable = 'AUTH_USER_MODEL'
 
     def __str__(self):
-        return self.name or self.get_full_name() or self.username
+        return self.get_full_name()
 
     def get_projects(self):
         return Project.objects.filter(
@@ -307,6 +307,15 @@ class Project(TimeStampedModel):
     @property
     def is_anonymous(self):
         return False
+
+    def get_contact(self):
+        """
+        Returns the contact person for the project. If a contact person is not explicitly set, it will return the PI.
+        """
+        contact = self.members.filter(role=ProjectMembership.Role.CO_INVESTIGATOR).first()
+        if not contact:
+            contact = self.pi
+        return contact
 
     def get_absolute_url(self):
         return reverse('project-profile', kwargs={'username': self.username or self.name})
