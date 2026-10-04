@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from basiclive.core.crm.forms import SupportEntryForm
 from basiclive.core.crm.models import SupportArea, SupportRecord
@@ -283,3 +286,335 @@ class SupportMigrationLogicTests(TestCase):
         self.assertEqual(records[0].area, area_a)
         self.assertEqual(records[1].area, area_b)
         self.assertEqual(records[1].comments, "Original record")
+
+
+class SupportRecordChainIntegrityTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="supportuser", email="user@example.org", is_staff=True)
+        self.project = Project.objects.create(name="Project Alpha", pi=self.user)
+        self.bl1 = Beamline.objects.create(name="Beamline 1", acronym="BL1")
+        self.bl2 = Beamline.objects.create(name="Beamline 2", acronym="BL2")
+        self.area1 = SupportArea.objects.create(name="Optics")
+        self.area2 = SupportArea.objects.create(name="Detectors")
+        self.base_time = timezone.now() - timedelta(days=1)
+
+    def test_sequential_record_creation_chains(self):
+        r1 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area1,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=1.0,
+            created=self.base_time + timedelta(hours=1),
+        )
+        r2 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area1,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=2.0,
+            created=self.base_time + timedelta(hours=2),
+        )
+        r3 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area1,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=3.0,
+            created=self.base_time + timedelta(hours=3),
+        )
+
+        r1.refresh_from_db()
+        r2.refresh_from_db()
+        r3.refresh_from_db()
+
+        self.assertIsNone(r1.previous)
+        self.assertEqual(r2.previous, r1)
+        self.assertEqual(r3.previous, r2)
+
+        self.assertEqual(r1.next, r2)
+        self.assertEqual(r2.next, r3)
+        self.assertIsNone(r3.next)
+
+    def test_different_partitions_isolated(self):
+        r1 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area1,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=1.0,
+            created=self.base_time + timedelta(hours=1),
+        )
+        r2 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area1,
+            beamline=self.bl2,
+            project=self.project,
+            staff=self.user,
+            lost_time=1.0,
+            created=self.base_time + timedelta(hours=2),
+        )
+        r3 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area2,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=1.0,
+            created=self.base_time + timedelta(hours=3),
+        )
+        r4 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.info,
+            area=self.area1,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=0.0,
+            created=self.base_time + timedelta(hours=4),
+        )
+
+        for r in [r1, r2, r3, r4]:
+            r.refresh_from_db()
+            self.assertIsNone(r.previous)
+            self.assertIsNone(r.next)
+
+    def test_insert_record_in_middle_and_head(self):
+        r1 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area1,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=1.0,
+            created=self.base_time + timedelta(hours=2),
+        )
+        r3 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area1,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=1.0,
+            created=self.base_time + timedelta(hours=4),
+        )
+
+        r2 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area1,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=1.0,
+            created=self.base_time + timedelta(hours=3),
+        )
+
+        r1.refresh_from_db()
+        r2.refresh_from_db()
+        r3.refresh_from_db()
+
+        self.assertIsNone(r1.previous)
+        self.assertEqual(r2.previous, r1)
+        self.assertEqual(r3.previous, r2)
+        self.assertEqual(r1.next, r2)
+        self.assertEqual(r2.next, r3)
+
+        r0 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem,
+            area=self.area1,
+            beamline=self.bl1,
+            project=self.project,
+            staff=self.user,
+            lost_time=1.0,
+            created=self.base_time + timedelta(hours=1),
+        )
+
+        r0.refresh_from_db()
+        r1.refresh_from_db()
+
+        self.assertIsNone(r0.previous)
+        self.assertEqual(r1.previous, r0)
+        self.assertEqual(r0.next, r1)
+
+    def test_update_partition_fields_relinks_both_chains(self):
+        a1 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area1, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=1),
+        )
+        a2 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area1, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=2),
+        )
+        a3 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area1, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=3),
+        )
+
+        b1 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area2, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=1, minutes=30),
+        )
+        b2 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area2, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=3, minutes=30),
+        )
+
+        a2.area = self.area2
+        a2.save()
+
+        a1.refresh_from_db()
+        a2.refresh_from_db()
+        a3.refresh_from_db()
+        b1.refresh_from_db()
+        b2.refresh_from_db()
+
+        self.assertIsNone(a1.previous)
+        self.assertEqual(a3.previous, a1)
+        self.assertEqual(a1.next, a3)
+        self.assertIsNone(a3.next)
+
+        self.assertIsNone(b1.previous)
+        self.assertEqual(a2.previous, b1)
+        self.assertEqual(b2.previous, a2)
+        self.assertEqual(b1.next, a2)
+        self.assertEqual(a2.next, b2)
+        self.assertIsNone(b2.next)
+
+    def test_update_created_timestamp_repositions(self):
+        r1 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area1, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=1),
+        )
+        r2 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area1, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=2),
+        )
+        r3 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area1, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=3),
+        )
+
+        r2.created = self.base_time + timedelta(hours=4)
+        r2.save()
+
+        r1.refresh_from_db()
+        r2.refresh_from_db()
+        r3.refresh_from_db()
+
+        self.assertIsNone(r1.previous)
+        self.assertEqual(r3.previous, r1)
+        self.assertEqual(r2.previous, r3)
+        self.assertEqual(r1.next, r3)
+        self.assertEqual(r3.next, r2)
+        self.assertIsNone(r2.next)
+
+    def test_delete_middle_head_and_tail(self):
+        r1 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area1, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=1),
+        )
+        r2 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area1, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=2),
+        )
+        r3 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.problem, area=self.area1, beamline=self.bl1, project=self.project,
+            staff=self.user, lost_time=1.0, created=self.base_time + timedelta(hours=3),
+        )
+
+        # Delete middle (r2)
+        r2.delete()
+        r1.refresh_from_db()
+        r3.refresh_from_db()
+        self.assertIsNone(r1.previous)
+        self.assertEqual(r3.previous, r1)
+        self.assertEqual(r1.next, r3)
+
+        # Delete head (r1)
+        r1.delete()
+        r3.refresh_from_db()
+        self.assertIsNone(r3.previous)
+        self.assertIsNone(r3.next)
+
+    def test_null_area_and_null_beamline_partitions(self):
+        n1 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.info, area=None, beamline=self.bl1, project=self.project,
+            staff=self.user, created=self.base_time + timedelta(hours=1),
+        )
+        n2 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.info, area=None, beamline=self.bl1, project=self.project,
+            staff=self.user, created=self.base_time + timedelta(hours=2),
+        )
+        n1.refresh_from_db()
+        n2.refresh_from_db()
+        self.assertIsNone(n1.previous)
+        self.assertEqual(n2.previous, n1)
+
+        b1 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.info, area=self.area1, beamline=None, project=self.project,
+            staff=self.user, created=self.base_time + timedelta(hours=1),
+        )
+        b2 = SupportRecord.objects.create(
+            kind=SupportRecord.TYPE.info, area=self.area1, beamline=None, project=self.project,
+            staff=self.user, created=self.base_time + timedelta(hours=2),
+        )
+        b1.refresh_from_db()
+        b2.refresh_from_db()
+        self.assertIsNone(b1.previous)
+        self.assertEqual(b2.previous, b1)
+
+
+class SupportPreviousMigrationTests(TestCase):
+    def test_migration_0088_populate_previous_records(self):
+        import importlib
+        migration_module = importlib.import_module("basiclive.core.crm.migrations.0088_supportrecord_previous")
+        populate_previous_records = migration_module.populate_previous_records
+
+        user = User.objects.create_user(username="prevuser", email="user@example.org")
+        project = Project.objects.create(name="Project", pi=user)
+        bl = Beamline.objects.create(name="BL", acronym="BL")
+        area = SupportArea.objects.create(name="Area")
+        base = timezone.now() - timedelta(days=2)
+
+        r1 = SupportRecord.objects.create(
+            kind="problem", area=area, beamline=bl, project=project, staff=user, lost_time=1.0,
+            created=base + timedelta(hours=1)
+        )
+        r2 = SupportRecord.objects.create(
+            kind="problem", area=area, beamline=bl, project=project, staff=user, lost_time=1.0,
+            created=base + timedelta(hours=2)
+        )
+        r3 = SupportRecord.objects.create(
+            kind="problem", area=area, beamline=bl, project=project, staff=user, lost_time=1.0,
+            created=base + timedelta(hours=3)
+        )
+
+        SupportRecord.objects.all().update(previous=None)
+        r1.refresh_from_db()
+        r2.refresh_from_db()
+        r3.refresh_from_db()
+        self.assertIsNone(r1.previous)
+        self.assertIsNone(r2.previous)
+        self.assertIsNone(r3.previous)
+
+        class MockApps:
+            def get_model(self, app_label, model_name):
+                return SupportRecord
+
+        class MockSchemaEditor:
+            class MockConnection:
+                alias = "default"
+            connection = MockConnection()
+
+        populate_previous_records(MockApps(), MockSchemaEditor())
+
+        r1.refresh_from_db()
+        r2.refresh_from_db()
+        r3.refresh_from_db()
+        self.assertIsNone(r1.previous)
+        self.assertEqual(r2.previous, r1)
+        self.assertEqual(r3.previous, r2)
+
