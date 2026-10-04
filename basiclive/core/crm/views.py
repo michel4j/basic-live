@@ -29,8 +29,13 @@ def format_comments(val, args):
     return linebreaksbr(val)
 
 
-def format_areas(val, record):
-    return '<br/>'.join(["<span class='badge text-bg-info'>{}</span>".format(a.name) for a in record.areas.all()])
+def format_area(val, record):
+    if record.area:
+        return f"<span class='badge text-bg-info'>{record.area.name}</span>"
+    return ""
+
+
+format_areas = format_area
 
 
 def format_created(val, args):
@@ -132,10 +137,10 @@ class SupportEntryList(ListViewMixin, ItemListView):
         'project__designation',
         'project__kind',
         'kind',
-        'areas'
+        'area'
     ]
     list_columns = ['beamline', 'staff', 'created', 'kind', 'comments', 'area', 'lost_time']
-    list_transforms = {'comments': format_comments, 'area': format_areas, 'created': format_created}
+    list_transforms = {'comments': format_comments, 'area': format_area, 'created': format_created}
     list_search = ['beamline__acronym', 'project__username', 'comments']
     ordering = ['-created']
     tool_template = 'crm/tools-support.html'
