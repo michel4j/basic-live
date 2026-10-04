@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('lims', '0103_add_user_and_membership'),
-        ('crm', '0081_alter_supportrecord_project'),
+        ('crm', '0082_alter_supportrecord_staff'),
         ('schedule', '0006_alter_beamtime_project'),
         ('notebooks', '0004_remove_notebook_access_remove_notebook_editor_and_more'),
     ]

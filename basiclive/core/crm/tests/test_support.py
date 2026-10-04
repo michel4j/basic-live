@@ -11,7 +11,7 @@ User = get_user_model()
 
 class SupportModelTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="user@example.org")
+        self.user = User.objects.create_user(username="testuser", email="user@example.org", is_staff=True)
         self.project = Project.objects.create(name="Research Project", pi=self.user)
         self.beamline = Beamline.objects.create(name="Beamline 1", acronym="BL1")
         self.area = SupportArea.objects.create(name="Optics & Mirrors", external=False)
@@ -25,8 +25,7 @@ class SupportModelTests(TestCase):
         record = SupportRecord.objects.create(
             kind=SupportRecord.TYPE.problem,
             area=self.area,
-            staff=self.project,
-            user=self.user,
+            staff=self.user,
             project=self.project,
             beamline=self.beamline,
             lost_time=1.5,
@@ -34,12 +33,14 @@ class SupportModelTests(TestCase):
             staff_comments="Realigned mirror motors",
         )
         self.assertEqual(record.area, self.area)
-        self.assertEqual(str(record), f"{self.project} | {self.beamline} | {self.project}")
+        self.assertEqual(record.staff, self.user)
+        self.assertEqual(str(record), f"{self.user} | {self.beamline} | {self.project}")
         self.assertEqual(record.area_names, "Optics & Mirrors")
 
     def test_support_record_without_area(self):
         record = SupportRecord.objects.create(
             kind=SupportRecord.TYPE.info,
+            staff=self.user,
             project=self.project,
             beamline=self.beamline,
         )
@@ -50,6 +51,7 @@ class SupportModelTests(TestCase):
         record1 = SupportRecord.objects.create(
             kind=SupportRecord.TYPE.problem,
             area=self.area,
+            staff=self.user,
             project=self.project,
             beamline=self.beamline,
             lost_time=1.0,
@@ -57,6 +59,7 @@ class SupportModelTests(TestCase):
         record2 = SupportRecord.objects.create(
             kind=SupportRecord.TYPE.info,
             area=self.area,
+            staff=self.user,
             project=self.project,
             beamline=self.beamline,
             lost_time=0.0,
@@ -66,9 +69,10 @@ class SupportModelTests(TestCase):
 
 class SupportFormTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="staffuser", email="staff@example.org")
-        self.staff_kind, _ = ProjectType.objects.get_or_create(name="Staff")
-        self.staff_project = Project.objects.create(name="Staff Group", kind=self.staff_kind, pi=self.user)
+        self.staff_user = User.objects.create_user(
+            username="staffuser", email="staff@example.org", is_staff=True
+        )
+        self.user = User.objects.create_user(username="scienceuser", email="user@example.org")
         self.user_project = Project.objects.create(name="User Group", pi=self.user)
         self.beamline = Beamline.objects.create(name="Beamline 1", acronym="BL1")
         self.area = SupportArea.objects.create(name="Detectors")
@@ -77,7 +81,7 @@ class SupportFormTests(TestCase):
         form_data = {
             "kind": "problem",
             "area": self.area.pk,
-            "staff": self.staff_project.pk,
+            "staff": self.staff_user.pk,
             "project": self.user_project.pk,
             "beamline": self.beamline.pk,
             "lost_time": 2.5,
@@ -88,6 +92,7 @@ class SupportFormTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         record = form.save()
         self.assertEqual(record.area, self.area)
+        self.assertEqual(record.staff, self.staff_user)
         self.assertEqual(record.lost_time, 2.5)
 
     def test_support_entry_form_layout_contains_area(self):
@@ -109,8 +114,9 @@ class SupportViewTests(TestCase):
         )
         self.client.force_login(self.admin_user)
 
-        self.staff_kind, _ = ProjectType.objects.get_or_create(name="Staff")
-        self.staff_project = Project.objects.create(name="Staff Group", kind=self.staff_kind, pi=self.admin_user)
+        self.staff_user = User.objects.create_user(
+            username="staffmember", email="staffmember@example.org", is_staff=True
+        )
         self.user_project = Project.objects.create(name="Science Group", pi=self.admin_user)
         self.beamline = Beamline.objects.create(name="Beamline 1", acronym="BL1")
         self.area1 = SupportArea.objects.create(name="Optics")
@@ -119,7 +125,7 @@ class SupportViewTests(TestCase):
         self.record1 = SupportRecord.objects.create(
             kind=SupportRecord.TYPE.problem,
             area=self.area1,
-            staff=self.staff_project,
+            staff=self.staff_user,
             project=self.user_project,
             beamline=self.beamline,
             lost_time=1.0,
@@ -128,7 +134,7 @@ class SupportViewTests(TestCase):
         self.record2 = SupportRecord.objects.create(
             kind=SupportRecord.TYPE.info,
             area=self.area2,
-            staff=self.staff_project,
+            staff=self.staff_user,
             project=self.user_project,
             beamline=self.beamline,
             lost_time=0.0,
@@ -151,7 +157,7 @@ class SupportViewTests(TestCase):
         post_data = {
             "kind": "problem",
             "area": self.area1.pk,
-            "staff": self.staff_project.pk,
+            "staff": self.staff_user.pk,
             "project": self.user_project.pk,
             "beamline": self.beamline.pk,
             "lost_time": 0.75,
@@ -160,13 +166,19 @@ class SupportViewTests(TestCase):
         }
         response = self.client.post(reverse("new-supportrecord"), post_data)
         self.assertEqual(response.status_code, 200)  # ModalForm returns 200 with JSON or redirect
-        self.assertTrue(SupportRecord.objects.filter(comments="Motor stalled", area=self.area1).exists())
+        self.assertTrue(SupportRecord.objects.filter(comments="Motor stalled", area=self.area1, staff=self.staff_user).exists())
+
+    def test_support_record_create_view_initial_staff(self):
+        response = self.client.get(reverse("new-supportrecord"))
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertEqual(form.initial.get("staff"), self.admin_user)
 
     def test_support_record_edit_view(self):
         post_data = {
             "kind": "problem",
             "area": self.area2.pk,
-            "staff": self.staff_project.pk,
+            "staff": self.staff_user.pk,
             "project": self.user_project.pk,
             "beamline": self.beamline.pk,
             "lost_time": 2.0,
@@ -178,6 +190,7 @@ class SupportViewTests(TestCase):
         self.record1.refresh_from_db()
         self.assertEqual(self.record1.area, self.area2)
         self.assertEqual(self.record1.lost_time, 2.0)
+        self.assertEqual(self.record1.staff, self.staff_user)
 
     def test_support_record_stats_view(self):
         response = self.client.get(reverse("supportrecord-stats"))
@@ -213,7 +226,7 @@ class SupportMigrationLogicTests(TestCase):
                 self.areas_list = areas_list
                 self.kind = record.kind
                 self.staff_id = record.staff_id
-                self.user_id = record.user_id
+                self.user_id = None
                 self.project_id = record.project_id
                 self.beamline_id = record.beamline_id
                 self.comments = record.comments
@@ -247,6 +260,7 @@ class SupportMigrationLogicTests(TestCase):
                 return self.mock_records
 
             def create(self, **kwargs):
+                kwargs.pop('user_id', None)
                 return SupportRecord.objects.create(**kwargs)
 
         class MockSupportRecordModel:

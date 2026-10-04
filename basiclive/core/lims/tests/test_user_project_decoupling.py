@@ -127,9 +127,9 @@ class DataModelsDecouplingTestCase(TestCase):
         beamtime = Beamtime(project=project)
         self.assertEqual(beamtime.project, project)
 
-        # SupportRecord user references User, staff and project reference Project
-        record = SupportRecord(user=staff_user, staff=project, project=project)
-        self.assertEqual(record.user, staff_user)
+        # SupportRecord staff references User, project references Project
+        record = SupportRecord(staff=staff_user, project=project)
+        self.assertEqual(record.staff, staff_user)
         self.assertEqual(record.project, project)
 
     def test_activity_log_user_and_project_references(self):
