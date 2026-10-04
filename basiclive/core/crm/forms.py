@@ -6,13 +6,16 @@ from crisp_modals.forms import (
     Row,
     ThirdWidth,
 )
-from crispy_forms.layout import HTML, Div, Field, Layout
+from crispy_forms.layout import Layout
 from django import forms
+from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
 from django.utils.text import slugify
 
 from basiclive.core.lims.models import Project, Beamline
 from .models import SupportRecord, SupportArea, Feedback, LikertScale
+
+User = get_user_model()
 
 
 class SupportAreaForm(ModalModelForm):
@@ -106,7 +109,9 @@ class FeedbackForm(ModalModelForm):
 
 
 class SupportEntryForm(ModalModelForm):
-    staff = forms.ModelChoiceField(queryset=Project.objects.filter(kind__name="Staff"))
+    staff = forms.ModelChoiceField(
+        queryset=User.objects.filter(is_staff=True, is_active=True).order_by('first_name', 'last_name', 'username')
+    )
 
     class Meta:
         model = SupportRecord

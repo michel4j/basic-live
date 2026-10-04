@@ -17,9 +17,6 @@ from basiclive.utils.encrypt import decrypt
 from basiclive.utils.mixins import AdminRequiredMixin, PlotViewMixin
 from . import forms, models, stats
 
-if lims_settings.USE_SCHEDULE:
-    from basiclive.core.schedule.models import BeamlineSupport
-
 
 def format_contact(val, record):
     return val and record.session.project or ""
@@ -141,7 +138,7 @@ class SupportEntryList(ListViewMixin, ItemListView):
     ]
     list_columns = ['beamline', 'staff', 'created', 'kind', 'comments', 'area', 'lost_time']
     list_transforms = {'comments': format_comments, 'area': format_area, 'created': format_created}
-    list_search = ['beamline__acronym', 'project__username', 'comments']
+    list_search = ['beamline__acronym', 'project__username', 'comments', 'staff__name', 'staff__first_name', 'staff__last_name', 'staff__username']
     ordering = ['-created']
     tool_template = 'crm/tools-support.html'
     link_url = 'supportrecord-edit'
@@ -176,9 +173,8 @@ class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateVie
         initial = super().get_initial()
         initial['project'] = models.Project.objects.filter(username=self.request.GET.get('project')).first()
         initial['beamline'] = models.Beamline.objects.filter(acronym=self.request.GET.get('beamline')).first()
-        if lims_settings.USE_SCHEDULE:
-            support = BeamlineSupport.objects.filter(date=timezone.now().date()).first()
-            initial['staff'] = support and support.staff or None
+        if self.request.user and getattr(self.request.user, 'is_staff', False):
+            initial['staff'] = self.request.user
         return initial
 
 
