@@ -110,7 +110,7 @@ class SupportEntryForm(ModalModelForm):
 
     class Meta:
         model = SupportRecord
-        fields = ['kind', 'areas', 'staff', 'project', 'beamline', 'comments', 'staff_comments', 'lost_time']
+        fields = ['kind', 'area', 'staff', 'project', 'beamline', 'comments', 'staff_comments', 'lost_time']
         widgets = {
             'comments': forms.Textarea(attrs={
                 "rows": 7, "placeholder": 'Question/Concern from User:\nMy Response/Action Taken:'}),
@@ -135,9 +135,9 @@ class SupportEntryForm(ModalModelForm):
                 ThirdWidth('project'),
             ),
             Row(
-                HalfWidth('kind'),
-                HalfWidth('lost_time'),
-                FullWidth(Field('areas', css_class="select")),
+                ThirdWidth('kind'),
+                ThirdWidth('area'),
+                ThirdWidth('lost_time'),
             ),
             Row(
                 FullWidth('comments'),

@@ -84,7 +84,6 @@ class SupportRecord(TimeStampedModel):
     )
     kind = models.CharField(_("Kind"), max_length=20, default=TYPE.info, choices=TYPE)
     area = models.ForeignKey(SupportArea, on_delete=models.SET_NULL, null=True, blank=True, related_name='records')
-    areas = models.ManyToManyField(SupportArea, blank=True, related_name='help')
     staff = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='support_entries'
@@ -104,4 +103,5 @@ class SupportRecord(TimeStampedModel):
 
     @property
     def area_names(self):
-        return ' | '.join(self.areas.values_list("name", flat=True))
+        return self.area.name if self.area else ""
+
