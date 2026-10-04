@@ -1885,3 +1885,7 @@ $category-colors: (
   height: calc(100vh - 51px) !important;
   max-height: calc(100vh - 51px) !important;
 }
+
+ul.errorlist {
+  padding-left: 0;
+}

@@ -11,8 +11,8 @@ from django import forms
 from django.urls import reverse_lazy
 from django.utils.text import slugify
 
+from basiclive.core.lims.models import Project, Beamline
 from .models import SupportRecord, SupportArea, Feedback, LikertScale
-from basiclive.core.lims.models import Project
 
 
 class SupportAreaForm(ModalModelForm):
@@ -128,6 +128,8 @@ class SupportEntryForm(ModalModelForm):
             self.body.form_action = reverse_lazy('new-supportrecord')
             self.fields['staff_comments'].widget = forms.HiddenInput()
 
+        self.fields['beamline'].queryset = Beamline.objects.filter(simulated=False, active=True)
+
         self.body.layout = Layout(
             Row(
                 ThirdWidth('staff'),
@@ -148,3 +150,12 @@ class SupportEntryForm(ModalModelForm):
             Button('Revert', type='reset', value='Reset', style="btn-secondary"),
             Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
+
+    def clean(self):
+        kind = self.cleaned_data.get('kind')
+        lost_time = self.cleaned_data.get('lost_time')
+        if kind == 'problem' and lost_time <= 0:
+            raise forms.ValidationError("Please enter the amount of time lost due to this problem.")
+        if kind == 'info' and lost_time > 0:
+            raise forms.ValidationError("If time was lost, then Kind should be 'Problem'")
+        return self.cleaned_data
