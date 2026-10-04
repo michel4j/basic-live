@@ -55,10 +55,9 @@ class FacilityMode(models.Model):
 
 
 class BeamlineSupport(models.Model):
-    user = models.ForeignKey(
-        django_settings.AUTH_USER_MODEL, related_name="support", on_delete=models.CASCADE, null=True
+    staff = models.ForeignKey(
+        django_settings.AUTH_USER_MODEL, related_name="support", on_delete=models.CASCADE
     )
-    staff = models.ForeignKey('lims.Project', related_name="support", on_delete=models.CASCADE)
     date = models.DateField()
 
     class Meta:
@@ -66,7 +65,7 @@ class BeamlineSupport(models.Model):
         verbose_name_plural = _("Beamline Support")
 
     def __str__(self):
-        return f"{self.staff.first_name} {self.staff.last_name}"
+        return f"{self.staff.first_name} {self.staff.last_name}".strip() or str(self.staff)
 
     def active(self):
         now = timezone.localtime()
