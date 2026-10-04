@@ -12,7 +12,11 @@ def populate_area_from_areas(apps, schema_editor):
 
         # Assign the first area to the existing record
         record.area = areas[0]
-        record.save(update_fields=['area'])
+
+        # fix record kind based on lost_time
+        if record.lost_time > 0:
+            record.kind = 'problem'
+        record.save(update_fields=['area', 'kind'])
 
         # Duplicate the record for each additional area
         for extra_area in areas[1:]:
