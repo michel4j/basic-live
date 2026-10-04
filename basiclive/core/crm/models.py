@@ -1,5 +1,8 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
@@ -92,6 +95,14 @@ class SupportRecord(TimeStampedModel):
     comments = models.TextField(blank=True, null=True)
     lost_time = models.FloatField(_('Time Lost (hours)'), default=0.0)
     staff_comments = models.TextField(blank=True, null=True)
+    previous = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='next_records',
+        verbose_name=_('Previous Record'),
+    )
 
     class Meta:
         verbose_name = _("Support Record")
@@ -103,4 +114,87 @@ class SupportRecord(TimeStampedModel):
     @property
     def area_names(self):
         return self.area.name if self.area else ""
+
+    @property
+    def next(self):
+        return self.next_records.first()
+
+    def _get_predecessor(self):
+        qs = SupportRecord.objects.filter(
+            area_id=self.area_id,
+            kind=self.kind,
+            beamline_id=self.beamline_id,
+        )
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+        if self.created:
+            if self.pk:
+                qs = qs.filter(models.Q(created__lt=self.created) | models.Q(created=self.created, pk__lt=self.pk))
+            else:
+                qs = qs.filter(created__lte=self.created)
+        return qs.order_by('-created', '-pk').first()
+
+    def _get_successor(self):
+        qs = SupportRecord.objects.filter(
+            area_id=self.area_id,
+            kind=self.kind,
+            beamline_id=self.beamline_id,
+        )
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+        if self.created:
+            if self.pk:
+                qs = qs.filter(models.Q(created__gt=self.created) | models.Q(created=self.created, pk__gt=self.pk))
+            else:
+                qs = qs.filter(created__gt=self.created)
+        return qs.order_by('created', 'pk').first()
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        if not self.created:
+            self.created = timezone.now()
+
+        orig = None
+        if self.pk:
+            orig = SupportRecord.objects.filter(pk=self.pk).values(
+                'id', 'area_id', 'kind', 'beamline_id', 'created', 'previous_id'
+            ).first()
+
+        if orig:
+            partition_or_time_changed = (
+                orig['area_id'] != self.area_id
+                or orig['kind'] != self.kind
+                or orig['beamline_id'] != self.beamline_id
+                or orig['created'] != self.created
+            )
+            if partition_or_time_changed:
+                SupportRecord.objects.filter(previous_id=self.pk).exclude(pk=self.pk).update(
+                    previous_id=orig['previous_id']
+                )
+
+        pred = self._get_predecessor()
+        self.previous = pred
+
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None:
+            update_fields = set(update_fields)
+            update_fields.add('previous')
+            kwargs['update_fields'] = update_fields
+
+        super().save(*args, **kwargs)
+
+        succ = self._get_successor()
+        if succ:
+            SupportRecord.objects.filter(pk=succ.pk).update(previous_id=self.pk)
+
+    @transaction.atomic
+    def delete(self, *args, **kwargs):
+        SupportRecord.objects.filter(previous_id=self.pk).update(previous_id=self.previous_id)
+        return super().delete(*args, **kwargs)
+
+
+@receiver(pre_delete, sender=SupportRecord)
+def support_record_pre_delete(sender, instance, **kwargs):
+    SupportRecord.objects.filter(previous_id=instance.pk).update(previous_id=instance.previous_id)
+
 
