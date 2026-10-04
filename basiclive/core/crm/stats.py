@@ -10,16 +10,21 @@ from .models import SupportArea, AreaFeedback, SupportRecord, LikertScale
 
 
 def avg_diff(td):
-    diffs = [abs(td[i]['created'] - td[i - 1]['end']).total_seconds()/3600 for i in range(1, len(td))]
-    return len(td) > 1 and (sum(diffs)/(len(td) - 1)) or None
+    if not td or len(td) <= 1:
+        return None
+    diffs = [
+        abs(td[i]['created'] - (td[i - 1].get('end') or (td[i - 1]['created'] + timedelta(hours=td[i - 1].get('lost_time', 0.0))))).total_seconds() / 3600
+        for i in range(1, len(td))
+    ]
+    return sum(diffs) / (len(td) - 1)
 
 
 def supportrecord_stats(objlist, filters):
-    support_fltrs = {"{}{}".format('help__', k): v for k, v in filters.items()}
-    support_areas = SupportArea.objects.filter(pk__in=objlist.values_list('areas__pk', flat=True)).annotate(
-        info=Count(Case(When(help__kind='info', then=1), output_field=IntegerField()), filter=Q(**support_fltrs)),
-        problem=Count(Case(When(help__kind='problem', then=1), output_field=IntegerField()), filter=Q(**support_fltrs)),
-        time_lost=Sum('help__lost_time', filter=Q(**support_fltrs))
+    support_fltrs = {"{}{}".format('records__', k): v for k, v in filters.items()}
+    support_areas = SupportArea.objects.filter(pk__in=objlist.exclude(area__isnull=True).values_list('area__pk', flat=True)).annotate(
+        info=Count(Case(When(records__kind='info', then=1), output_field=IntegerField()), filter=Q(**support_fltrs)),
+        problem=Count(Case(When(records__kind='problem', then=1), output_field=IntegerField()), filter=Q(**support_fltrs)),
+        time_lost=Sum('records__lost_time', filter=Q(**support_fltrs))
     ).order_by('pk').values('name', 'info', 'problem', 'time_lost', 'external')
 
     lost_time = {
@@ -37,18 +42,16 @@ def supportrecord_stats(objlist, filters):
         } for i, area in enumerate(support_areas)
     ]
 
-    fails = objlist.filter(kind__iexact='problem').annotate(
-        end=ExpressionWrapper(F('created') + timedelta(hours=1) * F('lost_time'), output_field=DateTimeField())
-    )
-    mtbf_overall = avg_diff(list(fails.order_by('created').values('created', 'end')))
-    mtbf_beamline = avg_diff(list(fails.exclude(areas__external=True).order_by('created').values('created', 'end')))
+    fails = objlist.filter(kind__iexact='problem')
+    mtbf_overall = avg_diff(list(fails.order_by('created').values('created', 'lost_time')))
+    mtbf_beamline = avg_diff(list(fails.exclude(area__external=True).order_by('created').values('created', 'lost_time')))
 
     mtbf = {
         **{
             'Overall': mtbf_overall,
             'Beamline Overall': mtbf_beamline,
         }, **{
-            a['name']: avg_diff(list(fails.filter(areas__name=a['name']).order_by('created').values('created', 'end')))
+            a['name']: avg_diff(list(fails.filter(area__name=a['name']).order_by('created').values('created', 'lost_time')))
             for a in support_areas
         }
     }
@@ -157,7 +160,7 @@ def supportrecord_stats(objlist, filters):
                 {
                     'title': 'User Support Interactions Staff Comments',
                     'notes': '<strong>Staff Comments:</strong>\n\n' + linebreaksbr(
-                        '\n\n'.join(SupportRecord.objects.values_list('staff_comments', flat=True).distinct())),
+                        '\n\n'.join([c for c in SupportRecord.objects.values_list('staff_comments', flat=True).distinct() if c])),
                     'style': 'col-12'
                 },
                 objlist and {
