@@ -55,7 +55,7 @@ class Feedback(TimeStampedModel):
         verbose_name_plural = _("Feedbacks")
 
     def __str__(self):
-        return self.session and self.session.name or "No Session"
+        return f"Feedback #{self.pk} for {self.session}"
 
 
 class AreaFeedback(models.Model):
@@ -66,9 +66,15 @@ class AreaFeedback(models.Model):
     class Meta:
         verbose_name = _("Area Feedback")
         verbose_name_plural = _("Area Feedbacks")
+        indexes = [
+            models.Index(fields=['feedback', 'area']),
+        ]
 
     def get_rating_display(self):
         return self.area.scale.choices()[self.rating]
+
+    def __str__(self):
+        return f"{self.area.name}: {self.get_rating_display()}"
 
 
 class SupportRecord(TimeStampedModel):
