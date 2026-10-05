@@ -997,9 +997,6 @@ class ActivityLogList(ListViewMixin, ItemListView):
     ordering = ['-created']
     ordering_proxies = {}
     list_transforms = {}
-    link_url = 'activitylog-detail'
-    link_attr = 'data-modal-url'
-    detail_target = '#modal-target'
 
 
 def format_total_time(val, record):

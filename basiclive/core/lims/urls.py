@@ -120,7 +120,6 @@ urlpatterns = [
     path('reports/<int:pk>/', views.ReportDetail.as_view(), name='report-detail'),
 
     path('activity/', views.ActivityLogList.as_view(), name='activitylog-list'),
-    path('activity/<int:pk>/', views.ActivityLogList.as_view(), name='activitylog-detail'),
 
     path('sessions/', views.SessionList.as_view(), name='session-list'),
     path('sessions/<int:pk>/', views.SessionDetail.as_view(), name='session-detail'),
