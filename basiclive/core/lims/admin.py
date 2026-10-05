@@ -30,6 +30,10 @@ admin.site.register(models.DataType)
 admin.site.register(models.ContainerType)
 admin.site.register(models.ContainerLocation, LocationAdmin)
 
+admin.site.register(models.User)
+admin.site.register(models.Country)
+admin.site.register(models.Region)
+
 admin.site.register(models.Shipment, ProjectAdmin)
 admin.site.register(models.Container, ProjectAdmin)
 admin.site.register(models.Group, ProjectAdmin)

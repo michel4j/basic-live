@@ -4,6 +4,7 @@ from datetime import datetime
 
 from django.core.exceptions import FieldError, FieldDoesNotExist
 from django.db import models
+from django.db.models import Case, When, Q
 from django.db.models import FloatField, Aggregate
 from django.db.models import Subquery, OuterRef, Min, Max, Count, Avg, Sum, Expression
 from django.db.models import Value, F
@@ -677,3 +678,28 @@ class SubAvg(SubAggregate):
 class SubSum(SubAggregate):
     """Annotates with the sum of a related expression."""
     aggregate = Sum
+
+
+class BoolMap(Case):
+    def __init__(self, field_name: str, false_val, true_val, null_val=None, **extra):
+        """
+        Maps boolean database field states:
+          - False -> false_val
+          - True  -> true_val
+          - NULL  -> null_val (defaults to None)
+        """
+        # Ensure raw Python values are wrapped as database Values
+        field_name = str(field_name.name) if isinstance(field_name, F) else str(field_name)
+        to_expr = lambda v: v if isinstance(v, Expression) else Value(v)
+
+        whens = [
+            When(Q(**{field_name: False}), then=to_expr(false_val)),
+            When(Q(**{field_name: True}), then=to_expr(true_val)),
+        ]
+
+        if null_val is not None:
+            whens.append(When(Q(**{f"{field_name}__isnull": True}), then=to_expr(null_val)))
+
+        default = to_expr(null_val) if null_val is not None else Value(None)
+
+        super().__init__(*whens, default=default, **extra)

@@ -90,6 +90,83 @@ class OrphanSample(object):
             return self.orphaned_reports
 
 
+class CountryManager(models.Manager):
+    def get_by_natural_key(self, code):
+        return self.get(alpha3=code)
+
+
+class Country(models.Model):
+    """
+    Model to store country data based on ISO 3166-1 standard.
+    """
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text="The common name of the country."
+    )
+    alpha2 = models.CharField(
+        max_length=2,
+        unique=True,
+        verbose_name="ISO 3166-1 alpha-2",
+        help_text="Two-letter country code."
+    )
+    alpha3 = models.CharField(
+        max_length=3,
+        unique=True,
+        verbose_name="ISO 3166-1 alpha-3",
+        help_text="Three-letter country code."
+    )
+    code = models.CharField(
+        max_length=3,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="ISO 3166-1 numeric code",
+        help_text="Three-digit country code."
+    )
+
+    objects = CountryManager()
+
+    class Meta:
+        verbose_name_plural = "Countries"
+        ordering = ['name']
+
+    def natural_key(self):
+        return (self.alpha3,)
+
+    def __str__(self):
+        return self.name
+
+
+class RegionManager(models.Manager):
+    def get_by_natural_key(self, code):
+        return self.get(code=code)
+
+
+class Region(models.Model):
+    """
+    Model for top-level administrative subdivisions of a country (e.g., state, province).
+    Corresponds to ISO 3166-2.
+    """
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name="regions")
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=10,  unique=True,  verbose_name="ISO 3166-2 code")
+    lat = models.FloatField(null=True, blank=True, verbose_name="Latitude")
+    lon = models.FloatField(null=True, blank=True, verbose_name="Longitude")
+    objects = RegionManager()
+
+    class Meta:
+        verbose_name_plural = "Regions"
+        unique_together = [['country', 'name']]
+        ordering = ['country__name', 'name']
+
+    def natural_key(self):
+        return (self.code,)
+
+    def __str__(self):
+        return f"{self.name}, {self.country.name}"
+
+
 class Beamline(models.Model):
     """
     A Beamline object should be created for every unique facility that will be uploading data or reports,
@@ -103,11 +180,15 @@ class Beamline(models.Model):
     automounters = models.ManyToManyField('Container', through='Automounter', through_fields=('beamline', 'container'))
     active = models.BooleanField(
         default=True,
-        help_text=_("Designates whether this beamline is operational. Unselect instead of deleting decommissioned beamlines.")
+        help_text=_(
+            "Designates whether this beamline is operational. Unselect instead of deleting decommissioned beamlines."
+        )
     )
     simulated = models.BooleanField(
         default=False,
-        help_text=_("Designates whether this beamline is used for testing and simulation rather than physical production.")
+        help_text=_(
+            "Designates whether this beamline is used for testing and simulation rather than physical production."
+        )
     )
 
     class Meta:
