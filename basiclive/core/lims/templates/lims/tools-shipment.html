@@ -1,4 +1,4 @@
-{% load bl_icons %}
+{% load bl_icons bl_tags %}
 
 {% if shipment.status >= shipment.STATES.SENT %}
     {% comment %}Shipment Details{% endcomment %}
@@ -17,7 +17,7 @@
         {% show_icon label='Reports' icon='reports' size='md' badge=shipment.num_reports color='info' %}
     </a>
 {% endif %}
-{% if user == shipment.project %}
+{% if user|can_edit:shipment %}
 
     {% if shipment.status == shipment.STATES.DRAFT %}
         {% include "lims/tools-shipment-edit.html" %}
@@ -32,7 +32,7 @@
             {% show_icon label='Send' icon='send' size='md' %}
         </a>
     {% endif %}
-    {% if shipment.status == shipment.STATES.SENT %}
+    {% if shipment.status == shipment.STATES.SENT and not user.is_superuser %}
         <a href="#!" data-modal-url="{% url 'shipment-recall-send' shipment.pk %}">
             {% show_icon label='Recall' icon='recall' size='md' %}
         </a>
@@ -42,30 +42,23 @@
             {% show_icon label='Labels' icon='tag' size='md' %}
         </a>
     {% endif %}
-{% elif user.is_superuser %}
-    {% comment %}Staff Actions{% endcomment %}
-
-    <a href="{% url 'shipment-labels' shipment.pk %}">
-        {% show_icon label='Labels' icon='tag' size='md' %}
-    </a>
-    <a href="#!" data-modal-url="{% url 'shipment-comments' shipment.pk %}">
-        {% show_icon label='Comment' icon='comments' size='md' %}
-    </a>
-    {% if shipment.status == shipment.STATES.SENT %}
-        <a href="#!" data-modal-url="{% url "shipment-receive" shipment.pk %}">
-            {% show_icon label='Receive' icon='receive' size='md' %}
-        </a>
-    {% elif shipment.status == shipment.STATES.ON_SITE %}
-        <a href="#!" data-modal-url="{% url "shipment-return" shipment.pk %}">
-            {% show_icon label='Return' icon='send' size='md' %}
-        </a>
-
-        <a href="{% url 'shipment-revise' shipment.pk %}">
-            {% show_icon label='Revise' icon='edit' size='md' %}
-        </a>
-    {% elif shipment.status == shipment.STATES.RETURNED %}
-        <a href="#!" data-modal-url="{% url "shipment-recall-return" shipment.pk %}">
-            {% show_icon label='Recall' icon='recall' size='md' %}
+    {% if user.is_superuser %}
+        {% comment %}Staff Actions{% endcomment %}
+        {% if shipment.status == shipment.STATES.SENT %}
+            <a href="#!" data-modal-url="{% url 'shipment-receive' shipment.pk %}">
+                {% show_icon label='Receive' icon='receive' size='md' %}
+            </a>
+        {% elif shipment.status == shipment.STATES.ON_SITE %}
+            <a href="#!" data-modal-url="{% url 'shipment-return' shipment.pk %}">
+                {% show_icon label='Return' icon='send' size='md' %}
+            </a>
+        {% elif shipment.status == shipment.STATES.RETURNED %}
+            <a href="#!" data-modal-url="{% url 'shipment-recall-return' shipment.pk %}">
+                {% show_icon label='Recall' icon='recall' size='md' %}
+            </a>
+        {% endif %}
+        <a href="#!" data-modal-url="{% url 'shipment-comments' shipment.pk %}">
+            {% show_icon label='Comment' icon='comments' size='md' %}
         </a>
     {% endif %}
 {% endif %}

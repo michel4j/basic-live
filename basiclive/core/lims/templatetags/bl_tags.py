@@ -141,3 +141,22 @@ class NumpyEncoder(json.JSONEncoder):
 def jsonify(data):
     return mark_safe(json.dumps(data, cls=NumpyEncoder))
 
+
+@register.filter
+def can_edit(user, obj):
+    """Check if a user can edit an object."""
+    if not user.is_authenticated:
+        return False
+    if hasattr(obj, 'can_edit'):
+        return obj.can_edit(user)
+    return False
+
+
+@register.filter
+def can_view(user, obj):
+    """Check if a user can view an object."""
+    if not user.is_authenticated:
+        return False
+    if hasattr(obj, 'can_view'):
+        return obj.can_view(user)
+    return False

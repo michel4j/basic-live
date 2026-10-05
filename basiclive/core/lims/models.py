@@ -329,7 +329,17 @@ class ProjectMembership(TimeStampedModel):
         return f"{self.user} - {self.project} ({self.get_role_display()})"
 
 
-class Project(TimeStampedModel):
+class ProjectEditorMixin:
+    def can_edit(self, user):
+        if hasattr(self, 'project') and hasattr(user, 'can_access_project'):
+            return user.can_access_project(self.project)
+        return False
+
+    def can_view(self, user):
+        return self.can_edit(user) or user.is_staff
+
+
+class Project(ProjectEditorMixin, TimeStampedModel):
     HELP = {
         'contact_person': _("Full name of contact person"),
     }
@@ -672,7 +682,7 @@ class Stretch(models.Model):
         ordering = ['-start', ]
 
 
-class ProjectObjectMixin(models.Model):
+class ProjectObjectMixin(ProjectEditorMixin, models.Model):
     """ STATES/TRANSITIONS define a finite state machine (FSM) for the Shipment (and other
     models.Model instances also defined in this file).
 
@@ -1833,7 +1843,9 @@ class ActivityLog(models.Model):
     )
     created = models.DateTimeField(_('Date/Time'), auto_now_add=True, editable=False)
     project = models.ForeignKey(Project, blank=True, null=True, on_delete=models.SET_NULL)
-    user = models.ForeignKey(main_settings.AUTH_USER_MODEL, blank=True, null=True, related_name='activities', on_delete=models.SET_NULL)
+    user = models.ForeignKey(
+        main_settings.AUTH_USER_MODEL, blank=True, null=True, related_name='activities', on_delete=models.SET_NULL
+    )
     user_description = models.CharField(_('User name'), max_length=60, blank=True, null=True)
     ip_number = models.GenericIPAddressField(_('IP Address'))
     object_id = models.PositiveIntegerField(blank=True, null=True)

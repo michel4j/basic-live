@@ -998,8 +998,7 @@ class ShipmentRecallSendForm(ModalModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.body.title = "Update Shipping Information"
-        self.body.form_action = reverse_lazy('shipment-recall-send', kwargs={'pk': self.instance.pk})
+        self.body.title = "Recall Shipment"
         self.body.layout = Layout(
             Row(
                 HalfWidth(Field('carrier', css_class="select")),
@@ -1010,7 +1009,7 @@ class ShipmentRecallSendForm(ModalModelForm):
             )
         )
         self.footer.set_buttons(
-            Button('Unsend', type='recall', value='Recall', style="btn-danger"),
+            Button('Recall', type='recall', value='Recall', style="btn-danger"),
             Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
@@ -1022,8 +1021,7 @@ class ShipmentRecallReturnForm(ModalModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.body.title = "Update Shipping Information"
-        self.body.form_action = reverse_lazy('shipment-recall-return', kwargs={'pk': self.instance.pk})
+        self.body.title = "Recall Shipment"
         self.body.layout = Layout(
             Row(
                 HalfWidth(Field('carrier', css_class="select")),
@@ -1033,7 +1031,7 @@ class ShipmentRecallReturnForm(ModalModelForm):
             )
         )
         self.footer.set_buttons(
-            Button('Unsend', type='recall', value='Recall', style="btn-danger"),
+            Button('Recall', type='recall', value='Recall', style="btn-danger"),
             Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
 
@@ -1046,7 +1044,6 @@ class ShipmentReceiveForm(ModalModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.body.title = "Receive Shipment?"
-        self.body.form_action = reverse_lazy('shipment-receive', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout('storage_location', 'staff_comments')
         self.footer.set_buttons(
             Button('Receive', type='submit', name="submit", value='submit', style='btn-primary'),
@@ -1263,10 +1260,10 @@ class AddShipmentForm(ModalModelForm):
             'comments': forms.Textarea(),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.initial['project'].is_superuser:
+        if user and user.is_superuser:
             name_row = Row(
                 ThirdWidth(Field('project', css_class="select")),
                 TwoThirdWidth('name'),
