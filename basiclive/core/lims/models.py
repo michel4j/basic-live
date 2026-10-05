@@ -24,6 +24,7 @@ from basiclive.core.lims.conf import settings
 from basiclive.utils.data import parse_frames, frame_ranges
 from basiclive.utils.encrypt import encrypt
 from basiclive.utils.functions import ShiftEnd, ShiftStart
+from basiclive.utils.network import get_client_address
 
 
 def get_hours_per_shift() -> int:
@@ -1786,38 +1787,30 @@ class AnalysisReport(ActiveStatusMixin):
 
 class ActivityLogManager(models.Manager):
     def log_activity(self, request, obj, action_type, description=''):
-        e = self.model()
+        activity = self.model(user=request.user)
         if obj is None:
-            try:
-                project = request.user
-                e.project_id = project.pk
-            except Project.DoesNotExist:
-                pass
-
+            activity.project = getattr(request, 'project', None)
         else:
             if getattr(obj, 'project', None) is not None:
-                e.project_id = obj.project.pk
+                activity.project_id = obj.project.pk
             elif getattr(request, 'project', None) is not None:
-                e.project_id = request.project.pk
+                activity.project_id = request.project.pk
             elif isinstance(obj, Project):
-                e.project_id = obj.pk
+                activity.project_id = obj.pk
 
-            e.object_id = obj.pk
-            e.affected_item = obj
-            e.content_type = ContentType.objects.get_for_model(obj)
-        try:
-            e.user = request.user
-            e.user_description = request.user.name
-        except:
-            e.user_description = _("System")
-        e.ip_number = request.META.get('REMOTE_ADDR', '127.0.0.1')
-        e.action_type = action_type
-        e.description = description
+            if action_type != ActivityLog.TYPE.DELETE:
+                activity.object_id = obj.pk
+                activity.affected_item = obj
+                activity.content_type = ContentType.objects.get_for_model(obj)
+
+        activity.ip_number = get_client_address(request)
+        activity.action_type = action_type
+        activity.description = description
         if obj is not None:
-            e.object_repr = '%s: %s' % (obj.__class__.__name__.upper(), obj)
+            activity.object_repr = f'{obj.__class__.__name__.upper()}: {obj}'
         else:
-            e.object_repr = 'N/A'
-        e.save()
+            activity.object_repr = 'N/A'
+        activity.save()
 
     def last_login(self, request, user=None):
         if user is None:
@@ -1846,7 +1839,6 @@ class ActivityLog(models.Model):
     user = models.ForeignKey(
         main_settings.AUTH_USER_MODEL, blank=True, null=True, related_name='activities', on_delete=models.SET_NULL
     )
-    user_description = models.CharField(_('User name'), max_length=60, blank=True, null=True)
     ip_number = models.GenericIPAddressField(_('IP Address'))
     object_id = models.PositiveIntegerField(blank=True, null=True)
     content_type = models.ForeignKey(ContentType, blank=True, null=True, on_delete=models.SET_NULL)

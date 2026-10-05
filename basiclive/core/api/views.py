@@ -177,7 +177,8 @@ class UpdateUserKey(View):
             target_project.save(update_fields=['key'])
 
         ActivityLog.objects.log_activity(
-            request, target_project, ActivityLog.TYPE.MODIFY, 'Project Key Initialized'
+            request, request.user, ActivityLog.TYPE.MODIFY,
+            f'Key Initialized for user {request.user}'
         )
 
         return JsonResponse({})
@@ -263,7 +264,9 @@ class LaunchSession(VerificationMixin, View):
                 return http.HttpResponseServerError("Unable to create SecurePath")
         session.launch()
         if created:
-            ActivityLog.objects.log_activity(request, session, ActivityLog.TYPE.CREATE, 'Session launched')
+            ActivityLog.objects.log_activity(
+                request, session, ActivityLog.TYPE.CREATE, f'Session {session} launched'
+            )
 
         try:
             feedback_url = force_str(reverse_lazy('session-feedback', kwargs={'key': session.feedback_key()}))
@@ -504,8 +507,11 @@ class AddReport(VerificationMixin, View):
             for d in data:
                 report.data.add(d)
 
-        ActivityLog.objects.log_activity(request, report, ActivityLog.TYPE.CREATE, "{} uploaded from {}".format(
-            report.name, kwargs.get('beamline', 'beamline')))
+        beamline_name = kwargs.get('beamline', 'beamline')
+        ActivityLog.objects.log_activity(
+            request, report, ActivityLog.TYPE.CREATE,
+            f"Report {report.name} uploaded from {beamline_name}"
+        )
         return JsonResponse({'id': report.pk})
 
 
@@ -608,6 +614,7 @@ class AddData(VerificationMixin, View):
         else:
             data, created = Data.objects.get_or_create(**details)
 
-        ActivityLog.objects.log_activity(request, data, ActivityLog.TYPE.CREATE, "{} uploaded from {}".format(
-            data.kind.name, beamline.acronym))
+        ActivityLog.objects.log_activity(
+            request, data, ActivityLog.TYPE.CREATE, f"{data.kind.name} metadata uploaded from {beamline.acronym}"
+        )
         return JsonResponse({'id': data.pk})

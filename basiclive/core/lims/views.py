@@ -10,7 +10,7 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.http import JsonResponse, Http404, HttpResponseRedirect, HttpResponseNotAllowed
+from django.http import JsonResponse, Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils import dateformat, timezone
@@ -222,7 +222,7 @@ class ShipmentComments(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView)
         obj = form.instance
         if form.data.get('submit') == 'Recall':
             obj.unreceive()
-            message = "Shipment un-received by staff"
+            message = "Shipment recalled by staff"
             models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(ShipmentComments, self).form_valid(form)
 
@@ -231,6 +231,15 @@ class ShipmentDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.Shipment
     success_message = "Shipment has been deleted."
     success_url = reverse_lazy('shipment-list')
+
+    def confirmed(self, *args, **kwargs):
+        response = super().confirmed(*args, **kwargs)
+        message = f"Shipment {self.object} deleted."
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.DELETE,
+            message
+        )
+        return response
 
 
 class SendShipment(ShipmentEdit):
@@ -250,7 +259,7 @@ class SendShipment(ShipmentEdit):
             models.Component.objects.create(shipment=self.object, kind=component)
 
         form.instance.send()
-        message = "Shipment sent"
+        message = f"Shipment {self.object} sent"
         models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.MODIFY, message)
         return super().form_valid(form)
 
@@ -260,7 +269,7 @@ class ReturnShipment(ShipmentEdit):
 
     def form_valid(self, form):
         obj = form.instance.returned()
-        message = "Shipment returned"
+        message = f"Shipment {self.object} returned"
         models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(ReturnShipment, self).form_valid(form)
 
@@ -284,7 +293,7 @@ class RecallSendShipment(ShipmentEdit):
         obj = form.instance
         if form.data.get('submit') == 'Recall':
             obj.unsend()
-            message = "Shipping recalled"
+            message = f"Shipping {obj} recalled"
             models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(RecallSendShipment, self).form_valid(form)
 
@@ -296,7 +305,7 @@ class RecallReturnShipment(ShipmentEdit):
         obj = form.instance
         if form.data.get('submit') == 'Recall':
             obj.unreturn()
-            message = "Shipping recalled by staff"
+            message = f"Shipping {obj} recalled by staff"
             models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(RecallReturnShipment, self).form_valid(form)
 
@@ -315,7 +324,7 @@ class ReceiveShipment(ShipmentEdit):
     def form_valid(self, form):
         obj = form.instance
         obj.receive()
-        message = "Shipment received on-site"
+        message = f"Shipment {obj} received on-site"
         models.ActivityLog.objects.log_activity(self.request, obj, models.ActivityLog.TYPE.MODIFY, message)
         return super(ReceiveShipment, self).form_valid(form)
 
@@ -397,9 +406,9 @@ class SampleDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
 
     def confirmed(self, *args, **kwargs):
         response = super().confirmed(*args, **kwargs)
+        message = f"Sample {self.object} deleted"
         models.ActivityLog.objects.log_activity(
-            self.request, self.object, models.ActivityLog.TYPE.DELETE,
-            self.success_message
+            self.request, self.object, models.ActivityLog.TYPE.DELETE, message
         )
         return response
 
@@ -542,8 +551,10 @@ class ContainerDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
 
     def confirmed(self, *args, **kwargs):
         response = super().confirmed(*args, **kwargs)
-        models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
-                                                self.success_message)
+        message = f"Container {self.object} deleted"
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.DELETE, message
+        )
         return response
 
 
@@ -614,8 +625,10 @@ class GroupDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
 
     def confirmed(self, *args, **kwargs):
         response = super().confirmed(*args, **kwargs)
-        models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
-                                                self.success_message)
+        message = f"Group {self.object} deleted"
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.DELETE, message
+        )
         return response
 
 
@@ -958,8 +971,9 @@ class RequestDelete(OwnerRequiredMixin, SuccessMessageMixin, ModalDeleteView):
 
     def confirmed(self, *args, **kwargs):
         response = super().confirmed(*args, **kwargs)
-        models.ActivityLog.objects.log_activity(self.request, self.object, models.ActivityLog.TYPE.DELETE,
-                                                self.success_message)
+        models.ActivityLog.objects.log_activity(
+            self.request, self.object, models.ActivityLog.TYPE.DELETE, f"Request {self.object} deleted"
+        )
         return response
 
 
@@ -978,7 +992,7 @@ class SessionReportList(ShipmentReportList):
 class ActivityLogList(ListViewMixin, ItemListView):
     model = models.ActivityLog
     list_filters = ['created', 'action_type']
-    list_columns = ['created', 'action_type', 'user_description', 'ip_number', 'object_repr', 'description']
+    list_columns = ['created', 'action_type', 'user', 'ip_number', 'object_repr', 'description']
     list_search = ['description', 'ip_number', 'content_type__name', 'action_type']
     ordering = ['-created']
     ordering_proxies = {}
@@ -1477,12 +1491,10 @@ class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        info_msg = 'New Project {} added'.format(self.object)
-
         models.ActivityLog.objects.log_activity(
-            self.request, self.object, models.ActivityLog.TYPE.CREATE, info_msg
+            self.request, self.object, models.ActivityLog.TYPE.CREATE,
+            f'New Project {self.object} added'
         )
-        # messages are simply passed down to the template via the request context
         return response
 
 
@@ -1583,20 +1595,23 @@ class SwitchProjectView(LoginRequiredMixin, View):
 
 def record_logout(sender, user, request, **kwargs):
     """ user logged outof the system """
-    models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGOUT, '{} logged-out'.format(user.name))
+    models.ActivityLog.objects.log_activity(
+        request, user, models.ActivityLog.TYPE.LOGOUT, f'{user.name} logged-out'
+    )
 
 
 def record_login(sender, user, request, **kwargs):
     """ Login a user into the system """
     if user.is_authenticated:
-        models.ActivityLog.objects.log_activity(request, user, models.ActivityLog.TYPE.LOGIN, '{} logged-in'.format(user.name))
+        models.ActivityLog.objects.log_activity(
+            request, user, models.ActivityLog.TYPE.LOGIN, f'{user.name} logged-in'
+        )
         last_login = models.ActivityLog.objects.last_login(request, user=user)
         try:
             if last_login is not None:
                 last_host = last_login.ip_number
-                message = 'Your previous login was on {date} from {ip}.'.format(
-                    date=dateformat.format(timezone.localtime(last_login.created), 'M jS @ P'),
-                    ip=last_host)
+                login_time = timezone.localtime(last_login.created)
+                message = f'Your previous login was on {dateformat.format(login_time, "M jS @ P")} from {last_host}.'
                 messages.info(request, message)
             elif not user.is_staff:
                 message = 'You are logging in for the first time. Please make sure your profile is updated.'
