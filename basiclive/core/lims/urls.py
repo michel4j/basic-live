@@ -17,6 +17,10 @@ urlpatterns = [
     path('projects/<slug:name>/info/', views.ProjectInfo.as_view(), name='project-info'),
     path('projects/<slug:name>/delete/', views.ProjectDelete.as_view(), name='project-delete'),
 
+    # User routes
+    path('<str:username>/', views.UserDetailView.as_view(), name='user-detail'),
+    path('<str:username>/edit/', views.UserEditView.as_view(), name='user-edit'),
+
     # Backward-compatible routes
     path('profile/<slug:name>/', views.ProjectProfile.as_view()),
     path('profile/<slug:name>/edit', views.ProjectEdit.as_view(), name='edit-profile'),

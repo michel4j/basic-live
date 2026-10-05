@@ -1541,10 +1541,10 @@ class ShipmentGroupForm(ModalModelForm):
 class SSHKeyForm(ModalModelForm):
     class Meta:
         model = SSHKey
-        fields = ['name', 'key', 'project']
+        fields = ['name', 'key', 'user']
         widgets = {
             'key': forms.Textarea(attrs={"placeholder": "SSH Public Key, begins with 'ssh-XXX'"}),
-            'project': forms.HiddenInput()
+            'user': forms.HiddenInput()
         }
 
     def __init__(self, *args, **kwargs):
@@ -1555,10 +1555,11 @@ class SSHKeyForm(ModalModelForm):
             self.body.form_action = reverse_lazy('sshkey-edit', kwargs={'pk': self.instance.pk})
         else:
             self.body.title = "New SSH key"
-            self.body.form_action = reverse_lazy('new-sshkey', kwargs={'username': self.initial['project'].username})
+            username = self.initial.get('user').username if hasattr(self.initial.get('user'), 'username') else str(self.initial.get('user'))
+            self.body.form_action = reverse_lazy('new-sshkey', kwargs={'username': username})
         self.body.layout = Layout(
             Row(
-                'project',
+                'user',
                 FullWidth('name'),
             ),
             Row(
@@ -1618,6 +1619,44 @@ class GuideForm(ModalModelForm):
                         css_class="form-check form-switch"
                     )
                 ),
+            ),
+        )
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
+        )
+
+
+class UserEditForm(ModalModelForm):
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email', 'phone', 'default_project')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.body.title = _("Edit Profile")
+            self.body.form_action = reverse_lazy('user-edit', kwargs={'username': self.instance.username})
+            self.fields['default_project'].queryset = self.instance.get_projects()
+        self.body.layout = Layout(
+            Row(
+                HalfWidth('first_name'),
+                HalfWidth('last_name'),
+                style="g-2"
+            ),
+            Row(
+                HalfWidth('email'),
+                HalfWidth(
+                    Field(
+                        'phone', pattern=r"(\+\d{1,3}-)?\d{3}-\d{3}-\d{4}( x\d+)?$",
+                        placeholder="[+9-]999-999-9999[ x9999]"
+                    )
+                ),
+                style="g-2"
+            ),
+            Row(
+                FullWidth(Field('default_project', css_class='select')),
+                style="g-2"
             ),
         )
         self.footer.set_buttons(

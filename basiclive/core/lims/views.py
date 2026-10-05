@@ -1306,52 +1306,68 @@ class ContainerSpreadsheet(LoginRequiredMixin, detail.DetailView):
             raise http.Http404('Container Not Found!')
 
 
-class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
+class SSHKeyCreate(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.SSHKeyForm
     model = models.SSHKey
     success_url = '/'
     success_message = "SSH key has been created"
 
     def test_func(self):
-        # Allow access to admin or project members
-        try:
-            username = self.kwargs.get('username') or self.kwargs.get('name')
-            proj = models.Project.objects.filter(
-                models.Q(name=username)
-            ).first()
-            if not proj:
-                return False
-            return self.request.user.can_access_project(proj)
-        except Exception:
+        # Allow access to self or superusers
+        target_user = self.get_target_user()
+        if not target_user:
             return False
+        return self.request.user == target_user or self.request.user.is_superuser
+
+    def get_target_user(self):
+        username = self.kwargs.get('username')
+        if not username:
+            return self.request.user
+        return models.User.objects.filter(username=username).first()
 
     def get_success_url(self):
-        kwarg_val = self.kwargs.get('name') or self.kwargs.get('username')
-        return reverse_lazy('project-profile', kwargs={'name': kwarg_val})
+        if hasattr(self, 'object') and self.object and self.object.user:
+            return reverse_lazy('user-detail', kwargs={'username': self.object.user.username})
+        return self.success_url
 
     def get_initial(self):
         initial = super().get_initial()
-        username = self.kwargs.get('username') or self.kwargs.get('name')
-        proj = models.Project.objects.filter(
-            models.Q(name=username)
-        ).first()
-        if not proj:
-            raise http.Http404
-        initial['project'] = proj
+        target_user = self.get_target_user()
+        if not target_user:
+            raise http.Http404('User not found')
+        initial['user'] = target_user
         return initial
 
 
-class SSHKeyEdit(LoginRequiredMixin, SuccessMessageMixin, ModalUpdateView):
+class SSHKeyEdit(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.SSHKeyForm
     model = models.SSHKey
     success_url = '/'
     success_message = "SSH key has been updated"
 
+    def test_func(self):
+        obj = self.get_object()
+        return self.request.user == obj.user or self.request.user.is_superuser
 
-class SSHKeyDelete(LoginRequiredMixin, SuccessMessageMixin, ModalDeleteView):
+    def get_success_url(self):
+        if hasattr(self, 'object') and self.object and self.object.user:
+            return reverse_lazy('user-detail', kwargs={'username': self.object.user.username})
+        return self.success_url
+
+
+class SSHKeyDelete(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.SSHKey
     success_url = '/'
     success_message = "SSH key has been deleted"
+
+    def test_func(self):
+        obj = self.get_object()
+        return self.request.user == obj.user or self.request.user.is_superuser
+
+    def get_success_url(self):
+        if hasattr(self, 'object') and self.object and self.object.user:
+            return reverse_lazy('user-detail', kwargs={'username': self.object.user.username})
+        return self.success_url
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1512,6 +1528,38 @@ class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
         name = self.kwargs.get('name') or self.kwargs.get('username')
         self.success_message = f"{name} project has been deleted"
         return super().confirmed(*args, **kwargs)
+
+
+class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
+    model = models.User
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    template_name = "lims/details/user.html"
+
+    def test_func(self):
+        target = self.get_object()
+        return self.request.user == target or self.request.user.is_superuser
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['projects'] = self.object.get_projects()
+        context['sshkeys'] = self.object.sshkeys.all()
+        return context
+
+
+class UserEditView(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
+    model = models.User
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    form_class = forms.UserEditForm
+    success_message = _("Profile has been updated.")
+
+    def test_func(self):
+        target = self.get_object()
+        return self.request.user == target or self.request.user.is_superuser
+
+    def get_success_url(self):
+        return reverse_lazy('user-detail', kwargs={'username': self.object.username})
 
 
 class SwitchProjectView(LoginRequiredMixin, View):
