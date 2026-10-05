@@ -37,7 +37,7 @@
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{% url 'session-list' %}">Sessions</a>
                     {% if user.is_superuser %}
-                        <a class="dropdown-item" href="{% url 'requesttype-list' %}">Request Types</a>
+                        <a class="dropdown-item" href="{% url 'request-type-list' %}">Request Types</a>
                     {% endif %}
                     <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity</a>
                 </div>

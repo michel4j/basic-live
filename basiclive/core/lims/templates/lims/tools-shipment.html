@@ -33,7 +33,7 @@
         </a>
     {% endif %}
     {% if shipment.status == shipment.STATES.SENT %}
-        <a href="#!" data-modal-url="{% url 'shipment-update-send' shipment.pk %}">
+        <a href="#!" data-modal-url="{% url 'shipment-recall-send' shipment.pk %}">
             {% show_icon label='Recall' icon='recall' size='md' %}
         </a>
     {% endif %}
@@ -64,7 +64,7 @@
             {% show_icon label='Revise' icon='edit' size='md' %}
         </a>
     {% elif shipment.status == shipment.STATES.RETURNED %}
-        <a href="#!" data-modal-url="{% url "shipment-update-return" shipment.pk %}">
+        <a href="#!" data-modal-url="{% url "shipment-recall-return" shipment.pk %}">
             {% show_icon label='Recall' icon='recall' size='md' %}
         </a>
     {% endif %}

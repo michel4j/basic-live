@@ -299,7 +299,7 @@ class RequestTypeForm(ModalModelForm):
 
         if pk:
             self.body.title = "Edit Request Type"
-            self.body.form_action = reverse_lazy('requesttype-edit', kwargs={'pk': pk})
+            self.body.form_action = reverse_lazy('request-type-edit', kwargs={'pk': pk})
         else:
             self.body.title = "Create Request Type"
             self.body.form_action = reverse_lazy('new-requesttype')
@@ -453,7 +453,7 @@ class RequestTypeLayoutForm(ModalModelForm):
             )
 
         self.body.title = "Edit Request Type Layout"
-        self.body.form_action = reverse_lazy('requesttype-layout', kwargs={'pk': pk})
+        self.body.form_action = reverse_lazy('request-type-layout', kwargs={'pk': pk})
 
         self.body.layout = Layout(
             self.help_text(),
@@ -999,7 +999,7 @@ class ShipmentRecallSendForm(ModalModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.body.title = "Update Shipping Information"
-        self.body.form_action = reverse_lazy('shipment-update-send', kwargs={'pk': self.instance.pk})
+        self.body.form_action = reverse_lazy('shipment-recall-send', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout(
             Row(
                 HalfWidth(Field('carrier', css_class="select")),
@@ -1023,7 +1023,7 @@ class ShipmentRecallReturnForm(ModalModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.body.title = "Update Shipping Information"
-        self.body.form_action = reverse_lazy('shipment-update-return', kwargs={'pk': self.instance.pk})
+        self.body.form_action = reverse_lazy('shipment-recall-return', kwargs={'pk': self.instance.pk})
         self.body.layout = Layout(
             Row(
                 HalfWidth(Field('carrier', css_class="select")),
@@ -1549,14 +1549,6 @@ class SSHKeyForm(ModalModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        if self.instance.pk:
-            self.body.title = "Edit SSH key"
-            self.body.form_action = reverse_lazy('sshkey-edit', kwargs={'pk': self.instance.pk})
-        else:
-            self.body.title = "New SSH key"
-            username = self.initial.get('user').username if hasattr(self.initial.get('user'), 'username') else str(self.initial.get('user'))
-            self.body.form_action = reverse_lazy('new-sshkey', kwargs={'username': username})
         self.body.layout = Layout(
             Row(
                 'user',

@@ -157,6 +157,7 @@ class ShipmentList(ListViewMixin, ItemListView):
     ordering = ['status', '-modified']
 
     def get_queryset(self):
+        print('ShipmentList.get_queryset() called')
         if self.request.user.is_superuser:
             return super(ShipmentList, self).get_queryset().filter(
                 status__gte=models.Shipment.STATES.SENT)
@@ -347,11 +348,11 @@ class ReceiveShipment(ShipmentEdit):
 
 class RequestTypeList(AdminRequiredMixin, ListViewMixin, ItemListView):
     model = models.RequestType
-    template_name = "lims/details/requesttype-list.html"
+    template_name = "lims/details/request-type-list.html"
     list_columns = ['id', 'name', 'description']
     list_search = ['name', 'spec', 'description']
     link_field = 'name'
-    link_url = 'requesttype-detail'
+    link_url = 'request-type-detail'
     ordering_proxies = {}
     list_transforms = {}
     show_project = False
@@ -359,7 +360,7 @@ class RequestTypeList(AdminRequiredMixin, ListViewMixin, ItemListView):
 
 class RequestTypeDetail(AdminRequiredMixin, detail.DetailView):
     model = models.RequestType
-    template_name = "lims/details/requesttype.html"
+    template_name = "lims/details/request-type.html"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -371,7 +372,7 @@ class RequestTypeCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView
     form_class = forms.RequestTypeForm
     template_name = "lims/forms/request-wizard.html"
     model = models.RequestType
-    success_url = reverse_lazy('requesttype-list')
+    success_url = reverse_lazy('request-type-list')
     success_message = "Request Type has been created."
 
 
@@ -382,7 +383,7 @@ class RequestTypeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     success_message = "Request Type has been updated."
 
     def get_success_url(self):
-        return reverse_lazy('requesttype-detail', kwargs={'pk': self.object.pk})
+        return reverse_lazy('request-type-detail', kwargs={'pk': self.object.pk})
 
 
 class RequestTypeLayout(RequestTypeEdit):
@@ -1460,6 +1461,21 @@ class ProjectList(AdminRequiredMixin, ItemListView):
     add_url = 'new-project'
     add_ajax = True
     ordering = ['name']
+
+
+class UserList(AdminRequiredMixin, ItemListView):
+    model = models.User
+    paginate_by = 16
+    template_name = "lims/list.html"
+    list_filters = ['is_active', 'is_superuser']
+    list_columns = ['username', 'first_name', 'last_name', 'email', 'is_active', 'is_superuser']
+    list_search = ['username', 'first_name', 'last_name', 'email']
+    link_url = 'user-detail'
+    link_kwarg = 'username'
+    page_title = _("Users")
+    add_url = 'new-user'
+    add_ajax = True
+    ordering = ['username']
 
 
 class ProjectInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
