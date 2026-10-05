@@ -23,8 +23,19 @@ from django.utils.translation import gettext as _
 from basiclive.core.lims.conf import settings
 from .icons import render_icon
 from .models import Guide, ProjectType, SSHKey, RequestType, Request, REQUEST_SPEC_SCHEMA
-from .models import Project, Shipment, Automounter, Sample, ComponentType, Container, Group, ContainerLocation, \
-    ContainerType
+from .models import (
+    User,
+    Project,
+    ProjectMembership,
+    Shipment,
+    Automounter,
+    Sample,
+    ComponentType,
+    Container,
+    Group,
+    ContainerLocation,
+    ContainerType,
+)
 
 disabled_widget = forms.HiddenInput(attrs={'readonly': True})
 
@@ -112,10 +123,34 @@ class ProjectForm(ModalModelForm):
 
 
 class NewProjectForm(ModalModelForm):
+    pi = forms.ModelChoiceField(
+        queryset=User.objects.filter(is_active=True),
+        required=True,
+        label=_("Principal Investigator")
+    )
+    co_investigator = forms.ModelChoiceField(
+        queryset=User.objects.filter(is_active=True),
+        required=False,
+        label=_("Co-Investigator")
+    )
+    members = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(is_active=True),
+        required=False,
+        label=_("Team Members")
+    )
+
     class Meta:
         model = Project
-        fields = ('name', 'contact_person', 'contact_email', 'contact_phone',
-                  'kind', 'alias', 'designation')
+        fields = (
+            'name', 'kind', 'alias', 'designation',
+            'contact_person', 'contact_email', 'contact_phone',
+            'carrier', 'account_number', 'shipping_notes',
+            'organisation', 'department', 'address', 'city', 'province',
+            'postal_code', 'country'
+        )
+        widgets = {
+            'shipping_notes': forms.Textarea(attrs={'rows': "2"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -131,6 +166,15 @@ class NewProjectForm(ModalModelForm):
                 style="g-2"
             ),
             Row(
+                HalfWidth(Field('pi', css_class="select")),
+                HalfWidth(Field('co_investigator', css_class="select")),
+                style="g-2"
+            ),
+            Row(
+                FullWidth(Field('members', css_class="select")),
+                style="g-2"
+            ),
+            Row(
                 HalfWidth('alias'),
                 HalfWidth(Field('designation', css_class='select')),
                 style="g-2"
@@ -138,13 +182,78 @@ class NewProjectForm(ModalModelForm):
             Row(
                 FullWidth('contact_person'),
                 HalfWidth('contact_email'),
-                HalfWidth('contact_phone'),
+                HalfWidth(
+                    Field(
+                        'contact_phone', pattern=r"(\+\d{1,3}-)?\d{3}-\d{3}-\d{4}( x\d+)?$",
+                        placeholder="[+9-]999-999-9999[ x9999]"
+                    )
+                ),
+                style="g-2"
+            ),
+            Row(
+                HalfWidth(Field('carrier', css_class="select")),
+                HalfWidth('account_number'),
+                style="g-2"
+            ),
+            Row(
+                FullWidth('shipping_notes'),
+            ),
+            Row(
+                HalfWidth('organisation'),
+                HalfWidth('department'),
+                style="g-2"
+            ),
+            Row(
+                TwoThirdWidth('address'),
+                ThirdWidth('city'),
+                style="g-2"
+            ),
+            Row(
+                ThirdWidth('province'),
+                ThirdWidth('country'),
+                ThirdWidth('postal_code'),
                 style="g-2"
             )
         )
         self.footer.set_buttons(
             Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
         )
+
+    def save(self, commit=True):
+        project = super().save(commit=False)
+        pi = self.cleaned_data['pi']
+        project.pi = pi
+        if commit:
+            project.save()
+            self.save_m2m()
+
+            # Create or update PI membership
+            ProjectMembership.objects.update_or_create(
+                project=project,
+                user=pi,
+                defaults={'role': ProjectMembership.Role.PI}
+            )
+
+            # Create or update Co-Investigator membership if provided
+            co_inv = self.cleaned_data.get('co_investigator')
+            if co_inv:
+                ProjectMembership.objects.update_or_create(
+                    project=project,
+                    user=co_inv,
+                    defaults={'role': ProjectMembership.Role.CO_INVESTIGATOR}
+                )
+
+            # Create or update Team Memberships
+            members = self.cleaned_data.get('members') or []
+            for member in members:
+                if member != pi and member != co_inv:
+                    ProjectMembership.objects.update_or_create(
+                        project=project,
+                        user=member,
+                        defaults={'role': ProjectMembership.Role.MEMBER}
+                    )
+
+        return project
 
 
 class RequestTypeForm(ModalModelForm):

@@ -1480,12 +1480,11 @@ class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.NewProjectForm
     model = models.Project
     success_url = reverse_lazy('user-list')
-    success_message = "New Account '%(username)s' has been created."
+    success_message = "New Project '%(name)s' has been created."
 
     def form_valid(self, form):
-        # create local user
         response = super().form_valid(form)
-        info_msg = 'New Account {} added'.format(self.object)
+        info_msg = 'New Project {} added'.format(self.object)
 
         models.ActivityLog.objects.log_activity(
             self.request, self.object, models.ActivityLog.TYPE.CREATE, info_msg
