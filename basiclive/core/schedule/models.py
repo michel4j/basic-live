@@ -137,9 +137,8 @@ class Beamtime(models.Model):
 
     def name(self):
         name = 'User'
-        if self.project:
-            pi = self.project.pi
-            name = pi.last_name
+        if self.project and self.project.pi:
+            name = self.project.pi.last_name or 'User'
         return name
 
     def start_date_display(self):
@@ -213,7 +212,9 @@ class EmailNotification(models.Model):
         verbose_name_plural = _("Email Notifications")
 
     def recipient_list(self):
-        return list(set([e for e in [self.beamtime.project.email, self.beamtime.project.contact_email] if e]))
+        pi_email = self.beamtime.project.pi.email if (self.beamtime.project and self.beamtime.project.pi) else None
+        contact_email = self.beamtime.project.contact_email if self.beamtime.project else None
+        return list(filter(None, {pi_email, contact_email}))
 
     def unsendable(self):
         late = timezone.now() > (self.send_time - timedelta(minutes=30))

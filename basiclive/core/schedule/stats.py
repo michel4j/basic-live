@@ -332,10 +332,10 @@ def beamtime_community_stats(objlist, field, period, periods, period_names):
     # Average H-Index
     if PUBLICATIONS:
         # Average H-index
-        active_users_info = objlist.exclude(project__isnull=True).values(field, 'project__username')
+        active_users_info = objlist.exclude(project__isnull=True).values(field, 'project__name')
         active_users = {}
         for au in active_users_info:
-            active_users.setdefault(au[field], []).append(au['project__username'])
+            active_users.setdefault(au[field], []).append(au['project__name'])
         hindex = h_indices(Project.objects.filter(pk__in=objlist.values_list('project', flat=True).distinct()))
         hindex_data = []
         for i, per in enumerate(periods):

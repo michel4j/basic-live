@@ -37,7 +37,7 @@ def format_authorized(projects, record):
         else:
             css_class = 'badge text-bg-warning'
             title = 'Manual Access'
-        badges.append(f'<span class="{css_class} badge-md" title="{title}">{escape(project.username.upper())}</span>')
+        badges.append(f'<span class="{css_class} badge-md" title="{title}">{escape(project.name.upper())}</span>')
     return ' '.join(badges)
 
 

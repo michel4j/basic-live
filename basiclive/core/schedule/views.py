@@ -93,7 +93,7 @@ class BeamtimeStats(PlotViewMixin, ListViewMixin, ItemListView):
         'project__kind',
         filters.TimeScaleFilter()
     ]
-    list_search = ['id', 'project__username', 'project__first_name', 'project__last_name']
+    list_search = ['id', 'project__name', 'project__pi__first_name', 'project__pi__last_name']
     date_field = 'start'
 
     def get_metrics(self):
@@ -348,7 +348,7 @@ class DowntimeEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
 class EmailNotificationList(AdminRequiredMixin, ListViewMixin, ItemListView):
     model = models.EmailNotification
     list_filters = ['send_time', 'sent']
-    list_columns = ['id', 'sent', 'unsendable', 'send_time', 'beamtime__start', 'beamtime__project__username', 'email_subject']
+    list_columns = ['id', 'sent', 'unsendable', 'send_time', 'beamtime__start', 'beamtime__project__name', 'email_subject']
     list_search = ['email_subject', 'email_body']
     link_url = 'email-edit'
     ordering = ['-send_time']

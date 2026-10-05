@@ -22,7 +22,7 @@ from basiclive.core.lims.middleware import ProjectContextMiddleware
 from basiclive.core.lims.models import (
     Project, ProjectMembership, Beamline, DataType, Session,
     Stretch, Sample, Container, ContainerType, Automounter, ContainerLocation,
-    Data, AnalysisReport
+    Data, AnalysisReport, SSHKey
 )
 from basiclive.utils.signing import Signer
 
@@ -50,8 +50,7 @@ class APIAuthenticationMiddlewareTests(TestCase):
         self.user = User.objects.create(username='api_alice', email='alice@example.com')
         self.project = Project.objects.create(name='proj_api_1', pi=self.user)
         self.priv_der, self.pub_ssh = generate_test_keys()
-        self.project.key = self.pub_ssh
-        self.project.save()
+        SSHKey.objects.create(name='default', key=self.pub_ssh, user=self.user, project=self.project)
 
     def test_jwt_authentication_valid_token(self):
         token = str(RefreshToken.for_user(self.user).access_token)
@@ -107,8 +106,7 @@ class VerificationMixinTests(TestCase):
         self.user = User.objects.create(username='verif_alice')
         self.project = Project.objects.create(name='verif_proj', pi=self.user)
         self.priv_der, self.pub_ssh = generate_test_keys()
-        self.project.key = self.pub_ssh
-        self.project.save()
+        SSHKey.objects.create(name='default', key=self.pub_ssh, project=self.project)
 
     def test_authenticated_user_passes_verification(self):
         class DummyView(VerificationMixin, View):
@@ -164,7 +162,8 @@ class VerificationMixinTests(TestCase):
         self.assertEqual(resp.status_code, 404)
 
     def test_unauthenticated_missing_public_key_400(self):
-        no_key_proj = Project.objects.create(name='no_key_proj', pi=self.user)
+        other_user = User.objects.create(username='no_key_user')
+        no_key_proj = Project.objects.create(name='no_key_proj', pi=other_user)
         class DummyView(VerificationMixin, View):
             def get(self, request, *args, **kwargs):
                 from django.http import HttpResponse
@@ -397,7 +396,7 @@ class APIEndpointsScopingTests(TestCase):
 
     def test_update_user_key(self):
         priv_der, pub_ssh = generate_test_keys()
-        self.assertFalse(self.project_a.key)
+        self.assertFalse(self.project_a.sshkeys.exists())
 
         # Alice initializes key for project_a
         req = self.rf.post('/api/project/', data={'public': pub_ssh, 'project': 'project_a'})
@@ -405,8 +404,7 @@ class APIEndpointsScopingTests(TestCase):
         view = UpdateUserKey.as_view()
         resp = view(req)
         self.assertEqual(resp.status_code, 200)
-        self.project_a.refresh_from_db()
-        self.assertEqual(self.project_a.key, pub_ssh)
+        self.assertTrue(self.project_a.sshkeys.filter(key=pub_ssh).exists())
 
         # Calling again when key is already set returns 304 Not Modified
         req2 = self.rf.post('/api/project/', data={'public': pub_ssh, 'project': 'project_a'})
@@ -417,8 +415,7 @@ class APIEndpointsScopingTests(TestCase):
     @patch('basiclive.core.api.views.make_secure_path', return_value='fake_token_key')
     def test_legacy_v2_launch_session(self, mock_secure_path):
         priv_der, pub_ssh = generate_test_keys()
-        self.project_a.key = pub_ssh
-        self.project_a.save()
+        SSHKey.objects.create(name='default', key=pub_ssh, user=self.alice, project=self.project_a)
 
         signer = Signer(private=priv_der)
         signature = signer.sign('project_a')
@@ -434,7 +431,7 @@ class APIEndpointsScopingTests(TestCase):
 
     def test_update_user_key_via_signature(self):
         priv_der, pub_ssh = generate_test_keys()
-        self.assertFalse(self.project_b.key)
+        self.assertFalse(self.project_b.sshkeys.exists())
 
         signer = Signer(private=priv_der)
         signature = signer.sign('project_b')
@@ -449,5 +446,4 @@ class APIEndpointsScopingTests(TestCase):
         view = UpdateUserKey.as_view()
         resp = view(req, username='project_b', signature=signature)
         self.assertEqual(resp.status_code, 200)
-        self.project_b.refresh_from_db()
-        self.assertEqual(self.project_b.key, pub_ssh)
+        self.assertTrue(self.project_b.sshkeys.filter(key=pub_ssh).exists())

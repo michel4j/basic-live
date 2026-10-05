@@ -26,10 +26,18 @@ def get_v2_user(request):
         project = Project.objects.filter(name__exact=username).first()
 
         public_key = None
-        if user and getattr(user, 'key', None):
-            public_key = user.key
-        elif project and getattr(project, 'key', None):
-            public_key = project.key
+        if user:
+            if getattr(user, 'key', None):
+                public_key = user.key
+            elif hasattr(user, 'sshkeys') and user.sshkeys.exists():
+                public_key = user.sshkeys.first().key
+        if not public_key and project:
+            if getattr(project, 'key', None):
+                public_key = project.key
+            elif hasattr(project, 'sshkeys') and project.sshkeys.exists():
+                public_key = project.sshkeys.first().key
+            elif project.pi and hasattr(project.pi, 'sshkeys') and project.pi.sshkeys.exists():
+                public_key = project.pi.sshkeys.first().key
 
         if not public_key:
             return None

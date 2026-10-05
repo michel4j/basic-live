@@ -79,7 +79,7 @@ class FeedbackList(ListViewMixin, ItemListView):
     ]
     list_columns = ['created', 'session__beamline__acronym', 'comments', 'contact']
     list_transforms = {'contact': format_contact}
-    list_search = ['session__project__username', 'comments']
+    list_search = ['session__project__name', 'comments']
     ordering = ['-created']
     tool_template = 'crm/tools-support.html'
     show_project = False
@@ -103,9 +103,9 @@ class FeedbackCreate(SuccessMessageMixin, edit.CreateView):
     def get_initial(self):
         initial = super().get_initial()
         try:
-            username, name = decrypt(self.kwargs.get('key')).split(':')
-            initial['session'] = models.Session.objects.get(project__username=username, name=name)
-        except models.Session.DoesNotExist:
+            project_name, name = decrypt(self.kwargs.get('key')).split(':')
+            initial['session'] = models.Session.objects.get(project__name=project_name, name=name)
+        except (models.Session.DoesNotExist, ValueError):
             raise Http404
 
         return initial
@@ -138,7 +138,7 @@ class SupportEntryList(ListViewMixin, ItemListView):
     ]
     list_columns = ['beamline', 'staff', 'created', 'kind', 'comments', 'area', 'lost_time']
     list_transforms = {'comments': format_comments, 'area': format_area, 'created': format_created}
-    list_search = ['beamline__acronym', 'project__username', 'comments', 'staff__name', 'staff__first_name', 'staff__last_name', 'staff__username']
+    list_search = ['beamline__acronym', 'project__name', 'comments', 'staff__name', 'staff__first_name', 'staff__last_name', 'staff__username']
     ordering = ['-created']
     tool_template = 'crm/tools-support.html'
     link_url = 'supportrecord-edit'
@@ -171,7 +171,9 @@ class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateVie
 
     def get_initial(self):
         initial = super().get_initial()
-        initial['project'] = models.Project.objects.filter(username=self.request.GET.get('project')).first()
+        project_param = self.request.GET.get('project')
+        if project_param:
+            initial['project'] = models.Project.objects.filter(name=project_param).first()
         initial['beamline'] = models.Beamline.objects.filter(acronym=self.request.GET.get('beamline')).first()
         if self.request.user and getattr(self.request.user, 'is_staff', False):
             initial['staff'] = self.request.user

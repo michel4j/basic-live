@@ -545,7 +545,7 @@ class Session(models.Model):
         return f'{self.url}/{self.name}.tar.gz'
 
     def feedback_key(self):
-        return encrypt("{user}:{name}".format(user=self.project.username, name=self.name))
+        return encrypt(f"{self.project.name}:{self.name}")
 
     def launch(self):
         Stretch.objects.active(extras={'session__beamline': self.beamline}).exclude(session=self).update(

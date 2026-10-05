@@ -18,7 +18,7 @@ from django.views.generic import View
 
 from basiclive.core.lims.conf import settings as lims_settings
 from basiclive.core.lims.models import ActivityLog, Beamline, Container, Automounter, Data, DataType, Sample
-from basiclive.core.lims.models import AnalysisReport, Project, Session
+from basiclive.core.lims.models import AnalysisReport, Project, Session, SSHKey
 from basiclive.core.lims.templatetags.bl_tags import humanize_duration
 from basiclive.utils.data import parse_frames
 from basiclive.utils.signing import Signer, InvalidSignature
@@ -78,10 +78,18 @@ class VerificationMixin(object):
             return http.HttpResponseNotFound("User or Project not found.")
 
         public_key = None
-        if user and getattr(user, 'key', None):
-            public_key = user.key
-        elif project and getattr(project, 'key', None):
-            public_key = project.key
+        if user:
+            if getattr(user, 'key', None):
+                public_key = user.key
+            elif hasattr(user, 'sshkeys') and user.sshkeys.exists():
+                public_key = user.sshkeys.first().key
+        if not public_key and project:
+            if getattr(project, 'key', None):
+                public_key = project.key
+            elif hasattr(project, 'sshkeys') and project.sshkeys.exists():
+                public_key = project.sshkeys.first().key
+            elif project.pi and hasattr(project.pi, 'sshkeys') and project.pi.sshkeys.exists():
+                public_key = project.pi.sshkeys.first().key
 
         if not public_key:
             return http.HttpResponseBadRequest("Public key not configured.")
@@ -151,9 +159,19 @@ class UpdateUserKey(View):
         else:
             return http.HttpResponseForbidden("Authentication required.")
 
-        if getattr(target_project, 'key', None):
+        has_key = (
+            getattr(target_project, 'key', None)
+            or (hasattr(target_project, 'sshkeys') and target_project.sshkeys.exists())
+        )
+        if has_key:
             return http.HttpResponseNotModified()
 
+        SSHKey.objects.create(
+            name='API Key',
+            key=public,
+            user=target_project.pi,
+            project=target_project
+        )
         if hasattr(target_project, 'key'):
             target_project.key = public
             target_project.save(update_fields=['key'])

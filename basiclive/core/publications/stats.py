@@ -212,9 +212,10 @@ def publication_stats(period='year', year=None, tag=None):
 def h_indices(users):
     h_indices = {}
     for user in users:
+        last_name = getattr(user, 'last_name', None) or (getattr(user, 'pi', None) and user.pi.last_name) or ''
         publications = Publication.objects.filter(
-            metrics__citations__isnull=False, author_names__icontains=user.last_name
-        )
+            metrics__citations__isnull=False, author_names__icontains=last_name
+        ) if last_name else Publication.objects.none()
         citations = publications.order_by('-metrics__citations').values_list('metrics__citations', flat=True)
         h_indices[user.name] = len([c for i, c in enumerate(citations) if c >= (i + 1)])
     return h_indices

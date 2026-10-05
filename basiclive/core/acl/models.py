@@ -39,11 +39,8 @@ def _get_project_usernames(project) -> set[str]:
         for m in project.members.all():
             names.add(m.username)
     # Fallback only for projects without PI/members (e.g. legacy test fixtures where Project was the user)
-    if not names:
-        if getattr(project, 'username', None):
-            names.add(project.username)
-        elif getattr(project, 'name', None):
-            names.add(project.name)
+    if not names and getattr(project, 'name', None):
+        names.add(project.name)
     return names
 
 

@@ -12,19 +12,23 @@ from datetime import datetime, timedelta
 
 SHIFT_MAP = ["08", "16", "00"]
 
+
 def get_user_by_name(name):
     User = get_user_model()
     return User.objects.filter((Q(last_name=name['last_name']) & Q(first_name=name['first_name'])) | (
                 Q(username__iexact=name['last_name']) | Q(username__iexact=name['first_name']))).first()
 
+
 def get_project_by_name(name):
     return Project.objects.filter(name__icontains=name['last_name']).first()
 
+
 def get_project_by_account(account):
     try:
-        return Project.objects.filter(username__iexact=account.split(',')[0].strip()).first()
+        return Project.objects.filter(name__iexact=account.split(',')[0].strip()).first()
     except:
         return None
+
 
 def get_date(dt, shift, end=False):
     dt = datetime.strptime("{}T{}".format(dt, SHIFT_MAP[shift]), "%Y-%m-%dT%H")
@@ -60,16 +64,16 @@ class Command(BaseCommand):
                     'email': p['fields']['email'],
                 }
                 try:
-                    if not mxproject.email and p['fields']['email']:
-                        mxproject.email = p['fields']['email']
+                    if not mxproject.contact_email and p['fields']['email']:
+                        mxproject.contact_email = p['fields']['email']
                         mxproject.save()
-                        print("Updating email '{}' for '{}'".format(mxproject.email, mxproject.username))
+                        print("Updating email '{}' for '{}'".format(mxproject.contact_email, mxproject.name))
                 except:
                     pass
                 try:
                     mxproject.alias = int(p['fields']['last_name'])
                     mxproject.save()
-                    print('Updating alias "{}" for "{}"'.format(mxproject.alias, mxproject.username))
+                    print('Updating alias "{}" for "{}"'.format(mxproject.alias, mxproject.name))
                 except:
                     pass
             print({p: k for p, k in project_map.items() if k['account'] == None})
