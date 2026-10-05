@@ -22,10 +22,10 @@ class AnnotatedUsersTests(TestCase):
         self.remote_access_type = AccessType.objects.create(name="Remote", remote=True)
         self.local_access_type = AccessType.objects.create(name="On-site", remote=False)
 
-        self.user_alice = Project.objects.create(username="alice", name="Alice Researcher")
-        self.user_bob = Project.objects.create(username="bob", name="Bob Scientist")
-        self.user_charlie = Project.objects.create(username="charlie", name="Charlie PI")
-        self.user_david = Project.objects.create(username="david", name="David Postdoc")
+        self.user_alice = Project.objects.create(name="alice")
+        self.user_bob = Project.objects.create(name="bob")
+        self.user_charlie = Project.objects.create(name="charlie")
+        self.user_david = Project.objects.create(name="david")
 
         self.access_list = AccessList.objects.create(
             name="Endstation-A",

@@ -394,7 +394,7 @@ class Project(TimeStampedModel):
         return contact
 
     def get_absolute_url(self):
-        return reverse('project-profile', kwargs={'username': self.name})
+        return reverse('project-profile', kwargs={'name': self.name})
 
     def onsite_containers(self):
         return self.containers.filter(status=Container.STATES.ON_SITE).count()

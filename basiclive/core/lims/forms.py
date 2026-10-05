@@ -51,8 +51,8 @@ class ProjectForm(ModalModelForm):
         pk = self.instance.pk
 
         if pk:
-            self.body.title = _("Edit Profile")
-            self.body.form_action = reverse_lazy('edit-profile', kwargs={'username': self.instance.name})
+            self.body.title = _("Edit Project")
+            self.body.form_action = reverse_lazy('project-edit', kwargs={'name': self.instance.name})
         else:
             self.body.title = _("Create New Profile")
             self.body.form_action = reverse_lazy('new-project')

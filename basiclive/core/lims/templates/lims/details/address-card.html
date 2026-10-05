@@ -16,8 +16,8 @@
       <div class="col-6">
         <div class="p-3 text-end">
             <span class="text-condensed text-muted">PRINCIPAL INVESTIGATOR:</span>
-            <strong>{{ object.first_name }} {{ object.last_name }}</strong><br/>
-            {% if object.email %}{{ object.email }}{% endif %}<br/>
+            <strong>{{ object.pi.get_full_name|default:object.contact_name }}</strong><br/>
+            {% if object.pi.email %}{{ object.pi.email }}{% endif %}<br/>
             {% if object.contact_fax %}
                 <span class="text-condensed text-muted">FACSIMILE:</span>&nbsp;<span class="font-monospace">{{ object.contact_fax }}</span><br/>
             {% endif %}
@@ -32,7 +32,7 @@
     </div>
     <div class="row d-flex flex-row">
         <div class="col-6">
-            {% include "lims/address.html" with user=object %}
+            {% include "lims/address.html" with project=object %}
         </div>
         <div class="col-6">
             <div class="p-3 text-center ms-auto">

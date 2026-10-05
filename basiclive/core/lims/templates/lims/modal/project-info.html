@@ -7,12 +7,12 @@
         <span class="text-muted">
             {% if object.alias %}{{ object.alias }} (<strong>{{ object.name|upper }}</strong>)
             {% else %}{{ object.name|upper }}{% endif %}
-        </span> | {{ object.contact_person }}
+        </span> | {{ object.contact_name }}
     </h3>
 {% endblock %}
 
 {% block modal_subtitle %}
-    Beamline User since {{ object.created|naturalday }}
+    Allocated since {{ object.created|naturalday }}
 {% endblock %}
 
 {% block modal_body %}
@@ -24,23 +24,24 @@
             </h6>
         </div>
         <div class="col float-end text-end">
-            <strong class="text-sm">Project Owner:</strong><br>
-            <span>{{ object.first_name }} {{ object.last_name }}</span>
+            <strong class="text-sm">Principal Investigator:</strong><br>
+            <span>{{ object.pi.get_full_name|default:object.contact_name }}</span>
         </div>
     </div>
     <div class="row">
         <div class="col-6">
             <div class="p-3">
-                <strong class="text-condensed">{{ object.contact_person }}</strong><br/>
+                <strong class="text-condensed">Logistics Contact</strong><br/>
+                {{ object.contact_person|default_if_none:"" }}<br/>
                 {{ object.contact_email|default_if_none:"" }}<br/>
                 <pre>{{ object.contact_phone|default_if_none:"" }}</pre>
             </div>
         </div>
         <div class="col-6">
-            {% if object.email %}
+            {% if object.pi %}
                 <div class="p-3">
-                    <strong class="text-condensed">{{ object.first_name }} {{ object.last_name }}</strong><br/>
-                    {{ object.email|default_if_none:"" }}
+                    <strong class="text-condensed">{{ object.pi.get_full_name }}</strong><br/>
+                    {{ object.pi.email|default_if_none:"" }}
                 </div>
             {% endif %}
         </div>
@@ -48,7 +49,7 @@
     <hr class="mt-0 mb-0"/>
     <div class="row">
         <div class="col-6">
-            {% include "lims/address.html" with user=object %}
+            {% include "lims/address.html" with project=object %}
         </div>
     </div>
 {% endblock %}

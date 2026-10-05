@@ -175,7 +175,7 @@ class ProjectProfileAndEditViewsTestCase(TestCase):
     def test_project_profile_permissions(self):
         view = ProjectProfile()
         request = self.rf.get(f'/projects/{self.project.name}/')
-        view.kwargs = {'username': self.project.name}
+        view.kwargs = {'name': self.project.name}
 
         request.user = self.pi
         view.request = request
@@ -193,10 +193,15 @@ class ProjectProfileAndEditViewsTestCase(TestCase):
         view.request = request
         self.assertTrue(view.test_func())
 
+        # Also support backward compatible 'username' kwarg
+        view.kwargs = {'username': self.project.name}
+        request.user = self.pi
+        self.assertTrue(view.test_func())
+
     def test_project_edit_permissions(self):
         view = ProjectEdit()
         request = self.rf.get(f'/projects/{self.project.name}/edit')
-        view.kwargs = {'username': self.project.name}
+        view.kwargs = {'name': self.project.name}
 
         request.user = self.pi
         view.request = request
@@ -209,6 +214,11 @@ class ProjectProfileAndEditViewsTestCase(TestCase):
         request.user = self.outsider
         view.request = request
         self.assertFalse(view.test_func())
+
+        # Also support backward compatible 'username' kwarg
+        view.kwargs = {'username': self.project.name}
+        request.user = self.pi
+        self.assertTrue(view.test_func())
 
 
 class AjaxViewsScopingAndSecurityTestCase(TestCase):

@@ -12,36 +12,32 @@
 
 {% block page-pre-title %}Project{% endblock %}
 {% block page-title %}
-{% if user.is_superuser %}<span class="fw-lighter">{{ object }} | </span>{% endif %}<strong>{{ object.first_name }} {{ object.last_name }}</strong>
+<strong>{{ object.name }}</strong>{% if object.pi %} <span class="fw-lighter">| {{ object.contact_name }}</span>{% endif %}
 {% endblock %}
 
 {% block page-subtitle %}
-    <span class="text-muted">Beamline User since {{ object.created|naturalday }}</span>
+    <span class="text-muted">Allocated since {{ object.created|naturalday }}</span>
 {% endblock %}
 
 {% block page-tools %}
-    <a href="{% url 'data-list' %}?search={{ object.username }}" title="Go to Data for {{ object.username }}">
+    <a href="{% url 'data-list' %}?search={{ object.name }}" title="Go to Data for {{ object.name }}">
         {% show_icon label="Data" icon="data" size='md' badge=object.datasets.count %}
     </a>
-    <a class="float-end" href="{% url 'result-list' %}?search={{ object.username }}" title="Go to Reports for {{ object.username }}">
+    <a class="float-end" href="{% url 'result-list' %}?search={{ object.name }}" title="Go to Reports for {{ object.name }}">
         {% show_icon label="Reports" icon="reports" size='md' badge=object.reports.count %}
     </a>
-    <a class="float-end" href="{% url 'session-list' %}?search={{ object.username }}" title="Go to Sessions for {{ object.username }}">
+    <a class="float-end" href="{% url 'session-list' %}?search={{ object.name }}" title="Go to Sessions for {{ object.name }}">
         {% show_icon label="Sessions" icon="history" size='md' badge=object.sessions.count %}
     </a>
     {% if user.is_superuser %}
     <span class="separator"></span>
-    <a href="{% url 'project-labels' object.username %}" title="Get Shipping Labels">
+    <a href="{% url 'project-labels' object.name %}" title="Get Shipping Labels">
         {% show_icon label="Labels" icon="tag" size='md' %}
     </a>
-    <a href="#!" data-modal-url="{% url 'edit-profile' object.username %}" title="Edit Profile">
+    <a href="#!" data-modal-url="{% url 'project-edit' object.name %}" title="Edit Project">
         {% show_icon label="Edit" icon="edit" size='md' %}
     </a>
     {% endif %}
-    <a  href="#!" data-modal-url="{% url 'new-sshkey' username=object.username %}">
-        {% show_icon label='Add SSH Key' icon='key' size='md' %}
-    </a>
-
 {% endblock %}
 
 {% block page-status-style %}callout{% endblock %}

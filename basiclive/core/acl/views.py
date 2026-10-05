@@ -81,7 +81,7 @@ class AccessConnectionList(AdminRequiredMixin, ItemListView):
     model = models.Access
     list_columns = ['user', 'name', 'userlist', 'status', 'start_time', 'end_time', 'total_time']
     list_filters = ['start_time', filters.YearFilter('start_time', reverse=True), 'userlist', 'status']
-    list_search = ['user__username', 'name', 'status', 'userlist__name', 'start_time']
+    list_search = ['user__name', 'name', 'status', 'userlist__name', 'start_time']
     ordering = ['-start_time']
     template_name = "lims/list.html"
     link_url = 'access-connection-detail'

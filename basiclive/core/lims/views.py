@@ -79,15 +79,15 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
         return kwargs
 
     def get_success_url(self):
-        kwarg_val = self.kwargs.get('username') or self.kwargs.get('name')
-        return reverse_lazy('project-profile', kwargs={'username': kwarg_val})
+        kwarg_val = self.kwargs.get('name') or self.kwargs.get('username')
+        return reverse_lazy('project-profile', kwargs={'name': kwarg_val})
 
 
 class ProjectLabels(AdminRequiredMixin, detail.DetailView):
     template_name = "lims/pdf/return-labels.html"
     model = models.Project
     slug_field = 'name'
-    slug_url_kwarg = 'username'
+    slug_url_kwarg = 'name'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1326,8 +1326,8 @@ class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
             return False
 
     def get_success_url(self):
-        kwarg_val = self.kwargs.get('username') or self.kwargs.get('name')
-        return reverse_lazy('project-profile', kwargs={'username': kwarg_val})
+        kwarg_val = self.kwargs.get('name') or self.kwargs.get('username')
+        return reverse_lazy('project-profile', kwargs={'name': kwarg_val})
 
     def get_initial(self):
         initial = super().get_initial()
@@ -1433,13 +1433,14 @@ class ProjectList(AdminRequiredMixin, ItemListView):
     paginate_by = 16
     template_name = "lims/details/user-list.html"
     list_filters = ['created', 'modified', 'kind', 'designation']
-    list_columns = ['name', 'contact_person', 'contact_phone', 'contact_email', 'kind']
+    list_columns = ['name', 'pi', 'kind', 'contact_person', 'contact_phone', 'contact_email']
     list_search = [
-        'name', 'contact_person', 'contact_phone', 'contact_email', 'city', 'province', 'country',
+        'name', 'pi__username', 'pi__first_name', 'pi__last_name',
+        'contact_person', 'contact_phone', 'contact_email', 'city', 'province', 'country',
         'department', 'organisation'
     ]
     link_url = 'project-profile'
-    link_kwarg = 'username'
+    link_kwarg = 'name'
     add_url = 'new-project'
     add_ajax = True
     ordering = ['name']
@@ -1456,7 +1457,7 @@ class ProjectInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
             return False
 
     def get_object(self, **kwargs):
-        username = self.kwargs.get('username') or self.kwargs.get('name')
+        username = self.kwargs.get('name') or self.kwargs.get('username')
         obj = models.Project.objects.filter(
             models.Q(name=username)
         ).first()
@@ -1496,19 +1497,21 @@ class ProjectCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
 class ProjectDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.Project
     success_url = reverse_lazy('user-list')
-    success_message = "Account has been deleted"
+    success_message = "Project has been deleted"
 
     def get_object(self, *kwargs):
-        obj = self.model.objects.get(username=self.kwargs.get('username'))
+        name = self.kwargs.get('name') or self.kwargs.get('username')
+        obj = self.model.objects.get(name=name)
         return obj
 
     def get_context_data(self, **kwargs):
         context = super(ProjectDelete, self).get_context_data(**kwargs)
-        context['form_action'] = reverse_lazy('project-delete', kwargs={'username': self.object.name})
+        context['form_action'] = reverse_lazy('project-delete', kwargs={'name': self.object.name})
         return context
 
     def confirmed(self, *args, **kwargs):
-        self.success_message = f"{self.kwargs.get('username')} account has been deleted"
+        name = self.kwargs.get('name') or self.kwargs.get('username')
+        self.success_message = f"{name} project has been deleted"
         return super().confirmed(*args, **kwargs)
 
 

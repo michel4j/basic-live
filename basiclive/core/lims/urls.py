@@ -6,18 +6,21 @@ from . import views, ajax_views, forms
 
 urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('profile/<slug:username>/', views.ProjectProfile.as_view(), name='project-profile'),
-    path('profile/<slug:username>/edit', views.ProjectEdit.as_view(), name='edit-profile'),
-    path('profile/<slug:username>/labels', views.ProjectLabels.as_view(), name='project-labels'),
-
     path('projects/', views.ProjectList.as_view(), name='user-list'),
     path('projects/dashboard/', views.ProjectList.as_view(), name='user-dashboard'),
     path('projects/switch/<int:pk>/', views.SwitchProjectView.as_view(), name='switch-project'),
     path('projects/switch/', views.SwitchProjectView.as_view(), name='switch-project-form'),
     path('projects/new/', views.ProjectCreate.as_view(), name='new-project'),
-    path('projects/<slug:username>/', views.ProjectProfile.as_view(), name='project-profile'),
-    path('projects/<slug:username>/info/', views.ProjectInfo.as_view(), name='project-info'),
-    path('projects/<slug:username>/delete/', views.ProjectDelete.as_view(), name='project-delete'),
+    path('projects/<slug:name>/', views.ProjectProfile.as_view(), name='project-profile'),
+    path('projects/<slug:name>/edit/', views.ProjectEdit.as_view(), name='project-edit'),
+    path('projects/<slug:name>/labels/', views.ProjectLabels.as_view(), name='project-labels'),
+    path('projects/<slug:name>/info/', views.ProjectInfo.as_view(), name='project-info'),
+    path('projects/<slug:name>/delete/', views.ProjectDelete.as_view(), name='project-delete'),
+
+    # Backward-compatible routes
+    path('profile/<slug:name>/', views.ProjectProfile.as_view()),
+    path('profile/<slug:name>/edit', views.ProjectEdit.as_view(), name='edit-profile'),
+    path('profile/<slug:name>/labels', views.ProjectLabels.as_view()),
 
     path('beamline/<int:pk>/', views.BeamlineDetail.as_view(), name='beamline-detail'),
     path('beamline/usage/', views.UsageSummary.as_view(), name='beamline-usage'),

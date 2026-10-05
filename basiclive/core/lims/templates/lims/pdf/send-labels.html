@@ -23,7 +23,7 @@
             </table>
             <div class="panel panel-default">
                 <table class="table table-sm">
-                    <tr class="border-bottom"><td>ID:</td><td>{{project.first_name}} {{project.last_name}} ({{shipment.name}})</td></tr>
+                    <tr class="border-bottom"><td>ID:</td><td>{{ project.contact_name }} ({{ shipment.name }})</td></tr>
                     <tr><td>From:</td><td>{{ project.contact_person|upper|default:"" }}{% if project.department %} / {{ project.department|upper }}{% endif %}</td></tr>
                     <tr><td></td><td>{{ project.organisation|upper|default:"" }}</td></tr>
                     {% include "lims/pdf/address-base.html" with project=project %}

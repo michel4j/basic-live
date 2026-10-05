@@ -44,7 +44,7 @@
         </div>
         <div class="list-group list-group-flush border-bottom scroll-area">
             {% for project in projects %}
-                <a href="{% url 'project-puck-loader' beamline=object.acronym project=project.username %}"
+                <a href="{% url 'project-puck-loader' beamline=object.acronym project=project.name %}"
                    class="list-group-item list-group-item-action {% if project == active_project %}active{% endif %} py-3 lh-sm"
                    {% if project == active_project %}aria-current="true"{% endif %}
                 >

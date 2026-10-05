@@ -3,11 +3,11 @@
 {% load bl_tags %}
 
 <div class="list-group-item p-2 {{ connection.beamtime.access.name }} {% if not connection.beamtime %}empty{% endif %}"
-     data-highlight="project" data-reference="{{ connection.user.username }}">
+     data-highlight="project" data-reference="{{ connection.user.name }}">
     <div class="d-flex flex-row">
         {% if USE_CRM %}
             <div class="box-status text-center small">
-                <a href="#!" data-modal-url="{% url 'new-supportrecord' %}?project={{ connection.user.username }}&beamline={{ connection.beamline }}"
+                <a href="#!" data-modal-url="{% url 'new-supportrecord' %}?project={{ connection.user.name }}&beamline={{ connection.beamline }}"
                    title='Record User Support'>{% show_icon label='Support' icon='support' size='sm' %}
                 </a>
             </div>
@@ -15,8 +15,8 @@
         <div class="ps-3 overflow-ellipsis align-self-center">
             <h6 class="m-0 text-condensed">
                 <span class="text-muted">
-                    <a href="#!" data-modal-url="{% url 'project-info' connection.user.username %}"
-                       title='View Contact Information for {{ connection.user.username }}'>
+                    <a href="#!" data-modal-url="{% url 'project-info' connection.user.name %}"
+                       title='View Contact Information for {{ connection.user.name }}'>
                         {% if connection.user.alias %}
                             {{ connection.user.alias }} (<strong>{{ connection.user.name|upper }}</strong>)
                         {% else %}
@@ -24,11 +24,8 @@
                         {% endif %}
                     </a>
                     {{ connection.beamline }} |
-   |
                 </span>
-                {% if connection.user.contact_person %}{{ connection.user.contact_person }}
-                {% else %}{{ connection.user.first_name|default_if_none:"" }} {{ connection.user.last_name|default_if_none:"" }}
-                {% endif %}
+                {{ connection.user.contact_name }}
             </h6>
             <span class="text-muted overflow-ellipsis small">
                 {% if connection.beamtime %}
@@ -44,8 +41,8 @@
         </div>
         <div class="tools-box ms-auto small">
             {% for access, conn in connection.connections.items %}
-                <a href="{% url 'access-connections' %}?search={{ connection.user.username }}&status=Connected&userlist__id__exact={{ conn.0.userlist.pk }}"
-                   title='View {{ connection.user.username|upper }} Connections to {{ access }}'>
+                <a href="{% url 'access-connections' %}?search={{ connection.user.name }}&status=Connected&userlist__id__exact={{ conn.0.userlist.pk }}"
+                   title='View {{ connection.user.name|upper }} Connections to {{ access }}'>
                     {% if conn|length == 1 %}
                         {% show_icon label=access|upper icon='access' size='sm' %}
                     {% else %}
