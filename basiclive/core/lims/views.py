@@ -61,10 +61,10 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
     success_message = "Profile has been updated."
 
     def get_object(self):
-        username = self.kwargs.get('username')
+        username = self.kwargs.get('username') or self.kwargs.get('name')
         return models.Project.objects.filter(
-            models.Q(username=username) | models.Q(name=username)
-        ).first() or models.Project.objects.get(username=username)
+            models.Q(name=username)
+        ).first() or models.Project.objects.get(name=username)
 
     def test_func(self):
         """Allow access to admin or project members"""
@@ -79,13 +79,14 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
         return kwargs
 
     def get_success_url(self):
-        return reverse_lazy('project-profile', kwargs={'username': self.kwargs['username']})
+        kwarg_val = self.kwargs.get('username') or self.kwargs.get('name')
+        return reverse_lazy('project-profile', kwargs={'username': kwarg_val})
 
 
 class ProjectLabels(AdminRequiredMixin, detail.DetailView):
     template_name = "lims/pdf/return-labels.html"
     model = models.Project
-    slug_field = 'username'
+    slug_field = 'name'
     slug_url_kwarg = 'username'
 
     def get_context_data(self, **kwargs):
@@ -150,7 +151,7 @@ class ShipmentList(ListViewMixin, ItemListView):
     model = models.Shipment
     list_filters = [filters.YearFilter('created'), 'status']
     list_columns = ['id', 'name', 'date_shipped', 'carrier', 'num_containers', 'status']
-    list_search = ['project__username', 'project__name', 'name', 'comments', 'status']
+    list_search = ['project__name', 'name', 'comments', 'status']
     link_url = 'shipment-detail'
     link_data = False
     ordering = ['status', '-modified']
@@ -1047,7 +1048,7 @@ class SessionList(ListViewMixin, ItemListView):
         filters.NewEntryFilter(field_label="First Session")
     ]
     list_columns = ['name', 'created', 'beamline', 'total_time', 'num_datasets', 'num_reports']
-    list_search = ['beamline__acronym', 'project__username', 'name']
+    list_search = ['beamline__acronym', 'project__name', 'name']
     link_field = 'name'
     ordering = ['-created']
     list_transforms = {
@@ -1314,9 +1315,9 @@ class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
     def test_func(self):
         # Allow access to admin or project members
         try:
-            username = self.kwargs.get('username')
+            username = self.kwargs.get('username') or self.kwargs.get('name')
             proj = models.Project.objects.filter(
-                models.Q(username=username) | models.Q(name=username)
+                models.Q(name=username)
             ).first()
             if not proj:
                 return False
@@ -1325,13 +1326,14 @@ class SSHKeyCreate(UserPassesTestMixin, SuccessMessageMixin, ModalCreateView):
             return False
 
     def get_success_url(self):
-        return reverse_lazy('project-profile', kwargs={'username': self.kwargs['username']})
+        kwarg_val = self.kwargs.get('username') or self.kwargs.get('name')
+        return reverse_lazy('project-profile', kwargs={'username': kwarg_val})
 
     def get_initial(self):
         initial = super().get_initial()
-        username = self.kwargs.get('username')
+        username = self.kwargs.get('username') or self.kwargs.get('name')
         proj = models.Project.objects.filter(
-            models.Q(username=username) | models.Q(name=username)
+            models.Q(name=username)
         ).first()
         if not proj:
             raise http.Http404
@@ -1431,9 +1433,9 @@ class ProjectList(AdminRequiredMixin, ItemListView):
     paginate_by = 16
     template_name = "lims/details/user-list.html"
     list_filters = ['created', 'modified', 'kind', 'designation']
-    list_columns = ['username', 'contact_person', 'contact_phone', 'contact_email', 'kind']
+    list_columns = ['name', 'contact_person', 'contact_phone', 'contact_email', 'kind']
     list_search = [
-        'username', 'contact_person', 'contact_phone', 'contact_email', 'city', 'province', 'country',
+        'name', 'contact_person', 'contact_phone', 'contact_email', 'city', 'province', 'country',
         'department', 'organisation'
     ]
     link_url = 'project-profile'
@@ -1456,7 +1458,7 @@ class ProjectInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
     def get_object(self, **kwargs):
         username = self.kwargs.get('username') or self.kwargs.get('name')
         obj = models.Project.objects.filter(
-            models.Q(username=username) | models.Q(name=username)
+            models.Q(name=username)
         ).first()
         if not obj:
             raise models.Project.DoesNotExist(f"Project matching {username} does not exist.")

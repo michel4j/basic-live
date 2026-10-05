@@ -209,7 +209,7 @@ class TemplateIntegrityTests(SimpleTestCase):
             steps = type("Steps", (), {"step0": 0, "step1": 1, "count": 2, "prev": None, "next": "step2"})()
             form = DummyForm()
 
-        project = Project(username="testuser", name="Test User")
+        project = Project(name="testuser")
 
         cases = [
             ("lims/base.html", {"user": None}),

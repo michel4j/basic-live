@@ -37,7 +37,7 @@ class ProjectForm(ModalModelForm):
     class Meta:
         model = Project
         fields = (
-            'first_name', 'last_name', 'email', 'contact_person', 'contact_email', 'contact_phone',
+            'contact_person', 'contact_email', 'contact_phone',
             'carrier', 'account_number', 'shipping_notes', 'organisation', 'department', 'address', 'city', 'province',
             'postal_code', 'country', 'kind', 'alias', 'designation'
         )
@@ -58,20 +58,14 @@ class ProjectForm(ModalModelForm):
             self.body.form_action = reverse_lazy('new-project')
 
         if not self.user.is_superuser:
-            for f in ['kind', 'alias', 'first_name', 'last_name', 'email', 'designation']:
+            for f in ['kind', 'alias', 'designation']:
                 self.fields[f].widget.attrs['readonly'] = True
             self.fields['designation'].widget = forms.MultipleHiddenInput()
 
         self.body.layout = Layout(
             Row(
-                ThirdWidth('first_name'),
-                ThirdWidth('last_name'),
-                ThirdWidth(Field('kind', css_class='select')),
-                style="g-2"
-            ),
-            Row(
-                HalfWidth('email') if self.user.is_superuser else TwoThirdWidth('email'),
-                QuarterWidth('alias') if self.user.is_superuser else ThirdWidth('alias'),
+                HalfWidth(Field('kind', css_class='select')),
+                QuarterWidth('alias') if self.user.is_superuser else HalfWidth('alias'),
                 QuarterWidth(Field('designation', css_class='select')) if self.user.is_superuser else Div('designation'),
                 style="g-2"
             ),
@@ -118,42 +112,31 @@ class ProjectForm(ModalModelForm):
 
 
 class NewProjectForm(ModalModelForm):
-    password = forms.CharField(required=False, help_text=_('A password will be auto-generated for this account'))
-
     class Meta:
         model = Project
-        fields = ('first_name', 'last_name', 'email', 'contact_person', 'contact_email', 'contact_phone', 'username',
+        fields = ('name', 'contact_person', 'contact_email', 'contact_phone',
                   'kind', 'alias', 'designation')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if settings.SEND_EMAILS:
-            self.fields['password'].help_text += _(' and sent to staff once this form is submitted')
         self.fields['kind'].initial = ProjectType.objects.first()
 
-        self.body.title = _("Create New User Account")
+        self.body.title = _("Create New Project")
         self.body.form_action = reverse_lazy('new-project')
         self.body.layout = Layout(
             Row(
-                HalfWidth('username'),
-                HalfWidth(Field('password', disabled=True)),
+                HalfWidth('name'),
+                HalfWidth(Field('kind', css_class="select")),
                 style="g-2"
             ),
             Row(
-                HalfWidth('first_name'),
-                HalfWidth('last_name'),
-                HalfWidth('email'),
+                HalfWidth('alias'),
                 HalfWidth(Field('designation', css_class='select')),
                 style="g-2"
             ),
             Row(
-                HalfWidth(Field('kind', css_class="select")),
-                HalfWidth('alias'),
                 FullWidth('contact_person'),
-                style="g-2"
-            ),
-            Row(
                 HalfWidth('contact_email'),
                 HalfWidth('contact_phone'),
                 style="g-2"

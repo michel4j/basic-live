@@ -9,7 +9,7 @@ class ProjectAdmin(admin.ModelAdmin):
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('name', 'contact_person', 'email')
+    list_display = ('name', 'contact_person', 'contact_email')
     search_fields = ('name', 'contact_person')
 
 

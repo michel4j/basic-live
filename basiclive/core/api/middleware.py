@@ -23,12 +23,12 @@ def get_v2_user(request):
         signature = kwargs.get('signature')
         user_model = get_user_model()
         user = user_model.objects.filter(username=username).first()
-        project = Project.objects.filter(Q(username__exact=username) | Q(name__exact=username)).first()
+        project = Project.objects.filter(name__exact=username).first()
 
         public_key = None
         if user and getattr(user, 'key', None):
             public_key = user.key
-        elif project and project.key:
+        elif project and getattr(project, 'key', None):
             public_key = project.key
 
         if not public_key:

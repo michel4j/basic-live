@@ -59,9 +59,22 @@ class DataModelsDecouplingTestCase(TestCase):
         self.assertEqual(project.pi, pi)
         self.assertIn(project, pi.led_projects.all())
 
+        # Project should not have user-focused fields
+        project_fields = [f.name for f in Project._meta.get_fields()]
+        for user_field in ['username', 'first_name', 'last_name', 'email', 'key']:
+            self.assertNotIn(user_field, project_fields)
+
         # Saving project with PI should ensure membership with role PI
         self.assertTrue(project.memberships.filter(user=pi, role=ProjectMembership.Role.PI).exists())
         self.assertIn(pi, project.members.all())
+
+        # contact_name fallback
+        self.assertEqual(project.contact_name, "Dr. Smith")
+        project.contact_person = "Custom Contact"
+        self.assertEqual(project.contact_name, "Custom Contact")
+        project.contact_person = None
+        project.pi = None
+        self.assertEqual(project.contact_name, "biomx-2026")
 
     def test_project_membership_roles_and_uniqueness(self):
         pi = LimsUser.objects.create_user(username="lead_pi", email="lead@example.org")

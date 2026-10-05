@@ -276,7 +276,7 @@ class User(AbstractUser):
         swappable = 'AUTH_USER_MODEL'
 
     def __str__(self):
-        return self.get_full_name()
+        return self.get_full_name() or self.name or self.username
 
     def get_projects(self):
         return Project.objects.filter(
@@ -334,10 +334,6 @@ class Project(TimeStampedModel):
         'contact_person': _("Full name of contact person"),
     }
     name = models.SlugField(max_length=100, unique=True)
-    username = models.CharField(max_length=150, blank=True, null=True, unique=True)
-    first_name = models.CharField(max_length=150, blank=True, default='')
-    last_name = models.CharField(max_length=150, blank=True, default='')
-    email = models.EmailField(blank=True, default='')
     pi = models.ForeignKey(
         'lims.User',
         related_name='led_projects',
@@ -366,7 +362,6 @@ class Project(TimeStampedModel):
     contact_fax = models.CharField(max_length=60, blank=True, null=True)
     organisation = models.CharField(max_length=600, blank=True, null=True)
     show_archives = models.BooleanField(default=True)
-    key = models.TextField(blank=True)
     kind = models.ForeignKey(
         ProjectType, blank=True, null=True, on_delete=models.SET_NULL, verbose_name=_("Project Type")
     )
@@ -382,12 +377,12 @@ class Project(TimeStampedModel):
         return self.name.upper() if self.name else ""
 
     @property
-    def is_authenticated(self):
-        return True
-
-    @property
-    def is_anonymous(self):
-        return False
+    def contact_name(self):
+        if self.contact_person:
+            return self.contact_person
+        if self.pi:
+            return self.pi.get_full_name() or self.pi.name or self.pi.username
+        return self.name
 
     def get_contact(self):
         """
@@ -399,7 +394,7 @@ class Project(TimeStampedModel):
         return contact
 
     def get_absolute_url(self):
-        return reverse('project-profile', kwargs={'username': self.username or self.name})
+        return reverse('project-profile', kwargs={'username': self.name})
 
     def onsite_containers(self):
         return self.containers.filter(status=Container.STATES.ON_SITE).count()
@@ -422,19 +417,8 @@ class Project(TimeStampedModel):
         return session.created if session else None
 
     def save(self, *args, **kwargs):
-        if not self.name and self.username:
-            self.name = self.username
-        elif not self.username and self.name:
-            self.username = self.name
         if not self.kind:
             self.kind = ProjectType.objects.first()
-        if self.pi:
-            if not self.email and self.pi.email:
-                self.email = self.pi.email
-            if not self.first_name and self.pi.first_name:
-                self.first_name = self.pi.first_name
-            if not self.last_name and self.pi.last_name:
-                self.last_name = self.pi.last_name
         super().save(*args, **kwargs)
         if self.pi:
             ProjectMembership.objects.get_or_create(
@@ -1189,7 +1173,7 @@ class Container(TransitStatusMixin):
 
     def get_project(self):
         if self.children.count():
-            return '/'.join(set(self.children.values_list('project__username', flat=True)))
+            return '/'.join(set(self.children.values_list('project__name', flat=True)))
         return self.project
 
     def get_location_name(self):

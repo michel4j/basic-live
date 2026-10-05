@@ -16,7 +16,7 @@ def get_current_project(request):
     )
     if project_identifier:
         is_num = str(project_identifier).isdigit()
-        query = Q(id=int(project_identifier)) if is_num else (Q(username__exact=project_identifier) | Q(name__exact=project_identifier))
+        query = Q(id=int(project_identifier)) if is_num else Q(name__exact=project_identifier)
         if user.is_superuser:
             project = Project.objects.filter(query).first()
         else:
