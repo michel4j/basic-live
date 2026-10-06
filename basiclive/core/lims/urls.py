@@ -178,3 +178,7 @@ urlpatterns = [
     path('loader/<slug:beamline>/load/<slug:position>', views.LoadPuck.as_view(), name='loader-load-puck'),
     path('loader/<slug:beamline>/unload/<slug:position>', views.UnloadPuck.as_view(), name='loader-unload-puck'),
 ]
+
+handler403 = 'lims.views.custom_403_view'
+handler404 = 'lims.views.custom_404_view'
+handler500 = 'lims.views.custom_500_view'

@@ -1,17 +1,1 @@
-{% extends "lims/warning.html" %}
-
-{% load bl_icons %}
-
-{% block page-title %}
-    <h3>
-        <span class="text-thin">Warning |</span>
-        <span class="text-condensed">
-            <strong>We can't find {{ request_path }}</strong>
-        </span>
-    </h3>
-    <span class="text-muted">
-        {% show_icon icon="error" extra_class="text-muted" %}
-        UH-OH-404 | Please contact staff for assistance or go back <a href="/">home</a>
-        and try again.
-    </span>
-{% endblock %}
+{% include "lims/warning.html" with error_message="The resource you requested may have moved, been deleted, or does not exist at this address. Check the URL for errors." error_title="Lost in Cyberspace" status_code=404 %}

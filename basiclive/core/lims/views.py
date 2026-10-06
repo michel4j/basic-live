@@ -1,4 +1,5 @@
 import json
+import uuid
 from typing import Any
 
 import requests
@@ -12,6 +13,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import JsonResponse, Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.utils import dateformat, timezone
 from django.utils.decorators import method_decorator
@@ -1763,3 +1765,40 @@ class CheckPending(AuthenticationRequiredMixin, View):
         return JsonResponse({'pending': config.pending})
 
 
+def custom_403_view(request, exception=None):
+    print(f"403 Error: Access forbidden for {request.path}. Exception: {exception}")
+    return render(request, "lims/warning.html", {
+       "status_code": 403,
+       "error_title": "Access Denied",
+       "error_message": (
+           "You lack the required authorization to view this resource."
+       ),
+       "request_id": f"REQ-{uuid.uuid4().hex[:8].upper()}",
+       "exception": str(exception),
+    }, status=403)
+
+
+def custom_404_view(request, exception=None):
+    print(f"404 Error: {request.path} not found. Exception: {exception}")
+    return render(request, "lims/warning.html", {
+       "status_code": 404,
+       "error_title": "Lost in Cyberspace",
+       "error_message": (
+           "The resource you requested may have moved, been deleted, or "
+           "does not exist at this address. Check the URL for errors."
+       ),
+       "request_id": f"REQ-{uuid.uuid4().hex[:8].upper()}",
+       "exception": str(exception),
+    }, status=404)
+
+
+def custom_500_view(request):
+    return render(request, "lims/warning.html", {
+       "status_code": 500,
+       "error_title": "Server Encountered an Error",
+       "error_message": (
+           "A critical unexpected server failure was encountered. "
+           "Our automated monitoring infrastructure has logged this event."
+       ),
+       "request_id": f"REQ-{uuid.uuid4().hex[:8].upper()}",
+    }, status=500)
