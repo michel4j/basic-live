@@ -10,8 +10,23 @@ class ItemAdmin(admin.ModelAdmin):
 
 
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('name', 'pi', 'kind', 'contact_person', 'contact_email')
-    search_fields = ('name', 'contact_person', 'contact_email', 'pi__username', 'pi__first_name', 'pi__last_name')
+    list_display = ('name', 'pi', 'kind', 'contact_person', 'contact_email', 'country', 'region')
+    search_fields = (
+        'name', 'contact_person', 'contact_email', 'pi__username', 'pi__first_name', 'pi__last_name',
+        'country__name', 'region__name'
+    )
+    list_filter = ('kind', 'country')
+
+
+class CountryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'alpha2', 'alpha3', 'code')
+    search_fields = ('name', 'alpha2', 'alpha3')
+
+
+class RegionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'country')
+    search_fields = ('name', 'code', 'country__name')
+    list_filter = ('country',)
 
 
 class UserAdmin(DjangoUserAdmin):
@@ -38,8 +53,8 @@ admin.site.register(models.ContainerType)
 admin.site.register(models.ContainerLocation, LocationAdmin)
 
 admin.site.register(models.User, UserAdmin)
-admin.site.register(models.Country)
-admin.site.register(models.Region)
+admin.site.register(models.Country, CountryAdmin)
+admin.site.register(models.Region, RegionAdmin)
 
 admin.site.register(models.Shipment, ItemAdmin)
 admin.site.register(models.Container, ItemAdmin)

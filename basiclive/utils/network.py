@@ -30,6 +30,11 @@ def get_client_address(request):
             address = ip_address(levels[-depth])
         else:
             address = None
+    elif 'REMOTE_ADDR' in request.META:
+        try:
+            address = ip_address(request.META['REMOTE_ADDR'])
+        except ValueError:
+            address = None
     else:
-        address = ip_address(request.META['REMOTE_ADDR'])
+        address = None
     return address and address.exploded or address

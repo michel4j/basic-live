@@ -225,8 +225,9 @@ class EmailNotification(models.Model):
         # Get user's local timezone
         if not self.pk:
             try:
-                locator = geocoders.Nominatim(user_agent='basic-live')
-                address = "{user.city}, {user.province}, {user.country}".format(user=self.beamtime.project)
+                proj = self.beamtime.project
+                addr_parts = [proj.city, proj.region.name if proj.region else None, proj.country.name if proj.country else None]
+                address = ", ".join(p for p in addr_parts if p)
                 _, (latitude, longitude) = locator.geocode(address)
                 usertz = tf.certain_timezone_at(lat=latitude, lng=longitude)
                 tz = ZoneInfo(usertz) if usertz else timezone.get_current_timezone()

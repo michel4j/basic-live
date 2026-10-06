@@ -10,6 +10,7 @@ from django.conf import settings as main_settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, F, Count, CharField, BooleanField, Value, Sum
 from django.db.models.functions import Coalesce, Concat
@@ -366,9 +367,23 @@ class Project(ProjectEditorMixin, TimeStampedModel):
     department = models.CharField(max_length=600, blank=True, null=True)
     address = models.CharField(max_length=600, blank=True, null=True)
     city = models.CharField(max_length=180, blank=True, null=True)
-    province = models.CharField(max_length=180, blank=True, null=True)
+    region = models.ForeignKey(
+        Region,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="projects",
+        verbose_name=_("State / Province / Region")
+    )
     postal_code = models.CharField(max_length=30, blank=True, null=True)
-    country = models.CharField(max_length=180, blank=True, null=True)
+    country = models.ForeignKey(
+        Country,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="projects",
+        verbose_name=_("Country")
+    )
     contact_phone = models.CharField(max_length=60, blank=True, null=True)
     contact_fax = models.CharField(max_length=60, blank=True, null=True)
     organisation = models.CharField(max_length=600, blank=True, null=True)
@@ -427,9 +442,28 @@ class Project(ProjectEditorMixin, TimeStampedModel):
         session = self.sessions.first()
         return session.created if session else None
 
+    @property
+    def region_code(self):
+        if not self.region:
+            return ""
+        if '-' in self.region.code:
+            return self.region.code.split('-', 1)[1]
+        return self.region.code
+
+    def clean(self):
+        super().clean()
+        if self.region:
+            if not self.country:
+                self.country = self.region.country
+            elif self.region.country_id != self.country_id:
+                raise ValidationError({
+                    'region': _("The selected region does not belong to the selected country.")
+                })
+
     def save(self, *args, **kwargs):
         if not self.kind:
             self.kind = ProjectType.objects.first()
+        self.clean()
         super().save(*args, **kwargs)
         if self.pi:
             ProjectMembership.objects.get_or_create(
@@ -1787,7 +1821,10 @@ class AnalysisReport(ActiveStatusMixin):
 
 class ActivityLogManager(models.Manager):
     def log_activity(self, request, obj, action_type, description=''):
-        activity = self.model(user=request.user)
+        user = getattr(request, 'user', None)
+        if not user and isinstance(obj, User):
+            user = obj
+        activity = self.model(user=user)
         if obj is None:
             activity.project = getattr(request, 'project', None)
         else:
@@ -1803,7 +1840,7 @@ class ActivityLogManager(models.Manager):
                 activity.affected_item = obj
                 activity.content_type = ContentType.objects.get_for_model(obj)
 
-        activity.ip_number = get_client_address(request)
+        activity.ip_number = get_client_address(request) or '127.0.0.1'
         activity.action_type = action_type
         activity.description = description
         if obj is not None:

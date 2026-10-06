@@ -1425,7 +1425,8 @@ class ProjectList(AdminRequiredMixin, ItemListView):
     list_columns = ['name', 'pi', 'kind', 'contact_person', 'contact_phone', 'contact_email']
     list_search = [
         'name', 'pi__username', 'pi__first_name', 'pi__last_name',
-        'contact_person', 'contact_phone', 'contact_email', 'city', 'province', 'country',
+        'contact_person', 'contact_phone', 'contact_email', 'city',
+        'region__name', 'region__code', 'country__name', 'country__alpha2', 'country__alpha3',
         'department', 'organisation'
     ]
     link_url = 'project-profile'

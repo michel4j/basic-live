@@ -38,6 +38,14 @@ _Avoid_: User Importer, Portal Bridge, Sync Service.
 A public cryptographic key registered by a User, used by beamline workstations to authenticate operational connections.
 _Avoid_: Private Key, Host Key.
 
+**Country**:
+A standardized ISO 3166-1 sovereign state or territory used to record institution and project geographic location.
+_Avoid_: Nation, State, Territory.
+
+**Region**:
+A standardized ISO 3166-2 primary administrative subdivision of a Country (such as a province or state) associated with a Project.
+_Avoid_: Province, State, District, County.
+
 ### Facility & Hardware
 
 **Beamline**:

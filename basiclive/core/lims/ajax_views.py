@@ -314,3 +314,36 @@ class SaveContainerSamples(LoginRequiredMixin, View):
             return JsonResponse({'url': container.get_absolute_url()}, safe=False)
         except models.Container.DoesNotExist:
             raise http.Http404('Container Not Found!')
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RegionLookup(LoginRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        country_param = request.GET.get('country')
+        if not country_param:
+            return JsonResponse([], safe=False)
+
+        country = None
+        if str(country_param).isdigit():
+            country = models.Country.objects.filter(pk=int(country_param)).first()
+        if not country:
+            country = (
+                models.Country.objects.filter(alpha2__iexact=country_param).first()
+                or models.Country.objects.filter(alpha3__iexact=country_param).first()
+            )
+
+        if not country:
+            return JsonResponse([], safe=False)
+
+        regions = country.regions.order_by('name')
+        data = [
+            {
+                'id': r.pk,
+                'name': r.name,
+                'code': r.code.split('-', 1)[1] if '-' in r.code else r.code
+            }
+            for r in regions
+        ]
+        return JsonResponse(data, safe=False)
+

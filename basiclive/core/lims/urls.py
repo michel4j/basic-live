@@ -16,6 +16,7 @@ urlpatterns = [
     path('projects/<slug:name>/labels/', views.ProjectLabels.as_view(), name='project-labels'),
     path('projects/<slug:name>/info/', views.ProjectInfo.as_view(), name='project-info'),
     path('projects/<slug:name>/delete/', views.ProjectDelete.as_view(), name='project-delete'),
+    path('regions/', ajax_views.RegionLookup.as_view(), name='region-list-ajax'),
 
     # User routes
     path('users/', views.UserList.as_view(), name='user-list'),

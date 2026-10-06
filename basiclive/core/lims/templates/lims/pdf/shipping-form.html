@@ -35,9 +35,9 @@
         <tr><td>City:</td>
             <td style="width: 300px;" class="input text-start">{{ project.city|cut:"None"|default:"" }}</td>
             <td>Province / State:</td>
-            <td style="width: 250px; border-right: 1px solid black !important;" class="input text-start">{{ project.province|cut:"None"|default:"" }}</td></tr>
+            <td style="width: 250px; border-right: 1px solid black !important;" class="input text-start">{{ project.region_code|default:project.region.name|cut:"None"|default:"" }}</td></tr>
         <tr><td>Country:</td>
-            <td class="input text-start">{{ project.country|cut:"None"|default:"" }}</td>
+            <td class="input text-start">{{ project.country.name|cut:"None"|default:"" }}</td>
             <td>Postal Code:</td>
             <td class="input text-start" style="border-right: 1px solid black !important;">{{ project.postal_code|cut:"None"|default:"" }}</td></tr>
         <tr><td>Att: (Contact Person):</td>
@@ -84,14 +84,14 @@
         {% if shipment %}<tr><td class="input text-center" style="border-left: 1px solid black !important;">{{ num_packages|default:"1" }}</td>
             <td class="input text-center" style="border-left: 1px solid black !important;">Each</td>
             <td colspan="2" class="input text-start">Non-Hazardous Frozen Protein Samples in Dry Shipping Dewar</td>
-            <td class="input text-center">{{ project.country|cut:"None"|default:"" }}</td>
+            <td class="input text-center">{{ project.country.name|cut:"None"|default:"" }}</td>
             <td class="input text-end" style="border-right: 1px solid black !important;">$200</td></tr>
         {% endif %}
         {% for component in shipment.components.all %}
             <tr><td class="input text-center" style="border-left: 1px solid black !important;">1</td>
                 <td class="input text-center" style="border-left: 1px solid black !important;">Each</td>
                 <td colspan="2" class="input text-start">{{ component.kind }}</td>
-                <td class="input text-center">{{ project.country|cut:"None"|default:"" }}</td>
+                <td class="input text-center">{{ project.country.name|cut:"None"|default:"" }}</td>
                 <td class="input text-end" style="border-right: 1px solid black !important;">$100</td></tr>
         {% endfor %}
         {% if shipment %}{% widthratio shipment.components.count|add:"1" 1 -1 as filled_lines %}

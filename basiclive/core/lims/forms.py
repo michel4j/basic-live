@@ -35,6 +35,8 @@ from .models import (
     Group,
     ContainerLocation,
     ContainerType,
+    Country,
+    Region,
 )
 
 disabled_widget = forms.HiddenInput(attrs={'readonly': True})
@@ -44,13 +46,62 @@ class HiddenArea(forms.HiddenInput):
     template_name = 'django/forms/widgets/textarea.html'
 
 
+def _region_script():
+    return HTML("""
+<script>
+(function() {
+    var countrySelect = $('#id_country');
+    var regionSelect = $('#id_region');
+    if (!countrySelect.val()) {
+        regionSelect.prop('disabled', true);
+    }
+    countrySelect.on('change', function() {
+        var countryId = $(this).val();
+        if (!countryId) {
+            regionSelect.empty().append('<option value="">---------</option>');
+            regionSelect.prop('disabled', true);
+            return;
+        }
+        $.getJSON('/lims/regions/', {country: countryId}, function(data) {
+            var prevVal = regionSelect.val();
+            regionSelect.empty().append('<option value="">---------</option>');
+            if (data && data.length > 0) {
+                $.each(data, function(i, item) {
+                    var opt = $('<option></option>').attr('value', item.id).text(item.name);
+                    if (prevVal && item.id == prevVal) {
+                        opt.prop('selected', true);
+                    }
+                    regionSelect.append(opt);
+                });
+                regionSelect.prop('disabled', false);
+            } else {
+                regionSelect.prop('disabled', true);
+            }
+        });
+    });
+})();
+</script>
+""")
+
+
 class ProjectForm(ModalModelForm):
+    country = forms.ModelChoiceField(
+        queryset=Country.objects.all(),
+        required=False,
+        empty_label=_("---------")
+    )
+    region = forms.ModelChoiceField(
+        queryset=Region.objects.all(),
+        required=False,
+        empty_label=_("---------")
+    )
+
     class Meta:
         model = Project
         fields = (
             'contact_person', 'contact_email', 'contact_phone',
-            'carrier', 'account_number', 'shipping_notes', 'organisation', 'department', 'address', 'city', 'province',
-            'postal_code', 'country', 'kind', 'alias', 'designation'
+            'carrier', 'account_number', 'shipping_notes', 'organisation', 'department', 'address', 'city', 'country',
+            'region', 'postal_code', 'kind', 'alias', 'designation'
         )
         widgets = {
             'shipping_notes': forms.Textarea(attrs={'rows': "2"}),
@@ -60,6 +111,19 @@ class ProjectForm(ModalModelForm):
         self.user = kwargs.pop('user')
         super().__init__(*args, **kwargs)
         pk = self.instance.pk
+
+        country_val = self.data.get('country') if self.data else (self.instance.country_id if self.instance and self.instance.pk else None)
+        if hasattr(country_val, 'pk'):
+            country_val = country_val.pk
+        if country_val:
+            try:
+                self.fields['region'].queryset = Region.objects.filter(country_id=int(country_val))
+            except (ValueError, TypeError):
+                self.fields['region'].queryset = Region.objects.none()
+        elif self.data and self.data.get('region'):
+            self.fields['region'].queryset = Region.objects.all()
+        else:
+            self.fields['region'].queryset = Region.objects.none()
 
         if pk:
             self.body.title = _("Edit Project")
@@ -110,16 +174,28 @@ class ProjectForm(ModalModelForm):
                 style="g-2"
             ),
             Row(
-                ThirdWidth('province'),
-                ThirdWidth('country'),
+                ThirdWidth(Field('country', css_class='select')),
+                ThirdWidth(Field('region', css_class='select')),
                 ThirdWidth('postal_code'),
                 style="g-2"
-            )
+            ),
+            _region_script()
         )
         self.footer.set_buttons(
             Button('Revert', type='reset', value='Reset', style="btn-secondary"),
             Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        country = cleaned_data.get('country')
+        region = cleaned_data.get('region')
+        if region:
+            if not country:
+                cleaned_data['country'] = region.country
+            elif region.country_id != country.id:
+                self.add_error('region', _("The selected region does not belong to the selected country."))
+        return cleaned_data
 
 
 class NewProjectForm(ModalModelForm):
@@ -138,6 +214,16 @@ class NewProjectForm(ModalModelForm):
         required=False,
         label=_("Team Members")
     )
+    country = forms.ModelChoiceField(
+        queryset=Country.objects.all(),
+        required=False,
+        empty_label=_("---------")
+    )
+    region = forms.ModelChoiceField(
+        queryset=Region.objects.all(),
+        required=False,
+        empty_label=_("---------")
+    )
 
     class Meta:
         model = Project
@@ -145,8 +231,8 @@ class NewProjectForm(ModalModelForm):
             'name', 'kind', 'alias', 'designation',
             'contact_person', 'contact_email', 'contact_phone',
             'carrier', 'account_number', 'shipping_notes',
-            'organisation', 'department', 'address', 'city', 'province',
-            'postal_code', 'country'
+            'organisation', 'department', 'address', 'city', 'country',
+            'region', 'postal_code'
         )
         widgets = {
             'shipping_notes': forms.Textarea(attrs={'rows': "2"}),
@@ -154,6 +240,19 @@ class NewProjectForm(ModalModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        country_val = self.data.get('country') if self.data else (self.instance.country_id if self.instance and self.instance.pk else None)
+        if hasattr(country_val, 'pk'):
+            country_val = country_val.pk
+        if country_val:
+            try:
+                self.fields['region'].queryset = Region.objects.filter(country_id=int(country_val))
+            except (ValueError, TypeError):
+                self.fields['region'].queryset = Region.objects.none()
+        elif self.data and self.data.get('region'):
+            self.fields['region'].queryset = Region.objects.all()
+        else:
+            self.fields['region'].queryset = Region.objects.none()
 
         self.fields['kind'].initial = ProjectType.objects.first()
 
@@ -209,15 +308,27 @@ class NewProjectForm(ModalModelForm):
                 style="g-2"
             ),
             Row(
-                ThirdWidth('province'),
-                ThirdWidth('country'),
+                ThirdWidth(Field('country', css_class='select')),
+                ThirdWidth(Field('region', css_class='select')),
                 ThirdWidth('postal_code'),
                 style="g-2"
-            )
+            ),
+            _region_script()
         )
         self.footer.set_buttons(
             Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        country = cleaned_data.get('country')
+        region = cleaned_data.get('region')
+        if region:
+            if not country:
+                cleaned_data['country'] = region.country
+            elif region.country_id != country.id:
+                self.add_error('region', _("The selected region does not belong to the selected country."))
+        return cleaned_data
 
     def save(self, commit=True):
         project = super().save(commit=False)
