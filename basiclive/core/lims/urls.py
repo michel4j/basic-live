@@ -6,7 +6,7 @@ from . import views, ajax_views, forms
 
 urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('projects/', views.ProjectList.as_view(), name='user-list'),
+    path('projects/', views.ProjectList.as_view(), name='project-list'),
     path('projects/dashboard/', views.ProjectList.as_view(), name='user-dashboard'),
     path('projects/switch/<int:pk>/', views.SwitchProjectView.as_view(), name='switch-project'),
     path('projects/switch/', views.SwitchProjectView.as_view(), name='switch-project-form'),
