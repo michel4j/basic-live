@@ -1,25 +1,22 @@
 import logging
-from django.views.generic import TemplateView
-from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy
-from django.views.generic import edit, detail
-from django.contrib.auth.mixins import UserPassesTestMixin
-from django.utils import timezone
-from django.db.models import Q
-from django.http import JsonResponse
-from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
+from datetime import datetime, timedelta
 
 from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView
-from basiclive.core.schedule.conf import settings
-from basiclive.utils import filters
-from basiclive.utils.mixins import AdminRequiredMixin, LoginRequiredMixin, PlotViewMixin
-
-from . import models, forms, stats
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Q
+from django.urls import reverse_lazy
+from django.utils import timezone
+from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
+from django.views.generic import TemplateView
+from django.views.generic import detail
 from itemlist.views import ItemListView
+
 from basiclive.core.lims.models import Beamline
 from basiclive.core.lims.views import ListViewMixin
-
-from datetime import datetime, timedelta
+from basiclive.core.schedule.conf import settings
+from basiclive.utils.mixins import AdminRequiredMixin, LoginRequiredMixin
+from . import models, forms
 
 MIN_SUPPORT_HOUR = settings.MIN_SUPPORT_HOUR
 MAX_SUPPORT_HOUR = settings.MAX_SUPPORT_HOUR
@@ -80,24 +77,6 @@ class BeamtimeInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):
     def test_func(self):
         # Allow access to admin or owner
         return self.request.user.is_superuser or self.get_object().project == self.request.user
-
-
-class BeamtimeStats(PlotViewMixin, ListViewMixin, ItemListView):
-    model = models.Beamtime
-    list_filters = [
-        'beamline',
-        filters.YearFilter('start'),
-        filters.MonthFilter('start'),
-        filters.QuarterFilter('start'),
-        'access',
-        'project__kind',
-        filters.TimeScaleFilter()
-    ]
-    list_search = ['id', 'project__name', 'project__pi__first_name', 'project__pi__last_name']
-    date_field = 'start'
-
-    def get_metrics(self):
-        return stats.beamtime_stats(self.get_queryset(), self.get_active_filters())
 
 
 class BeamtimeCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):

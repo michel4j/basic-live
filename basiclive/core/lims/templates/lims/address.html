@@ -3,6 +3,6 @@
     {{ project.organisation }}<br/>
     {% if project.department %}{{ project.department }} <br/>{% endif %}
     {{ project.address|upper }}<br/>
-    {{ project.city|upper }} {{ project.region_code|default:project.region.name|upper }}&nbsp;&nbsp;&nbsp;{{ project.postal_code|upper }}<br/>
+    {{ project.city|upper }} {% if project.region %}{{ project.region_code|default:project.region.name|upper }}&nbsp;&nbsp;&nbsp;{% endif %}{{ project.postal_code|upper }}<br/>
     {{ project.country.name|upper }}
 </div>

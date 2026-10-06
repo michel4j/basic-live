@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from crisp_modals.views import ModalCreateView, ModalUpdateView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import Http404
 from django.template.defaultfilters import linebreaksbr
@@ -9,13 +10,11 @@ from django.utils.text import slugify
 from django.views.generic import edit, detail
 from itemlist.views import ItemListView
 
-from crisp_modals.views import ModalCreateView, ModalUpdateView
-from basiclive.core.lims.conf import settings as lims_settings
 from basiclive.core.lims.views import ListViewMixin
 from basiclive.utils import filters
 from basiclive.utils.encrypt import decrypt
-from basiclive.utils.mixins import AdminRequiredMixin, PlotViewMixin
-from . import forms, models, stats
+from basiclive.utils.mixins import AdminRequiredMixin
+from . import forms, models
 
 
 def format_contact(val, record):
@@ -145,22 +144,6 @@ class SupportEntryList(ListViewMixin, ItemListView):
     link_field = 'beamline'
     link_attr = 'data-modal-url'
     plot_url = reverse_lazy("supportrecord-stats")
-
-
-class SupportEntryStats(PlotViewMixin, SupportEntryList):
-    date_field = 'created'
-    list_url = reverse_lazy("supportrecord-list")
-
-    def get_metrics(self):
-        return stats.supportrecord_stats(self.get_queryset(), self.get_active_filters())
-
-
-class FeedbackStats(PlotViewMixin, FeedbackList):
-    date_field = 'created'
-    list_url = reverse_lazy("user-feedback-list")
-
-    def get_metrics(self):
-        return stats.feedback_stats(self.get_queryset(), self.get_active_filters())
 
 
 class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):

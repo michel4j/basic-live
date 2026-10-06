@@ -26,12 +26,6 @@
             {% show_icon label='History' icon='history' size='md' %}
         </a>
     {% endif %}
-    <a href="{% url 'data-stats' %}?beamline__id__exact={{ object.pk }}">
-        {% show_icon label='Stats' icon='stats' size='md' %}
-    </a>
-    <a href="{% url 'beamline-usage' %}?beamline__id__exact={{ object.pk }}">
-        {% show_icon label='Usage' icon='reports' size='md' %}
-    </a>
     {% if automounter %}
         <a href="#!" data-modal-url="{% url 'automounter-edit' pk=automounter.pk %}">
             {% show_icon label='Comment' icon='comments' size='md' %}

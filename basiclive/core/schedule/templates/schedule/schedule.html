@@ -20,9 +20,6 @@
 
 {% block page-tools %}
     {% if editable %}
-        <a href="{% url 'beamtime-stats' %}">
-            {% show_icon label='Usage' icon='reports' size='md' %}
-        </a>
         <a href="{% url 'email-list' %}">
             {% show_icon label='Emails' icon='mail' size='md' %}
         </a>

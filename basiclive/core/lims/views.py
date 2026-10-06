@@ -652,48 +652,6 @@ class DataList(ListViewMixin, ItemListView):
     plot_url = reverse_lazy("data-stats")
 
 
-class DataStats(PlotViewMixin, DataList):
-    plot_fields = {
-        'beam_size': {'kind': 'pie'},
-        'kind__name': {'kind': 'columnchart'},
-        'reports__score': {'kind': 'histogram', 'range': (0.01, 1)},
-        'energy': {'kind': 'histogram', 'range': (4., 18.), 'bins': 8},
-        'exposure_time': {'kind': 'histogram', 'range': (0.01, 20)},
-        'attenuation': {'kind': 'histogram'},
-        'num_frames': {'kind': 'histogram'},
-    }
-    date_field = 'modified'
-    list_url = reverse_lazy("data-list")
-
-    def get_metrics(self):
-        return stats.parameter_summary(**self.get_active_filters())
-
-
-class UsageSummary(PlotViewMixin, DataList):
-    date_field = 'modified'
-    list_url = reverse_lazy("data-list")
-    list_filters = [
-        'beamline',
-        'beamline__active',
-        'beamline__simulated',
-        'kind',
-        filters.StartYearFilter('modified'),
-        filters.EndYearFilter('modified'),
-        filters.MonthFilter('modified'),
-        filters.QuarterFilter('modified'),
-        filters.TimeScaleFilter()
-    ]
-
-    def get_metrics(self):
-        return stats.usage_summary(period='year', **self.get_active_filters())
-
-    def page_title(self):
-        if self.kwargs.get('year'):
-            return f'{self.kwargs["year"]} Usage Metrics'
-        else:
-            return 'Usage Metrics'
-
-
 class DataDetail(OwnerRequiredMixin, detail.DetailView):
     model = models.Data
     template_name = "lims/data/data.html"

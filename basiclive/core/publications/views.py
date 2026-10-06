@@ -1,11 +1,11 @@
 from django.utils.safestring import mark_safe
-from django.views.generic import DetailView, TemplateView, list
+from django.views.generic import DetailView, list
 from itemlist.views import ItemListView
 
 from basiclive.core.publications.conf import settings
 from basiclive.utils import filters
 from basiclive.utils.mixins import AdminRequiredMixin
-from . import models, stats
+from . import models
 
 PDB_URL_TEMPLATE = settings.PDB_URL_TEMPLATE
 PDB_IMAGE_URL_TEMPLATE = settings.PDB_IMAGE_URL_TEMPLATE
@@ -133,25 +133,3 @@ class JournalList(AdminRequiredMixin, ItemListView):
     paginate_by = 16
     page_title = 'Journals'
 
-
-class Statistics(AdminRequiredMixin, TemplateView):
-    template_name = "publications/statistics.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        tag = self.kwargs.get('tag')
-        year = self.kwargs.get('year')
-        period = 'month' if year else 'year'
-
-        context['year'] = year
-        context['tag'] = tag
-        context['tags'] = models.Tag.objects.values_list('name', flat=True)
-        context['years'] = stats.get_publications_periods(period='year')
-        context['report'] = stats.publication_stats(period=period, year=year, tag=tag)
-        return context
-
-    def page_title(self):
-        if self.kwargs.get('year'):
-            return f'{self.kwargs["year"]} Publication Metrics'
-        else:
-            return 'Publication Metrics'

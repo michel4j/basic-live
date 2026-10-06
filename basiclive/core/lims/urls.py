@@ -27,7 +27,6 @@ urlpatterns = [
     path('users/<slug:username>/sshkey/<int:pk>/delete/', views.SSHKeyDelete.as_view(), name='sshkey-delete'),
 
     path('beamline/<int:pk>/', views.BeamlineDetail.as_view(), name='beamline-detail'),
-    path('beamline/usage/', views.UsageSummary.as_view(), name='beamline-usage'),
     path('automounter/<int:pk>/edit/', views.AutomounterEdit.as_view(), name='automounter-edit'),
 
     path('requests/', views.RequestList.as_view(), name='request-list'),
@@ -99,7 +98,6 @@ urlpatterns = [
     ),
 
     path('samples/', views.SampleList.as_view(), name='sample-list'),
-    path('samples/stats/', views.SampleStats.as_view(), name='sample-stats'),
     path('samples/<int:pk>/', views.SampleDetail.as_view(), name='sample-detail'),
     path('samples/<int:pk>/edit/', views.SampleEdit.as_view(), name='sample-edit'),
     path('samples/<int:pk>/delete/', views.SampleDelete.as_view(), name='sample-delete'),
@@ -114,7 +112,6 @@ urlpatterns = [
     path('groups/<int:pk>/delete/', views.GroupDelete.as_view(), name='group-delete'),
 
     path('data/', views.DataList.as_view(), name='data-list'),
-    path('data/stats/', views.DataStats.as_view(), name='data-stats'),
     path('data/<int:pk>/', views.DataDetail.as_view(), name='data-detail'),
 
     path('reports/', views.ReportList.as_view(), name='result-list'),
