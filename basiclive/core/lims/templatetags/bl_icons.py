@@ -95,3 +95,21 @@ def compile_svg_sprite(icon_list_string):
 
     sprite_content.append('</svg>')
     return mark_safe('\n'.join(sprite_content))
+
+
+@register.simple_tag
+def get_activity_icon(activity):
+    """
+    Returns the icon name for a given activity type.
+    """
+    activity_icon_map = {
+        0: 'user',
+        1: 'user-off',
+        2: 'task',
+        3: 'add',
+        4: 'edit',
+        5: 'trash',
+        6: 'archive',
+        # Add more mappings as needed
+    }
+    return activity_icon_map.get(activity.action_type, 'question')

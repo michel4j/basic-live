@@ -1531,6 +1531,7 @@ class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView)
         context = super().get_context_data(**kwargs)
         context['projects'] = self.object.get_projects()
         context['sshkeys'] = self.object.sshkeys.all()
+        context['activities'] = self.object.activities.all().order_by('-created')[:12]
         return context
 
 

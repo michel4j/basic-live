@@ -285,6 +285,14 @@ class User(AbstractUser):
             Q(memberships__user=self) | Q(pi=self)
         ).distinct().order_by('name')
 
+    def get_status(self):
+        if self.is_superuser:
+            return "Super-User"
+        elif self.is_staff:
+            return "Staff"
+        else:
+            return "User"
+
     def can_access_project(self, project) -> bool:
         if not self.is_authenticated:
             return False

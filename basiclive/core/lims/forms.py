@@ -46,44 +46,6 @@ class HiddenArea(forms.HiddenInput):
     template_name = 'django/forms/widgets/textarea.html'
 
 
-def _region_script():
-    return HTML("""
-<script>
-(function() {
-    var countrySelect = $('#id_country');
-    var regionSelect = $('#id_region');
-    if (!countrySelect.val()) {
-        regionSelect.prop('disabled', true);
-    }
-    countrySelect.on('change', function() {
-        var countryId = $(this).val();
-        if (!countryId) {
-            regionSelect.empty().append('<option value="">---------</option>');
-            regionSelect.prop('disabled', true);
-            return;
-        }
-        $.getJSON('/lims/regions/', {country: countryId}, function(data) {
-            var prevVal = regionSelect.val();
-            regionSelect.empty().append('<option value="">---------</option>');
-            if (data && data.length > 0) {
-                $.each(data, function(i, item) {
-                    var opt = $('<option></option>').attr('value', item.id).text(item.name);
-                    if (prevVal && item.id == prevVal) {
-                        opt.prop('selected', true);
-                    }
-                    regionSelect.append(opt);
-                });
-                regionSelect.prop('disabled', false);
-            } else {
-                regionSelect.prop('disabled', true);
-            }
-        });
-    });
-})();
-</script>
-""")
-
-
 class ProjectForm(ModalModelForm):
     country = forms.ModelChoiceField(
         queryset=Country.objects.all(),
@@ -139,9 +101,9 @@ class ProjectForm(ModalModelForm):
 
         self.body.layout = Layout(
             Row(
-                HalfWidth(Field('kind', css_class='select')),
-                QuarterWidth('alias') if self.user.is_superuser else HalfWidth('alias'),
-                QuarterWidth(Field('designation', css_class='select')) if self.user.is_superuser else Div('designation'),
+                ThirdWidth(Field('kind', css_class='select')),
+                ThirdWidth('alias') if self.user.is_superuser else HalfWidth('alias'),
+                ThirdWidth(Field('designation', css_class='select')) if self.user.is_superuser else Div('designation'),
                 style="g-2"
             ),
             Row(
@@ -179,11 +141,11 @@ class ProjectForm(ModalModelForm):
                 ThirdWidth('postal_code'),
                 style="g-2"
             ),
-            _region_script()
         )
         self.footer.set_buttons(
             Button('Revert', type='reset', value='Reset', style="btn-secondary"),
             Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
+            HTML("""{% load static %}<script src="{% static 'lims/js/basiclive-countries.js' %}"></script>""")
         )
 
     def clean(self):
@@ -313,10 +275,10 @@ class NewProjectForm(ModalModelForm):
                 ThirdWidth('postal_code'),
                 style="g-2"
             ),
-            _region_script()
         )
         self.footer.set_buttons(
             Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
+            HTML("""{% load static %}<script src="{% static 'lims/js/basiclive-countries.js' %}"></script>""")
         )
 
     def clean(self):

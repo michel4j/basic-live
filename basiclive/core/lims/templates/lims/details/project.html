@@ -12,7 +12,7 @@
 
 {% block page-pre-title %}Project{% endblock %}
 {% block page-title %}
-<strong>{{ object.name }}</strong>{% if object.pi %} <span class="fw-lighter">| {{ object.contact_name }}</span>{% endif %}
+<strong>{{ object.name|upper }}</strong>{% if object.pi %} <span class="fw-lighter">| {{ object.contact_name }}</span>{% endif %}
 {% endblock %}
 
 {% block page-subtitle %}
