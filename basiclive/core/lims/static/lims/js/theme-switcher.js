@@ -9,13 +9,24 @@
 
   const getStoredTheme = () => localStorage.getItem('theme')
   const setStoredTheme = theme => localStorage.setItem('theme', theme)
+  const getStoredAccent = () => localStorage.getItem('accent')
+  const setStoredAccent = accent => localStorage.setItem('accent', accent)
 
   const getPreferredTheme = () => {
     const storedTheme = getStoredTheme()
+
     if (storedTheme) {
       return storedTheme
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+
+  const getPreferredAccent = () => {
+    const storedAccent = getStoredAccent()
+    if (storedAccent) {
+      return storedAccent
+    }
+    return 'user'
   }
 
   const setTheme = theme => {
@@ -24,8 +35,12 @@
     }
     document.documentElement.setAttribute('data-bs-theme', theme)
   }
+  const setAccent = accent => {
+    document.documentElement.setAttribute('data-bl-accent', accent)
+  }
 
   setTheme(getPreferredTheme())
+  setAccent(getPreferredAccent())
 
   const showActiveTheme = (theme) => {
     const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`)

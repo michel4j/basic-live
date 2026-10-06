@@ -1766,7 +1766,6 @@ class CheckPending(AuthenticationRequiredMixin, View):
 
 
 def custom_403_view(request, exception=None):
-    print(f"403 Error: Access forbidden for {request.path}. Exception: {exception}")
     return render(request, "lims/warning.html", {
        "status_code": 403,
        "error_title": "Access Denied",
@@ -1779,7 +1778,6 @@ def custom_403_view(request, exception=None):
 
 
 def custom_404_view(request, exception=None):
-    print(f"404 Error: {request.path} not found. Exception: {exception}")
     return render(request, "lims/warning.html", {
        "status_code": 404,
        "error_title": "Lost in Cyberspace",
