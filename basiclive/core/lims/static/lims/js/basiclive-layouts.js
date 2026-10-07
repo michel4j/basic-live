@@ -271,7 +271,7 @@ const locTemplate = _.template(
     '           <div class="tools-box">' +
     '               <a href="#!" data-unload-url="<%= url_root %><%= root_id %>/<%= id %>/unload/" data-id="<%= id %>"' +
     '                   <div class="icon-stack">' +
-    '                       <i class="ti ti-share"></i>' +
+    '                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plug-off"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M16.123 16.092l-.177 .177a5.81 5.81 0 1 1 -8.215 -8.215l.159 -.159" /><path d="M4 20l3.5 -3.5" /><path d="M15 4l-3.5 3.5" /><path d="M20 9l-3.5 3.5" /><path d="M3 3l18 18" /></svg>' +
     '                   </div>' +
     '               </a>' +
     '           </div>' +
@@ -291,12 +291,12 @@ const projTemplate = _.template(
     '           <div class="project-list-tools tools-box">' +
     '               <a data-bs-toggle="collapse" href="#prj-<%= name.toLowerCase() %>-list"> ' +
     '                   <div class="icon-stack">' +
-    '                       <i class="ti ti-md ti-zoom-in"></i>' +
+    '                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-zoom-in"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M7 10l6 0" /><path d="M10 7l0 6" /><path d="M21 21l-6 -6" /></svg>' +
     '                   </div>' +
     '               </a>' +
-    '               <a href="#!" data-modal-url="<%= url_root %><%= root_id %>/<%= parent %>/unload/<%= name.toLowerCase() %>/">' +
+    '               <a href="#!" data-modal-url="<%= url_root %><%= root_id %>/<%= parent %>/unload-project/<%= name.toLowerCase() %>/">' +
     '                   <div class="icon-stack">' +
-    '                       <i class="ti ti-md ti-share"></i>' +
+    '                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plug-off"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M16.123 16.092l-.177 .177a5.81 5.81 0 1 1 -8.215 -8.215l.159 -.159" /><path d="M4 20l3.5 -3.5" /><path d="M15 4l-3.5 3.5" /><path d="M20 9l-3.5 3.5" /><path d="M3 3l18 18" /></svg>' +
     '                   </div>' +
     '               </a>' +
     '           </div>' +
@@ -304,7 +304,13 @@ const projTemplate = _.template(
     '</div>' +
     '<div class="collapse detail-container-list row" id="prj-<%= name.toLowerCase() %>-list">' +
     '<div class="col ms-5 my-1 ">' +
-    '     <% _.each(details, function(container, i){ container.root_id = root_id; %><%= locTemplate(container) %><% }); %>' +
+    '     <% _.each(details, function(container, i){ ' +
+    '       container.root_id = root_id; ' +
+    '       container.url_root = url_root; ' +
+    '       console.log(container); ' +
+    '     %>' +
+    '       <%= locTemplate(container) %>' +
+    '     <% }); %>' +
     '</div></div>'
 );
 
@@ -326,6 +332,7 @@ function listLoaded(proj_container, loc_container, data, settings) {
                 return (a.loc < b.loc) ? -1: 0;
             });
             d.root_id = settings.root_id;
+            d.url_root = settings.url_root;
             return projTemplate(d)
         });
     projects
@@ -337,6 +344,7 @@ function listLoaded(proj_container, loc_container, data, settings) {
                 return (a.loc < b.loc) ? -1: 0;
             });
             d.root_id = settings.root_id;
+            d.url_root = settings.url_root;
             return projTemplate(d)
         });
 
@@ -350,11 +358,13 @@ function listLoaded(proj_container, loc_container, data, settings) {
         .attr("class", d => "list-group-item py-1 list-cnt-" + d.id)
         .html(function (d) {
             d.root_id = settings.root_id;
+            d.url_root = settings.url_root;
             return locTemplate(d)
         });
     containers
         .html(function (d) {
             d.root_id = settings.root_id;
+            d.url_root = settings.url_root;
             return locTemplate(d)
         });
     initTooltips(proj_container + ' [title], ' + loc_container + ' [title]');

@@ -22,7 +22,7 @@
 {% block page-tools %}
     {% with object.active_automounter as automounter %}
     {% if automounter.container.children_history.all %}
-        <a href="#!" data-modal-url="{% url 'automounter-history' object.active_automounter.container.pk %}">
+        <a href="{% url 'automounter-history' object.active_automounter.container.pk %}">
             {% show_icon label='History' icon='history' size='md' %}
         </a>
     {% endif %}

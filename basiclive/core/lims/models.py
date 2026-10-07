@@ -1324,16 +1324,19 @@ class Container(TransitStatusMixin):
 class LoadHistory(models.Model):
     start = models.DateTimeField(auto_now_add=True, editable=False)
     end = models.DateTimeField(null=True, blank=True)
-    child = models.ForeignKey(Container, null=False, blank=False, related_name='parent_history',
-                              on_delete=models.CASCADE)
-    parent = models.ForeignKey(Container, null=False, blank=False, related_name='children_history',
-                               on_delete=models.CASCADE)
+    child = models.ForeignKey(
+        Container, null=False, blank=False, related_name='parent_history', on_delete=models.CASCADE
+    )
+    parent = models.ForeignKey(
+        Container, null=False, blank=False, related_name='children_history', on_delete=models.CASCADE
+    )
     location = models.ForeignKey(ContainerLocation, blank=True, null=True, on_delete=models.SET_NULL)
-
     objects = StretchManager()
 
     class Meta:
         ordering = ['-start', ]
+        verbose_name = _("Load History")
+        verbose_name_plural = _("Load Histories")
 
     def __str__(self):
         return f'{self.child}|{self.parent}|{self.start}|{self.end}'

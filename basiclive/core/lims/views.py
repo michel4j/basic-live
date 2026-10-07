@@ -519,7 +519,7 @@ class LocationLoad(AdminRequiredMixin, ContainerEdit):
 class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
     form_class = forms.EmptyContainers
     model = models.Project
-    success_message = "Containers have been removed for {username}."
+    success_message = "Containers have been removed for {name}."
     success_url = reverse_lazy('container-list')
 
     def get_form_kwargs(self):
@@ -531,7 +531,7 @@ class EmptyContainers(AdminRequiredMixin, edit.UpdateView):
 
     def get_object(self, queryset=None):
         self.root = models.Container.objects.get(pk=self.kwargs['root'])
-        return models.Project.objects.get(username=self.kwargs.get('username'))
+        return models.Project.objects.get(name=self.kwargs.get('project'))
 
     def get_initial(self):
         initial = super(EmptyContainers, self).get_initial()
@@ -1404,6 +1404,46 @@ class UserList(AdminRequiredMixin, ItemListView):
     add_url = 'new-user'
     add_ajax = True
     ordering = ['username']
+
+
+class AutomounterHistory(AdminRequiredMixin, ListViewMixin, ItemListView):
+    model = models.LoadHistory
+    template_name = "lims/list.html"
+    show_project = False
+    list_filters = ['start', 'end']
+    list_columns = ['child', 'location', 'start', 'end', ]
+    list_search = ['child__name', 'child__project__name', 'location__name', 'parent__container__name']
+    page_title = "Load History"
+
+    def get_queryset(self):
+        automounter_id = self.kwargs.get('pk')
+        automounter = get_object_or_404(models.Automounter, pk=automounter_id)
+        self.page_title = f"Load History | {automounter.container.name}"
+        return super().get_queryset().filter(parent_id=automounter_id).order_by('-start')
+
+
+class ContainerHistory(UserPassesTestMixin, ListViewMixin, ItemListView):
+    model = models.LoadHistory
+    template_name = "lims/list.html"
+    show_project = False
+    list_filters = ['start', 'end']
+    list_columns = ['parent', 'location', 'start', 'end', ]
+    list_search = ['parent__name', 'child__name', 'child__project__name', 'location__name', 'parent__container__name']
+    page_title = "Load History"
+
+    def test_func(self) -> bool | None:
+        container_id = self.kwargs.get('pk')
+        obj = get_object_or_404(models.Container, pk=container_id)
+
+        if obj:
+            self.page_title = f"Load History | {obj.name}"
+            return self.request.user.can_access_project(obj.project)
+
+        return False
+
+    def get_queryset(self):
+        container_id = self.kwargs.get('pk')
+        return super().get_queryset().filter(child_id=container_id).order_by('-start')
 
 
 class ProjectInfo(LoginRequiredMixin, UserPassesTestMixin, detail.DetailView):

@@ -73,16 +73,8 @@ urlpatterns = [
 
     path('containers/', views.ContainerList.as_view(), name='container-list'),
     path('containers/<int:pk>/', views.ContainerDetail.as_view(), name='container-detail'),
-    path(
-        'containers/<int:pk>/history/',
-        views.ContainerDetail.as_view(template_name="lims/modal/container-history.html"),
-        name='container-history'
-    ),
-    path(
-        'automounter/<int:pk>/history/',
-        views.ContainerDetail.as_view(template_name="lims/modal/automounter-history.html"),
-        name='automounter-history'
-    ),
+    path('containers/<int:pk>/history/', views.ContainerHistory.as_view(), name='container-history'),
+    path('automounter/<int:pk>/history/', views.AutomounterHistory.as_view(), name='automounter-history'),
     path('containers/<int:pk>/edit/', views.ContainerEdit.as_view(), name='container-edit'),
     path('containers/<int:pk>/samples/', views.ContainerSpreadsheet.as_view(), name='edit-container-samples'),
     path('containers/<int:pk>/delete/', views.ContainerDelete.as_view(), name='container-delete'),
@@ -93,7 +85,7 @@ urlpatterns = [
         views.LocationLoad.as_view(), name='location-load'
     ),
     path(
-        'containers/<int:root>/<int:pk>/unload/<slug:username>/',
+        'containers/<int:root>/<int:pk>/unload-project/<slug:project>/',
         views.EmptyContainers.as_view(), name='empty-containers'
     ),
 
