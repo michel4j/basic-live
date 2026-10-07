@@ -1290,22 +1290,17 @@ class SSHKeyEdit(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, M
 
 class SSHKeyDelete(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, ModalDeleteView):
     model = models.SSHKey
-    success_url = '/'
     success_message = "SSH key has been deleted"
 
     def test_func(self):
+        username = self.kwargs.get('username')
+        key_pk = self.kwargs.get('pk')
         obj = self.get_object()
-        return self.request.user == obj.user or self.request.user.is_superuser
-
-    def get_success_url(self):
-        if hasattr(self, 'object') and self.object and self.object.user:
-            return reverse_lazy('user-detail', kwargs={'username': self.object.user.username})
-        return self.success_url
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form_action'] = reverse_lazy('sshkey-delete', kwargs={'pk': self.object.pk})
-        return context
+        if self.request.user.is_superuser:
+            return True
+        elif obj.user.username != username or obj.pk != key_pk:
+            return False
+        return  False
 
 
 class GuideView(detail.DetailView):

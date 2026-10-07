@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from basiclive.core.crm.models import Feedback, SupportArea, LikertScale
 from basiclive.core.lims.models import Beamline, Project, Session
-from basiclive.utils.encrypt import decrypt, encrypt
+from basiclive.utils.encrypt import decrypt
 
 User = get_user_model()
 
@@ -23,21 +23,15 @@ class FeedbackTests(TestCase):
         decrypted = decrypt(key)
         self.assertEqual(decrypted, f"{self.project.name}:{self.session.name}")
 
-    def test_feedback_create_view_valid_key(self):
-        url = reverse('session-feedback', kwargs={'key': self.session.feedback_key()})
+    def test_feedback_create_view_valid_session(self):
+        url = reverse('session-feedback', kwargs={'session': self.session.pk, 'project': self.project.name})
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertIn('form', resp.context)
         self.assertEqual(resp.context['form'].initial['session'], self.session)
 
-    def test_feedback_create_view_invalid_key_404(self):
-        url = reverse('session-feedback', kwargs={'key': 'invalid-malformed-key'})
-        resp = self.client.get(url)
-        self.assertEqual(resp.status_code, 404)
-
-    def test_feedback_create_view_nonexistent_session_404(self):
-        fake_key = encrypt("nonexistent-proj:nonexistent-sess")
-        url = reverse('session-feedback', kwargs={'key': fake_key})
+    def test_feedback_create_view_invalid_session_404(self):
+        url = reverse('session-feedback', kwargs={'session': 9999, 'project': 'nonexistent-project'})
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 404)
 
@@ -51,7 +45,7 @@ class FeedbackTests(TestCase):
         )
         area = SupportArea.objects.create(name="Beamline Software", user_feedback=True, scale=scale)
 
-        url = reverse('session-feedback', kwargs={'key': self.session.feedback_key()})
+        url = reverse('session-feedback', kwargs={'session': self.session.pk, 'project': self.project.name})
         post_data = {
             'session': self.session.pk,
             'comments': 'Great remote experiment session!',

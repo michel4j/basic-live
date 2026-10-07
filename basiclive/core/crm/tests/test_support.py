@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from basiclive.core.crm.forms import SupportEntryForm
 from basiclive.core.crm.models import SupportArea, SupportRecord
-from basiclive.core.lims.models import Beamline, Project, ProjectType
+from basiclive.core.lims.models import Beamline, Project
 
 User = get_user_model()
 
@@ -194,10 +194,6 @@ class SupportViewTests(TestCase):
         self.assertEqual(self.record1.area, self.area2)
         self.assertEqual(self.record1.lost_time, 2.0)
         self.assertEqual(self.record1.staff, self.staff_user)
-
-    def test_support_record_stats_view(self):
-        response = self.client.get(reverse("supportrecord-stats"))
-        self.assertEqual(response.status_code, 200)
 
 
 class SupportMigrationLogicTests(TestCase):

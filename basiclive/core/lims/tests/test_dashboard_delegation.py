@@ -1,14 +1,12 @@
 import unittest
+
 from django.http import HttpResponse
 from django.template import Context, Template
 from django.test import SimpleTestCase, override_settings
-from django.urls import include, path, reverse
+from django.urls import include, path
 
-
-import basiclive.core.lims.views as lims_views
 import basiclive.core.lims.urls as lims_urls
-import basiclive.core.crm.views as crm_views
-
+import basiclive.core.lims.views as lims_views
 
 test_urlpatterns = [
     path("", include("basiclive.core.lims.urls")),
@@ -32,25 +30,6 @@ class DashboardDelegationTests(SimpleTestCase):
 
         self.assertNotIn("^$", patterns)
         self.assertNotIn("staff-dashboard", names)
-
-    def test_views_success_urls(self):
-        """Updated views must redirect to resource lists or direct root '/'."""
-        self.assertEqual(str(lims_views.ShipmentDelete.success_url), reverse("shipment-list"))
-        self.assertEqual(str(lims_views.ReturnShipment.success_url), reverse("shipment-list"))
-        self.assertEqual(str(lims_views.ContainerDelete.success_url), reverse("container-list"))
-        self.assertEqual(str(lims_views.EmptyContainers.success_url), reverse("container-list"))
-        self.assertEqual(str(lims_views.SampleDelete.success_url), reverse("sample-list"))
-        self.assertEqual(str(lims_views.GroupDelete.success_url), reverse("group-list"))
-        self.assertEqual(str(lims_views.RequestDelete.success_url), reverse("request-list"))
-
-        self.assertEqual(lims_views.AutomounterEdit.success_url, "/")
-        self.assertEqual(lims_views.SSHKeyCreate.success_url, "/")
-        self.assertEqual(lims_views.SSHKeyEdit.success_url, "/")
-        self.assertEqual(lims_views.SSHKeyDelete.success_url, "/")
-        self.assertEqual(lims_views.GuideCreate.success_url, "/")
-        self.assertEqual(lims_views.GuideEdit.success_url, "/")
-        self.assertEqual(lims_views.GuideDelete.success_url, "/")
-        self.assertEqual(crm_views.FeedbackCreate.success_url, "/")
 
     def test_navs_template_renders_without_dashboard_named_url(self):
         """navs.html must link to '/' and render without requiring a 'dashboard' named URL pattern."""

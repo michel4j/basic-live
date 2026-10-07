@@ -600,14 +600,14 @@ pyasn1 = ">=0.4.6,<0.7"
 
 [[package]]
 name = "django-reportcraft"
-version = "2026.9.5"
+version = "2026.9.15"
 description = "A Django reusable App for dynamically designing and generating reports for business intelligence."
 optional = false
 python-versions = ">=3.12"
 groups = ["main"]
 files = [
-    {file = "django_reportcraft-2026.9.5-py3-none-any.whl", hash = "sha256:3ad049dc70913c92bb54390187c5aadeceb58f7abe939b2401c5ad061bbc9062"},
-    {file = "django_reportcraft-2026.9.5.tar.gz", hash = "sha256:bd91420c6ad626aeb9a16a7e8731eabcc270684efe172e17e7498043e9c56896"},
+    {file = "django_reportcraft-2026.9.15-py3-none-any.whl", hash = "sha256:49883acee4064ed1651111351c94eaf9fa9b3c0f80ee8f2ec43aea1812a96141"},
+    {file = "django_reportcraft-2026.9.15.tar.gz", hash = "sha256:f99d7b76eba9f62efc253c69b54b221263b006ff35ce1a17d9bdfbb95029b03c"},
 ]
 
 [package.dependencies]
@@ -1724,4 +1724,4 @@ ldap = ["django-python3-ldap", "ldap3"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0"
-content-hash = "949e92a195c52d8a338d8ab0d1c4c33793eed2d638a96f2e7b27efdde064cb92"
+content-hash = "0c23b64db18429f40cbc1c17b8d7af9f30d755d4904f23eee4309188991df801"
