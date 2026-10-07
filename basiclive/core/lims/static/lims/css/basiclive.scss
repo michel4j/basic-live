@@ -987,10 +987,8 @@ a[data-modal-url], .back text[port], .cursor {
 
 .badge {
   margin: 1px;
-  --bs-badge-font-size: 0.85rem;
 
   &.score {
-    font-size: 0.95rem;
     border: 1px solid var(--bl-gray-barely);
   }
 }

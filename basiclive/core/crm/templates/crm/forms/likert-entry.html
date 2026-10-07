@@ -13,7 +13,7 @@
             {% endif %}
         </th>
         {% for choice in field.field.choices %}
-            <td align="center" class="text-center p-0"><label>&nbsp;
+            <td class="text-center p-0"><label>&nbsp;
                 <input type="radio" class="form-check-input{% if field.errors %} is-invalid{% endif %}"{% if choice.0 in field.value or choice.0|stringformat:"s" in field.value or choice.0|stringformat:"s" == field.value|default_if_none:""|stringformat:"s" %} checked="checked"{% endif %} name="{{ field.html_name }}" id="id_{{ field.html_name }}_{{ forloop.counter }}" value="{{ choice.0|unlocalize }}" {{ field.field.widget.attrs|flatatt }} />
             </label></td>
         {% endfor %}

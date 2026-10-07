@@ -1,7 +1,9 @@
 from datetime import datetime
 
 from crisp_modals.views import ModalCreateView, ModalUpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Q
 from django.http import Http404
 from django.template.defaultfilters import linebreaksbr
 from django.urls import reverse_lazy
@@ -12,7 +14,6 @@ from itemlist.views import ItemListView
 
 from basiclive.core.lims.views import ListViewMixin
 from basiclive.utils import filters
-from basiclive.utils.encrypt import decrypt
 from basiclive.utils.mixins import AdminRequiredMixin
 from . import forms, models
 
@@ -92,18 +93,34 @@ class FeedbackDetail(AdminRequiredMixin, detail.DetailView):
     template_name = "crm/feedback.html"
 
 
-class FeedbackCreate(SuccessMessageMixin, edit.CreateView):
+class FeedbackCreate(LoginRequiredMixin, UserPassesTestMixin, edit.CreateView):
     form_class = forms.FeedbackForm
     template_name = "crm/forms/survey.html"
     model = models.Feedback
     success_url = '/'
     success_message = "User Feedback has been submitted"
 
+    def test_func(self):
+        project_name = self.kwargs.get('project')
+        session_id = self.kwargs.get('session')
+
+        flt = (Q(pi_id=self.request.user.pk) | Q(members__pk=self.request.user.pk)) & Q(name=project_name)
+        if not self.request.user.is_authenticated:
+            return False
+        elif not models.Session.objects.filter(project__name=project_name, id=session_id).exists():
+            return False
+        elif self.request.user.is_superuser:
+            return True
+        elif models.Project.objects.filter(flt).exists():
+            return True
+        return False
+
     def get_initial(self):
         initial = super().get_initial()
         try:
-            project_name, name = decrypt(self.kwargs.get('key')).split(':')
-            initial['session'] = models.Session.objects.get(project__name=project_name, name=name)
+            project_name = self.kwargs.get('project')
+            session_id = self.kwargs.get('session')
+            initial['session'] = models.Session.objects.get(project__name=project_name, id=session_id)
         except (models.Session.DoesNotExist, ValueError):
             raise Http404
 
@@ -115,9 +132,19 @@ class FeedbackCreate(SuccessMessageMixin, edit.CreateView):
         to_create = []
 
         for area in models.SupportArea.objects.filter(user_feedback=True):
-            if form.cleaned_data.get(slugify(area.name)):
-                to_create.append(models.AreaFeedback(feedback=self.object, area=area,
-                                                     rating=form.cleaned_data.get(slugify(area.name))[0]))
+            scale = area.scale
+            key = slugify(area.name)
+            if form.cleaned_data.get(key):
+                rating = int(form.cleaned_data.get(key)[0])
+                label = scale.get_label(rating)
+                to_create.append(
+                    models.AreaFeedback(
+                        feedback=self.object,
+                        area=area,
+                        label=label,
+                        rating=rating
+                    )
+                )
 
         models.AreaFeedback.objects.bulk_create(to_create)
         return response

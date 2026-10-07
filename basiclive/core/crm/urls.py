@@ -12,5 +12,5 @@ urlpatterns = [
 
     path('feedback/', views.FeedbackList.as_view(), name='user-feedback-list'),
     path('feedback/<int:pk>/', views.FeedbackDetail.as_view(), name='user-feedback-detail'),
-    path('feedback/<str:key>/new/', views.FeedbackCreate.as_view(), name='session-feedback'),
+    path('feedback/<slug:project>/<int:session>/new/', views.FeedbackCreate.as_view(), name='session-feedback'),
 ]

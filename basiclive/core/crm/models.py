@@ -14,6 +14,7 @@ class LikertScale(models.Model):
     statement = models.CharField(max_length=250, null=True)
     worst = models.CharField("-2", max_length=25)
     worse = models.CharField("-1", max_length=25)
+    neutral = models.CharField("0", max_length=25, default="Neutral")
     better = models.CharField("1", max_length=25)
     best = models.CharField("2", max_length=25)
 
@@ -22,15 +23,18 @@ class LikertScale(models.Model):
         verbose_name_plural = _("Likert Scales")
 
     def __str__(self):
-        return ' | '.join([self.worst, self.worse, self.better, self.best])
+        return ' | '.join([self.worst, self.worse, self.neutral, self.better, self.best])
+
+    def get_label(self, rating):
+        return self.choices()[rating]
 
     def choices(self):
         return Choices(
             (-2, 'WORST', self.worst),
             (-1, 'WORSE', self.worse),
+            (0, 'NEUTRAL', self.neutral),
             (1, 'BETTER', self.better),
             (2, 'BEST', self.best),
-            (0, 'NOT_APPLICABLE', _('N/A')),
         )
 
 
@@ -64,7 +68,8 @@ class Feedback(TimeStampedModel):
 class AreaFeedback(models.Model):
     feedback = models.ForeignKey(Feedback, on_delete=models.CASCADE, related_name='areas')
     area = models.ForeignKey(SupportArea, on_delete=models.CASCADE, related_name='impressions')
-    rating = models.IntegerField(default=0)
+    label = models.CharField(max_length=200, blank=True, null=True)   # e.g 'Excellent', 'Good', 'Poor', etc.
+    rating = models.IntegerField(default=0)  # Rating based on the scale (-2, -1, 0, 1, 2)
 
     class Meta:
         verbose_name = _("Area Feedback")
@@ -74,7 +79,7 @@ class AreaFeedback(models.Model):
         ]
 
     def get_rating_display(self):
-        return self.area.scale.choices()[self.rating]
+        return self.area.scale.get_label(self.rating)
 
     def __str__(self):
         return f"{self.area.name}: {self.get_rating_display()}"

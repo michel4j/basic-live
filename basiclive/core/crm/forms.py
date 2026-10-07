@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
 from django.utils.text import slugify
 
-from basiclive.core.lims.models import Project, Beamline
+from basiclive.core.lims.models import Beamline
 from .models import SupportRecord, SupportArea, Feedback, LikertScale
 
 User = get_user_model()
@@ -78,7 +78,7 @@ class FeedbackForm(ModalModelForm):
         super().__init__(*args, **kwargs)
 
         self.body.title = "User Experience Survey"
-        self.body.form_action = reverse_lazy('session-feedback', kwargs={'key': self.initial['session'].feedback_key()})
+        # self.body.form_action = reverse_lazy('session-feedback', kwargs={'key': self.initial['session'].feedback_key()})
 
         likert_tables = []
         area_pks = SupportArea.objects.filter(user_feedback=True).values_list('scale__pk', flat=True)
