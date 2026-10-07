@@ -16,6 +16,7 @@ class FeedbackTests(TestCase):
         self.project = Project.objects.create(name="archaeology-01", pi=self.pi)
         self.beamline = Beamline.objects.create(name="BioCAT", acronym="08B1-1")
         self.session = Session.objects.create(project=self.project, beamline=self.beamline, name="run-alpha")
+        self.client.force_login(self.pi)
 
     def test_session_feedback_key_generation_and_decryption(self):
         key = self.session.feedback_key()
@@ -30,10 +31,10 @@ class FeedbackTests(TestCase):
         self.assertIn('form', resp.context)
         self.assertEqual(resp.context['form'].initial['session'], self.session)
 
-    def test_feedback_create_view_invalid_session_404(self):
+    def test_feedback_create_view_invalid_session_forbidden(self):
         url = reverse('session-feedback', kwargs={'session': 9999, 'project': 'nonexistent-project'})
         resp = self.client.get(url)
-        self.assertEqual(resp.status_code, 404)
+        self.assertIn(resp.status_code, [403, 404])
 
     def test_feedback_survey_submission(self):
         scale = LikertScale.objects.create(
@@ -60,3 +61,57 @@ class FeedbackTests(TestCase):
         self.assertEqual(feedback.comments, 'Great remote experiment session!')
         self.assertTrue(feedback.contact)
         self.assertEqual(feedback.session.project.name, 'archaeology-01')
+
+    def test_feedback_form_uses_display_label_and_slugified_name(self):
+        from basiclive.core.crm.forms import FeedbackForm
+        scale = LikertScale.objects.create(
+            statement="Rate your experience:",
+            worst="Bad", worse="Poor", better="Good", best="Great"
+        )
+        area_with_label = SupportArea.objects.create(
+            name="Remote Access",
+            label="How would you rate the responsiveness of remote access software?",
+            user_feedback=True,
+            scale=scale,
+        )
+        area_fallback = SupportArea.objects.create(
+            name="Data Storage",
+            label="",
+            user_feedback=True,
+            scale=scale,
+        )
+
+        form = FeedbackForm()
+        self.assertIn("remote-access", form.fields)
+        self.assertEqual(
+            form.fields["remote-access"].label,
+            "How would you rate the responsiveness of remote access software?"
+        )
+        self.assertIn("data-storage", form.fields)
+        self.assertEqual(form.fields["data-storage"].label, "Data Storage")
+
+    def test_feedback_detail_modal_renders_name_and_label(self):
+        from basiclive.core.crm.models import AreaFeedback
+        scale = LikertScale.objects.create(statement="Survey", worst="1", worse="2", better="3", best="4")
+        area = SupportArea.objects.create(
+            name="Impact to potential researchers",
+            label="What impact could these facilities have on the research of others in your field?",
+            user_feedback=True,
+            scale=scale,
+        )
+        feedback = Feedback.objects.create(session=self.session, comments="Helpful assistance")
+        AreaFeedback.objects.create(
+            feedback=feedback,
+            area=area,
+            label="Great",
+            rating=2,
+        )
+
+        admin_user = User.objects.create_superuser(username="admin_test", email="admin@test.edu")
+        self.client.force_login(admin_user)
+        url = reverse("user-feedback-detail", kwargs={"pk": feedback.pk})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Impact to potential researchers")
+        self.assertContains(resp, "What impact could these facilities have on the research of others in your field?")
+

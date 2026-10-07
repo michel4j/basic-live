@@ -677,7 +677,7 @@ class Session(models.Model):
         """
         total = self.stretches.with_duration().aggregate(time=Sum('duration'))
 
-        return total['time'].total_seconds() / 3600
+        return total['time'].total_seconds() / 3600 if total.get('time') else 0.0
 
     total_time.short_description = _("Duration")
 

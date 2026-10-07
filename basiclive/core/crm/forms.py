@@ -93,7 +93,7 @@ class FeedbackForm(ModalModelForm):
             likert_table = LikertTable(options=scale.choices())
             for area in SupportArea.objects.filter(user_feedback=True, scale=scale):
                 name = slugify(area.name)
-                self.fields[name] = forms.MultipleChoiceField(choices=scale.choices(), label=area.name, initial=0)
+                self.fields[name] = forms.MultipleChoiceField(choices=scale.choices(), label=area.display_label, initial=0)
                 likert_table.append(LikertEntry(slugify(name)))
             likert_tables.append(likert_table)
             likert_tables.append(HTML("""<br/>"""))

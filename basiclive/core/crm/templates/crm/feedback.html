@@ -41,7 +41,12 @@
                 <tbody>
                   {% for area in object.areas.all %}
                     <tr>
-                      <td>{{ area.area.name }}</td>
+                      <td>
+                        <div class="fw-bold">{{ area.area.name }}</div>
+                        {% if area.area.label and area.area.label != area.area.name %}
+                          <small class="text-muted">{{ area.area.label }}</small>
+                        {% endif %}
+                      </td>
                       <td>{{ area.get_rating_display }}</td>
                     </tr>
                   {% endfor %}
