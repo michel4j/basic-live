@@ -4,7 +4,7 @@ from crisp_modals.forms import (
     HalfWidth,
     ModalModelForm,
     Row,
-    ThirdWidth,
+    ThirdWidth, ThreeQuarterWidth, QuarterWidth,
 )
 from crispy_forms.layout import HTML, Div, Field, Layout
 from django import forms
@@ -25,27 +25,24 @@ class SupportAreaForm(ModalModelForm):
     class Meta:
         model = SupportArea
         fields = ['name', 'label', 'user_feedback', 'external', 'scale']
+        widgets = {
+            'label': forms.Textarea(attrs={"rows": 3}),
+        }
         help_texts = {
-            'label': _("Questionnaire prompt or statement displayed in user experience surveys. Falls back to name if blank."),
+            "label": _(
+                "Questionnaire prompt or statement displayed in user experience surveys. "
+                "Falls back to name if blank."
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        if self.instance.pk:
-            self.body.title = "Edit Support Area"
-            self.body.form_action = reverse_lazy('supportarea-edit', kwargs={'pk': self.instance.pk})
-        else:
-            self.body.title = "New Support Area"
-            self.body.form_action = reverse_lazy('new-supportarea')
-
         self.body.layout = Layout(
             Row(
-                FullWidth('name'),
+                ThreeQuarterWidth('name'), QuarterWidth('scale'),
                 FullWidth('label'),
-                HalfWidth(Div('user_feedback', css_class="mt-3 ms-3 ps-1")),
-                HalfWidth('scale'),
-                FullWidth(Div('external', css_class="mt-3 ms-3 ps-1")),
+                FullWidth('user_feedback'),
+                FullWidth('external'),
             ),
         )
         self.footer.set_buttons(
@@ -84,8 +81,6 @@ class FeedbackForm(ModalModelForm):
         super().__init__(*args, **kwargs)
 
         self.body.title = "User Experience Survey"
-        # self.body.form_action = reverse_lazy('session-feedback', kwargs={'key': self.initial['session'].feedback_key()})
-
         likert_tables = []
         area_pks = SupportArea.objects.filter(user_feedback=True).values_list('scale__pk', flat=True)
         for scale in LikertScale.objects.filter(pk__in=area_pks):

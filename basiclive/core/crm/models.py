@@ -39,7 +39,7 @@ class LikertScale(models.Model):
 
 
 class SupportArea(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(_("Short Name"), max_length=200)
     label = models.CharField(_("Label"), max_length=500, blank=True, default="")
     user_feedback = models.BooleanField(_('Add to User Experience Survey'), default=False)
     external = models.BooleanField(_("External (out of the beamline's control)"), default=False)

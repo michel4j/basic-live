@@ -31,6 +31,11 @@ class Migration(migrations.Migration):
             name='label',
             field=models.CharField(blank=True, default='', max_length=500, verbose_name='Label'),
         ),
+        migrations.AlterField(
+            model_name='supportarea',
+            name='name',
+            field=models.CharField(max_length=200, verbose_name='Short Name'),
+        ),
         migrations.RunPython(populate_supportarea_label, reverse_code=reverse_populate_supportarea_label),
     ]
 
