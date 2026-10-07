@@ -15,23 +15,43 @@ from basiclive.core.lims.views import ListViewMixin
 from basiclive.utils import filters
 from basiclive.utils.mixins import AdminRequiredMixin
 from . import forms, models
+from ...utils.misc import natural_duration
 
 
 def format_contact(val, record):
     return val and record.session.project or ""
 
 
-def format_comments(val, args):
-    return linebreaksbr(val)
+def format_comments(val, record):
+    text = ''.join([
+        f'<div class="small">{paragraph}</div>' for paragraph in val.split('\n') if paragraph
+    ])
+    time_text = natural_duration(record.created)
+    staff_text = "" if not record.staff else f" by <strong>{record.staff}</strong>&nbsp;"
+    return (
+        f"{text}<br/>"
+        f"<div class='small text-end text-muted'>Created{staff_text} for <span>{record.project.name.upper()}</span>"
+        f"&nbsp; <span>{time_text} ago</span></div>"
+    )
 
 
-def format_area(val, record):
-    if record.area:
-        return f"<span class='badge text-bg-info'>{record.area.name}</span>"
+def format_kind(val, record):
+    if record.kind == models.SupportRecord.TYPE.problem:
+        return (
+            f"<span class='badge badge-md text-danger-emphasis bg-danger-subtle'>{record.area} | "
+            f"<strong>{record.get_kind_display()}</strong></span>"
+        )
+    elif record.kind == models.SupportRecord.TYPE.info:
+        return (
+            f"<span class='badge badge-md text-info-emphasis bg-info-subtle'>{record.area} | "
+            f"<strong>{record.get_kind_display()}</strong></span>"
+        )
     return ""
 
 
-format_areas = format_area
+def format_hours(val, record):
+    delta = timezone.timedelta(hours=val)
+    return natural_duration(delta)
 
 
 def format_created(val, args):
@@ -146,25 +166,32 @@ class FeedbackCreate(LoginRequiredMixin, UserPassesTestMixin, edit.CreateView):
         return response
 
 
-class SupportEntryList(ListViewMixin, ItemListView):
+class SupportEntryList(AdminRequiredMixin, ListViewMixin, ItemListView):
     model = models.SupportRecord
     list_filters = [
         'beamline',
-        'created',
         filters.YearFilter('created', reverse=True),
         filters.MonthFilter('created'),
-        'project__designation',
         'project__kind',
         'kind',
         'area'
     ]
-    list_columns = ['beamline', 'staff', 'created', 'kind', 'comments', 'area', 'lost_time']
-    list_transforms = {'comments': format_comments, 'area': format_area, 'created': format_created}
+    list_columns = ['beamline', 'kind', 'lost_time', 'comments']
+    list_transforms = {
+        'comments': format_comments,
+        'created': format_created,
+        'lost_time': format_hours,
+        'kind': format_kind,
+    }
+    list_styles = {
+        'beamline': 'text-nowrap'
+    }
     list_search = ['beamline__acronym', 'project__name', 'comments', 'staff__name', 'staff__first_name', 'staff__last_name', 'staff__username']
     ordering = ['-created']
     tool_template = 'crm/tools-support.html'
     link_url = 'supportrecord-edit'
     link_field = 'beamline'
+    show_project = False
     link_attr = 'data-modal-url'
 
 

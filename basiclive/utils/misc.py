@@ -1,5 +1,5 @@
-from datetime import timedelta
-
+from datetime import timedelta, datetime
+from django.utils import timezone
 
 def humanize_duration(duration, sec=False):
     if isinstance(duration, (int, float)):
@@ -26,4 +26,6 @@ def natural_seconds(seconds, depth=2):
 
 
 def natural_duration(delta):
+    if isinstance(delta, datetime):
+        delta = timezone.now() - delta
     return natural_seconds(delta.total_seconds())
