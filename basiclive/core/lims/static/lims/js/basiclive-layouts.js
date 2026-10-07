@@ -307,7 +307,6 @@ const projTemplate = _.template(
     '     <% _.each(details, function(container, i){ ' +
     '       container.root_id = root_id; ' +
     '       container.url_root = url_root; ' +
-    '       console.log(container); ' +
     '     %>' +
     '       <%= locTemplate(container) %>' +
     '     <% }); %>' +

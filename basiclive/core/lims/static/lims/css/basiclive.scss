@@ -1129,6 +1129,10 @@ a {
   animation: spin 2s infinite linear;
 }
 
+.report-viewer {
+  font-size-adjust: 0.51 !important;
+}
+
 .report-viewer table.table tbody td {
   font-family: var(--bs-font-monospace);
 }
