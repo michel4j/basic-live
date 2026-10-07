@@ -6,7 +6,6 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.http import Http404
 from django.template.defaultfilters import linebreaksbr
-from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.text import slugify
 from django.views.generic import edit, detail
@@ -55,14 +54,12 @@ class SupportAreaList(ListViewMixin, ItemListView):
 class SupportAreaCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.SupportAreaForm
     model = models.SupportArea
-    success_url = reverse_lazy('supportarea-list')
     success_message = "Support area has been created"
 
 
 class SupportAreaEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.SupportAreaForm
     model = models.SupportArea
-    success_url = reverse_lazy('supportarea-list')
     success_message = "Support area has been updated"
 
 
@@ -85,7 +82,6 @@ class FeedbackList(ListViewMixin, ItemListView):
     show_project = False
     link_url = 'user-feedback-detail'
     link_attr = 'data-modal-url'
-    plot_url = reverse_lazy("user-feedback-stats")
 
 
 class FeedbackDetail(AdminRequiredMixin, detail.DetailView):
@@ -170,13 +166,11 @@ class SupportEntryList(ListViewMixin, ItemListView):
     link_url = 'supportrecord-edit'
     link_field = 'beamline'
     link_attr = 'data-modal-url'
-    plot_url = reverse_lazy("supportrecord-stats")
 
 
 class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateView):
     form_class = forms.SupportEntryForm
     model = models.SupportRecord
-    success_url = reverse_lazy('supportrecord-list')
     success_message = "Support record has been created"
 
     def get_initial(self):
@@ -193,5 +187,4 @@ class SupportEntryCreate(AdminRequiredMixin, SuccessMessageMixin, ModalCreateVie
 class SupportEntryEdit(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
     form_class = forms.SupportEntryForm
     model = models.SupportRecord
-    success_url = reverse_lazy('supportrecord-list')
     success_message = "Support record has been updated"
