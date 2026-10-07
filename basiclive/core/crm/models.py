@@ -188,9 +188,9 @@ class SupportRecord(TimeStampedModel):
 
         super().save(*args, **kwargs)
 
-        succ = self._get_successor()
-        if succ:
-            SupportRecord.objects.filter(pk=succ.pk).update(previous_id=self.pk)
+        successor = self._get_successor()
+        if successor:
+            SupportRecord.objects.filter(pk=successor.pk).update(previous_id=self.pk)
 
     @transaction.atomic
     def delete(self, *args, **kwargs):
