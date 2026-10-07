@@ -300,7 +300,7 @@ class User(AbstractUser):
             return True
         if not project:
             return False
-        return project.pi_id == self.pk or project.members.filter(pk=self.pk).exists()
+        return project.is_member(self)
 
     def save(self, *args, **kwargs):
         if not self.name and (self.first_name or self.last_name):
@@ -467,6 +467,19 @@ class Project(ProjectEditorMixin, TimeStampedModel):
                 raise ValidationError({
                     'region': _("The selected region does not belong to the selected country.")
                 })
+
+    def is_member(self, user):
+        if not user.is_authenticated:
+            return False
+        return self.pi_id == user.pk or self.members.filter(pk=user.pk).exists()
+
+    def is_owner(self, user):
+        if not user.is_authenticated:
+            return False
+        return (
+            self.pi_id == user.pk or
+            self.memberships.filter(pk=user.pk, role=ProjectMembership.Role.CO_INVESTIGATORPI).exists()
+        )
 
     def save(self, *args, **kwargs):
         if not self.kind:

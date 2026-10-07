@@ -160,3 +160,23 @@ def can_view(user, obj):
     if hasattr(obj, 'can_view'):
         return obj.can_view(user)
     return False
+
+
+@register.filter
+def is_member(user, project):
+    """Check if a user is a member of the project"""
+    if not user.is_authenticated:
+        return False
+    if hasattr(project, 'is_member'):
+        return project.is_member(user)
+    return False
+
+
+@register.filter
+def is_owner(user, project):
+    """Check if a user is the owner of the project"""
+    if not user.is_authenticated:
+        return False
+    if hasattr(project, 'is_owner'):
+        return project.is_owner(user)
+    return False

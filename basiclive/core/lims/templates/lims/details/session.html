@@ -33,14 +33,15 @@
         </a>
     {% endif %}
     {% if object.datasets.count %}
-
         <a href="{% url 'files-proxy' section='archive' path=object.download_url %}">
             {% show_icon label='Download' icon='download' size='md' %}
         </a>
     {% endif %}
     {% if USE_CRM %}
-        {% if request.user == object.project %}
-            <a href="{% url 'session-feedback' key=object.feedback_key %}" title="Give feedback about this session">
+        {% if request.user|is_member:object.project %}
+            <a href="{% url 'session-feedback' project=object.project.name session=object.pk %}"
+               title="Give feedback about this session"
+            >
                 {% show_icon label='Feedback' icon='star' size='md' %}
             </a>
         {% endif %}
