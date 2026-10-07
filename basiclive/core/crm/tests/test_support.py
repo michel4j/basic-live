@@ -122,6 +122,45 @@ class SupportFormTests(TestCase):
         ]
         self.assertIn("area", layout_fields)
 
+    def test_support_area_form_valid_with_name_and_label(self):
+        from basiclive.core.crm.forms import SupportAreaForm
+        form = SupportAreaForm(data={
+            "name": "Beamline Computing",
+            "label": "How would you rate the speed and stability of data processing software?",
+            "user_feedback": True,
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        area = form.save()
+        self.assertEqual(area.name, "Beamline Computing")
+        self.assertEqual(area.label, "How would you rate the speed and stability of data processing software?")
+        self.assertTrue(area.user_feedback)
+
+    def test_support_area_form_valid_without_label(self):
+        from basiclive.core.crm.forms import SupportAreaForm
+        form = SupportAreaForm(data={
+            "name": "Vacuum Systems",
+            "external": True,
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        area = form.save()
+        self.assertEqual(area.name, "Vacuum Systems")
+        self.assertEqual(area.label, "")
+        self.assertEqual(area.display_label, "Vacuum Systems")
+
+    def test_support_area_form_layout_contains_name_and_label(self):
+        from basiclive.core.crm.forms import SupportAreaForm
+        form = SupportAreaForm()
+        self.assertIn("name", form.fields)
+        self.assertIn("label", form.fields)
+        layout_fields = [
+            field_name
+            for row in form.body.layout.fields if hasattr(row, 'fields')
+            for f in row.fields
+            for field_name in (f.fields if hasattr(f, 'fields') else [f])
+        ]
+        self.assertIn("name", layout_fields)
+        self.assertIn("label", layout_fields)
+
 
 class SupportViewTests(TestCase):
     def setUp(self):
@@ -207,6 +246,35 @@ class SupportViewTests(TestCase):
         self.assertEqual(self.record1.area, self.area2)
         self.assertEqual(self.record1.lost_time, 2.0)
         self.assertEqual(self.record1.staff, self.staff_user)
+
+    def test_support_area_list_view_displays_label(self):
+        area = SupportArea.objects.create(name="Sample Delivery", label="Rate robotics reliability")
+        response = self.client.get(reverse("supportarea-list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Sample Delivery")
+        self.assertContains(response, "Rate robotics reliability")
+
+    def test_support_area_create_view_with_label(self):
+        post_data = {
+            "name": "Data Storage",
+            "label": "Were file transfers and download speeds acceptable?",
+            "user_feedback": True,
+        }
+        response = self.client.post(reverse("new-supportarea"), post_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            SupportArea.objects.filter(
+                name="Data Storage", label="Were file transfers and download speeds acceptable?"
+            ).exists()
+        )
+
+    def test_support_area_admin_configuration(self):
+        from django.contrib import admin
+        area_admin = admin.site._registry[SupportArea]
+        self.assertIn("name", area_admin.list_display)
+        self.assertIn("label", area_admin.list_display)
+        self.assertIn("name", area_admin.search_fields)
+        self.assertIn("label", area_admin.search_fields)
 
 
 class SupportMigrationLogicTests(TestCase):

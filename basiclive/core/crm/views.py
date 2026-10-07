@@ -42,8 +42,8 @@ def format_created(val, args):
 class SupportAreaList(ListViewMixin, ItemListView):
     model = models.SupportArea
     list_filters = ['user_feedback']
-    list_columns = ['name', 'user_feedback']
-    list_search = ['name']
+    list_columns = ['name', 'label', 'user_feedback']
+    list_search = ['name', 'label']
     link_field = 'name'
     show_project = False
     ordering = ['name']

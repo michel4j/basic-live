@@ -12,6 +12,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
 from django.utils.text import slugify
 
+from django.utils.translation import gettext_lazy as _
+
 from basiclive.core.lims.models import Beamline
 from .models import SupportRecord, SupportArea, Feedback, LikertScale
 
@@ -22,7 +24,10 @@ class SupportAreaForm(ModalModelForm):
 
     class Meta:
         model = SupportArea
-        fields = ['name', 'user_feedback', 'external', 'scale']
+        fields = ['name', 'label', 'user_feedback', 'external', 'scale']
+        help_texts = {
+            'label': _("Questionnaire prompt or statement displayed in user experience surveys. Falls back to name if blank."),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,6 +42,7 @@ class SupportAreaForm(ModalModelForm):
         self.body.layout = Layout(
             Row(
                 FullWidth('name'),
+                FullWidth('label'),
                 HalfWidth(Div('user_feedback', css_class="mt-3 ms-3 ps-1")),
                 HalfWidth('scale'),
                 FullWidth(Div('external', css_class="mt-3 ms-3 ps-1")),
