@@ -18,11 +18,13 @@ function initTooltips(selector) {
             loadable : parent.data('loadable'),
             prefix: parent.data('prefix') || 'cnt',
             root_id: parent.data('pk'),
+            url_root: parent.data('containers-url'),
             on_complete: function() {
             },
         }, options);
 
         let url = parent.data('layout-url');
+
         // fetch data and render
         $.ajax({
             dataType: "json",
@@ -169,9 +171,9 @@ function initTooltips(selector) {
                 if (settings.loadable && (d.accepts||d.final)) {
                     d3.event.stopPropagation();
                     if (! d.id) {
-                        url = `/users/containers/${settings.root_id}/${data.id}/location/${d.loc}/`;
+                        url = `${settings.url_root}${settings.root_id}/${data.id}/location/${d.loc}/`;
                     } else {
-                        url = `/users/containers/${settings.root_id}/${d.id}/load/`;
+                        url = `${settings.url_root}${settings.root_id}/${d.id}/load/`;
                     }
                     $('#modal-target').asyncForm(url, {
                         complete: function(data){
@@ -267,7 +269,7 @@ const locTemplate = _.template(
     '               </div>' +
     '           </div>' +
     '           <div class="tools-box">' +
-    '               <a href="#!" data-unload-url="/users/containers/<%= root_id %>/<%= id %>/unload/" data-id="<%= id %>"' +
+    '               <a href="#!" data-unload-url="<%= url_root %><%= root_id %>/<%= id %>/unload/" data-id="<%= id %>"' +
     '                   <div class="icon-stack">' +
     '                       <i class="ti ti-share"></i>' +
     '                   </div>' +
@@ -292,7 +294,7 @@ const projTemplate = _.template(
     '                       <i class="ti ti-md ti-zoom-in"></i>' +
     '                   </div>' +
     '               </a>' +
-    '               <a href="#!" data-modal-url="/users/containers/<%= root_id %>/<%= parent %>/unload/<%= name.toLowerCase() %>/">' +
+    '               <a href="#!" data-modal-url="<%= url_root %><%= root_id %>/<%= parent %>/unload/<%= name.toLowerCase() %>/">' +
     '                   <div class="icon-stack">' +
     '                       <i class="ti ti-md ti-share"></i>' +
     '                   </div>' +
