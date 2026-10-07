@@ -24,6 +24,19 @@ class SupportModelTests(TestCase):
         self.assertFalse(self.area.external)
         self.assertFalse(self.area.user_feedback)
 
+    def test_support_area_label_and_display_label(self):
+        # Default label is blank, display_label falls back to name
+        self.assertEqual(self.area.label, "")
+        self.assertEqual(self.area.display_label, "Optics & Mirrors")
+        self.assertEqual(str(self.area), "Optics & Mirrors")
+
+        # Custom label returns label for display_label while str remains name
+        self.area.label = "Are you satisfied with the optics and mirrors alignment?"
+        self.area.save()
+        self.assertEqual(self.area.label, "Are you satisfied with the optics and mirrors alignment?")
+        self.assertEqual(self.area.display_label, "Are you satisfied with the optics and mirrors alignment?")
+        self.assertEqual(str(self.area), "Optics & Mirrors")
+
     def test_support_record_creation_with_area(self):
         record = SupportRecord.objects.create(
             kind=SupportRecord.TYPE.problem,
@@ -613,4 +626,38 @@ class SupportPreviousMigrationTests(TestCase):
         self.assertIsNone(r1.previous)
         self.assertEqual(r2.previous, r1)
         self.assertEqual(r3.previous, r2)
+
+
+class SupportAreaLabelMigrationTests(TestCase):
+    def test_migration_0090_populate_supportarea_label(self):
+        import importlib
+        migration_module = importlib.import_module("basiclive.core.crm.migrations.0090_supportarea_label")
+        populate_supportarea_label = migration_module.populate_supportarea_label
+        reverse_populate_supportarea_label = migration_module.reverse_populate_supportarea_label
+
+        area1 = SupportArea.objects.create(name="Area 1", label="")
+        area2 = SupportArea.objects.create(name="Area 2", label="")
+
+        class MockApps:
+            def get_model(self, app_label, model_name):
+                return SupportArea
+
+        class MockSchemaEditor:
+            class MockConnection:
+                alias = "default"
+            connection = MockConnection()
+
+        populate_supportarea_label(MockApps(), MockSchemaEditor())
+
+        area1.refresh_from_db()
+        area2.refresh_from_db()
+        self.assertEqual(area1.label, "Area 1")
+        self.assertEqual(area2.label, "Area 2")
+
+        reverse_populate_supportarea_label(MockApps(), MockSchemaEditor())
+        area1.refresh_from_db()
+        area2.refresh_from_db()
+        self.assertEqual(area1.label, "")
+        self.assertEqual(area2.label, "")
+
 
