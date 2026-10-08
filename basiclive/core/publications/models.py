@@ -93,7 +93,12 @@ class PublicationManager(models.Manager):
             cites=Coalesce('metrics__citations', 0),
             mentions=Coalesce('metrics__mentions', 0),
             citation=Concat(
-                'author_names', V(" ("), 'published__year', V(") "), 'title', V(". "), "code",
+                'author_names',
+                V(" ("),
+                'published__year',
+                V(") "),
+                'title', V(". "),
+                "code",
                 output_field=models.TextField()
             ),
             impact_factor=Coalesce('journal__metrics__impact_factor', 0.0),

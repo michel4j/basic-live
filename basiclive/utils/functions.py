@@ -6,6 +6,7 @@ from django.core.exceptions import FieldError, FieldDoesNotExist
 from django.db import models
 from django.db.models import Case, When, Q
 from django.db.models import FloatField, Aggregate
+from django.db.models import Func, CharField
 from django.db.models import Subquery, OuterRef, Min, Max, Count, Avg, Sum, Expression
 from django.db.models import Value, F
 from django.utils import timezone
@@ -703,3 +704,42 @@ class BoolMap(Case):
         default = to_expr(null_val) if null_val is not None else Value(None)
 
         super().__init__(*whens, default=default, **extra)
+
+
+class TruncateWords(Func):
+    """
+    Truncates a text field to a specific word count using PostgreSQL arrays,
+    and appends a custom ellipsis if the text was actually truncated.
+    """
+
+    def __init__(self, expression, word_count, ellipsis='...', **extra):
+        # 1. Split string into a PG array: string_to_array(text, ' ')
+        # 2. Slice the array: [1:word_count]
+        # 3. Join back to string: array_to_string(..., ' ')
+        if isinstance(word_count, models.Value):
+            word_count = int(word_count.value)
+
+        if isinstance(ellipsis, models.Value):
+            ellipsis = str(ellipsis.value)
+
+        template = f"array_to_string((string_to_array(%(expressions)s, ' '))[1:{int(word_count)}], ' ')"
+
+        super().__init__(expression, template=template, output_field=CharField(), **extra)
+        self.ellipsis = ellipsis
+
+    def as_sql(self, compiler, connection, **extra_context):
+        # We wrap the truncated text with a Case/When logic to ensure the ellipsis
+        # is ONLY added if the original text actually had more words than the limit.
+        sql, params = super().as_sql(compiler, connection, **extra_context)
+
+        # SQL logic: IF the original text matches the truncated text, don't append ellipsis.
+        # Otherwise, append the custom ellipsis text.
+        conditional_sql = f"""
+            CASE 
+                WHEN %(expressions)s = {sql} THEN {sql}
+                ELSE {sql} || %s
+            END
+        """
+        pars = list(params)
+        pars.append(self.ellipsis)
+        return conditional_sql, tuple(pars)
