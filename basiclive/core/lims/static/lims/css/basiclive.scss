@@ -161,9 +161,9 @@ main {
   .modal-sidebar {
     height: 25rem;
   }
-  .modal-dialog.data-viewer {
-    max-width: 700px;
-  }
+  //.modal-dialog.data-viewer {
+  //  max-width: 700px;
+  //}
   .modal-md, .modal-lg, .modal-xl {
     --bs-modal-width: 600px
   }
@@ -882,20 +882,27 @@ a[data-modal-url], .back text[port], .cursor {
   }
 
   .xtal-pic {
-    height: 200px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    border: 1px solid var(--bl-gray-alpha);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    img {
+      width: 100%;
+      height: auto;
+      padding: 0;
+      margin: 0;
+    }
 
     &::before {
-      content: '⌖';
-      font-size: 2.0rem;
-      mix-blend-mode: difference;
-      filter: invert(100%);
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      content: '＋';
+      font-size: 1.5rem;
+      line-height: 0.5;
+      color: #ab5656;
+      opacity: 0.5;
     }
   }
 

@@ -22,24 +22,24 @@
          data-delta-angle='{{ object.meta_data.delta_angle|default:0 }}'
          class="d-flex"
     >
-        <div>
+        <div class="m-2">
             <!-- image viewer aspect -->
-            <div class="data-image p-0">
+            <div class="data-image">
                 <div class="image-wrapper">
                     <div id="diffviewer" class="viewer"></div>
                 </div>
             </div>
         </div>
 
-        <div class="d-none d-lg-flex flex-column flex-fill ps-3">
+        <div class="d-none d-lg-flex flex-column flex-fill ms-0 m-2">
             <!-- Display of metaData -->
-            <div class="meta-data mb-3" style="flex: none;">
-                <div class="xtal-pic"
-                     style="background-image: url('{% url 'files-proxy' section='snapshot' path=object.snapshot_url %}');"
-                     title="Snapshot from beamline">&nbsp;
-                </div>
+            <div class="xtal-pic">
+                <img
+                    src="{% url 'files-proxy' section='snapshot' path=object.snapshot_url %}"
+                    title="Snapshot from beamline"
+                />
             </div>
-            <div style="flex: none;">
+            <div class="mt-2">
                 <ul class="nav nav-tabs text-condensed px-2" role="tablist">
                     <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab"
                                             href="#frames">{{ object.num_frames }}
