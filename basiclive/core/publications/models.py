@@ -7,7 +7,6 @@ from model_utils import Choices
 from model_utils.models import TimeStampedModel
 
 from basiclive.utils import fields
-from basiclive.utils import temporal
 
 
 class SubjectArea(TimeStampedModel):
@@ -58,21 +57,6 @@ class Journal(TimeStampedModel):
 
     def __str__(self):
         return self.title
-
-
-class JournalProfile(temporal.TemporalProfile):
-    owner = models.ForeignKey(Journal, on_delete=models.CASCADE, related_name='profiles')
-    sjr_rank = models.FloatField("SJR-Rank", default=0.0, null=True)
-    sjr_quartile = models.SmallIntegerField("SJR-Quartile", default=4, null=True)
-    impact_factor = models.FloatField("Impact Factor", default=0.0, null=True)
-    h_index = models.IntegerField("H-Index", default=1.0, null=True)
-
-    class Meta:
-        verbose_name = _("Journal Profile")
-        verbose_name_plural = _("Journal Profiles")
-
-    def __str__(self):
-        return f"{self.owner} > {self.effective.isoformat()}"
 
 
 def default_year() -> int:
