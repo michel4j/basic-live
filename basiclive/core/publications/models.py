@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Value as V
-from django.db.models.functions import Coalesce, Concat
+from django.db.models.functions import Concat
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
@@ -48,9 +49,8 @@ class Journal(TimeStampedModel):
     title = models.TextField()
     short_name = models.TextField(blank=True, null=True)
     codes = fields.StringListField("ISSN", unique=True)
-    publisher = models.TextField(blank=True, null=True)
+    publisher = models.CharField(max_length=255, blank=True, null=True)
     topics = models.ManyToManyField(SubjectArea, related_name='journals', blank=True)
-    metrics = models.ForeignKey('JournalProfile', null=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = _("Journal")
@@ -75,6 +75,29 @@ class JournalProfile(temporal.TemporalProfile):
         return f"{self.owner} > {self.effective.isoformat()}"
 
 
+def default_year() -> int:
+    """
+    Returns the current year as an integer.
+    """
+    return timezone.localtime(timezone.now()).year
+
+
+class JournalMetric(TimeStampedModel):
+    journal = models.ForeignKey(Journal, related_name='metrics', on_delete=models.CASCADE)
+    sjr_rank = models.FloatField("SJR-Rank", default=0.0, null=True)
+    sjr_quartile = models.SmallIntegerField("SJR-Quartile", default=4, null=True)
+    impact_factor = models.FloatField("Impact Factor", default=0.0, null=True)
+    h_index = models.IntegerField("H-Index", default=1.0, null=True)
+    year = models.IntegerField("Year", default=default_year)
+
+    class Meta:
+        unique_together = ('journal', 'year')
+        verbose_name = "Journal Metric"
+
+    def __str__(self):
+        return f"{self.journal} > {self.year}"
+
+
 class Funder(TimeStampedModel):
     name = models.TextField(unique=True)
     code = models.CharField(max_length=50, null=True, blank=True)
@@ -90,8 +113,6 @@ class Funder(TimeStampedModel):
 class PublicationManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().annotate(
-            cites=Coalesce('metrics__citations', 0),
-            mentions=Coalesce('metrics__mentions', 0),
             citation=Concat(
                 'author_names',
                 V(" ("),
@@ -101,7 +122,6 @@ class PublicationManager(models.Manager):
                 "code",
                 output_field=models.TextField()
             ),
-            impact_factor=Coalesce('journal__metrics__impact_factor', 0.0),
         )
 
 
@@ -135,7 +155,6 @@ class Publication(TimeStampedModel):
     volume = models.CharField(max_length=100, blank=True, null=True)
     issue = models.CharField(max_length=20, blank=True, null=True)
     pages = models.CharField(max_length=20, blank=True, null=True)
-    metrics = models.ForeignKey("Metric", null=True, on_delete=models.SET_NULL, related_name='publication')
 
     objects = PublicationManager()
 
@@ -147,17 +166,19 @@ class Publication(TimeStampedModel):
         return self.code
 
 
-class Metric(temporal.TemporalProfile):
-    owner = models.ForeignKey(Publication, null=True, on_delete=models.CASCADE, related_name='all_metrics')
-    citations = models.IntegerField(default=0)
-    mentions = models.IntegerField(default=0)
+class ArticleMetric(TimeStampedModel):
+    publication = models.ForeignKey(Publication, related_name='metrics', on_delete=models.CASCADE)
+    citations = models.IntegerField("Citations", default=0)
+    mentions = models.IntegerField("Mentions", default=0)
+    self_cites = models.IntegerField("Self-Citations", default=0)
+    year = models.IntegerField("Year", default=default_year)
 
     class Meta:
-        verbose_name = _("Metric")
-        verbose_name_plural = _("Metrics")
+        unique_together = ('publication', 'year')
+        verbose_name = "Article Metric"
 
     def __str__(self):
-        return f'{self.citations}'
+        return f"{self.publication} > {self.year}"
 
 
 class Deposition(TimeStampedModel):

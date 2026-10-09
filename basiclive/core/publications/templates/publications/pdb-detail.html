@@ -52,7 +52,7 @@
             <div class="my-3"><strong>Publication:</strong> {{ object.reference.title }}
             {% if object.reference.code %}
                 <br/>
-                <small class="text-muted">{{ object.reference.code }}</small>
+                <span class="text-muted">{{ object.reference.code }}</span>
             {% endif %}
             </div>
             {% elif object.citation %}
@@ -63,10 +63,5 @@
 {% endblock %}
 
 {% block modal_footer %}
-    {% if pdb_url %}
-        <a href="{{ pdb_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary me-auto">
-            {% show_icon icon="share" %} View on RCSB PDB
-        </a>
-    {% endif %}
     <button type="button" class="btn btn-primary" data-bs-dismiss="modal" aria-label="Close">Close</button>
 {% endblock %}

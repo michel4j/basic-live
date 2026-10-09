@@ -23,13 +23,8 @@ class PubEntryList(AdminRequiredMixin, ItemListView):
         filters.QuarterFilter('published'),
         'tags'
     ]
-    list_columns = ['published', 'citation', 'cites', 'mentions', 'impact_factor']
+    list_columns = ['citation', 'published', 'journal']
     list_search = ['title', 'main_title', 'author_names', 'code', 'comments', 'journal__title', 'funders__name']
-    list_headers = {
-        'impact_factor': mark_safe("<span class='no-wrap'>Impact Factor</span>"),
-        'metrics__mentions': "Mentions",
-        'metrics__citations': "Citations",
-    }
     list_transforms = {
         'citation': lambda x, y: mark_safe(x),
         'published': lambda x, y: x.strftime('%Y/%b')
@@ -125,7 +120,7 @@ class JournalList(AdminRequiredMixin, ItemListView):
     template_name = 'publications/list.html'
     model = models.Journal
     list_filters = ['created', 'modified']
-    list_columns = ['id', 'title', 'short_name', 'publisher', 'codes', 'metrics__impact_factor']
+    list_columns = ['id', 'title', 'short_name', 'publisher', 'codes']
     list_search = ['short_name', 'title', 'codes', 'publisher']
     list_transforms = {
         'codes': lambda codes, obj: mark_safe(f"<span class='no-wrap'>{" / ".join(codes)}</span>")
