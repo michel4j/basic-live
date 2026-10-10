@@ -159,7 +159,6 @@ class ShipmentList(ListViewMixin, ItemListView):
     ordering = ['status', '-modified']
 
     def get_queryset(self):
-        print('ShipmentList.get_queryset() called')
         if self.request.user.is_superuser:
             return super(ShipmentList, self).get_queryset().filter(
                 status__gte=models.Shipment.STATES.SENT)

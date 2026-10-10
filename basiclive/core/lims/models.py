@@ -1766,7 +1766,6 @@ class Data(ActiveStatusMixin):
             }
             for f in self.frames
         ]
-        print(self.file_name)
         return records
 
     def first_frame(self):

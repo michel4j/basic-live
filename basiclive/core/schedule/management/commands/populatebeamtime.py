@@ -1,14 +1,13 @@
+import json
+from datetime import datetime, timedelta
+
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils.timezone import make_aware
 
 from basiclive.core.lims.models import Project, Beamline
 from basiclive.core.schedule.models import Beamtime, BeamlineSupport, AccessType, Downtime
-
-import json
-from datetime import datetime, timedelta
-
 
 SHIFT_MAP = ["08", "16", "00"]
 
@@ -38,7 +37,7 @@ def get_date(dt, shift, end=False):
 
 
 class Command(BaseCommand):
-    help = 'Imports beamtime from the Django 2 website.'
+    help = 'Imports beamtime from the Django.'
 
     def add_arguments(self, parser):
         parser.add_argument('--file', type=str)
