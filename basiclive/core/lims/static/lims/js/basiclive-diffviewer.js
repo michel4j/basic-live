@@ -824,10 +824,32 @@
          */
         createui: function () {
             const self = this;
+            const zoomBox = $("<div>")
+                .addClass("diffviewer_zoom_box diffviewer_common")
+                .appendTo(this.container);
 
-            const makeBtn = function (btnClass, iconClass, title, onClick) {
+            const icons = {
+                zoom_in: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+                    <path d="M9 12h6" /><path d="M12 9v6" />
+                    </svg>`,
+                zoom_out: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                    <path d="M9 12l6 0" />
+                    </svg>`,
+                zoom_fit: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" 
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M4 8v-2a2 2 0 0 1 2 -2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" />
+                    <path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 0 2 -2v-2" />
+                    </svg>`
+            };
+            const makeBtn = function (btnClass, title, onClick) {
                 return $("<div>", {
-                    'class': btnClass + " diffviewer_common diffviewer_button",
+                    // 'class': `diffviewer_common diffviewer_button diffviewer_${btnClass}`,
                     'role': "button",
                     'tabindex': "0",
                     'aria-label': title,
@@ -844,19 +866,19 @@
                         onClick();
                     }
                 })
-                .html('<i class="' + iconClass + '"></i>')
-                .appendTo(self.container);
+                .html(icons[btnClass])
+                .appendTo(zoomBox);
             };
 
-            const btnIn = makeBtn("diffviewer_zoom_in", "ti ti-zoom-in", "Zoom In", function () {
+            const btnIn = makeBtn("zoom_in", "Zoom In", function () {
                 self.zoom_by(1);
             });
 
-            const btnOut = makeBtn("diffviewer_zoom_out", "ti ti-zoom-out", "Zoom Out", function () {
+            const btnOut = makeBtn("zoom_out", "Zoom Out", function () {
                 self.zoom_by(-1);
             });
 
-            const btnFit = makeBtn("diffviewer_zoom_fit", "ti ti-reload", "Reset Zoom", function () {
+            const btnFit = makeBtn("zoom_fit", "Reset Zoom", function () {
                 self.fit(true);
             });
 
