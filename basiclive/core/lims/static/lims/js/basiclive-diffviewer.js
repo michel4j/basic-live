@@ -812,7 +812,7 @@
                 }
                 const self = this;
                 this._posRafId = requestAnimationFrame(function () {
-                    self.zoom_object.html('<span>Res: ' + formatted + ' &#8491;</span>');
+                    self.zoom_object.html(`<span>${formatted} Å</span>`);
                     self._posRafId = null;
                 });
             }

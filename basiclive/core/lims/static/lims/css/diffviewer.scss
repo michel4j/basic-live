@@ -37,8 +37,7 @@
   color: var(--bs-body-bg);
   background-color: var(--bs-body-color);
   text-align: center;
-  width: 8em;
-  filter: alpha(opacity = 70);
+  width: 5em;
   opacity: 0.7;
 }
 
@@ -51,7 +50,6 @@
   text-align: center;
   width: 128px;
   height: 128px;
-  border: 1px solid var(--bs-border-color-translucent);
   display: none;
 }
 
