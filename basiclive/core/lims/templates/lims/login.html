@@ -9,15 +9,16 @@
 {% block body %}
     <div class="d-flex justify-content-center align-content-around w-100 h-100">
         <div class="card align-self-center">
-            <div class="card-body">
-                <div class="mb-4">
-                    <h1 class="fw-light">{{APP_NAME}} Login</h1>
-                    <p>
-                        Information management at Beamlines, from samples to data analysis.
-                    </p>
+            <div class="card-header text-center">
+                <div class="my-3 d-flex flex-column">
+                    <div class="fw-lighter fs-1 mb-3">{{APP_NAME}} Login</div>
+                    <small class="text-muted px-5">
+                        Information management at Beamlines. <br/>
+                        Samples, Experiments, Data and Business Intelligence.
+                    </small>
                 </div>
             </div>
-            <div class="card-body bg-light">
+            <div class="card-body">
                 <form class="form-signin" role="form" action="{{ app_path }}" method="post">
                     {% csrf_token %}
                     {% if form.non_field_errors or error_message %}
@@ -48,8 +49,8 @@
                     <button class="btn btn-lg btn-primary w-100 mb-2" type="submit">Sign in</button>
                 </form>
             </div>
-            <div>
-                <p class="mt-5 mb-3 text-muted text-center">&copy; 2008-{% now "Y" %} Canadian Light Source, Inc</p>
+            <div class="card-footer text-center p-4">
+                <small class="text-muted">&copy; 2008-{% now "Y" %} Canadian Light Source, Inc</small>
             </div>
 
         </div>
