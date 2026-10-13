@@ -15,7 +15,11 @@ def unload_reports_fixture(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('reportcraft', '0018_alter_entry_aspect_ratio'),
         ('lims', '0120_alter_loadhistory_options'),
+        ('notebooks', '0006_alter_annotation_options_alter_entry_options_and_more'),
+        ('publications', '0022_delete_journalprofile'),
+        ('schedule', '0008_remove_beamlinesupport_staff_and_rename_user')
     ]
 
     operations = [
