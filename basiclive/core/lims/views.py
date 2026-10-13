@@ -1571,10 +1571,7 @@ class SwitchProjectView(LoginRequiredMixin, View):
             request.user.save(update_fields=['default_project'])
 
         # Safe redirection
-        redirect_to = next_url or request.POST.get('next') or request.GET.get('next') or request.META.get('HTTP_REFERER') or '/'
-        if not url_has_allowed_host_and_scheme(url=redirect_to, allowed_hosts={request.get_host()}):
-            redirect_to = '/'
-
+        redirect_to = '/'
         return HttpResponseRedirect(redirect_to)
 
     def get(self, request, pk=None):

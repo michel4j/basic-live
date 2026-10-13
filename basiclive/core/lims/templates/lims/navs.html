@@ -42,6 +42,21 @@
                     <a class="dropdown-item" href="{% url 'activitylog-list' %}">Activity</a>
                 </div>
             </li>
+
+            {% if user.is_superuser %}
+            <li class="nav-item dropdown">
+                <a class="nav-link  dropdown-toggle me-md-2" href="#"
+                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {% show_icon icon="lock" %}<span class="d-none d-md-inline-block">&nbsp;Admin</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="search-menu">
+                    <a class="dropdown-item" href="{% url 'report-editor-root' %}">Create Reports</a>
+                    <a class="dropdown-item" href="{% url 'user-list' %}">Manage Users</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger-emphasis" href="{% url 'admin:index' %}">Admin Backend</a>
+                </div>
+            </li>
+            {% endif %}
             {% if user.is_authenticated %}
                 {% with user_projects=user.get_projects %}
                     {% if user_projects.count > 1 %}
@@ -54,7 +69,8 @@
                                 <h6 class="dropdown-header">Active Project</h6>
                                 {% for proj in user_projects %}
                                     <a class="dropdown-item d-flex align-items-center justify-content-between {% if request.project and proj.pk == request.project.pk %}active{% endif %}"
-                                       href="{% url 'switch-project' proj.pk %}?next={{ request.get_full_path|default:'/'|urlencode }}">
+                                       href="{% url 'switch-project' proj.pk %}"
+                                    >
                                         <span>{{ proj.name.upper }}</span>
                                         {% if request.project and proj.pk == request.project.pk %}
                                             {% show_icon icon="check" %}
@@ -91,8 +107,6 @@
                     {% if user.is_superuser %}
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{% url 'user-dashboard' %}">User Dashboard</a>
-                    <a class="dropdown-item" href="{% url 'report-editor-root' %}">Report Builder</a>
-                    <a class="dropdown-item" href="{% url 'admin:index' %}">Admin Backend</a>
                     {% endif %}
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="{% url 'user-detail' user.username %}">Account Profile</a>

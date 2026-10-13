@@ -18,6 +18,15 @@ class ProjectAdmin(admin.ModelAdmin):
     list_filter = ('kind', 'country')
 
 
+class ProjectMemberAdmin(admin.ModelAdmin):
+    list_display = ('user', 'project__name')
+    list_filter = ('project__designation', 'project__kind')
+    search_fields = (
+        'user__username', 'user__first_name', 'user__last_name', 'project__name',
+        'project__contact_person', 'project__contact_email',
+    )
+
+
 class CountryAdmin(admin.ModelAdmin):
     list_display = ('name', 'alpha2', 'alpha3', 'code')
     search_fields = ('name', 'alpha2', 'alpha3')
@@ -45,7 +54,7 @@ admin.site.register(models.Automounter)
 admin.site.register(models.ProjectType)
 admin.site.register(models.ProjectDesignation)
 admin.site.register(models.Project, ProjectAdmin)
-admin.site.register(models.ProjectMembership)
+admin.site.register(models.ProjectMembership, ProjectMemberAdmin)
 admin.site.register(models.ComponentType)
 admin.site.register(models.RequestType)
 admin.site.register(models.DataType)
