@@ -1928,3 +1928,8 @@ ul.errorlist {
     stroke-width: 9;
   }
 }
+
+.toast {
+    --bs-toast-spacing: 1rem;
+    --bs-toast-border-radius: 0.25rem;
+}

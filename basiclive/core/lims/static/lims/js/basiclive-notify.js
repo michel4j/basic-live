@@ -2,7 +2,6 @@ class Notify {
   static DEFAULTS = {
     theme: 'light',          // 'light' or 'dark'
     color: 'light',          // Bootstrap bg color: 'light', 'primary', 'secondary', 'success', 'danger', 'warning', 'info'
-    textColor: '',           // Bootstrap text color suffix (e.g., 'white', 'dark'), omitted when empty
     title: '',               // optional header title
     message: 'This is a toast message',
     delay: 3000,             // delay in milliseconds
@@ -41,7 +40,7 @@ class Notify {
   show(params = {}) {
     const options = this.#resolveOptions(params);
     const toastContainer = this.#getContainer();
-    const textClass = options.textColor ? `text-${options.textColor}` : '';
+    const colorClass = options.color ? `text-bg-${options.color}` : '';
 
     let closeBtn =
       '<button type="button" class="btn-close ms-auto me-1" data-bs-dismiss="toast" aria-label="Close"></button>';
@@ -49,7 +48,7 @@ class Notify {
 
     if (options.title) {
       titleHtml = `
-        <div class="toast-header d-flex flex-row bg-transparent ${textClass}">
+        <div class="toast-header d-flex flex-row bg-transparent">
           <strong>${options.title}</strong>${closeBtn}
         </div>
       `;
@@ -58,7 +57,7 @@ class Notify {
 
     const html = `
       <div data-bs-theme="${options.theme}"
-        class="toast d-flex flex-column align-items-stretch mt-1 ${textClass} bg-${options.color} border-0"
+        class="toast d-flex flex-column align-items-stretch ${colorClass} border-0"
         role="alert" aria-live="assertive" aria-atomic="true">
         ${titleHtml}
         <div class="toast-body d-flex align-items-center">
