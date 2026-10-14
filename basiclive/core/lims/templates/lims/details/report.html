@@ -63,7 +63,7 @@
 {% block page-scripts %}
     {{ report_data |json_script:"rc-report-data" }}
     <script type="module">
-        import {showReport} from '';
+        import {showReport} from '{% static "reportcraft/reportcraft.min.js" %}';
 
         document.addEventListener('DOMContentLoaded', function() {
             const inlineDataEl = document.getElementById("rc-report-data");
