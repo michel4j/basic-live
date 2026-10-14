@@ -17,7 +17,6 @@ from django.db.models.functions import Coalesce, Concat
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from memoize import memoize
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
 
@@ -26,6 +25,7 @@ from basiclive.utils.data import parse_frames, frame_ranges
 from basiclive.utils.encrypt import encrypt
 from basiclive.utils.functions import ShiftEnd, ShiftStart
 from basiclive.utils.network import get_client_address
+from basiclive.utils.cache import cached_method
 
 
 def get_hours_per_shift() -> int:
@@ -657,11 +657,11 @@ class Session(models.Model):
             for group in self.groups()
         }
 
-    @memoize(60)
+    @cached_method(60)
     def is_active(self):
         return self.stretches.active().exists()
 
-    @memoize(60)
+    @cached_method(60)
     def is_recent(self):
         return self.end() >= (timezone.now() - timedelta(days=7))
 
@@ -683,7 +683,7 @@ class Session(models.Model):
                 shifts.add(st)
             return len(shifts)
 
-    @memoize(60)
+    @cached_method(60)
     def total_time(self):
         """
         Returns total time the session was active, in hours
@@ -694,20 +694,20 @@ class Session(models.Model):
 
     total_time.short_description = _("Duration")
 
-    @memoize(60)
+    @cached_method(60)
     def start(self):
         return timezone.localtime(self.stretches.earliest('start').start)
 
-    @memoize(60)
+    @cached_method(60)
     def end(self):
         return timezone.localtime(self.stretches.latest('start').end or timezone.localtime())
 
-    @memoize(60)
+    @cached_method(60)
     def last_record_time(self):
         last_data = self.datasets.last()
         return last_data.modified if last_data else self.created
 
-    @memoize(60)
+    @cached_method(60)
     def first_record_time(self):
         first_data = self.datasets.first()
         return first_data.modified if first_data else self.created
@@ -1185,7 +1185,7 @@ class Container(TransitStatusMixin):
     def has_children(self):
         return self.children.count() > 0
 
-    @memoize(3600)
+    @cached_method(60)
     def accepts_children(self):
         return self.kind.locations.filter(accepts__isnull=False).exists()
 
@@ -1215,7 +1215,7 @@ class Container(TransitStatusMixin):
                 groups.append(sample.group)
         return groups
 
-    @memoize(timeout=60)
+    @cached_method(60)
     def automounter(self):
         return self.beamlines.filter(active=True).first() or self.parent and self.parent.automounter() or None
 

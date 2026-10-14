@@ -564,20 +564,6 @@ files = [
 django = ">=5.2.17,<7.0.0"
 
 [[package]]
-name = "django-memoize"
-version = "2.3.1"
-description = "An implementation of memoization technique for Django."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "django-memoize-2.3.1.tar.gz", hash = "sha256:62ac4807710ecf22a7397d008d64d0f798e7230482d4b6072d916cac852a47cd"},
-]
-
-[package.dependencies]
-django = "*"
-
-[[package]]
 name = "django-model-utils"
 version = "5.0.0"
 description = "Django model mixins and utilities"
@@ -1102,14 +1088,14 @@ htmlsoup = ["BeautifulSoup4"]
 
 [[package]]
 name = "markdown"
-version = "3.11"
+version = "3.11.1"
 description = "Python implementation of John Gruber's Markdown."
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "markdown-3.11-py3-none-any.whl", hash = "sha256:cd6c89e7eb308c8b332ed673215a52d208a43f8bacc030b1419376129408719e"},
-    {file = "markdown-3.11.tar.gz", hash = "sha256:180224db6aed87ba9ce1f2781ebcd5826253de8ff637112090e24b84502bbf9f"},
+    {file = "markdown-3.11.1-py3-none-any.whl", hash = "sha256:f1fa378ba5d682900c9ecb55ccceacca936016dda7c3b27097e8ae03ff78feb5"},
+    {file = "markdown-3.11.1.tar.gz", hash = "sha256:496f4f80f9ebd3395a04c8ec9595c40bbe8ec19e9c67d21fe071a1643e876606"},
 ]
 
 [package.extras]
@@ -1869,4 +1855,4 @@ ldap = ["django-python3-ldap", "ldap3"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13,<4.0"
-content-hash = "f79c19c35c0d5f177bf8aaa8b2ba55c905efd81cb6f1cae2a0bc7f0e62bf01c5"
+content-hash = "2e624cce6d5b65d826152027af0a856ad1d91a21b65c0229939c536b96815394"

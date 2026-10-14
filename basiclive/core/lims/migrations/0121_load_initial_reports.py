@@ -5,6 +5,7 @@ from django.db import migrations
 
 
 def load_reports_fixture(apps, schema_editor):
+    call_command('migrate', 'contenttypes')   # Make sure contenttypes tables are up-to-date
     call_command('loaddata', 'reports.yaml', app_label='lims')
 
 

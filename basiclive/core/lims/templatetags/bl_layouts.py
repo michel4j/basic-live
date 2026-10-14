@@ -1,10 +1,8 @@
 from django import template
-from memoize import memoize
 
 register = template.Library()
 
 
-@memoize(timeout=3600)
 def get_kind_col(container):
     kind = container.kind
     height = kind.height

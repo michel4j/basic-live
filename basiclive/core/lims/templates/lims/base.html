@@ -109,25 +109,30 @@
 <div id="modal-target"></div>
 <script src="{% static 'misc/js/popper.min.js' %}"></script>
 <script src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'misc/js/slimselect.min.js' %}"></script>
 {% block page-scripts %}{% endblock %}
+<script src="{% static 'misc/js/slimselect.min.js' %}"></script>
 <script>
-    $(document).ready(function () {
-        // enable tooltips
-        $("[title]").not("[data-bs-toggle]").tooltip({
-            container: 'body',
-            viewport: {selector: 'body', padding: 5}
-            //placement: 'auto'
+    document.addEventListener('DOMContentLoaded', () => {
+        // Use SlimSelect for all ".form-select"
+        const selectElements = document.querySelectorAll('select.form-select');
+        selectElements.forEach((el) => {
+            el.classList.remove('form-select');
+            new SlimSelect({
+              select: el,
+              settings: {
+                maxValuesShown: 40,
+              }
+            });
         });
 
         // Enable tooltips
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         tooltipTriggerList.forEach(function (tooltipTriggerEl) {
             new bootstrap.Tooltip(tooltipTriggerEl);
         });
 
         // Enable popovers
-        const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
         popoverTriggerList.forEach(function (popoverTriggerEl) {
             new bootstrap.Popover(popoverTriggerEl);
         });
@@ -139,46 +144,28 @@
             });
         });
 
-        // show attention popovers
-        $(".attention").popover('show');
-
-        // enable multiselects
-        $(document).find('select[multiple].selectmultiple').each(function () {
-            $(this).removeClass('form-select').addClass('form-select-multiple');
-            new SlimSelect({
-                select: this,
-                settings: {
-                    maxValuesShown: 40
-                }
-            })
-        });
-
         // Initialize crisp_modals
         $('#modal-target').initModal({
             setup: function (body) {
-                $('#modal-target').find('select[multiple]').each(function () {
-                    $(this).removeClass('form-select').addClass('form-select-multiple');
+                const selectElements = document.querySelectorAll('#modal-target select.form-select');
+                selectElements.forEach((el) => {
+                    el.classList.remove('form-select');
                     new SlimSelect({
-                        select: this,
-                        settings: {
-                            maxValuesShown: 40
-                        }
-                    })
+                      select: el,
+                      settings: {
+                          maxValuesShown: 40,
+                          contentLocation: el.closest('.modal') || document.body
+                      }
+                    });
                 });
 
                 // tooltips in modal
-                const tooltipTriggerList = [].slice.call(document.querySelectorAll('#modal-target [data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                const tooltipTriggerList = document.querySelectorAll('#modal-target [data-bs-toggle="tooltip"]');
+                tooltipTriggerList.forEach((tooltipTriggerEl) => {
                     new bootstrap.Tooltip(tooltipTriggerEl);
                 });
             }
         });
-
-        // Handle data-modal-url, data-form-link and data-href
-        $(document).on('click', '[data-href]', function () {
-            window.document.location = $(this).data("href");
-        });
-
     });
 </script>
 {% block post-scripts %}{% endblock %}

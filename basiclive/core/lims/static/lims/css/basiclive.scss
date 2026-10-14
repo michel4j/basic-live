@@ -60,6 +60,30 @@ $max_font: 15px;
   --bs-border-radius-xxl: 1em;
   --bs-font-sans-serif: var(--bl-font-sans-serif);
   --bs-body-font-family: var(--bl-font-sans-serif);
+
+  /* Slim Select Variables*/
+  --ss-primary-color: var(--bs-primary);
+  --ss-bg-color: var(--bs-body-bg);
+  --ss-font-color: var(--bs-body-color);
+  --ss-placeholder-color: var(--bs-secondary);
+  --ss-disabled-color: var(--bs-secondary-bg);
+  --ss-border-color: var(--bs-border-color-translucent);
+  --ss-highlight-color: var(--bs-highlight-color);
+  --ss-focus-color: var(--ss-primary-color);
+  --ss-success-color: var(--bs-success);
+  --ss-error-color: var(--bs-danger);
+  --ss-main-height: 2.4rem;
+  --ss-modal-height: 85vh;
+  --ss-modal-width: min(90vw, 400px);
+  --ss-search-height: var(--ss-main-height);
+  --ss-option-height: var(--ss-main-height);
+  --ss-spacing-l: 7px;
+  --ss-spacing-m: 5px;
+  --ss-spacing-s: 3px;
+  --ss-border-radius: var(--bs-border-radius-sm);
+  --ss-content-height: 300px;
+  --ss-spacing: 0.75rem;
+
   @include fluid-type($min_width, $max_width, $min_font, $max_font);
 }
 
@@ -1654,28 +1678,13 @@ body::before {
   transition: width 0.3s ease-in, opacity 0.3s ease-out;
 }
 
+
 .form-select-multiple {
-  --ss-primary-color: var(--bs-primary);
-  --ss-bg-color: var(--bs-body-bg);
-  --ss-font-color: var(--bs-body-color);
-  --ss-font-placeholder-color: var(--bs-secondary);
-  --ss-disabled-color: var(--bs-secondary);
-  --ss-border-color: var(--bs-border-color);
-  --ss-highlight-color: var(--bs-warning-bg-subtle);
-  --ss-success-color: var(--bs-success);
-  --ss-error-color: var(--bs-danger);
-  --ss-focus-color: var(--bs-primary);
-  --ss-main-height: 2.4rem;
-  --ss-content-height: 300px;
-  --ss-spacing-l: 7px;
-  --ss-spacing-m: 5px;
-  --ss-spacing-s: 3px;
-  --ss-spacing: 0.75rem;
-  --ss-animation-timing: 0.2s;
-  --ss-border-radius: var(--bs-border-radius-sm);
-  --ss-disabled-color: var(--bs-secondary-bg);
   font-weight: 400;
 }
+
+
+
 
 .ss-content .ss-list .ss-option.ss-disabled {
   display: none !important;
@@ -1896,4 +1905,25 @@ $category-colors: (
 
 ul.errorlist {
   padding-left: 0;
+}
+
+.ss-main {
+  .ss-values {
+    .ss-value {
+      color: contrast-color(var(--bs-primary));
+      .ss-value-text {
+        color: contrast-color(var(--bs-primary));
+      }
+      .ss-value-delete {
+        color: contrast-color(var(--bs-primary));
+        border-left: 1px solid contrast-color(var(--bs-primary));
+        svg path {
+          stroke: contrast-color(var(--bs-primary));
+        }
+      }
+    }
+  }
+  .ss-arrow path {
+    stroke-width: 9;
+  }
 }

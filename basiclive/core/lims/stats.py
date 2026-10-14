@@ -8,7 +8,6 @@ from django.db.models import Count, Sum, F, Avg, FloatField, Case, When, Integer
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.timesince import timesince
-from memoize import memoize
 
 from basiclive.core.lims.conf import settings
 from basiclive.core.lims.models import Data, Sample, Session, Project, AnalysisReport, Container, Shipment, ProjectType, DataType
@@ -44,7 +43,6 @@ def js_epoch(dt):
     return int("{:0.0f}000".format(dt.timestamp() if dt else datetime.now().timestamp()))
 
 
-@memoize(timeout=HOUR_SECONDS)
 def get_data_periods(period='year'):
     field = 'created__{}'.format(period)
     return sorted(Data.objects.values_list(field, flat=True).order_by(field).distinct())
