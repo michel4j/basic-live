@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 
 from django.test import SimpleTestCase, override_settings
 
-from basiclive.core.publications.conf import settings as pub_settings
-from basiclive.core.publications.utils import get_search_json, tag_function
+from basiclive.core.publications.conf import settings as pub_settings, default_tag_function
+from basiclive.core.publications.utils import get_search_json
 from basiclive.core.publications.views import PDBDetail, PDBEntryList
 
 
@@ -28,7 +28,7 @@ class PublicationsConfTests(SimpleTestCase):
 
         # Default tag function behavior
         entry = {"diffrn_source.pdbx_synchrotron_beamline": "Synchrotron 08B1-1"}
-        self.assertEqual(tag_function(entry), ["08B1-1"])
+        self.assertEqual(default_tag_function(entry), ["08B1-1"])
 
         # Default search JSON uses PDB_FACILITY_ACRONYM
         search_json = get_search_json()
@@ -58,6 +58,7 @@ class PublicationsConfTests(SimpleTestCase):
             self.assertEqual(pub_settings.YEAR_FILTER_START, 2012)
 
             # Custom tag function
+            tag_function = pub_settings.PDB_TAG_FUNCTION
             self.assertEqual(tag_function({}), ["CUSTOM_TAG"])
 
             # Search json dynamically reflects acronym

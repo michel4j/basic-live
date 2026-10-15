@@ -93,13 +93,15 @@ class ProjectLabels(AdminRequiredMixin, detail.DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        sender = None
+        sender = self.request.user
         if settings.USE_SCHEDULE:
-            sender = BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
+            support = BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
+            if support:
+                sender = support.staff
         context.update({
             'project': self.get_object(),
             'shipment': None,
-            'admin_project': models.Project.objects.filter(is_superuser=True).first(),
+            'system': models.SystemSettings.load(),
             'sender': sender
         })
         return context
@@ -191,14 +193,11 @@ class ShipmentLabels(OwnerRequiredMixin, detail.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         shipment = self.get_object()
-        sender = None
-        if settings.USE_SCHEDULE:
-            sender = BeamlineSupport.objects.filter(date=timezone.localtime().date()).first()
         context.update({
             'project': shipment.project,
             'shipment': shipment,
-            # 'admin_project': models.Project.objects.filter(is_superuser=True).first(),
-            'sender': sender
+            'system': models.SystemSettings.load(),
+            'sender': shipment.project.pi
         })
         return context
 
@@ -1293,13 +1292,13 @@ class SSHKeyDelete(LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin,
 
     def test_func(self):
         username = self.kwargs.get('username')
-        key_pk = self.kwargs.get('pk')
         obj = self.get_object()
+
         if self.request.user.is_superuser:
             return True
-        elif obj.user.username != username or obj.pk != key_pk:
-            return False
-        return  False
+        elif obj.user.username == username:
+            return True
+        return False
 
 
 class GuideView(detail.DetailView):
@@ -1581,6 +1580,16 @@ class SwitchProjectView(LoginRequiredMixin, View):
     def post(self, request, pk=None):
         project_id = pk or request.POST.get('project_id')
         return self._switch(request, project_id, next_url=request.POST.get('next'))
+
+
+class EditSettings(AdminRequiredMixin, SuccessMessageMixin, ModalUpdateView):
+    model = models.SystemSettings
+    form_class = forms.SystemSettingsForm
+    success_message = _("System Settings updated.")
+
+    def get_object(self, queryset=None):
+        self.kwargs['pk'] = 1
+        return super().get_object(queryset=queryset)
 
 
 def record_logout(sender, user, request, **kwargs):

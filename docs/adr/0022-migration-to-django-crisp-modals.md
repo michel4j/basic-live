@@ -11,10 +11,10 @@ Following the migration to Bootstrap 5, we decided to adopt the modal form frame
    - Added `"crisp_modals"` to `INSTALLED_APPS` and wired frontend assets via CDN (`jquery.form.min.js`, `crisp_modals/modals.min.js`).
 
 2. **Template Modernization and Inheritance**:
-   - Re-based `lims/modal/content.html` on `crisp_modals/modal.html`.
+   - Switched `lims/modal/content.html` to `crisp_modals/modal.html`.
+   - Switched `lims/modal/delete.html` to `crisp_modals/delete.html`.
    - Re-based `lims/modal/form.html` on `crisp_modals/form.html`.
-   - Re-based `lims/modal/delete.html` on `crisp_modals/delete.html`.
-   - Configured `$('#modal-target').initModal(...)` in `lims/base.html` while retaining backward-compatible event listeners for `data-modal-url` and `data-modal-url` triggers alongside native `data-modal-url`.
+   - Configured `$('#modal-target').initModal(...)` in `lims/base.html`.
 
 3. **Frontend Helper Consolidation**:
    - Retired and purged `basiclive-modals.js` and `basiclive-modals.min.js`.

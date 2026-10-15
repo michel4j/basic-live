@@ -93,7 +93,7 @@ EXTRA_SETTINGS = {
     'REPORTCRAFT_MIXINS': REPORTCRAFT_MIXINS,
     'SECURE_CSP': SECURE_CSP,
     'AUTH_USER_MODEL': 'lims.User',
-    "BASICLIVE_ICON_BACKEND": "basiclive.core.lims.icons.TablerIconBackend"
+    "BASICLIVE_ICON_BACKEND": "basiclive.core.lims.icons.ThemifyBackend",
 }
 
 

@@ -213,9 +213,7 @@ class TemplateIntegrityTests(SimpleTestCase):
 
         cases = [
             ("lims/base.html", {"user": None}),
-            ("lims/modal/content.html", {"title": "Test Title"}),
             ("lims/modal/form.html", {"form": DummyForm(), "title": "Edit Item"}),
-            ("lims/modal/delete.html", {"object": project, "title": "Delete Item"}),
             ("lims/modal/wizard.html", {"wizard": DummyWizard(), "title": "New Item"}),
         ]
         for tname, ctx in cases:
@@ -378,11 +376,6 @@ class TemplateIntegrityTests(SimpleTestCase):
         base_tmpl = get_template("lims/base.html")
         self.assertIn("data-bs-toggle", base_tmpl.template.source)
 
-        modal_content = get_template("lims/modal/content.html")
-        rendered_modal = modal_content.render({})
-        self.assertIn('data-bs-dismiss="modal"', rendered_modal)
-        self.assertIn('btn-close', rendered_modal)
-
     def test_jquery_migrate_not_referenced(self):
         """Verify that jquery-migrate is purged from all templates and assets.json."""
         # 1. Sweep all templates across all registered apps
@@ -438,24 +431,9 @@ class TemplateIntegrityTests(SimpleTestCase):
         self.assertIn("crisp_modals/modals.min.js", rendered_base)
         self.assertIn("jquery.form.min.js", rendered_base)
         self.assertIn("initModal", rendered_base)
-        self.assertIn("data-modal-url", rendered_base)
-        self.assertIn("data-modal-url", rendered_base)
-
-        # 2. Re-based templates extend crisp_modals
-        content_tmpl = get_template("lims/modal/content.html")
-        self.assertIn('extends "crisp_modals/modal.html"', content_tmpl.template.source)
 
         form_tmpl = get_template("lims/modal/form.html")
         self.assertIn('extends "crisp_modals/form.html"', form_tmpl.template.source)
-
-        delete_tmpl = get_template("lims/modal/delete.html")
-        self.assertIn('extends "crisp_modals/delete.html"', delete_tmpl.template.source)
-
-        # 3. Rendered modal templates contain Bootstrap 5 modal markup
-        rendered_content = content_tmpl.render({})
-        self.assertIn('data-bs-dismiss="modal"', rendered_content)
-        self.assertIn('btn-close', rendered_content)
-        self.assertIn('id="modal"', rendered_content)
 
     def test_spreadsheet_utility_functions_present(self):
         """Verify that slugify and strip utility functions exist in basiclive-spreadsheet.js and .min.js."""

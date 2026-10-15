@@ -166,6 +166,8 @@ urlpatterns = [
     path('loader/<slug:beamline>/pending/', views.CheckPending.as_view(), name='loader-check-pending'),
     path('loader/<slug:beamline>/load/<slug:position>', views.LoadPuck.as_view(), name='loader-load-puck'),
     path('loader/<slug:beamline>/unload/<slug:position>', views.UnloadPuck.as_view(), name='loader-unload-puck'),
+
+    path('settings/edit/', views.EditSettings.as_view(), name='settings-edit'),
 ]
 
 handler403 = 'lims.views.custom_403_view'

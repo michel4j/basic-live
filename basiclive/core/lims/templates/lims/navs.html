@@ -50,8 +50,10 @@
                     {% show_icon icon="lock" %}<span class="d-none d-md-inline-block">&nbsp;Admin</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="search-menu">
-                    <a class="dropdown-item" href="{% url 'report-editor-root' %}">Create Reports</a>
+                    <a class="dropdown-item" href="{% url 'report-editor-root' %}">Report Builder</a>
                     <a class="dropdown-item" href="{% url 'user-list' %}">Manage Users</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#0" data-modal-url="{% url 'settings-edit' %}">Site Settings</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item text-danger-emphasis" href="{% url 'admin:index' %}">Admin Backend</a>
                 </div>

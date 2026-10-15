@@ -12,7 +12,7 @@ from crisp_modals.forms import (
     FiveSixthWidth,
     SixthWidth,
     ThirdWidth,
-    TwoThirdWidth,
+    TwoThirdWidth, ThreeQuarterWidth,
 )
 from crispy_forms.layout import HTML, Div, Field, Layout
 from django import forms
@@ -25,6 +25,7 @@ from .icons import render_icon
 from .models import Guide, ProjectType, SSHKey, RequestType, Request, REQUEST_SPEC_SCHEMA
 from .models import (
     User,
+    SystemSettings,
     Project,
     ProjectMembership,
     Shipment,
@@ -1725,3 +1726,89 @@ class UserEditForm(ModalModelForm):
             Button('Revert', type='reset', value='Reset', style="btn-secondary"),
             Button('Save', type='submit', name="submit", value='save', style='btn-primary'),
         )
+
+
+class SystemSettingsForm(ModalModelForm):
+    country = forms.ModelChoiceField(
+        queryset=Country.objects.all(),
+        required=False,
+        empty_label=_("---------")
+    )
+    region = forms.ModelChoiceField(
+        queryset=Region.objects.all(),
+        required=False,
+        empty_label=_("---------")
+    )
+
+    class Meta:
+        model = SystemSettings
+        fields = (
+            'name', 'acronym', 'maintenance_mode', 'contact_person',
+            'support_email', 'department', 'address', 'city',
+            'region', 'country', 'postal_code', 'organisation', 'contact_phone'
+        )
+        widgets = {
+            'shipping_notes': forms.Textarea(attrs={'rows': "2"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        country_val = self.data.get('country') if self.data else (self.instance.country_id if self.instance and self.instance.pk else None)
+        if hasattr(country_val, 'pk'):
+            country_val = country_val.pk
+        if country_val:
+            try:
+                self.fields['region'].queryset = Region.objects.filter(country_id=int(country_val))
+            except (ValueError, TypeError):
+                self.fields['region'].queryset = Region.objects.none()
+        elif self.data and self.data.get('region'):
+            self.fields['region'].queryset = Region.objects.all()
+        else:
+            self.fields['region'].queryset = Region.objects.none()
+
+        self.body.title = _("Edit System Settings")
+        self.body.layout = Layout(
+            Row(
+                ThreeQuarterWidth('name'), QuarterWidth('acronym'),
+                style="g-2"
+            ),
+            Row(
+                ThirdWidth('contact_person'),
+                ThirdWidth('support_email'),
+                ThirdWidth('contact_phone'),
+                style="g-2"
+            ),
+            Row(
+                HalfWidth('organisation'),
+                HalfWidth('department'),
+                style="g-2"
+            ),
+            Row(
+                TwoThirdWidth('address'),
+                ThirdWidth('city'),
+                style="g-2"
+            ),
+            Row(
+                ThirdWidth(Field('country', css_class='select')),
+                ThirdWidth(Field('region', css_class='select')),
+                ThirdWidth('postal_code'),
+                style="g-2"
+            ),
+        )
+        self.footer.set_buttons(
+            Button('Revert', type='reset', value='Reset', style="btn-secondary"),
+            Button('Save', type='submit', name="submit", value='submit', style='btn-primary'),
+            HTML("""{% load static %}<script src="{% static 'lims/js/basiclive-countries.js' %}"></script>""")
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        country = cleaned_data.get('country')
+        region = cleaned_data.get('region')
+        if region:
+            if not country:
+                cleaned_data['country'] = region.country
+            elif region.country_id != country.id:
+                self.add_error('region', _("The selected region does not belong to the selected country."))
+        return cleaned_data

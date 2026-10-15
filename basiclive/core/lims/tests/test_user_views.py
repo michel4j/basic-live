@@ -122,7 +122,7 @@ class UserViewsTestCase(TestCase):
         self.assertEqual(key.user, self.user)
 
         # Delete key (ModalDeleteView confirmed post returns 200 JSON or redirect)
-        delete_url = reverse('sshkey-delete', kwargs={'pk': key.pk})
+        delete_url = reverse('sshkey-delete', kwargs={'pk': key.pk, 'username': 'alice'})
         resp = self.client.post(delete_url)
         self.assertIn(resp.status_code, [200, 302])
         self.assertFalse(SSHKey.objects.filter(name='My Laptop').exists())

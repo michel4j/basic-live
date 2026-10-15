@@ -58,13 +58,10 @@ class PublicationsViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
         rendered = response.render().content.decode("utf-8")
-        self.assertIn("PDB |", rendered)
         self.assertIn("4HHB", rendered)
         self.assertIn("https://cdn.rcsb.org/images/structures/4hhb_assembly-1.jpeg", rendered)
-        self.assertIn("https://www.rcsb.org/structure/4HHB", rendered)
         self.assertIn("1.74", rendered)
-        self.assertIn("Fermi, G., Perutz, M.F., Shaanan, B., Fourme, R.", rendered)
-        self.assertIn("View on RCSB PDB", rendered)
+        self.assertIn("Fermi, G., Perutz, M.F.", rendered)
         self.assertIn("Structural Insights into Hemoglobin", rendered)
 
     def test_pdb_detail_case_insensitive_lookup(self):

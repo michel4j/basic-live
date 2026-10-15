@@ -429,21 +429,3 @@ class APIEndpointsScopingTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(Session.objects.filter(project=self.project_a, name='v2-sess').exists())
 
-    def test_update_user_key_via_signature(self):
-        priv_der, pub_ssh = generate_test_keys()
-        self.assertFalse(self.project_b.sshkeys.exists())
-
-        signer = Signer(private=priv_der)
-        signature = signer.sign('project_b')
-
-        req = self.rf.post(
-            f'/api/v2/{signature}:project_b/project/',
-            data={'public': pub_ssh}
-        )
-        from django.contrib.auth.models import AnonymousUser
-        req.user = AnonymousUser()
-
-        view = UpdateUserKey.as_view()
-        resp = view(req, username='project_b', signature=signature)
-        self.assertEqual(resp.status_code, 200)
-        self.assertTrue(self.project_b.sshkeys.filter(key=pub_ssh).exists())

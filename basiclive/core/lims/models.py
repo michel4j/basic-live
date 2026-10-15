@@ -1994,6 +1994,8 @@ class SystemSettings(Singleton):
     maintenance_mode = models.BooleanField(default=False)
     contact_person = models.CharField(max_length=200, blank=True, null=True)
     support_email = models.EmailField(default="support@example.com")
+    contact_phone = models.CharField(max_length=60, blank=True, null=True)
+    organisation = models.CharField(max_length=600, blank=True, null=True)
     department = models.CharField(max_length=600, blank=True, null=True)
     address = models.CharField(max_length=600, blank=True, null=True)
     city = models.CharField(max_length=180, blank=True, null=True)
@@ -2012,8 +2014,6 @@ class SystemSettings(Singleton):
         on_delete=models.SET_NULL,
         verbose_name=_("Country")
     )
-    contact_phone = models.CharField(max_length=60, blank=True, null=True)
-    organisation = models.CharField(max_length=600, blank=True, null=True)
 
     class Meta:
         verbose_name = _("System Settings")

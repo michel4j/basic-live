@@ -7,16 +7,16 @@
 <div class="container">
     <div class="row">
         <h2 class="heading">
-            <span class="text-thin">{{ APP_LABEL }}&nbsp;|&nbsp;</span>
+            <span class="fw-lighter">{{ APP_NAME }}&nbsp;|&nbsp;</span>
             <span class="text-condensed">RETURN SHIPPING LABEL</span>
         </h2>
         <p>Print this document and cut out the label. Remove the labels currently on the dewars and replace them with this return label.</p>
         <div class="panel panel-main" style="width: 20cm;">
             <div class="label-sidebar">
                 <div>
-                    <img src="{% static "img/fragile_sign.svg" %}"/>
+                    <img alt="Fragile" src="{% static "lims/img/fragile_sign.svg" %}"/>
                 </div>
-                <div class="p-2 emphasize text-center"><strong>Non-Hazardous Frozen Samples In Dry-Shipper</strong></div>
+                <div class="my-3 text-center text-condensed fs-5">Non-Hazardous Frozen Samples In Dry-Shipper</div>
             </div>
             <table class="table table-sm">
                 <tr>
@@ -30,23 +30,23 @@
                 {% include "lims/pdf/address-base.html" %}
             </table>
             <div class="panel panel-default">
-                <table class="table table-sm">
-                    <tr class="border-bottom">
-                        <td>ID:</td>
-                        <td>{{ project.contact_name }} {% if shipment %}({{ shipment.name }}){% endif %}</td>
-                    </tr>
+                <table class="table table-sm mb-3">
                     <tr>
                         <td>From:</td>
-                        <td>{{ admin_project.contact_person|upper|default:"" }}{% if admin_project.department %} / {{ admin_project.department|upper }}{% endif %}</td>
+                        <td>{{ system.contact_person|upper|default:"" }}{% if system.department %} / {{ system.department|upper }}{% endif %}</td>
                     </tr>
                     <tr>
                         <td></td>
-                        <td>{{ admin_project.organisation|upper|default:"" }}</td>
+                        <td>{{ system.organisation|upper|default:"" }}</td>
                     </tr>
-                    {% include "lims/pdf/address-base.html" with project=admin_project %}
+                    {% include "lims/pdf/address-base.html" with project=system %}
+                    <tr class="border-top">
+                        <td>ID:</td>
+                        <td>{{ project.name.upper }} &nbsp;/&nbsp; {{ shipment.name }}</td>
+                    </tr>
                 </table>
             </div>
-        <span class="emphasize">Not restricted, as per Special Provision A152</span>
+            <div class="my-3 text-center text-condensed fs-5">Not restricted, as per Special Provision A152</div>
         </div>
     </div>
 </div>

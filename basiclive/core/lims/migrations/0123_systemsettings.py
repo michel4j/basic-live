@@ -4,38 +4,6 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-def create_system_settings(apps, _):
-    SystemSettings = apps.get_model('lims', 'SystemSettings')
-    User = apps.get_model('lims', 'User')
-
-    # Find first super
-    super_user = User.objects.filter(is_superuser=True).order_by('pk').first()
-    defaults = {}
-    if super_user:
-        defaults.update({
-            'support_email': super_user.email,
-            'contact_person': f"{super_user.first_name} {super_user.last_name}",
-            'contact_phone': super_user.phone,
-        })
-
-        # Update default settings
-        super_project = super_user.projects.first()
-        if super_project:
-            defaults.update({
-                'support_email': super_project.contact_email,
-                'department': super_project.department,
-                'address': super_project.address,
-                'city': super_project.city,
-                'postal_code': super_project.postal_code,
-                'contact_phone': super_project.contact_phone,
-                'region': super_project.region,
-                'country': super_project.country,
-            })
-
-    # create singleton
-    SystemSettings.objects.create(**defaults)
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -67,5 +35,4 @@ class Migration(migrations.Migration):
                 'verbose_name': 'System Settings',
             },
         ),
-        migrations.RunPython(create_system_settings),
     ]

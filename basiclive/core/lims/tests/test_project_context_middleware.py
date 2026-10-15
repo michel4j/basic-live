@@ -6,6 +6,7 @@ from django.core.management import call_command
 from django.http import HttpResponse, Http404
 from django.template import Context, Template
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 from django.utils.functional import SimpleLazyObject
 
 
@@ -166,11 +167,11 @@ class SwitchProjectViewTestCase(TestCase):
 
     def test_switch_project_get_success(self):
         view = SwitchProjectView.as_view()
-        request = self._get_request('/projects/switch/1/?next=/samples/', user=self.user)
+        request = self._get_request(reverse('switch-project', kwargs={'pk': 1}), user=self.user)
         response = view(request, pk=self.proj_2.pk)
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/samples/')
+        self.assertEqual(response.url, '/')
         self.assertEqual(request.session['active_project_id'], self.proj_2.pk)
 
         self.user.refresh_from_db()
@@ -178,11 +179,13 @@ class SwitchProjectViewTestCase(TestCase):
 
     def test_switch_project_post_success(self):
         view = SwitchProjectView.as_view()
-        request = self._get_request('/projects/switch/', user=self.user, data={'project_id': self.proj_1.pk, 'next': '/shipments/'}, method='POST')
+        request = self._get_request(
+            reverse('switch-project-form'), user=self.user, data={'project_id': self.proj_1.pk}, method='POST'
+        )
         response = view(request)
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/shipments/')
+        self.assertEqual(response.url, '/')
         self.assertEqual(request.session['active_project_id'], self.proj_1.pk)
 
         self.user.refresh_from_db()
@@ -190,7 +193,7 @@ class SwitchProjectViewTestCase(TestCase):
 
     def test_switch_project_unauthorized_forbidden(self):
         view = SwitchProjectView.as_view()
-        request = self._get_request(f'/projects/switch/{self.proj_other.pk}/', user=self.user)
+        request = self._get_request(reverse('switch-project', kwargs={'pk': self.proj_other.pk}), user=self.user)
         with self.assertRaises(PermissionDenied):
             view(request, pk=self.proj_other.pk)
 

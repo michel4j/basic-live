@@ -1,9 +1,0 @@
-{% extends "crisp_modals/delete.html" %}
-
-{% block modal_body %}
-    {{ block.super }}
-    {% if object.delete_warning %}
-        <p class="text-warning">{{ object.delete_warning }}</p>
-    {% endif %}
-{% endblock %}
-
