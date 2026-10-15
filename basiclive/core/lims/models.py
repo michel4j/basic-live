@@ -24,6 +24,7 @@ from basiclive.core.lims.conf import settings
 from basiclive.utils.data import parse_frames, frame_ranges
 from basiclive.utils.encrypt import encrypt
 from basiclive.utils.functions import ShiftEnd, ShiftStart
+from basiclive.utils.singleton import SingletonManager, Singleton
 from basiclive.utils.network import get_client_address
 from basiclive.utils.cache import cached_method
 
@@ -1972,7 +1973,7 @@ class Guide(TimeStampedModel):
         return self.title
 
 
-class Config(TimeStampedModel):
+class LoaderConfig(TimeStampedModel):
     beamline = models.ForeignKey(Beamline, on_delete=models.CASCADE)
     automounter = models.ForeignKey(Automounter, on_delete=models.CASCADE)
     selected = models.ForeignKey(Container, related_name='selected', on_delete=models.SET_NULL, null=True)
@@ -1985,3 +1986,59 @@ class Config(TimeStampedModel):
 
     def __str__(self):
         return f"{self.automounter.container.kind}"
+
+
+class SystemSettings(Singleton):
+    name = models.CharField(max_length=200, default="ACME Facility")
+    acronym = models.CharField(max_length=20, default="ACME")
+    maintenance_mode = models.BooleanField(default=False)
+    contact_person = models.CharField(max_length=200, blank=True, null=True)
+    support_email = models.EmailField(default="support@example.com")
+    department = models.CharField(max_length=600, blank=True, null=True)
+    address = models.CharField(max_length=600, blank=True, null=True)
+    city = models.CharField(max_length=180, blank=True, null=True)
+    region = models.ForeignKey(
+        Region,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("State / Province / Region")
+    )
+    postal_code = models.CharField(max_length=30, blank=True, null=True)
+    country = models.ForeignKey(
+        Country,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("Country")
+    )
+    contact_phone = models.CharField(max_length=60, blank=True, null=True)
+    organisation = models.CharField(max_length=600, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _("System Settings")
+
+    def __str__(self):
+        return _("System Settings")
+
+    @property
+    def region_code(self):
+        if not self.region:
+            return ""
+        if '-' in self.region.code:
+            return self.region.code.split('-', 1)[1]
+        return self.region.code
+
+    def clean(self):
+        """
+        Ensure the region and country are consistent
+        """
+        super().clean()
+        if self.region:
+            if not self.country:
+                self.country = self.region.country
+            elif self.region.country_id != self.country_id:
+                raise ValidationError({
+                    'region': _("The selected region does not belong to the selected country.")
+                })
+

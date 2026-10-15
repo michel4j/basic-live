@@ -62,7 +62,7 @@ class ProjectEdit(UserPassesTestMixin, SuccessMessageMixin, ModalUpdateView):
     model = models.Project
     success_message = "Profile has been updated."
 
-    def get_object(self):
+    def get_object(self, queryset=None):
         username = self.kwargs.get('username') or self.kwargs.get('name')
         return models.Project.objects.filter(
             models.Q(name=username)
@@ -197,7 +197,7 @@ class ShipmentLabels(OwnerRequiredMixin, detail.DetailView):
         context.update({
             'project': shipment.project,
             'shipment': shipment,
-            'admin_project': models.Project.objects.filter(is_superuser=True).first(),
+            # 'admin_project': models.Project.objects.filter(is_superuser=True).first(),
             'sender': sender
         })
         return context
@@ -1626,14 +1626,14 @@ class PuckLoader(AdminRequiredMixin, detail.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         automounter = self.object.active_automounter()
-        config, created = models.Config.objects.get_or_create(
+        config, created = models.LoaderConfig.objects.get_or_create(
             beamline=self.object, automounter=automounter
         )
         context['config'] = config
         context['projects'] = models.Project.objects.filter(
             shipments__status=models.Shipment.STATES.ON_SITE,
         )
-        models.Config.objects.filter(pk=config.pk).update(pending=False)
+        models.LoaderConfig.objects.filter(pk=config.pk).update(pending=False)
         if self.kwargs.get('project'):
             project = models.Project.objects.filter(name=self.kwargs['project']).first()
             if project:
@@ -1657,7 +1657,7 @@ class SelectPuck(AuthenticationRequiredMixin, View):
             messages.error(request, 'Puck not found')
             return JsonResponse({"url": "", "error": "Puck not found"})
 
-        config, created = models.Config.objects.get_or_create(
+        config, created = models.LoaderConfig.objects.get_or_create(
             beamline=beamline, automounter=beamline.active_automounter()
         )
         elapsed = timezone.now() - config.modified
@@ -1685,7 +1685,7 @@ class LoadPuck(AuthenticationRequiredMixin, View):
         acronym = kwargs.get('beamline')
         position = kwargs.get('position')
 
-        config = models.Config.objects.filter(beamline__acronym=acronym).first()
+        config = models.LoaderConfig.objects.filter(beamline__acronym=acronym).first()
         if not config:
             return http.HttpResponseBadRequest("Automounter not found")
 
@@ -1722,7 +1722,7 @@ class UnloadPuck(AuthenticationRequiredMixin, View):
         acronym = kwargs.get('beamline')
         position = kwargs.get('position')
 
-        config = models.Config.objects.filter(beamline__acronym=acronym).first()
+        config = models.LoaderConfig.objects.filter(beamline__acronym=acronym).first()
         if not config:
             return http.HttpResponseBadRequest("Automounter not found")
 
@@ -1747,7 +1747,7 @@ class CheckPending(AuthenticationRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         acronym = kwargs.get('beamline')
-        config = models.Config.objects.filter(beamline__acronym=acronym).first()
+        config = models.LoaderConfig.objects.filter(beamline__acronym=acronym).first()
         if not config:
             return JsonResponse({'pending': False})
 
