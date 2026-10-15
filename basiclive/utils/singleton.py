@@ -25,8 +25,10 @@ class SingletonManager(models.Manager):
         """
         # Singletons cannot have unique lookups other than id=1.
         # We redirect the initialization default dict to match the payload.
-        lookup_defaults = defaults or {}
+        lookup_defaults = dict(defaults or {})
         if kwargs:
+            kwargs.pop('id', None)
+            kwargs.pop('pk', None)
             lookup_defaults.update(kwargs)
 
         return super().get_or_create(id=1, defaults=lookup_defaults)
@@ -35,15 +37,14 @@ class SingletonManager(models.Manager):
         """
         Forces any update/create lookup mapping to target ID=1.
         """
-        lookup_defaults = defaults or {}
-        create_defaults = create_defaults or {}
+        lookup_defaults = dict(defaults or {})
         if kwargs:
             # Strip out lookups from kwargs to safely merge into defaults
             kwargs.pop('id', None)
             kwargs.pop('pk', None)
             lookup_defaults.update(kwargs)
 
-        return super().update_or_create(id=1, defaults=lookup_defaults, create_defaults=create_defaults, **kwargs)
+        return super().update_or_create(id=1, defaults=lookup_defaults, create_defaults=create_defaults)
 
     def bulk_create(self, objs, *args, **kwargs):
         raise PermissionDenied("Bulk creation is prohibited on Singleton models.")
