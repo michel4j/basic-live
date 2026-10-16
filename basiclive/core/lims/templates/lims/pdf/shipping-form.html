@@ -1,4 +1,4 @@
-{% load static %}
+{% load static bl_tags %}
 
 <div id="shipping-form" class="lh-1" style="font-size: 130% !important;">
     <div class="container">
@@ -13,7 +13,7 @@
         <tr><td style="width: 150px;">Shipper's Name:</td><td colspan="3" class="input text-start" style="width: 400px;">{{ system.contact_person }}</td>
             <td colspan="2" style="width: 75px;"></td>
             <td>DATE</td><td colspan="2" class="input">{% now "F d, Y" %}</td></tr>
-        <tr><td>Department:</td><td colspan="3" class="input text-start">{{system.department|cut:"None"|default:""}}</td>
+        <tr><td>Department:</td><td colspan="3" class="input text-start">{{system.department|default:""}}</td>
             <td colspan="5"></td></tr>
         <tr><td>Phone:</td><td style="width: 250px;" class="input text-start">{{ sender.phone }}</td>
             <td class="border-top border-white" colspan="7"><small>(If this is a project GL Account complete Code Code, WP, & Job ID information)</small></td></tr>
@@ -26,13 +26,13 @@
     <table class="table table-sm text-end border-black-top border-black-right mb-0 pb-0" style="width: 100%; margin-right: 2rem; border-left: 1px solid black; border-right: 1px solid black; line-height: 105%;">
         <tr class="bg-light"><td colspan="4" style="width: 100%;" class="text-start fw-bold">Shipping Information: (Consignee)&emsp;<em>Shipping Priority: &ensp;Low &#9711; &ensp;Medium &#9711; &ensp;High &#11044;</em></td></tr>
         <tr><td style="width: 200px;">Company Name:</td>
-            <td colspan="3" class="input text-start" style="border-right: 1px solid black !important;">{{ project.department|cut:"None"|default:"" }}, {{ project.organisation|cut:"None"|default:"" }}</td></tr>
+            <td colspan="3" class="input text-start" style="border-right: 1px solid black !important;">{{ project.department|default:"" }} {{ project.organisation|cut:"None"|default:"" }}</td></tr>
         <tr><td style="width: 200px;">Street Address:</td>
             <td colspan="3" class="input text-start" style="border-right: 1px solid black !important;">{{ project.address|cut:"None"|default:"" }}</td></tr>
         <tr><td>City:</td>
-            <td style="width: 300px;" class="input text-start">{{ project.city|cut:"None"|default:"" }}</td>
+            <td style="width: 230px;" class="input text-start">{{ project.city|cut:"None"|default:"" }}</td>
             <td>Province / State:</td>
-            <td style="width: 250px; border-right: 1px solid black !important;" class="input text-start">{{ project.region_code|default:project.region.name|cut:"None"|default:"" }}</td></tr>
+            <td style="width: 180px; border-right: 1px solid black !important;" class="input text-start">{{ project.region_code|default:project.region.name|cut:"None"|default:"" }}</td></tr>
         <tr><td>Country:</td>
             <td class="input text-start">{{ project.country.name|cut:"None"|default:"" }}</td>
             <td>Postal Code:</td>
@@ -51,24 +51,24 @@
             <td class="input" style="border-right: 1px solid black !important;"></td></tr>
         <tr><td colspan="4"></td></tr>
         <tr><td>Consignee's Courier:</td>
-            <td class="input fw-bold text-center">{{ project.carrier.name|cut:"None"|default:"" }}</td>
+            <td class="input fw-bold text-center">{{ project.carrier.name|human_code }}</td>
             <td>Courier Account #:</td>
             <td class="input text-center fw-bold" style="border-right: 1px solid black !important;">{{ project.account_number|cut:"None"|default:"" }}</td></tr>
         <tr><td colspan="4"></td></tr>
 
         <tr class="bg-light"><td class="py-1">On Loan <span class="text-large">&#x25A1;</span></td>
-            <td class="py-1">Chargeable Repair <span class="text-large">&#x25A1;</span></td>
-            <td class="py-1">Return to Owner <span class="text-large">&#9632;</span></td>
+            <td class="py-1 text-nowrap">Chargeable Repair <span class="text-large">&#x25A1;</span></td>
+            <td class="py-1 text-nowrap">Return to Owner <span class="text-large">&#9632;</span></td>
             <td class="py-1 border-left border-top text-start" style="border-right: 1px solid black !important;">Other:</td>
         </tr>
         <tr class="bg-light"><td class="py-1">Return of Loan <span class="text-large">&#x25A1;</span></td>
-            <td class="py-1">Warranty Repair <span class="text-large">&#x25A1;</span></td>
-            <td class="py-1">US Goods Returned <span class="text-large">&#x25A1;</span></td>
+            <td class="py-1 text-nowrap">Warranty Repair <span class="text-large">&#x25A1;</span></td>
+            <td class="py-1 text-nowrap">US Goods Returned <span class="text-large">&#x25A1;</span></td>
             <td class="py-1 border-left"></td>
         </tr>
-        <tr class="bg-light"><td class="py-1">Return to Vendor <span class="text-large">&#x25A1;</span></td>
-            <td class="py-1">RMA# <input style="border-radius: 0; border-style: solid;" class="w-25 border-secondary border"/></td>
-            <td class="py-1">Other (explain) <span class="text-large">&#x25A1;</span></td>
+        <tr class="bg-light"><td class="py-1 text-nowrap">Return to Vendor <span class="text-large">&#x25A1;</span></td>
+            <td class="py-1 text-nowrap">RMA# <input style="border-radius: 0; border-style: solid;" class="w-25 border-secondary border"/></td>
+            <td class="py-1 text-nowrap">Other (explain) <span class="text-large">&#x25A1;</span></td>
             <td class="py-1 border-left"></td>
         </tr>
     </table>
@@ -93,7 +93,7 @@
         {% endfor %}
         {% if shipment %}{% widthratio shipment.components.count|add:"1" 1 -1 as filled_lines %}
         {% else %}{% widthratio 0 1 -1 as filled_lines %}{% endif %}
-        {% with filled_lines|add:"9" as empty_lines %}
+        {% with filled_lines|add:"6" as empty_lines %}
         {% with ''|center:empty_lines as range %}
             {% for _ in range %}
                 <tr><td class="input" style="border-left: 1px solid black !important;">&nbsp;</td>

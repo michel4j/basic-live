@@ -67,7 +67,19 @@ table td {
     width: 100%;
   }
 }
+.label-main {
+  table td {
+    line-height: 1.05;
+    font-size: 13pt;
+  }
 
+  font-weight: 600;
+  tr.return-address td {
+    font-size: 0.9rem;
+    font-weight: 300;
+    background: rgba(0, 0, 0, 0.1) !important;
+  }
+}
 /* Shipping Form */
 
 #shipping-form {

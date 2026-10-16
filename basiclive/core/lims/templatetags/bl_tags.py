@@ -82,47 +82,30 @@ def human_number(value):
 
 
 @register.filter("human_code")
-def human_code(text):
+def human_code(text, length=None):
     """Comma formatted numbers."""
     if not text:
-        text = "9" * 10
+        return "-"
+    elif not isinstance(text, str):
+        text = str(text)
+
     text = text.replace(' ', '')
+    if length and len(text) < length:
+        text = text.zfill(length)
 
     n = len(text)
     # Handle base cases where string is too short to follow the rule
-    if n < 3:
-        return [text] if text else []
-    if n == 5:
-        return [text]  # 5 cannot be split into groups of 3 and 4 cleanly
+    if n <= 2 or n == 5:
+        return text
 
-    remainder = n % 3
+    rem = n % 3
+    num_4 = 0 if rem == 0 else (1 if rem == 1 else 2)
+    num_3 = (n - (4 * num_4)) // 3
 
-    if remainder == 0:
-        num_groups_of_4 = 0
-    elif remainder == 1:
-        num_groups_of_4 = 1
-    else:  # remainder == 2
-        num_groups_of_4 = 2
-
-    # Total characters used by the 4-character groups
-    chars_for_4s = num_groups_of_4 * 4
-    # The rest are filled by 3-character groups
-    num_groups_of_3 = (n - chars_for_4s) // 3
-
-    groups = []
-    idx = 0
-
-    # Extract the 3-character groups first
-    for _ in range(num_groups_of_3):
-        groups.append(text[idx:idx + 3])
-        idx += 3
-
-    # Extract the 4-character groups next
-    for _ in range(num_groups_of_4):
-        groups.append(text[idx:idx + 4])
-        idx += 4
-
-    return '-'.join(groups)
+    # Build the list of split points based on chunk sizes (3s first, then 4s)
+    indices = [0] + list(numpy.cumsum([3] * num_3 + [4] * num_4))
+    parts = [text[i:j] for i, j in zip(indices[:-1], indices[1:] + [None])]
+    return '-'.join(parts)
 
 
 class NumpyEncoder(json.JSONEncoder):

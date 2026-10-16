@@ -64,7 +64,7 @@ class Singleton(models.Model):
     @classmethod
     def load(cls):
         # Always fetch or create the row with id=1
-        obj, created = cls.objects.get_or_create(id=1)
+        obj, created = cls.objects.get_or_create()
         return obj
 
     def save(self, *args, **kwargs):

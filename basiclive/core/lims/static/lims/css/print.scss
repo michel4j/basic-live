@@ -2,7 +2,7 @@
 @page {
   /* Defines the physical paper size and orientation */
   size: letter portrait; /* Options: A4, letter, legal, or custom (e.g., 8.5in 11in) */
-  margin: 1in;         /* Sets the print margins */
+  margin: 0in;         /* Sets the print margins */
 }
 
 @media print {

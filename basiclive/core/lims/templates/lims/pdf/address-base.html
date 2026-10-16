@@ -1,7 +1,20 @@
-<tr><td></td><td>{{ project.address|upper|default:"" }}</td></tr>
-<tr><td></td><td>{{ project.city|upper|default:"" }} {{ project.region_code|default:project.region.name|upper|default:"" }}&nbsp;&nbsp;&nbsp;{{ project.postal_code|upper|default:"" }}</td></tr>
-<tr><td></td><td>{{ project.country.name|upper|default:"" }}</td></tr>
-<tr><td class="pt-3"></td><td class="pt-3">Phone: {{ project.contact_phone|default:""}}</td></tr>
-{% if project.contact_fax %}
-    <tr><td></td><td>Fax: {{ project.contact_fax|default:""}}</td></tr>
+<tr class="{{ style_class }}">
+    <td></td>
+    <td>{{ object.address|upper|default:"" }}</td>
+</tr>
+<tr class="{{ style_class }}">
+    <td></td>
+    <td>
+    {{ object.city|upper|default:"" }}&nbsp;
+    {{ object.region_code|default:object.region.name|upper|default:"" }}&nbsp;
+    {{ object.postal_code|upper|default:"" }}
+    </td>
+</tr>
+<tr class="{{ style_class }}">
+    <td></td>
+    <td>{{ object.country.name|upper|default:"" }}</td>
+</tr>
+{% if object.contact_phone %}
+    <tr class="{{ style_class }}"><td></td><td></td></tr>
+    <tr class="{{ style_class }}"><td></td><td>Phone: {{ object.contact_phone|default:""}}</td></tr>
 {% endif %}
