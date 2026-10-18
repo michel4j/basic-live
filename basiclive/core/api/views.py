@@ -21,6 +21,7 @@ from basiclive.core.lims.models import ActivityLog, Beamline, Container, Automou
 from basiclive.core.lims.models import AnalysisReport, Project, Session, SSHKey
 from basiclive.core.lims.templatetags.bl_tags import humanize_duration
 from basiclive.utils.data import parse_frames
+from basiclive.utils.mixins import AuthenticationRequiredMixin
 from basiclive.utils.signing import Signer, InvalidSignature
 
 
@@ -184,12 +185,11 @@ class UpdateUserKey(View):
         return JsonResponse({})
 
 
-class LaunchSession(VerificationMixin, View):
+class LaunchSession(AuthenticationRequiredMixin, View):
     """
     Method to start a BasicLIVE Session from the beamline. If a Session with the same name already exists, a new Stretch
     will be added to the Session.
 
-    :key: r'^(?P<signature>(?P<username>):.+)/launch/(?P<beamline>)/(?P<session>)/$'
     """
 
     def post(self, request, *args, **kwargs):

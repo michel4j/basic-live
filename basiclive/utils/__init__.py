@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 from django.utils.csp import CSP
@@ -27,6 +28,7 @@ REPORTCRAFT_FUNCTIONS = [
 ]
 
 BASICLIVE_APPS = [
+    "rest_framework",
     "crispy_forms",
     "crispy_bootstrap5",
     "crisp_modals",
@@ -39,7 +41,6 @@ BASICLIVE_APPS = [
     'basiclive.core.lims',
     'basiclive.core.api',
     'basiclive.core.acl',
-
 ]
 OPTIONAL_APPS = {
     'USE_CRM': 'basiclive.core.crm',
@@ -94,6 +95,17 @@ EXTRA_SETTINGS = {
     'SECURE_CSP': SECURE_CSP,
     'AUTH_USER_MODEL': 'lims.User',
     "BASICLIVE_ICON_BACKEND": "basiclive.core.lims.icons.ThemifyBackend",
+    "REST_FRAMEWORK": {
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+        )
+    },
+    "SIMPLE_JWT": {
+        # "X-Access-Token" works better as it's not removed by earlier middleware in the client request
+        "AUTH_HEADER_NAME": "HTTP_X_ACCESS_TOKEN",
+        "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
+        "REFRESH_TOKEN_LIFETIME": timedelta(days=365),
+    }
 }
 
 
@@ -106,7 +118,7 @@ def configure(settings: dict) -> None:
     :param settings: settings dictionary, use globals() from within settings.py
     """
 
-    # Configure ReportCraft
+    # Configure ReportCraft, REST Framework, and other BasicLive settings
     settings.update(EXTRA_SETTINGS)
 
     # Update static and assets roots
