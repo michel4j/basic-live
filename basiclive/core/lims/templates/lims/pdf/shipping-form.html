@@ -89,7 +89,8 @@
                 <td class="input text-center" style="border-left: 1px solid black !important;">Each</td>
                 <td colspan="2" class="input text-start">{{ component.kind }}</td>
                 <td class="input text-center">{{ project.country.name|cut:"None"|default:"" }}</td>
-                <td class="input text-end" style="border-right: 1px solid black !important;">$100</td></tr>
+                <td class="input text-end" style="border-right: 1px solid black !important;">$100</td>
+            </tr>
         {% endfor %}
         {% if shipment %}{% widthratio shipment.components.count|add:"1" 1 -1 as filled_lines %}
         {% else %}{% widthratio 0 1 -1 as filled_lines %}{% endif %}
