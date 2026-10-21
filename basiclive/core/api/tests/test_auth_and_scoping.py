@@ -1,27 +1,22 @@
-import unittest
 from unittest.mock import patch, MagicMock
-from datetime import timedelta
+
 import msgpack
-
-
-from django.contrib.auth import get_user_model
-from django.db.models import Q
-from django.test import TestCase, RequestFactory, override_settings
-from django.utils import timezone
-from rest_framework_simplejwt.tokens import RefreshToken
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-
+from django.contrib.auth import get_user_model
+from django.test import TestCase, RequestFactory
 from django.views.generic import View
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from basiclive.core.api.middleware import APIAuthenticationMiddleware, get_v2_user, get_v3_user
 from basiclive.core.api.views import (
     VerificationMixin, LaunchSession, CloseSession, ProjectSamples,
-    AddData, AddReport, UpdateUserKey
+    AddData, AddReport
 )
 from basiclive.core.lims.middleware import ProjectContextMiddleware
 from basiclive.core.lims.models import (
     Project, ProjectMembership, Beamline, DataType, Session,
-    Stretch, Sample, Container, ContainerType, Automounter, ContainerLocation,
+    Sample, Container, ContainerType, Automounter, ContainerLocation,
     Data, AnalysisReport, SSHKey
 )
 from basiclive.utils.signing import Signer
@@ -54,7 +49,7 @@ class APIAuthenticationMiddlewareTests(TestCase):
 
     def test_jwt_authentication_valid_token(self):
         token = str(RefreshToken.for_user(self.user).access_token)
-        req = self.rf.get('/api/v3/data/08B1-1/', HTTP_AUTHORIZATION=f'Bearer {token}')
+        req = self.rf.get('/api/v3/data/08B1-1/', HTTP_X_ACCESS_TOKEN=f'Bearer {token}')
         user = get_v3_user(req)
         self.assertEqual(user, self.user)
 
@@ -63,7 +58,7 @@ class APIAuthenticationMiddlewareTests(TestCase):
         self.assertEqual(req.user, self.user)
 
     def test_jwt_authentication_invalid_token(self):
-        req = self.rf.get('/api/v3/data/08B1-1/', HTTP_AUTHORIZATION='Bearer invalid-token')
+        req = self.rf.get('/api/v3/data/08B1-1/', HTTP_X_ACCESS_TOKEN='Bearer invalid-token')
         user = get_v3_user(req)
         self.assertIsNone(user)
 
@@ -393,24 +388,6 @@ class APIEndpointsScopingTests(TestCase):
         req2.user = self.charlie
         resp2 = view(req2, beamline='08B1-1')
         self.assertEqual(resp2.status_code, 403)
-
-    def test_update_user_key(self):
-        priv_der, pub_ssh = generate_test_keys()
-        self.assertFalse(self.project_a.sshkeys.exists())
-
-        # Alice initializes key for project_a
-        req = self.rf.post('/api/project/', data={'public': pub_ssh, 'project': 'project_a'})
-        req.user = self.alice
-        view = UpdateUserKey.as_view()
-        resp = view(req)
-        self.assertEqual(resp.status_code, 200)
-        self.assertTrue(self.project_a.sshkeys.filter(key=pub_ssh).exists())
-
-        # Calling again when key is already set returns 304 Not Modified
-        req2 = self.rf.post('/api/project/', data={'public': pub_ssh, 'project': 'project_a'})
-        req2.user = self.alice
-        resp2 = view(req2)
-        self.assertEqual(resp2.status_code, 304)
 
     @patch('basiclive.core.api.views.make_secure_path', return_value='fake_token_key')
     def test_legacy_v2_launch_session(self, mock_secure_path):

@@ -347,7 +347,7 @@ class MachineAPIScopingWorkflowTestCase(TestCase):
     def test_api_project_samples_authorized_via_jwt_and_header(self):
         request = self.rf.get(
             f"/api/v3/samples/{self.beamline.acronym}/",
-            HTTP_AUTHORIZATION=f"Bearer {self.token_a}",
+            HTTP_X_ACCESS_TOKEN=f"Bearer {self.token_a}",
             HTTP_X_PROJECT=self.proj_a.name,
         )
         request.session = self.SessionStore()
@@ -371,7 +371,7 @@ class MachineAPIScopingWorkflowTestCase(TestCase):
         # user_a attempts to query samples for proj_b
         request = self.rf.get(
             f"/api/v3/samples/{self.beamline.acronym}/",
-            HTTP_AUTHORIZATION=f"Bearer {self.token_a}",
+            HTTP_X_ACCESS_TOKEN=f"Bearer {self.token_a}",
             HTTP_X_PROJECT=self.proj_b.name,
         )
         request.session = self.SessionStore()
@@ -389,7 +389,7 @@ class MachineAPIScopingWorkflowTestCase(TestCase):
         # user_a launches session for proj_a
         request = self.rf.post(
             f"/api/v3/session/{self.beamline.acronym}/session-1/start/",
-            HTTP_AUTHORIZATION=f"Bearer {self.token_a}",
+            HTTP_X_ACCESS_TOKEN=f"Bearer {self.token_a}",
             HTTP_X_PROJECT=self.proj_a.name,
         )
         request.session = self.SessionStore()
@@ -405,7 +405,7 @@ class MachineAPIScopingWorkflowTestCase(TestCase):
         # user_a attempts to launch session for proj_b -> 403 Forbidden
         request_bad = self.rf.post(
             f"/api/v3/session/{self.beamline.acronym}/session-2/start/",
-            HTTP_AUTHORIZATION=f"Bearer {self.token_a}",
+            HTTP_X_ACCESS_TOKEN=f"Bearer {self.token_a}",
             HTTP_X_PROJECT=self.proj_b.name,
         )
         request_bad.session = self.SessionStore()
