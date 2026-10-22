@@ -20,16 +20,6 @@ def _setting(name, default=None):
         return default
 
 
-BASE_DN = settings.BASE_DN
-SERVER_URI = settings.SERVER_URI
-MANAGER_DN = settings.MANAGER_DN
-MANAGER_SECRET = settings.MANAGER_SECRET
-USER_TABLE = settings.USER_TABLE
-USER_ROOT = settings.USER_ROOT
-GROUP_TABLE = settings.GROUP_TABLE
-USER_SHELL = settings.USER_SHELL
-WORDS_DICTIONARY = settings.WORDS_DICTIONARY
-PASSPHRASE_SEPARATORS = settings.PASSPHRASE_SEPARATORS
 USER_ATTRIBUTES = [
     'cn', 'uid', 'uidNumber', 'gidNumber',
     'homeDirectory', 'loginShell', 'description',
@@ -136,7 +126,7 @@ class Directory(object):
     def __init__(self, uri=None, user=None, secret=None, use_ssl=True):
         """
         :param uri: Server URI
-        :param user: user name to bind or None for anonymous bind
+        :param user: name to bind or None for anonymous bind
         :param secret: password to bind or None for anonymous.
         :param use_ssl: whether to use SSL or not. Default True.
         """

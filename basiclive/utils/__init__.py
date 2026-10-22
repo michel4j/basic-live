@@ -33,9 +33,6 @@ BASICLIVE_APPS = [
     "crispy_bootstrap5",
     "crisp_modals",
 
-    'allauth',
-    'allauth.account',
-
     'itemlist',
     'reportcraft',
     'basiclive.core.lims',
@@ -155,17 +152,11 @@ def configure(settings: dict) -> None:
 
     # Add authentication apps
     if settings.get("BASICLIVE_AUTH_PROVIDERS", []):
-        installed_apps['allauth.socialaccount'] = True
-        settings['AUTHENTICATION_BACKENDS'].append(
-            'allauth.account.auth_backends.AuthenticationBackend'
-        )
         for provider in settings["BASICLIVE_AUTH_PROVIDERS"]:
             if provider == 'ldap':
-                settings["AUTHENTICATION_BACKENDS"][0] = 'django_python3_ldap.auth.LDAPBackend'
+                settings["AUTHENTICATION_BACKENDS"].append('django_python3_ldap.auth.LDAPBackend')
             elif provider == 'cas':
-                settings["AUTHENTICATION_BACKENDS"][0] = 'django_cas_ng.backends.CASBackend'
-            else:
-                installed_apps[f'allauth.socialaccount.providers.{provider}'] = True
+                settings["AUTHENTICATION_BACKENDS"].append('django_cas_ng.backends.CASBackend')
 
     # Update INSTALLED APPS with unique app names in order
     settings["INSTALLED_APPS"].extend([
@@ -177,7 +168,6 @@ def configure(settings: dict) -> None:
     settings['MIDDLEWARE'].extend([
         'basiclive.core.api.middleware.APIAuthenticationMiddleware',
         'basiclive.core.lims.middleware.ProjectContextMiddleware',
-        "allauth.account.middleware.AccountMiddleware",
     ])
 
 
