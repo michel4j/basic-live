@@ -3,8 +3,8 @@ import operator
 import os
 from datetime import timedelta
 
+import httpx2
 import msgpack
-import requests
 from django import http
 from django.contrib.auth import get_user_model
 from django.db.models import Q
@@ -43,12 +43,13 @@ MAX_CONTAINER_DEPTH = lims_settings.MAX_CONTAINER_DEPTH
 def make_secure_path(path):
     # Download  key
     url = PROXY_URL + '/data/create/'
-    r = requests.post(url, data={'path': path})
-    if r.status_code == 200:
-        key = r.json()['key']
-        return key
-    else:
-        raise ValueError('Unable to create SecurePath')
+    try:
+        r = httpx2.post(url, data={'path': path})
+        if r.status_code == 200:
+            return r.json()['key']
+    except httpx2.HTTPError as e:
+        raise ValueError('Unable to create SecurePath') from e
+    raise ValueError('Unable to create SecurePath')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -618,3 +619,13 @@ class AddData(VerificationMixin, View):
             request, data, ActivityLog.TYPE.CREATE, f"{data.kind.name} metadata uploaded from {beamline.acronym}"
         )
         return JsonResponse({'id': data.pk})
+
+
+class FetchProjects(AuthenticationRequiredMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        user = self.request.user
+
+        projects = user.get_projects()
+        return JsonResponse(projects, safe=False)
+

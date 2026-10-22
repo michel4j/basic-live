@@ -15,11 +15,11 @@ urlpatterns = [
 
     # V3 routes (JWT Bearer Token / request.project context)
     path('v3/data/<slug:beamline>/', views.AddData.as_view(), name='api-data'),
+    path('v3/projects/', views.FetchProjects.as_view(), name='api-projects'),
     path('v3/report/<slug:beamline>/', views.AddReport.as_view(), name='api-report'),
     path('v3/samples/<slug:beamline>/', views.ProjectSamples.as_view(), name='api-project-samples'),
     path('v3/session/<slug:beamline>/<slug:session>/start/', views.LaunchSession.as_view(), name='api-session-start'),
     path('v3/session/<slug:beamline>/<slug:session>/close/', views.CloseSession.as_view(), name='api-session-close'),
-    path('v3/project/', views.UpdateUserKey.as_view(), name='api-project-key'),
 
     # V2 legacy routes (asymmetric signed URL fallback)
     path('v2/<slug:signature>:<slug:username>/data/<slug:beamline>/', views.AddData.as_view(), name='v2-data'),
@@ -27,7 +27,6 @@ urlpatterns = [
     path('v2/<slug:signature>:<slug:username>/samples/<slug:beamline>/', views.ProjectSamples.as_view(), name='v2-project-samples'),
     path('v2/<slug:signature>:<slug:username>/launch/<slug:beamline>/<slug:session>/', views.LaunchSession.as_view(), name='v2-session-launch'),
     path('v2/<slug:signature>:<slug:username>/close/<slug:beamline>/<slug:session>/', views.CloseSession.as_view(), name='v2-session-close'),
-    path('v2/<slug:signature>:<slug:username>/project/', views.UpdateUserKey.as_view(), name='v2-project-update'),
 ]
 
 if lims_settings.USE_ACL:
