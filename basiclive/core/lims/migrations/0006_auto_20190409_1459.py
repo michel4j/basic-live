@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 import os
 
-import requests
+import httpx2
 from django.conf import settings
 from django.db import migrations
 
@@ -14,12 +14,13 @@ PROXY_URL = getattr(settings, 'DOWNLOAD_PROXY_URL', '')
 def make_secure_path(path):
     # Generate Download  key on proxy server
     url = PROXY_URL + '/data/create/'
-    r = requests.post(url, data={'path': path})
-    if r.status_code == 200:
-        key = r.json()['key']
-        return key
-    else:
-        raise ValueError('Unable to create SecurePath')
+    try:
+        r = httpx2.post(url, data={'path': path})
+        if r.status_code == 200:
+            return r.json()['key']
+    except httpx2.HTTPError as e:
+        raise ValueError('Unable to create SecurePath') from e
+    raise ValueError('Unable to create SecurePath')
 
 
 def add_session_url(apps, schema_editor):

@@ -1,16 +1,8 @@
 from __future__ import annotations
 
-import base64
-import hashlib
-import json
-
-import requests
-from urllib.parse import urljoin
-from pathlib import Path
-from django.apps import apps as django_apps, apps
+from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from datetime import timedelta
 from basiclive.core.acl.conf import settings
 
 

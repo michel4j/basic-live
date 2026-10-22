@@ -13,13 +13,14 @@ from itertools import batched
 from pathlib import Path
 from pprint import pprint as print
 
+import httpx2
 import pandas as pd
-import requests
 from django.conf import settings as main_settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import dateparse, timezone
 from habanero import Crossref
+from habanero.exceptions import RequestError as HabaneroRequestError
 
 from basiclive.core.publications.conf import settings
 from . import models
@@ -118,7 +119,7 @@ class CrossRef(Crossref):
         events = []
         more_results = True
         while more_results:
-            response = requests.get(settings.CROSSREF_EVENTS_URL, params=params, headers=headers)
+            response = httpx2.get(settings.CROSSREF_EVENTS_URL, params=params, headers=headers, follow_redirects=True, timeout=30.0)
             if response.status_code == 200:
                 result = response.json()
                 message = result.get('message', {})
@@ -162,7 +163,7 @@ class OpenCitations:
         """
         filters = f'?filter=creation={year}' if year else ''
         url = f"{self.base_url}citations/doi:{doi}{filters}"
-        response = requests.get(url, headers=self.headers)
+        response = httpx2.get(url, headers=self.headers, follow_redirects=True, timeout=30.0)
         if response.status_code == 200:
             data = response.json()
             return data
@@ -556,7 +557,7 @@ def fetch_deposition_codes():
     """
     Retrieve all PDB Codes for the facility as a list of strings
     """
-    response = requests.post(settings.PDB_SEARCH_URL, json=get_search_json())
+    response = httpx2.post(settings.PDB_SEARCH_URL, json=get_search_json(), timeout=30.0)
 
     if response.status_code == 200:
         return [entry['identifier'] for entry in response.json()['result_set']]
@@ -574,7 +575,7 @@ def fetch_depositions(codes) -> list[dict]:
     params = REPORT_QUERY
     params = params.format(', '.join([f'"{pdb}"' for pdb in codes]))
 
-    response = requests.post(settings.PDB_REPORT_URL, json={'query': params})
+    response = httpx2.post(settings.PDB_REPORT_URL, json={'query': params}, timeout=30.0)
     if response.status_code == 200:
         result = response.json()
         return result['data']['entries']
@@ -658,8 +659,8 @@ def fetch_book(isbn_list):
     for isbn in isbn_list:
         isbn = re.sub(r'[\s_-]', '', isbn)
         params = {'q': 'isbn:{0}'.format(isbn), 'key': settings.GOOGLE_API_KEY}
-        response = requests.get(settings.GOOGLE_BOOKS_API, params=params)
-        if response.status_code == requests.codes.ok:
+        response = httpx2.get(settings.GOOGLE_BOOKS_API, params=params, follow_redirects=True, timeout=30.0)
+        if response.status_code == httpx2.codes.OK:
             result = response.json()
             if result['totalItems'] == 0:
                 continue
@@ -748,7 +749,7 @@ def create_publications(doi_list):
             try:
                 results = cr.journals(ids=code)
                 found = True
-            except requests.exceptions.HTTPError as e:
+            except (HabaneroRequestError, httpx2.HTTPError) as e:
                 continue
 
             # update journal details in new journals
@@ -873,11 +874,10 @@ def fetch_journal_metrics(year=None):
             return results
     else:
         print(f'Fetching journal metrics for {params["year"]} from SCIMAGO...')
-        response = requests.get(settings.SCIMAGO_URL, params=params)
+        response = httpx2.get(settings.SCIMAGO_URL, params=params, follow_redirects=True, timeout=30.0)
         if response.status_code == 200:
             dialect = csv.Sniffer().sniff(response.text[:5000])
-            text = codecs.iterdecode(response.iter_lines(), 'utf-8')
-            reader = csv.DictReader(text, dialect=dialect)
+            reader = csv.DictReader(response.iter_lines(), dialect=dialect)
             results = {
                 obj.get_codes(): obj.dict()
                 for row in reader

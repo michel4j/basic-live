@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from urllib.parse import urljoin
 
-import requests
+import httpx2
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -49,7 +49,7 @@ def download_asset(src_url, path: Path | str, sri: str | None = None):
 
     if download_pending:
         # fetch the file from the url
-        response = requests.get(src_url)
+        response = httpx2.get(src_url, follow_redirects=True)
         response.raise_for_status()
 
         # check the integrity of the file if an SRI was supplied

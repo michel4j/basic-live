@@ -2,7 +2,7 @@ import json
 import uuid
 from typing import Any
 
-import requests
+import httpx2
 from crisp_modals.views import ModalCreateView, ModalUpdateView, ModalDeleteView, ModalFormView
 from django import http
 from django.contrib import messages
@@ -1343,30 +1343,53 @@ class GuideDelete(AdminRequiredMixin, SuccessMessageMixin, ModalDeleteView):
         return context
 
 
+def stream_httpx_response(client, response, chunk_size=8192):
+    try:
+        for chunk in response.iter_bytes(chunk_size=chunk_size):
+            yield chunk
+    finally:
+        response.close()
+        client.close()
+
+
 class ProxyView(View):
     def get(self, request, *args, **kwargs):
         remote_url = settings.DOWNLOAD_PROXY_URL + request.path
         if kwargs.get('section') == 'archive':
             return fetch_archive(request, remote_url)
-        r = requests.get(remote_url, params=request.GET, stream=True)
+        client = httpx2.Client()
+        req = client.build_request('GET', remote_url, params=request.GET)
+        r = client.send(req, stream=True)
         if r.status_code == 200:
             resp = http.StreamingHttpResponse(
-                r.iter_content(chunk_size=8192),
+                stream_httpx_response(client, r, chunk_size=8192),
                 content_type=r.headers.get('Content-Type')
             )
             if 'Content-Disposition' in r.headers:
                 resp['Content-Disposition'] = r.headers['Content-Disposition']
             return resp
-        return http.HttpResponse(r.content, status=r.status_code, content_type=r.headers.get('Content-Type'))
+        try:
+            content = r.read()
+        finally:
+            r.close()
+            client.close()
+        return http.HttpResponse(content, status=r.status_code, content_type=r.headers.get('Content-Type'))
 
 
 def fetch_archive(request, url):
-    r = requests.get(url, stream=True)
+    client = httpx2.Client()
+    req = client.build_request('GET', url)
+    r = client.send(req, stream=True)
     if r.status_code == 200:
-        resp = http.StreamingHttpResponse(r, content_type='application/x-gzip')
+        resp = http.StreamingHttpResponse(
+            stream_httpx_response(client, r, chunk_size=8192),
+            content_type='application/x-gzip'
+        )
         resp['Content-Disposition'] = r.headers.get('Content-Disposition', 'attachment; filename=archive.tar.gz')
         return resp
     else:
+        r.close()
+        client.close()
         return http.HttpResponseNotFound()
 
 

@@ -3,7 +3,7 @@ import logging
 import warnings
 from datetime import datetime, timedelta
 
-import requests
+import httpx2
 from django import template
 from django.utils import timezone
 
@@ -61,7 +61,7 @@ def calendar_view(year, week):
     if settings.FACILITY_MODES:
         try:
             url = f"{settings.FACILITY_MODES}?start={start}&end={end}"
-            r = requests.get(url)
+            r = httpx2.get(url, follow_redirects=True)
             if r.status_code == 200:
                 for mode in r.json():
                     st = datetime.fromisoformat(mode['start'])
@@ -74,9 +74,9 @@ def calendar_view(year, week):
                             info['week'][dt]['modes'][hr] = {
                                 'kind': str(mode['kind'])
                             }
-        except requests.exceptions.ConnectionError:
+        except (httpx2.ConnectError, httpx2.NetworkError):
             warnings.warn(f"Couldn't fetch beam modes from {settings.FACILITY_MODES}.")
-        except requests.exceptions.MissingSchema:
+        except (httpx2.UnsupportedProtocol, httpx2.InvalidURL):
             warnings.warn("FACILITY_MODE must start with 'http://' or 'https://'.")
 
     return info

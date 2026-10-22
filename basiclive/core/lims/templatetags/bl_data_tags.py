@@ -3,7 +3,7 @@ import json
 import os
 
 import numpy
-import requests
+import httpx2
 from django import template
 from django.urls import reverse
 
@@ -52,7 +52,7 @@ def get_meta_data(data):
 
 def get_json_info(path):
     url = settings.DOWNLOAD_PROXY_URL + reverse('files-proxy', kwargs={'section': 'raw', 'path': path})
-    r = requests.get(url)
+    r = httpx2.get(url)
     if r.status_code == 200:
         return json.loads(r.content)
     else:
@@ -62,7 +62,7 @@ def get_json_info(path):
 
 def get_xdi_info(path):
     url = settings.DOWNLOAD_PROXY_URL + reverse('files-proxy', kwargs={'section': 'raw', 'path': path})
-    r = requests.get(url)
+    r = httpx2.get(url)
     if r.status_code == 200:
         return xdi.read_xdi_data(r.content)
     else:
