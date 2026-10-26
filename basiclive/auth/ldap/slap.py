@@ -3,21 +3,12 @@ import random
 import secrets
 import string
 
-try:
-    import ldap3
-    from ldap3 import Server, Connection
-except ImportError:
-    ldap3 = None
-    Server = Connection = None
+
+import ldap3
+from ldap3 import Server, Connection
+
 
 from basiclive.auth.ldap.conf import settings
-
-
-def _setting(name, default=None):
-    try:
-        return getattr(settings, name, default)
-    except Exception:
-        return default
 
 
 USER_ATTRIBUTES = [
