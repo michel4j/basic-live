@@ -146,12 +146,15 @@ def configure(settings: dict) -> None:
 
     # Add optional apps to installed apps if configured
     # Optional apps are included by default
+    lims_config = settings.get("BASICLIVE_LIMS", {})
     for toggle, app_name in OPTIONAL_APPS.items():
-        if settings["BASICLIVE_LIMS"].get(toggle, True):
+        if lims_config.get(toggle, True):
             installed_apps[app_name] = toggle
 
     # Add authentication apps
     if settings.get("BASICLIVE_AUTH_PROVIDERS", []):
+        if "AUTHENTICATION_BACKENDS" not in settings:
+            settings["AUTHENTICATION_BACKENDS"] = ['django.contrib.auth.backends.ModelBackend']
         for provider in settings["BASICLIVE_AUTH_PROVIDERS"]:
             if provider == 'ldap':
                 settings["AUTHENTICATION_BACKENDS"].append('django_python3_ldap.auth.LDAPBackend')
