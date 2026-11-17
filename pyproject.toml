@@ -44,21 +44,23 @@ cas = [
     "django-cas-ng",
 ]
 
-
-[tool.poetry]
-packages = [
-    { include = "basiclive" },
-]
-version = "0.0.0"
-
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
 
-[tool.poetry.requires-plugins]
-poetry-dynamic-versioning = { version = ">=1.0.0,<2.0.0", extras = ["plugin"] }
+[tool.uv]
+package = true
 
-[tool.poetry-dynamic-versioning]
-enable = true
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.hatch.build.targets.wheel]
+packages = ["basiclive"]
+
+[tool.uv-dynamic-versioning]
 vcs = "git"
+style = "pep440" # Options: "pep440", "semver", "pvp"
+fallback-version = "0.0.0" # Used if building outside a Git repo (e.g., from an sdist)
 format = "{base}.{revision}{distance}"
+
+
